@@ -11,6 +11,7 @@ Status: design phase. The design docs are settled; the Godot project and the C# 
   - `docs/gameplay.md`: controls, turning objects, seams, chirality, threats, puzzle types.
   - `docs/prologue.md`: prologue scenes and their puzzle chain.
   - `docs/story.md`: story and world.
+  - `docs/style.md`: visual and audio style, interaction feel, how atmosphere changes with section depth.
 - `archives/threejs-demo/` is the frozen three.js prototype (a Vite project). It is the reference implementation for ported 4D math; new work goes to the Godot project.
 
 ## Architecture

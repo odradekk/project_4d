@@ -238,7 +238,7 @@
 - **四维生物切片**：采用四维元球（Metaballs）配合四面体行进算法（Marching Tetrahedra）实时切片，单次切片耗时约 0.4 毫秒（demo 实测数据）。
 - **关卡构建**：每个截面使用常规三维工具建模，为楼房结构元素标注 W 范围标签，由工具根据标签自动生成四维几何体（详见 [framework.md](framework.md)）；侧视图只需换一个包含 W 轴的平面进行切片即可。
 - **薄片表现**：普通物件在 W 方向上的厚度统一为 1.2 厘米，竖起后留在其他截面里的切面就是这样一片厚 1.2 厘米的薄板，视觉上与 PS1 低多边形风格非常契合。
-- **PS1 风格渲染管线**：低分辨率渲染、顶点坐标抖动（Vertex Snapping）、仿射纹理映射（Affine Texture Mapping）、15 位色彩量化加有序抖动（Ordered Dithering，demo 已实现）。
+- **PS1 风格渲染管线**：低分辨率渲染、顶点坐标抖动（Vertex Snapping）、仿射纹理映射（Affine Texture Mapping）、15 位色彩量化加有序抖动（Ordered Dithering，demo 已实现）。画面和美术规范见 [style.md](style.md)。
 
 ## 精确四维模型（序章原型）
 
