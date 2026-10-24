@@ -1,0 +1,54 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: #cfc6b0;
+  font-family: "SimSun", "Songti SC", "Microsoft YaHei", serif; user-select: none; }
+#app canvas { display: block; width: 100vw; height: 100vh; }
+
+.hidden { display: none !important; }
+
+.overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; background: rgba(0, 0, 0, 0.82); z-index: 10; text-align: center; padding: 16px; }
+#title h1 { font-family: "KaiTi", "STKaiti", serif; font-size: 72px; font-weight: normal; letter-spacing: 0.3em;
+  margin: 0 0 12px; color: #b9b09a; }
+#title .sub { font-size: 18px; color: #8f8775; margin: 0 0 40px; }
+.keys { font-size: 14px; line-height: 2; color: #8a8270; }
+.keys b { color: #cfc6b0; font-weight: normal; border: 1px solid #555; padding: 0 6px; margin: 0 2px; }
+.start { margin-top: 40px; font-size: 15px; color: #cfc6b0; animation: blink 1.6s infinite; }
+@keyframes blink { 50% { opacity: 0.35; } }
+
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+#status { position: absolute; left: 20px; bottom: 18px; font-size: 13px; color: rgba(207, 198, 176, 0.55); }
+#status span { margin-right: 10px; }
+#bar { width: 110px; height: 3px; background: rgba(255, 255, 255, 0.08); margin-top: 6px; }
+#bar i { display: block; height: 100%; width: 100%; background: rgba(190, 170, 140, 0.6); }
+#status.mirrored #side { color: rgba(200, 90, 70, 0.85); }
+
+#dial { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); display: none; gap: 26px;
+  font-family: "Times New Roman", serif; font-size: 22px; }
+#dial.on { display: flex; }
+#dial span { color: rgba(160, 140, 100, 0.45); padding: 0 6px; border-bottom: 2px solid transparent; }
+#dial span.cur { color: rgba(220, 205, 170, 0.9); }
+#dial span.tgt { border-bottom-color: rgba(220, 205, 170, 0.9); }
+#dial span.solid { text-decoration: line-through; border-bottom-style: dotted; }
+#dial span.faint { text-shadow: 0 0 6px rgba(200, 60, 40, 0.7); }
+#dial span.eye { color: rgba(230, 70, 50, 1); text-shadow: 0 0 10px rgba(230, 40, 20, 0.9); animation: twitch 0.25s infinite; }
+@keyframes twitch { 50% { opacity: 0.55; } }
+
+#prompt { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); font-size: 14px;
+  color: rgba(220, 210, 185, 0.8); }
+#msg { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); max-width: 80vw; font-size: 18px;
+  color: #d8cfb8; text-shadow: 0 0 6px #000; transition: opacity 0.6s; opacity: 0; white-space: pre-line; }
+#msg.show { opacity: 1; }
+#msg.mirror { transform: translateX(-50%) scaleX(-1); }
+#hint { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); font-size: 13px;
+  color: rgba(207, 198, 176, 0.75); transition: opacity 0.6s; opacity: 0; white-space: pre-line; }
+#hint.show { opacity: 1; }
+
+#note .paper { background: #d6cdb6; color: #2a2420; max-width: 520px; width: 90vw; padding: 36px 40px;
+  font-family: "KaiTi", "STKaiti", serif; font-size: 22px; line-height: 1.8; text-align: left;
+  white-space: pre-line; transform: rotate(-1.2deg); box-shadow: 0 0 40px #000;
+  background-image: repeating-linear-gradient(transparent 0 39px, rgba(90, 80, 60, 0.18) 39px 40px); }
+#note .paper.mirror { transform: rotate(-1.2deg) scaleX(-1); }
+#note .paper.crayon { font-size: 26px; color: #8a2b1e; letter-spacing: 0.08em; }
+#note .close { margin-top: 18px; font-size: 13px; color: #8a8270; }
+
+#end-text { font-family: "KaiTi", "STKaiti", serif; font-size: 28px; line-height: 2; white-space: pre-line; color: #b9b09a; }

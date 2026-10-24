@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>反锁</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="hud">
+    <div id="status"><span id="page">第 Ⅰ 页</span><span id="side">正</span><div id="bar"><i></i></div></div>
+    <div id="dial"><span data-l="0">Ⅰ</span><span data-l="1">Ⅱ</span><span data-l="2">Ⅲ</span></div>
+    <div id="prompt"></div>
+    <div id="msg"></div>
+    <div id="hint"></div>
+  </div>
+
+  <div id="title" class="overlay">
+    <h1>反锁</h1>
+    <p class="sub">小满在反锁的房间里消失了。</p>
+    <div class="keys">
+      <div><b>WASD</b> 移动　<b>Shift</b> 跑　<b>E</b> 互动</div>
+      <div><b>右键</b> 按住举起立体镜　<b>滚轮 / Q</b> 选择要看的那一页</div>
+      <div>举着立体镜时 <b>左键</b> 翻过去</div>
+    </div>
+    <p class="start">点击开始（建议戴耳机）</p>
+  </div>
+
+  <div id="note" class="overlay hidden">
+    <div class="paper"><div id="note-text"></div></div>
+    <div class="close">[E] 放下</div>
+  </div>
+
+  <div id="pause" class="overlay hidden"><p class="start">点击继续</p></div>
+
+  <div id="end" class="overlay hidden">
+    <div id="end-text"></div>
+    <p class="start">按 R 重新开始</p>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

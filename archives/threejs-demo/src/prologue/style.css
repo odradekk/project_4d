@@ -1,0 +1,16 @@
+#cross { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px;
+  background: rgba(240, 232, 214, 0.55); border-radius: 50%; }
+
+#msg { font-family: "KaiTi", "STKaiti", serif; font-size: 22px; bottom: 16%; text-align: center; }
+
+#card { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-family: "KaiTi", "STKaiti", serif;
+  font-size: 26px; line-height: 1.8; text-align: center; color: #efe6d2; text-shadow: 0 0 10px #000;
+  white-space: pre-line; opacity: 0; transition: opacity 1.2s; }
+#card.show { opacity: 1; }
+
+#notebook { background: rgba(0, 0, 0, 0.78); }
+#nb-page { height: min(82vh, 640px); width: auto; box-shadow: 0 0 40px #000; transform: rotate(-1deg); }
+#nb-page.mirror { transform: rotate(-1deg) scaleX(-1); }
+.nb-nav { margin-top: 14px; font-size: 13px; color: #8a8270; }
+
+#end-text { font-size: 30px; }

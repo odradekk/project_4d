@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>序章</title>
+  <link rel="stylesheet" href="/src/style.css" />
+  <link rel="stylesheet" href="/src/prologue/style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="hud">
+    <div id="cross"></div>
+    <div id="dial"><span data-l="0">Ⅰ</span><span data-l="1">Ⅱ</span><span data-l="2">Ⅲ</span></div>
+    <div id="prompt"></div>
+    <div id="msg"></div>
+    <div id="hint"></div>
+    <div id="card"></div>
+  </div>
+
+  <div id="title" class="overlay">
+    <h1>序 章</h1>
+    <p class="sub">二〇〇〇年四月十三日　星期四</p>
+    <div class="keys">
+      <div><b>WASD</b> 移动　<b>Shift</b> 跑　<b>E</b> 拿起 / 互动　<b>N</b> 笔记本</div>
+      <div><b>右键</b> 按住举起棱镜　<b>滚轮 / Q</b> 换一页　举着棱镜时 <b>左键</b> 钻过缝</div>
+      <div><b>F</b> 把东西竖进第四方向 / 放倒　<b>R</b> 翻面　<b>空格</b> 站上凳子</div>
+    </div>
+    <p class="start">点击开始（建议戴耳机）</p>
+  </div>
+
+  <div id="notebook" class="overlay hidden">
+    <canvas id="nb-page" width="520" height="640"></canvas>
+    <div class="nb-nav">A / ← 上一页　　N 合上　　D / → 下一页</div>
+  </div>
+
+  <div id="pause" class="overlay hidden"><p class="start">点击继续</p></div>
+
+  <div id="end" class="overlay hidden">
+    <div id="end-text"></div>
+    <p class="start">按 R 重新开始</p>
+  </div>
+
+  <script type="module" src="/src/prologue/main.js"></script>
+</body>
+</html>
