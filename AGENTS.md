@@ -2,7 +2,7 @@
 
 A first-person Chinese cosmic-horror game about four-dimensional beings: PS1-style low poly, China in 2000, dread without jump scares. A father searches for his daughter, who slipped through a prism into deeper sections of 4D space.
 
-Status: design phase. The design docs are settled; the Godot project and the C# 4D engine are not created yet.
+Status: the design docs are settled and the project skeleton exists (4D engine library, its tests, Godot project), with no engine or game code yet.
 
 ## Map
 
@@ -12,6 +12,8 @@ Status: design phase. The design docs are settled; the Godot project and the C# 
   - `docs/prologue.md`: prologue scenes and their puzzle chain.
   - `docs/story.md`: story and world.
   - `docs/style.md`: visual and audio style, interaction feel, how atmosphere changes with section depth.
+- `engine/` is the 4D engine (`FourD`), a plain .NET library; `engine.tests/` holds its xUnit tests.
+- `game/` is the Godot 4.7 project (assembly `Game`); adapter code goes in `game/adapter/`. `game/Game.sln` holds all three projects and maps Godot's ExportDebug/ExportRelease builds to the engine's Debug/Release.
 - `archives/threejs-demo/` is the frozen three.js prototype (a Vite project). It is the reference implementation for ported 4D math; new work goes to the Godot project.
 
 ## Architecture

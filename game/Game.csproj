@@ -1,0 +1,18 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Godot builds as ExportDebug/ExportRelease, which a plain library treats as unoptimized
+         custom configurations. Map them to the engine's own Debug/Release. -->
+    <ProjectReference Include="..\engine\FourD.csproj">
+      <SetConfiguration Condition=" '$(Configuration)' == 'ExportDebug' ">Configuration=Debug</SetConfiguration>
+      <SetConfiguration Condition=" '$(Configuration)' == 'ExportRelease' ">Configuration=Release</SetConfiguration>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

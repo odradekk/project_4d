@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game", "Game.csproj", "{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FourD", "..\engine\FourD.csproj", "{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FourD.Tests", "..\engine.tests\FourD.Tests.csproj", "{AAB58708-9D24-42F3-9159-391E215E5533}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		ExportDebug|Any CPU = ExportDebug|Any CPU
+		ExportRelease|Any CPU = ExportRelease|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{AF3C84B0-1A20-484D-A0F7-66B855BE7FAE}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+		{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}.ExportDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}.ExportDebug|Any CPU.Build.0 = Debug|Any CPU
+		{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}.ExportRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{53AEAABD-B489-4827-8C2B-29B98DE7ED2F}.ExportRelease|Any CPU.Build.0 = Release|Any CPU
+		{AAB58708-9D24-42F3-9159-391E215E5533}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB58708-9D24-42F3-9159-391E215E5533}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAB58708-9D24-42F3-9159-391E215E5533}.ExportDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB58708-9D24-42F3-9159-391E215E5533}.ExportRelease|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+EndGlobal
