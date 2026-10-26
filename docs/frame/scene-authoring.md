@@ -147,7 +147,7 @@ public sealed record LoadError(
 |---|---|
 | 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
 | 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
-| 空或逆向区间、缺口越界/重叠 | InvalidInterval；楼房缺口闭区间减去，不允许恰在可玩 Section 的边界上分段换形 |
+| 空或逆向区间、缺口越界/重叠 | InvalidInterval；楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状的分段换形仍不允许恰在可玩Section上发生 |
 | 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状 |
 | 可转物交互参数/装置轨道非法、携带冲突 | InvalidInteraction/InvalidMotion/InvalidCarry |
 | 正反竖起完成后零件端面距任一可玩 Section（含原Section）小于 0.02m | PartBoundaryTooClose；等于 0.02m 通过，原Section不设ε豁免；总长不足以让铰链两侧都留0.02m时同样报错 |
