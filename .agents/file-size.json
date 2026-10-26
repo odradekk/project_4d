@@ -1,0 +1,25 @@
+{
+  "max_tokens": 5000,
+  "exclude": [
+    "**/*.lock",
+    "**/package-lock.json",
+    "**/pnpm-lock.yaml",
+    "**/go.sum",
+    "**/*.min.js",
+    "**/*.min.css",
+    "**/*.map",
+    "**/*.generated.*",
+    "**/__generated__/**",
+    "**/__snapshots__/**",
+    "**/vendor/**",
+    "**/third_party/**",
+    "**/*.svg",
+    "archives/**"
+  ],
+  "exceptions": {},
+  "baseline": {
+    "docs/framework.md": 8998,
+    "docs/gameplay.md": 9356,
+    "docs/prologue.md": 6054
+  }
+}
