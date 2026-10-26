@@ -1,0 +1,21 @@
+name: Check
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: dotnet build game/Game.sln
+      - run: dotnet test engine.tests
+      - run: python .agents/scripts/check_file_size.py --all
