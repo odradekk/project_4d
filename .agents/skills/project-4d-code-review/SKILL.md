@@ -32,33 +32,36 @@ description: 按本仓库写下的规则和以往出过的错，审查 project_4
 | 路径 | 规则在 |
 |---|---|
 | 全仓库 | [AGENTS.md](../../../AGENTS.md)；用词以[玩法文档](../../../docs/gameplay.md)的「术语」表为准 |
-| `engine/**`、`engine.tests/**` | [框架文档](../../../docs/framework.md)、玩法文档；决策笔记 `2026-10-26-engine-rewrite`、`2026-10-26-device-translation` |
-| `game/adapter/**` | 框架文档「引擎模块」；决策笔记 `2026-10-26-region-scene-authoring` |
-| `game/**` 的其余部分 | 框架文档、玩法文档、[序章文档](../../../docs/prologue.md)、[故事文档](../../../docs/story.md)；决策笔记 `2026-10-26-prologue-greybox`、`2026-10-26-game-layer-csharp`、`2026-10-26-region-scene-authoring`。[风格文档](../../../docs/style.md)等序章定稿后才适用 |
+| `engine/**`、`engine.tests/**` | [计算原则](../../../docs/frame/principles.md)、[内容分类](../../../docs/frame/content.md)、[跨截面规则与尺寸规范](../../../docs/frame/rules.md)、[引擎模块](../../../docs/frame/engine.md)、玩法文档；决策笔记 `2026-10-26-engine-rewrite`、`2026-10-26-device-translation` |
+| `game/adapter/**` | [引擎模块](../../../docs/frame/engine.md)；决策笔记 `2026-10-26-region-scene-authoring` |
+| `game/**` 的其余部分 | [框架目录](../../../docs/frame/README.md)、玩法文档、[序章文档](../../../docs/prologue.md)、[故事文档](../../../docs/story.md)；决策笔记 `2026-10-26-prologue-greybox`、`2026-10-26-game-layer-csharp`、`2026-10-26-region-scene-authoring`。[风格文档](../../../docs/style.md)等序章定稿后才适用 |
 | `docs/**` | `AGENTS.md`「Language and terms」；玩法文档「术语」表 |
 | `.agents/notes/**` | [.agents/notes/accepted/AGENTS.md](../../notes/accepted/AGENTS.md)；`decision-notes` skill |
 | `archives/threejs-demo/**` | 已冻结，不改（`AGENTS.md`「Map」） |
 
 决策笔记按 ID 查找：`git ls-files '*<ID>.md'`。
 
-框架、玩法、序章文档目前描述的是要实现的设计，引擎和游戏代码还没写。代码已经实现的部分，文档就是规则；还没实现的部分，文档只约束改动新写的代码，文档和现有代码之间已知的差距不算问题。下面几处已被已接受的决策笔记取代，以笔记为准，#1 会改文档：
+框架、玩法、序章文档描述的是要实现的设计。代码已经实现的部分，文档就是规则；还没实现的部分，文档只约束改动新写的代码，文档和现有代码之间已知的差距不算问题。
 
-- `AGENTS.md` 里说原型是「reference implementation for ported 4D math」和「Ported math is checked against the archived prototype's output」两句：`2026-10-26-engine-rewrite`。
-- 框架文档解耦规则第 7 条、模块表的「原型对应文件」一列：`2026-10-26-engine-rewrite`；「楼房」的资产制作：`2026-10-26-region-scene-authoring`；游戏层「GDScript 或 C# 均可」：`2026-10-26-game-layer-csharp`；四维装置只有旋转运动：`2026-10-26-device-translation`。
-- 序章文档第 4 场「绕着桌沿翻过去」：`2026-10-26-prologue-greybox`。序章文档待定问题第 2 条已由玩法文档「接缝」定下。
+序章文档的「做 demo 需要的系统」与「demo 范围建议」仍描述归档原型和旧的实现顺序；正式项目的实现与制作顺序以决策笔记 `2026-10-26-engine-rewrite`、`2026-10-26-prologue-greybox` 为准。「待定问题」第 2 条已由玩法文档「接缝」定下。
 
 ## 自动运行的检查
 
-目前没有。钩子要每个 clone 自己连接，仓库也还没有 CI（#1 会加上）。
+每个 PR 的 GitHub Actions 都运行以下检查，配置见 [.github/workflows/check.yml](../../../.github/workflows/check.yml)。CI 已通过的机械检查不重复报告；失败、缺失或尚未完成的检查要写明。有 PR 时读取实际检查结果，不把本地通过写成远端已通过。
+
+- `dotnet build game/Game.sln`。
+- `dotnet test engine.tests`。
+- `python .agents/scripts/check_file_size.py --all`。
 
 ## 由审查者运行
 
-用 `pre-push-checks` skill 为改动的路径挑出要跑的检查，运行后把命令和结果写进报告：
+用 `pre-push-checks` skill 为改动的路径挑出手动检查，运行后把命令和结果写进报告：
 
-- 文件大小：`python .agents/scripts/check_file_size.py --all`。
 - 提交信息里的 AI 署名：`echo "HEAD $(git rev-parse HEAD) refs/heads/main $(git rev-parse origin/main)" | python .agents/scripts/strip_attribution.py --pre-push`，检查还不在 `origin/main` 上的提交。
 - 决策笔记：`python <decision-notes skill 的目录>/scripts/verify_notes.py .agents/notes --base $(git merge-base HEAD origin/main)`。
-- `AGENTS.md` Agent workflow 一节表格里对应改动路径的检查：引擎测试、`dotnet build game/Game.csproj`、`dotnet build game/Game.sln`、Godot 的 `--scene` 和 `--import` 检查。Godot 的路径写在那张表下面。Godot 载入失败时退出码仍是 0，输出里有 `ERROR:` 行就算失败。
+- 场景与导入资源：运行 `AGENTS.md` Agent workflow 表格对应的 Godot `--scene` 和 `--import` 检查。Godot 路径在表格下面；退出码为 0 但输出含 `ERROR:` 仍算失败。
+
+钩子仍需每个 clone 自己连接。没有 PR 或 CI 结果时，按 `pre-push-checks` 补齐受改动影响的本地检查，并说明尚无远端结果。
 
 ## 阻止合并的要求
 
@@ -98,4 +101,4 @@ description: 按本仓库写下的规则和以往出过的错，审查 project_4
 
 每个问题写明：来自哪项检查（如果有）、问题是什么、在哪里、有什么影响、证据。阻止合并的问题排在建议前面，然后列出运行过的检查和结果。有 PR 时，关于某一处的问题写在 diff 的那一行上，关于整个改动的问题写在 PR 上；没有 PR 时，在报告里给出文件和行号。作者收到审查意见后，先用 `verify-bug` skill 核实；成立的就修，不成立的给出证据。
 
-来源核对到提交 `b6e7e5a`（2026-10-26）。
+来源核对到提交 `734845b`（2026-10-26）。
