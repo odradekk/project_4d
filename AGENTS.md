@@ -7,18 +7,18 @@ Status: the design docs are settled and the project skeleton exists (4D engine l
 ## Map
 
 - `docs/` holds the design, in Chinese. Read the doc that owns a topic before changing code or content in it:
-  - `docs/framework.md`: 4D geometry, content categories, cross-section rules, size norms, the engine/Godot split and its API groups.
+  - `docs/frame/README.md`: 4D geometry, content categories, cross-section rules, size norms, the engine/Godot split and its API groups.
   - `docs/gameplay.md`: controls, turning objects, seams, chirality, threats, puzzle types.
   - `docs/prologue.md`: prologue scenes and their puzzle chain.
   - `docs/story.md`: story and world.
   - `docs/style.md`: visual and audio style, interaction feel, how atmosphere changes with section depth.
 - `engine/` is the 4D engine (`FourD`), a plain .NET library; `engine.tests/` holds its xUnit tests.
 - `game/` is the Godot 4.7 project (assembly `Game`); adapter code goes in `game/adapter/`. `game/Game.sln` holds all three projects and maps Godot's ExportDebug/ExportRelease builds to the engine's Debug/Release.
-- `archives/threejs-demo/` is the frozen three.js prototype (a Vite project). It is the reference implementation for ported 4D math; new work goes to the Godot project.
+- `archives/threejs-demo/` is the frozen three.js prototype (a Vite project). It is a reference for gameplay and interaction feel; new work goes to the Godot project.
 
 ## Architecture
 
-Godot with C#, in three layers. `docs/framework.md` (引擎模块) holds the full rules and API groups.
+Godot with C#, in three layers. `docs/frame/engine.md` holds the full rules and API groups.
 
 - **4D engine**: a plain .NET project with no Godot reference. It owns all 4D state, 4D math, and cross-section rules; computes in `double`; advances only when the host calls its step with a time delta; leaves rendering, audio, input, and files to the host. Its public surface is the fixed API, and everything else is `internal`.
 - **Adapter**: the only code that knows both sides. It turns Godot scenes into the engine's world description, and engine output into meshes, collision shapes, and signals.
@@ -29,7 +29,7 @@ Two rules shape every feature:
 - Exact kinematics, no 4D dynamics: geometry, slicing, support, and sweep collisions follow exact formulas; nothing simulates inertia, tumbling, or stacking.
 - Puzzle and story conditions read the world through the engine's generic queries (is it supported, is this spot occupied, does it have a slice in that section). A condition that needs something new gets a new generic query in the engine.
 
-Engine tests run under `dotnet test` without Godot. Ported math is checked against the archived prototype's output for the same inputs.
+Engine tests run under `dotnet test` without Godot. Rewrite 4D math from the design, without translating the prototype. Test expectations come from exact geometric results that can be calculated by hand, geometric invariants, and formula-derived values in the size norms.
 
 ## Language and terms
 
@@ -58,9 +58,9 @@ Maintained with the `setup-agent-workflow` skill. Edit values freely; keep the f
   - `kind/feature`: a new user- or model-facing capability. `kind/bug-fix`: corrects a defect. `kind/simplification`: removes code, behavior, or surface without adding capability. `kind/architecture`: the structure of the shipped code. `kind/process`: tooling and workflow around the code. `kind/testing`: test infrastructure and strategy.
   - `area/engine`: `engine/**`, `engine.tests/**`. `area/adapter`: `game/adapter/**`. `area/game`: the rest of `game/**`. `area/docs`: `docs/**`, `AGENTS.md`.
 - Prose: documents, decision notes, tickets, pull request descriptions, and commit bodies are revised with the `plain-language` skill. House style: the "Language and terms" rules above; terms come from the 术语 table in `docs/gameplay.md`.
-- File size: files stay under 5,000 tokens (bytes / 4) so an agent can read them whole. `.agents/file-size.json` lists excluded paths, exceptions with their reasons, and the baseline of older files over the limit, which may shrink but not grow. The pre-commit hook runs `.agents/scripts/check_file_size.py`; no CI runs it.
+- File size: files stay under 5,000 tokens (bytes / 4) so an agent can read them whole. `.agents/file-size.json` lists excluded paths, exceptions with their reasons, and the baseline of older files over the limit, which may shrink but not grow. The pre-commit hook runs `.agents/scripts/check_file_size.py`; PR CI also checks every tracked file with `--all`.
 - Hooks: pre-commit runs `.agents/scripts/check_file_size.py`; commit-msg removes AI attribution lines and pre-push rejects commits that still credit an AI tool, both through `.agents/scripts/strip_attribution.py`; post-checkout, post-merge, and post-rewrite make frozen decision notes read-only again through `.agents/scripts/note_lifecycle.py`. `core.hooksPath` connects them in one clone only; in each new clone run `git config core.hooksPath .agents/hooks`.
-- CI: none. Nothing runs the full suite automatically; the full check is `dotnet build game/Game.sln`, then `dotnet test engine.tests`.
+- CI: GitHub Actions runs on every pull request: `dotnet build game/Game.sln`, `dotnet test engine.tests`, and `python .agents/scripts/check_file_size.py --all`. Any failure fails the check. Godot scene checks stay local.
 
 | Change | Narrowest check |
 |---|---|

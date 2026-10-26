@@ -18,8 +18,7 @@
   ],
   "exceptions": {},
   "baseline": {
-    "docs/framework.md": 8998,
-    "docs/gameplay.md": 9356,
-    "docs/prologue.md": 6054
+    "docs/gameplay.md": 9343,
+    "docs/prologue.md": 6045
   }
 }
