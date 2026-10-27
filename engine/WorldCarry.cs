@@ -5,7 +5,8 @@ public sealed partial class World
 {
     /// <summary>
     /// Makes the actor hold the item in hand, or grab its slice when it is stood up. The item needs a slice in the
-    /// actor's section, each actor holds at most one item, and an item has at most one holder.
+    /// actor's section, each actor holds at most one item in hand, and an item has at most one holder. An item in
+    /// the actor's own backpack comes out into the hand.
     /// </summary>
     public CarryResult HoldEntity(EntityId actor, EntityId item)
     {
@@ -16,24 +17,26 @@ public sealed partial class World
             return Reject(KindOrUnknown(item), "Entity is unknown or cannot be held.", item);
         if (rotations.ContainsKey(item)) return Reject(FailureCode.Busy, "Entity is rotating.", item);
         if (!DynamicShapes.Interaction(held.Definition).Holdable) return Reject(FailureCode.NotHoldable, "Entity is not holdable.", item);
-        if (held.Holder is not null || HoldsItem(actor))
+        var inBackpack = held.Holder == actor && held.Packed;
+        if ((held.Holder is not null && !inBackpack) || HoldsInHand(actor))
             return Reject(FailureCode.EntityInUse, "The item is already held or the actor already holds an item.", item);
-        var section = sections.Single(candidate => candidate.Id == holder.Definition.Section);
-        if (Slice(held, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", item);
+        var section = sections.Single(candidate => candidate.Id == holder.Section);
+        var taken = held with { Packed = false };
+        if (Slice(taken, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", item);
 
-        dynamicEntities[item] = held with { Holder = actor };
+        dynamicEntities[item] = taken with { Holder = actor };
         revision++;
         return new CarryResult.Changed(State(dynamicEntities[item]));
     }
 
-    /// <summary>Lets go of a held item where it is.</summary>
+    /// <summary>Lets go of a held item, or one in the backpack, where it is.</summary>
     public CarryResult ReleaseEntity(EntityId item)
     {
         CarryResult Reject(FailureCode code, string detail) => new CarryResult.Rejected(Fail(code, detail, item));
         if (!dynamicEntities.TryGetValue(item, out var held)) return Reject(KindOrUnknown(item), "Entity is unknown or cannot be held.");
         if (held.Holder is null) return Reject(FailureCode.InvalidInput, "Entity is not held.");
 
-        dynamicEntities[item] = held with { Holder = null };
+        dynamicEntities[item] = held with { Holder = null, Packed = false };
         revision++;
         return new CarryResult.Changed(State(dynamicEntities[item]));
     }
@@ -54,7 +57,7 @@ public sealed partial class World
         if (!dynamicEntities.TryGetValue(request.Entity, out var item))
             return Reject(KindOrUnknown(request.Entity), "Entity is unknown or cannot be moved.");
         if (rotations.ContainsKey(request.Entity)) return Reject(FailureCode.Busy, "Entity is rotating.");
-        if (item.Holder is null) return Reject(FailureCode.InvalidInput, "Entity is not held.");
+        if (item.Holder is null || item.Packed) return Reject(FailureCode.InvalidInput, "Entity is not held.");
 
         var solids = DynamicShapes.Solids(item.Definition, item.Pose);
         double[] delta = [request.Delta.X, request.Delta.Y, request.Delta.Z, 0];

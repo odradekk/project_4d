@@ -17,7 +17,7 @@ public sealed partial class World
             foreach (var part in entity.Parts)
                 foreach (var segment in entity.Segments)
                     yield return Box4.From(entity, part, segment);
-        foreach (var item in dynamicEntities.Values)
+        foreach (var item in dynamicEntities.Values.Where(item => !item.Packed))
             foreach (var solid in DynamicShapes.Solids(item.Definition, item.Pose))
                 yield return solid;
     }

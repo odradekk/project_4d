@@ -111,12 +111,10 @@ public class WorldValidationTests
         // Definitions that are not supported yet
         var unknown = new UnknownDefinition(new("unknown"), Origin, Source);
         var water = new SharedValueDefinition(new("water"), new(0, 1), 0, Source);
-        var seam = new SeamDefinition(new("seam"), default, new(1, 0, 0), [new("I")], false, true, false, Source);
         var move = new ExpectedMove(new(new("item"), default), default, null);
         var operation = new ExpectedOperation(new("operation"), Source, new([], [], [], []), [move]);
         yield return [valid with { Entities = [unknown] }, LoadErrorCode.UnsupportedDefinition];
         yield return [valid with { SharedValues = [water] }, LoadErrorCode.UnsupportedDefinition];
-        yield return [valid with { Seams = [seam] }, LoadErrorCode.UnsupportedDefinition];
         yield return [valid with { ExpectedOperations = [operation] }, LoadErrorCode.UnsupportedDefinition];
         yield return [valid with { Seams = null! }, LoadErrorCode.InvalidGeometry];
         yield return [valid with { SharedValues = null! }, LoadErrorCode.InvalidGeometry];

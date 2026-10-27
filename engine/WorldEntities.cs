@@ -2,10 +2,12 @@ namespace FourD;
 
 public sealed partial class World
 {
-    // A turnable object or an item. `Holder` is whoever holds it in hand or has grabbed its slice.
+    // A turnable object or an item. `Holder` is whoever holds it in hand or has grabbed its slice, or carries it in a
+    // backpack, where the item is `Packed`: it has no slice and is no obstacle.
     private sealed record Dynamic(
-        EntityDefinition Definition, Pose4 Pose, SectionId? Section, SectionId? Origin, RotationPlan? Upright = null, EntityId? Holder = null);
-    private sealed record Actor(Creature3Definition Definition, Pose4 Pose, double Yaw);
+        EntityDefinition Definition, Pose4 Pose, SectionId? Section, SectionId? Origin, RotationPlan? Upright = null,
+        EntityId? Holder = null, bool Packed = false);
+    private sealed record Actor(Creature3Definition Definition, Pose4 Pose, double Yaw, SectionId Section);
 
     private readonly Dictionary<EntityId, Dynamic> dynamicEntities = [];
     private readonly Dictionary<EntityId, Actor> actors = [];
@@ -50,7 +52,7 @@ public sealed partial class World
 
     // Held items that have not been stood up are carried along; a stood-up one is only grabbed.
     private EntityState State(Actor actor) => new(
-        actor.Definition.Id, actor.Definition, actor.Pose, actor.Definition.Section, actor.Yaw,
+        actor.Definition.Id, actor.Definition, actor.Pose, actor.Section, actor.Yaw,
         UprightOrigin: null, Holder: null,
         CarriedItems: Array.AsReadOnly(dynamicEntities.Values
             .Where(item => item.Holder == actor.Definition.Id && item.Origin is null)
@@ -68,6 +70,7 @@ public sealed partial class World
     // The slice of the entity at w, or of only its body, which is what an upright item must keep in its section.
     private SliceGeometry? Slice(Dynamic item, double w, bool bodyOnly = false)
     {
+        if (item.Packed) return null;
         var definition = item.Definition;
         var pieces = new List<(PartId Part, SliceBuffer Buffer)>();
         foreach (var part in DynamicShapes.Parts(definition))
@@ -117,7 +120,7 @@ public sealed partial class World
             .Concat(actors.Values.Select(other => (EntityDefinition)other.Definition))
             .Append(actor);
         if (ValidationFailure(definitions, actor.Id) is { } failure) return new AddEntityResult.Rejected(failure);
-        actors.Add(actor.Id, new(actor, actor.Pose, 0));
+        actors.Add(actor.Id, new(actor, actor.Pose, 0, actor.Section));
         revision++;
         Enqueue(new EntityAdded(actor.Id), time);
         return new AddEntityResult.Added(State(actors[actor.Id]));
@@ -163,6 +166,8 @@ public sealed partial class World
 
     private bool HoldsItem(EntityId actor) => dynamicEntities.Values.Any(item => item.Holder == actor);
 
+    private bool HoldsInHand(EntityId actor) => dynamicEntities.Values.Any(item => item.Holder == actor && !item.Packed);
+
     public EntityReadResult ReadEntity(EntityId entity)
     {
         if (actors.TryGetValue(entity, out var actor)) return new EntityReadResult.Found(State(actor));
@@ -181,11 +186,12 @@ public sealed partial class World
             return new UpdateResult.Rejected(Fail(KindOrUnknown(actor), "Unknown actor.", actor));
         if (!new[] { position.X, position.Y, position.Z, yaw }.All(double.IsFinite))
             return new UpdateResult.Rejected(Fail(FailureCode.InvalidInput, "Position and yaw must be finite.", actor));
-        actors[actor] = state with
-        {
-            Pose = state.Pose with { Position = new(position.X, position.Y, position.Z, state.Pose.Position.W) },
-            Yaw = yaw
-        };
+        var moved = new Vec4(position.X, position.Y, position.Z, state.Pose.Position.W);
+        var shift = Sub(moved, state.Pose.Position);
+        actors[actor] = state with { Pose = state.Pose with { Position = moved }, Yaw = yaw };
+        // The backpack goes where its owner goes; an item in the hand is moved by the host with MoveEntity.
+        foreach (var (id, packed) in dynamicEntities.Where(entry => entry.Value.Holder == actor && entry.Value.Packed).ToArray())
+            dynamicEntities[id] = packed with { Pose = packed.Pose with { Position = Add(packed.Pose.Position, shift) } };
         revision++;
         return new UpdateResult.Updated();
     }

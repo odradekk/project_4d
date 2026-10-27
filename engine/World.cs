@@ -26,6 +26,9 @@ public sealed partial class World
     // The angle that stands a lying object up or lays it down.
     internal const double QuarterTurn = Math.PI / 2;
 
+    // Smallest horizontal distance between two seams that share a section (docs/frame/rules.md).
+    internal const double SeamSpacing = .8;
+
     private readonly SectionDefinition[] sections;
     private readonly BuildingDefinition[] buildings;
     private readonly StaticEntity[] entities;
@@ -35,6 +38,8 @@ public sealed partial class World
     {
         sections = description.Sections.ToArray();
         buildings = description.Buildings.ToArray();
+        foreach (var seam in description.Seams)
+            seams.Add(seam.Id, seam with { Sections = Array.AsReadOnly(seam.Sections.ToArray()) });
         var solids = new List<StaticEntity>();
         foreach (var definition in description.Entities)
             switch (definition)
@@ -43,7 +48,7 @@ public sealed partial class World
                     AddInitial(definition);
                     break;
                 case Creature3Definition actor:
-                    actors.Add(actor.Id, new(actor, actor.Pose, 0));
+                    actors.Add(actor.Id, new(actor, actor.Pose, 0, actor.Section));
                     break;
                 default:
                     solids.Add(AddStatic(definition));

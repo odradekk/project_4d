@@ -21,7 +21,7 @@ public sealed partial class World
             return Reject(KindOrUnknown(request.Entity), "Entity is unknown or not turnable.", request.Entity);
         if (rotations.ContainsKey(request.Entity)) return Reject(FailureCode.Busy, "Entity is rotating.", request.Entity);
         if (!DynamicShapes.Interaction(item.Definition).Holdable) return Reject(FailureCode.NotHoldable, "Entity is not holdable.", request.Entity);
-        var section = sections.Single(candidate => candidate.Id == actor.Definition.Section);
+        var section = sections.Single(candidate => candidate.Id == actor.Section);
         if (Slice(item, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", request.Entity);
 
         var (motion, failure) = request switch
