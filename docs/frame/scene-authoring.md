@@ -149,7 +149,8 @@ public sealed record LoadError(
 |---|---|
 | 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
 | 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
-| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前静态世界仅接受 BuildingElementDefinition 和 FixedDefinition，Seams、SharedValues、ExpectedOperations 必须为空集合；后续任务实现后逐项开放 |
+| 接缝的位置或法线不是有限数；法线不是水平单位向量；Sections 少于两个、重复、不按 W 递增或引用不存在的截面 | InvalidNumber/InvalidGeometry/DuplicateId/InvalidSectionOrder/MissingReference；错误指向 `Position`、`HorizontalNormal`、`Sections` 字段 |
+| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前实现支持楼房元素、固定物、普通物件、四维物品、三维生物和接缝；装置、啃食者、共享量，以及预期操作里的接缝、共享量、携带前置布置和旋转、推进之外的步骤，载入时报此错误，后续任务实现后逐项开放 |
 | 空或逆向区间、缺口越界/内部重叠 | InvalidInterval；缺口允许端点相接。楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状用独立元素表示，各自使用闭 W 区间；共享边界同时保留两者的切片，按实体与零件 ID 稳定排序。若某个可玩 Section 只应显示一种形状，把换形边界放在两个 Section 之间 |
 | 派生几何不可表示 | 世界变换后的顶点、法线和 UV 必须有限，否则返回 InvalidNumber；在当前 double 精度下，盒子须保留三维体积，输出三角形须有非零面积及正确绕序，否则返回 InvalidGeometry。固定物的 W−ε 与 W+ε 须真正夹住 W，且厚度大于采样距离；报错 Source 定位零件、FaceUvs 或 Pose.Position.W。不设统一坐标上限 |
 | 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状 |
@@ -158,7 +159,7 @@ public sealed record LoadError(
 | 静止隐藏结构距任一 Section 不足“管半径+ε+0.02m” | HiddenStructureTooClose；圆环中心圆最近 W 距离与该下限比较，不把管半径重复扣两次 |
 | 所属楼房不能包住本区域内物品正反竖起及隐藏结构的完整活动范围 | BuildingCoverage；物品节点 BuildingId 必填，适配层直接填写TurnableDefinition/ItemDefinition.Building，不按XYZ范围猜测归属 |
 | 活动范围会触及另一栋楼 | BuildingInterference |
-| 共享某 Section 的两缝水平距离<0.8m | SeamTooClose，等于0.8m通过；仅 W 不同不能抵消此错误 |
+| 共享某 Section 的两缝水平距离<0.8m | SeamTooClose，等于0.8m通过；仅 W 不同不能抵消此错误；错误指向后一道缝的 `Position` |
 | 独立预期操作的返回值/实际位移/碰撞或终态不符合声明 | ExpectedOperationFailed，含 Operation 与从0开始的 StepIndex、实际 Failure/Contacts |
 
 安全距离按实际铰链和全部零件变换计算，包含隐藏结构；浮点计算只允许1e-10m的数值舍入余量，不能用0.005m碰撞容差放宽0.02m安全规则。
