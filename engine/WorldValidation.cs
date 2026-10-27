@@ -179,10 +179,17 @@ internal sealed partial class WorldValidation
     // Reports a value that is not a finite positive number, and returns whether it is one.
     private bool PositiveNumber(double value, Source source, string label, EntityId entity)
     {
-        if (!double.IsFinite(value)) Error(LoadErrorCode.InvalidNumber, source, $"{label} must be finite.", entity);
-        else if (value <= 0) Error(LoadErrorCode.InvalidGeometry, source, $"{label} must be positive.", entity);
-        else return true;
-        return false;
+        if (!double.IsFinite(value))
+        {
+            Error(LoadErrorCode.InvalidNumber, source, $"{label} must be finite.", entity);
+            return false;
+        }
+        if (value <= 0)
+        {
+            Error(LoadErrorCode.InvalidGeometry, source, $"{label} must be positive.", entity);
+            return false;
+        }
+        return true;
     }
 
     private void Unsupported<T>(IReadOnlyList<T>? values, Func<T, Source> source, Source root, string name)

@@ -23,7 +23,7 @@ public sealed partial class World
                 if (!query.Representable()) return Reject(FailureCode.InvalidInput, "Occupancy box cannot be represented.");
                 intersection = solid => Box4.Overlaps(solid, query) ? Box4.IntersectionPoint(solid, query) : null;
                 break;
-            case OccupancySphere sphere when Box4.ToArray(sphere.Center).All(double.IsFinite) && double.IsFinite(sphere.Radius) && sphere.Radius > 0:
+            case OccupancySphere sphere when IsValid(sphere):
                 intersection = solid => SphereContact(solid, sphere);
                 break;
             default:
@@ -45,6 +45,9 @@ public sealed partial class World
                 }
         return new OccupancyResult.Occupancy(hits.AsReadOnly());
     }
+
+    private static bool IsValid(OccupancySphere sphere) =>
+        Box4.ToArray(sphere.Center).All(double.IsFinite) && double.IsFinite(sphere.Radius) && sphere.Radius > 0;
 
     private static bool IsValid(OccupancyBox box)
     {

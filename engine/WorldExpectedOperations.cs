@@ -28,7 +28,7 @@ public sealed partial class World
             operation.Source with { Property = operation.Source.Property + (field ?? (step is int index ? $".Steps[{index}]" : "")) },
             entity, operation.Id, step, detail, contacts ?? []);
 
-    // Finds what is wrong with an operation's ID, setup and steps without running anything.
+    // Finds what is wrong with an operation's ID, setup and steps without running anything, and records its ID in `ids`.
     private static List<LoadError> OperationProblems(ExpectedOperation operation, WorldDescription description, HashSet<OperationId> ids)
     {
         var problems = new List<LoadError>();
@@ -111,19 +111,26 @@ public sealed partial class World
         _ => null
     };
 
-    private static Failure? RunRotation(World world, ExpectedRotation rotation) => world.PlanRotation(rotation.Request) switch
+    // Plans and starts a rotation. Unless it is expected to fail, also advances time until it ends.
+    private static Failure? RunRotation(World world, ExpectedRotation rotation)
     {
-        RotationPlanResult.Rejected rejected => rejected.Failure,
-        RotationPlanResult.Blocked blocked => blocked.Failure,
-        RotationPlanResult.Allowed allowed => StartAndRun(world, allowed.Plan, finish: rotation.ExpectedFailure is null),
-        _ => null
-    };
-
-    // Starts a planned rotation and, when `finish` is set, advances time until it ends.
-    private static Failure? StartAndRun(World world, RotationPlan plan, bool finish) => world.StartRotation(plan) switch
-    {
-        StartRotationResult.Rejected rejected => rejected.Failure,
-        StartRotationResult.Started started when finish => (world.Step(started.Duration) as StepResult.Rejected)?.Failure,
-        _ => null
-    };
+        switch (world.PlanRotation(rotation.Request))
+        {
+            case RotationPlanResult.Rejected rejected:
+                return rejected.Failure;
+            case RotationPlanResult.Blocked blocked:
+                return blocked.Failure;
+            case RotationPlanResult.Allowed allowed:
+                switch (world.StartRotation(allowed.Plan))
+                {
+                    case StartRotationResult.Rejected startRejected:
+                        return startRejected.Failure;
+                    case StartRotationResult.Started started when rotation.ExpectedFailure is null:
+                        return (world.Step(started.Duration) as StepResult.Rejected)?.Failure;
+                }
+                return null;
+            default:
+                return null;
+        }
+    }
 }

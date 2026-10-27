@@ -146,6 +146,9 @@ public sealed partial class World
         if (distance <= RoundingMargin) return false;
         var steps = Math.Max(1, (int)Math.Ceiling(distance / SamplingDistance));
         return Enumerable.Range(1, steps).Any(step =>
-            IntersectsReservation(Box4.From(item.Definition, item.Pose with { Position = start with { Y = start.Y - distance * step / steps } }), id));
+        {
+            var falling = item.Pose with { Position = start with { Y = start.Y - distance * step / steps } };
+            return IntersectsReservation(Box4.From(item.Definition, falling), id);
+        });
     }
 }
