@@ -41,13 +41,15 @@ Room (Node3D, Region3D)
 | HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body |
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
 | Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape` |
-| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`；Section 来自祖先 |
-| Character3D（CharacterBody3D，角色场景的根节点） | `string DisplayName`、`float WalkSpeed/RunSpeed`；必须有子节点 Shape（胶囊形的 CollisionShape3D）和 Visual（Node3D，装着模型）；碰撞层 2，碰撞掩码 1；猫和老师各再带一个行为子节点 Cat、Teacher |
+| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`、`string DisplayName`（台词前的名字，空则用角色场景自己的）；Section 来自祖先 |
+| Character3D（CharacterBody3D，角色场景的根节点；游戏层节点，脚本在 `game/characters/`，不在 `game/adapter/`） | `string DisplayName`、`float WalkSpeed/RunSpeed`；必须有子节点 Shape（胶囊形的 CollisionShape3D）和 Visual（Node3D，装着模型）；碰撞层 2，碰撞掩码 1，准星的射线看不到层 2；猫再带子节点 Cat 和 Pickup（Interactable3D，球形，碰撞层 4，提示「抱起」），老师再带子节点 Teacher |
 | Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin |
 | BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
 | ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
 
 视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。每个出生点创建一个 Creature3Definition：位置取出生点的 XYZ，W 取所属 Section，四维旋转为单位旋转。出生点的 CharacterScene 决定它是谁：根节点是 FirstPersonPlayer 的是玩家，一个区域恰有一个；根节点是 Character3D 的是猫、老师、同桌等角色，数量不限。每个角色放在所属 Section 的物理世界里，位置和朝向取自出生点的 XYZ 变换，穿缝后由适配层移到目标 Section 的物理世界。适配层每个物理帧用 SynchronizeActor 把角色的位置和朝向交给引擎，不另存 W 或手性。玩家场景是 CharacterBody3D + CollisionShape3D + Camera3D，猫和其他角色不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
+
+角色没有寻路，只朝目标走直线，被挡住就沿障碍滑行。路线弯折的地方，比如绕过塌洞、上折返的楼梯，由场景脚本给出路径点：老师的 `Patrol` 按路径点走，猫的 `Follow` 接受一个把玩家位置换成当前要去的点的函数，`Chase` 的目标本来就是函数。玩家可以抱起猫，抱着时再给猫（或它的身体）任何命令都会把猫放下。
 
 | Resource | 全部导出字段 |
 |---|---|
