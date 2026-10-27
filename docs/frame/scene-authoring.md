@@ -69,7 +69,7 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。啃食者的切片在镜片里不画发光轮廓，轮廓只给贯穿物。
 
-啃食者的测试区域为 `game/regions/grazer_test.tscn`：三个截面，啃食者从 W=11 的深处出发。`game/tests/grazer_demo.tscn` 让它沿时间轴逼近，啃掉一扇门和一道缝。
+啃食者的测试区域为 `game/regions/grazer_test.tscn`：三个截面，啃食者从 W=11 的深处出发。`game/tests/grazer_demo.tscn` 让它沿时间轴逼近，啃掉一扇门和一道缝，音乐和画面闪烁随它与玩家的四维距离变化（调试启动 `--start=grazer-demo`）。
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 

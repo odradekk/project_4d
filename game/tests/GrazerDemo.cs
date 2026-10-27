@@ -1,14 +1,16 @@
 using System;
 using FourD;
 using Game.Adapter;
+using Game.Audio;
 using Game.Creatures;
+using Game.Rendering;
 using Godot;
 
 namespace Game.Tests;
 
 /// <summary>
 /// The grazer debug scene: a grazer comes up from the deep sections of the grazer test region, opens its mouth at the
-/// door, bites it and a seam, then turns toward the player.
+/// door, bites it and a seam, then turns toward the player. Its music and flicker follow its distance.
 /// </summary>
 public partial class GrazerDemo : Node
 {
@@ -19,6 +21,7 @@ public partial class GrazerDemo : Node
     internal const double BiteTime = 29;
 
     private Region3D region = null!;
+    private GrazerMusic music = null!;
     private Label label = null!;
     private double elapsed;
 
@@ -46,6 +49,12 @@ public partial class GrazerDemo : Node
         region = GD.Load<PackedScene>(Scene).Instantiate<Region3D>();
         region.Name = "Region";
         AddChild(region);
+        music = new GrazerMusic { Name = "Music" };
+        AddChild(music);
+        music.Configure(region, Grazer);
+        var flicker = new GrazerFlicker { Name = "Flicker" };
+        AddChild(flicker);
+        flicker.Configure(region, Grazer);
         var layer = new CanvasLayer { Layer = 3 };
         AddChild(layer);
         label = new Label { Position = new Vector2(20, 200) };
@@ -58,6 +67,8 @@ public partial class GrazerDemo : Node
     public override void _Process(double delta)
     {
         elapsed += delta;
-        label.Text = $"{elapsed:F0} s  距离 {region.Grazers!.Distance(Grazer):F1} m";
+        var levels = music.Levels;
+        label.Text = $"{elapsed:F0} s  距离 {region.Grazers!.Distance(Grazer):F1} m\n" +
+            $"低音 {levels.Bass:F2}  节奏 {levels.Rhythm:F2}  压低 {levels.Duck:F2}";
     }
 }
