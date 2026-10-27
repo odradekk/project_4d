@@ -130,7 +130,7 @@ internal sealed class SceneReader(Region3D region)
         Map(spawn, "EntityId", "PassageRadius", spawn, "PassageRadius");
         Map(spawn, "EntityId", "PassageHeight", spawn, "PassageHeight");
         var position = RelativeTransform(spawn, region).Origin;
-        var pose = new Pose4(new(position.X, position.Y, position.Z, section.W),
+        var pose = new Pose4(new(Typed(position.X), Typed(position.Y), Typed(position.Z), section.W),
             new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1)));
         return new(new(spawn.EntityId), pose, At(spawn, "EntityId"), new(section.SectionId),
             spawn.PassageRadius, spawn.PassageHeight, spawn.CanUseSeamsWithoutPrism);
@@ -169,7 +169,7 @@ internal sealed class SceneReader(Region3D region)
     {
         var transform = RelativeTransform(node, region);
         var r = Rotation(transform.Basis);
-        return new(new(transform.Origin.X, transform.Origin.Y, transform.Origin.Z, w),
+        return new(new(Typed(transform.Origin.X), Typed(transform.Origin.Y), Typed(transform.Origin.Z), w),
             new(new(r.X.X, r.X.Y, r.X.Z, 0), new(r.Y.X, r.Y.Y, r.Y.Z, 0), new(r.Z.X, r.Z.Y, r.Z.Z, 0), new(0, 0, 0, 1)));
     }
 
@@ -213,7 +213,8 @@ internal sealed class SceneReader(Region3D region)
     private static Vec3 V(Vector3 v) => new(Typed(v.X), Typed(v.Y), Typed(v.Z));
 
     // Godot stores the decimal an author types as the nearest float, such as 0.46f = 0.4600000083446503. The engine checks
-    // sizes and reach to 1e-10 m, so it gets the decimal back: the shortest text that reads as the same float.
+    // sizes and reach to 1e-10 m, so positions, sizes and the hinge go to it as the decimal: the shortest text that reads
+    // as the same float.
     private static double Typed(float value) => double.Parse(value.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
     private void MapRange(Node node, string root)
     {
