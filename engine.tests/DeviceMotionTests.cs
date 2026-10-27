@@ -18,7 +18,48 @@ public class DeviceMotionTests
     }
 
     [Fact]
-    public void OpeningTheFlapLowersThePlankOnTheSameHingeAtTheSameTime()
+    public void OpeningTheFlapLaysTheLeaningPlankDownAsASlopeToTheFloor()
+    {
+        var world = Scene([.. CabinetRoom(), Cabinet()]);
+
+        var driven = world.Driven(CabinetId, -Math.PI / 2);
+
+        // The turn of -π/2 takes a point (x, y) about the hinge to (y, -x). The flap, with y from 0 to .4 and x within
+        // ±.01, lies along +x. The plank is a rectangle of length L and half width .01 leaning at α from vertical, with
+        // sin α = 2/√5 and cos α = 1/√5: at its end, (x, y) = (L sin α, L cos α) ± .01 (cos α, -sin α). Turned, its
+        // x runs from -.01 sin α to L cos α + .01 sin α, and its y from -L sin α - .01 cos α to .01 cos α.
+        Assert.Empty(driven.Contacts);
+        Assert.Equal(-Math.PI / 2, world.State(CabinetId).DevicePosition);
+        var flap = world.SliceOf(CabinetId, I)!;
+        AssertRange(flap.Range(Axis3.X), 0, .4);
+        AssertRange(flap.Range(Axis3.Y), 1.99, 2.01);
+        AssertRange(flap.Range(Axis3.Z), -.3, .3);
+        var (sin, cos) = (2 / Math.Sqrt(5), 1 / Math.Sqrt(5));
+        var plank = world.SliceOf(CabinetId, II)!;
+        AssertRange(plank.Range(Axis3.X), -.01 * sin, PlankLength * cos + .01 * sin);
+        AssertRange(plank.Range(Axis3.Y), 2 - PlankLength * sin - .01 * cos, 2 + .01 * cos);
+        AssertRange(plank.Range(Axis3.Z), -.1, .1);
+    }
+
+    [Fact]
+    public void TheCabinetStartsClosedWithTheFlapUpAndThePlankLeaningUnderTheCeiling()
+    {
+        var world = Scene([.. CabinetRoom(), Cabinet()]);
+
+        var flap = world.SliceOf(CabinetId, I)!;
+        AssertRange(flap.Range(Axis3.X), -.01, .01);
+        AssertRange(flap.Range(Axis3.Y), 2, 2.4);
+        AssertRange(flap.Range(Axis3.Z), -.3, .3);
+        // The plank's end corners at (L sin α, L cos α) ± .01 (cos α, -sin α) are the highest and the farthest points.
+        var (sin, cos) = (2 / Math.Sqrt(5), 1 / Math.Sqrt(5));
+        var plank = world.SliceOf(CabinetId, II)!;
+        AssertRange(plank.Range(Axis3.X), -.01 * cos, PlankLength * sin + .01 * cos);
+        AssertRange(plank.Range(Axis3.Y), 2 - .01 * sin, 2 + PlankLength * cos + .01 * sin);
+        Assert.True(plank.Range(Axis3.Y).Max < 3);
+    }
+
+    [Fact]
+    public void TurningAHangerTurnsItsSlicesInEverySectionByTheSameAngle()
     {
         var world = Scene(Hanger());
 
@@ -235,6 +276,10 @@ public class DeviceMotionTests
         Assert.Equal(SashId, contact.Moving);
         Assert.Equal(RodId, contact.Obstacle);
         Assert.Equal(-.226, contact.Point.X, 9);
+        // The meeting is between the sections and in section II: the pane's lower edge is below the pencil's top (y = .03)
+        // only from W = .05, and the pencil reaches only to W = .46.
+        Assert.InRange(contact.Point.W, .05, .46);
+        Assert.Null(contact.Section);
         AssertNear(new(-1, 0, 0, 0), contact.Normal);
         Assert.Equal(driven.Position, world.State(SashId).DevicePosition);
         Assert.Equal(driven.Position, world.State(SashId).Pose.Position.X, 9);
@@ -263,6 +308,19 @@ public class DeviceMotionTests
 
         Assert.Equal(1, driven.Position);
         Assert.Empty(driven.Contacts);
+    }
+
+    [Fact]
+    public void AWindowSashThatDoesNotChangeWithWIsStoppedByTheLyingPencilToo()
+    {
+        // The pencil lying across section I fills the whole range of W that a pane at that height has there.
+        var flatPane = Sash() with { Shape = Loft(Key(-.2, Pane(0)), Key(.6, Pane(0))) };
+        var world = Scene(Rod(), Actor(), flatPane);
+
+        var driven = world.Driven(SashId, 1);
+
+        Assert.Equal(-.24 + .6, driven.Position, 9);
+        Assert.Equal(RodId, Assert.Single(driven.Contacts).Obstacle);
     }
 
     [Fact]

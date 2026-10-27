@@ -7,6 +7,7 @@ namespace FourD.Tests;
 // W = 0 and .42, and the building "home" spans W from -.5 to 1.
 internal static class DeviceScenes
 {
+    public static readonly EntityId CabinetId = new("cabinet");
     public static readonly EntityId HangerId = new("hanger");
     public static readonly EntityId SashId = new("sash");
     public static readonly EntityId LiftId = new("lift");
@@ -55,6 +56,38 @@ internal static class DeviceScenes
         HangerId, At(0, 2, 0), TestSource,
         Loft(Key(-.2, Leaf(-.4, .3)), Key(0, Leaf(-.4, .3)), Key(.42, Leaf(-1.2, .1)), Key(.62, Leaf(-1.2, .1))),
         new DeviceRotation(RotationPlane.XY, default, new(0, max), initial));
+
+    // The cabinet of scene 8 in a room. The hinge is a line along Z at y = 2, the floor's top is at y = 0 and the
+    // ceiling's underside at y = 3. In section I the device is a flap standing up from the hinge, 40 cm high, 60 cm wide
+    // and 2 cm thick. In section II it is a plank 2.2 m long, 20 cm wide and 2 cm thick that leans out from the hinge
+    // by the angle whose tangent is 2, so that its end is at x = .98, y = 2.98 under the ceiling. The two are two
+    // segments of one loft that change shape at W = .21, between the sections, and they share one hinge and one turn.
+    // A turn of -π/2 opens the flap to lie along +x and lays the plank down as a slope to the floor, its end at
+    // x = .98, y = .03.
+    public static readonly double Lean = Math.Atan2(2, 1);
+    public const double PlankLength = 2.2;
+
+    private static ConvexPart Tilted(ConvexPart part, double angle) => part with
+    {
+        Vertices = [.. part.Vertices.Select(v => new Vec3(v.X * Math.Cos(angle) - v.Y * Math.Sin(angle), v.X * Math.Sin(angle) + v.Y * Math.Cos(angle), v.Z))]
+    };
+
+    public static ConvexPart Flap() => LoftBox("flap", (-.01, .01), (0, .4), (-.3, .3));
+
+    public static ConvexPart Plank() => Tilted(LoftBox("plank", (-.01, .01), (0, PlankLength), (-.1, .1)), -Lean);
+
+    public static DeviceDefinition Cabinet(double initial = 0) => new(
+        CabinetId, At(0, 2, 0), TestSource,
+        Loft(
+            new LoftSegment([Key(-.2, Flap()), Key(0, Flap()), Key(.21, Flap())]),
+            new LoftSegment([Key(.21, Plank()), Key(.42, Plank()), Key(.62, Plank())])),
+        new DeviceRotation(RotationPlane.XY, default, new(-Math.PI / 2, 0), initial));
+
+    public static EntityDefinition[] CabinetRoom() =>
+    [
+        FloorOf(new(-.5, 1)),
+        Block("ceiling", new(0, 3.1, 0), new(3, .1, 3), new Interval(-.5, 1))
+    ];
 
     // A sliding sash that closes toward +x, 40 cm wide and 2 cm thick. Its lower edge dips with W, from y = .13 at
     // W = -.2 to -.19 at .6, so that at section I (y = .05) it clears a pencil lying on the sill, and deeper in W it

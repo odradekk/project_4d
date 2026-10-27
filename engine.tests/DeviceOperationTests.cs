@@ -38,6 +38,18 @@ public class DeviceOperationTests
     }
 
     [Fact]
+    public void TheCabinetOfTheBedroomOpensToTheFloorUnlessSomethingStandsOnTheSlope()
+    {
+        // The slope passes (x, y) = (.9, .2). A post there from W = .3 meets the plank in section II, and not the flap.
+        var post = Block("post", new(.9, .3, 0), new(.1, .2, 1), new Interval(.3, .6));
+        ExpectedStep[] opens = [Drive(CabinetId, -Math.PI / 2, -Math.PI / 2)];
+        ExpectedStep[] blocked = [Drive(CabinetId, -Math.PI / 4, -Math.PI / 4), Drive(CabinetId, -Math.PI / 2, 0, FailureCode.RotationBlocked)];
+
+        Load(WithOperation(Setup(), opens, [.. CabinetRoom(), Cabinet()]));
+        Load(WithOperation(Setup(), blocked, [.. CabinetRoom(), Cabinet(), post]));
+    }
+
+    [Fact]
     public void AHangerTurnsFreelyBeforeAnObstacleAndIsBlockedAfterIt()
     {
         var post = Block("post", new(.7, 2, 0), new(.1, .4, 1), new Interval(.3, .6));
