@@ -1,0 +1,46 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.8, 0.8, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="Resource" id="u1"]
+script = ExtResource("e2")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="u2"]
+script = ExtResource("e2")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="u3"]
+script = ExtResource("e2")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="u4"]
+script = ExtResource("e2")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="u5"]
+script = ExtResource("e2")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="u6"]
+script = ExtResource("e2")
+Axis = 2
+Positive = true
+
+[node name="BoxPart" type="MeshInstance3D"]
+script = ExtResource("e1")
+mesh = SubResource("b1")
+FaceUvs = Array[ExtResource("e2")]([SubResource("u1"), SubResource("u2"), SubResource("u3"), SubResource("u4"), SubResource("u5"), SubResource("u6")])

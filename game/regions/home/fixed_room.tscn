@@ -1,0 +1,244 @@
+[gd_scene load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/home/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.52, 0.36, 0.24, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.9, 0.55, 0.6, 1)
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.38, 0.26, 0.19, 1)
+
+[sub_resource type="StandardMaterial3D" id="m5"]
+albedo_color = Color(0.4, 0.58, 0.45, 1)
+
+[sub_resource type="StandardMaterial3D" id="m6"]
+albedo_color = Color(0.55, 0.45, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="m7"]
+albedo_color = Color(0.85, 0.85, 0.9, 1)
+
+[sub_resource type="StandardMaterial3D" id="m8"]
+albedo_color = Color(0.9, 0.3, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="m9"]
+albedo_color = Color(0.9, 0.9, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="m10"]
+albedo_color = Color(0.95, 0.85, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(0.95, 0.32, 2)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(0.91, 0.18, 1.53)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m3")
+size = Vector3(0.75, 0.14, 0.34)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m1")
+size = Vector3(0.95, 0.8, 0.1)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m4")
+size = Vector3(0.45, 0.5, 0.45)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m4")
+size = Vector3(0.6, 0.04, 1.1)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m4")
+size = Vector3(0.05, 0.72, 0.05)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m4")
+size = Vector3(0.53, 0.16, 0.47)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m5")
+size = Vector3(0.14, 0.02, 0.14)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m5")
+size = Vector3(0.02, 0.24, 0.02)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m5")
+size = Vector3(0.26, 0.1, 0.26)
+
+[sub_resource type="BoxMesh" id="b12"]
+material = SubResource("m6")
+size = Vector3(0.23, 0.12, 0.27)
+
+[sub_resource type="BoxMesh" id="b13"]
+material = SubResource("m7")
+size = Vector3(0.19, 0.02, 0.24)
+
+[sub_resource type="BoxMesh" id="b14"]
+material = SubResource("m1")
+size = Vector3(0.55, 1.9, 1.1)
+
+[sub_resource type="BoxMesh" id="b15"]
+material = SubResource("m8")
+size = Vector3(0.03, 0.45, 0.6)
+
+[sub_resource type="BoxMesh" id="b16"]
+material = SubResource("m9")
+size = Vector3(0.32, 0.46, 0.03)
+
+[sub_resource type="BoxMesh" id="b17"]
+material = SubResource("m10")
+size = Vector3(0.03, 0.36, 0.36)
+
+[node name="Room" type="Node3D"]
+
+[node name="bed" type="Node3D" parent="."]
+position = Vector3(3.475, 0, 3.55)
+script = ExtResource("e1")
+EntityId = "bed"
+
+[node name="p1" parent="bed" instance=ExtResource("e2")]
+position = Vector3(0, 0.16, 0.05)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="bed" instance=ExtResource("e2")]
+position = Vector3(0, 0.41, 0.265)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="bed" instance=ExtResource("e2")]
+position = Vector3(0, 0.39, -0.72)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="bed" instance=ExtResource("e2")]
+position = Vector3(0, 0.4, -1)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="nightstand" type="Node3D" parent="."]
+position = Vector3(4.225, 0, 2.725)
+script = ExtResource("e1")
+EntityId = "nightstand"
+
+[node name="p1" parent="nightstand" instance=ExtResource("e2")]
+position = Vector3(0, 0.25, 0)
+mesh = SubResource("b5")
+PartId = "p1"
+
+[node name="desk" type="Node3D" parent="."]
+position = Vector3(7.3, 0, 3.25)
+script = ExtResource("e1")
+EntityId = "desk"
+
+[node name="p1" parent="desk" instance=ExtResource("e2")]
+position = Vector3(0, 0.74, 0)
+mesh = SubResource("b6")
+PartId = "p1"
+
+[node name="p2" parent="desk" instance=ExtResource("e2")]
+position = Vector3(-0.255, 0.36, -0.505)
+mesh = SubResource("b7")
+PartId = "p2"
+
+[node name="p3" parent="desk" instance=ExtResource("e2")]
+position = Vector3(0.255, 0.36, -0.505)
+mesh = SubResource("b7")
+PartId = "p3"
+
+[node name="p4" parent="desk" instance=ExtResource("e2")]
+position = Vector3(-0.255, 0.36, 0.505)
+mesh = SubResource("b7")
+PartId = "p4"
+
+[node name="p5" parent="desk" instance=ExtResource("e2")]
+position = Vector3(0.255, 0.36, 0.505)
+mesh = SubResource("b7")
+PartId = "p5"
+
+[node name="p6" parent="desk" instance=ExtResource("e2")]
+position = Vector3(0.015, 0.64, 0.235)
+mesh = SubResource("b8")
+PartId = "p6"
+
+[node name="lamp" type="Node3D" parent="."]
+position = Vector3(7.34, 0, 2.92)
+script = ExtResource("e1")
+EntityId = "lamp"
+
+[node name="p1" parent="lamp" instance=ExtResource("e2")]
+position = Vector3(0.06, 0.77, -0.04)
+mesh = SubResource("b9")
+PartId = "p1"
+
+[node name="p2" parent="lamp" instance=ExtResource("e2")]
+position = Vector3(0.06, 0.9, -0.04)
+mesh = SubResource("b10")
+PartId = "p2"
+
+[node name="p3" parent="lamp" instance=ExtResource("e2")]
+position = Vector3(0, 1.01, 0)
+mesh = SubResource("b11")
+PartId = "p3"
+
+[node name="books" type="Node3D" parent="."]
+position = Vector3(7.465, 0, 3.585)
+script = ExtResource("e1")
+EntityId = "books"
+
+[node name="p1" parent="books" instance=ExtResource("e2")]
+position = Vector3(0, 0.82, 0)
+mesh = SubResource("b12")
+PartId = "p1"
+
+[node name="notebook" type="Node3D" parent="."]
+position = Vector3(7.195, 0, 3.47)
+script = ExtResource("e1")
+EntityId = "notebook"
+
+[node name="p1" parent="notebook" instance=ExtResource("e2")]
+position = Vector3(0, 0.77, 0)
+mesh = SubResource("b13")
+PartId = "p1"
+
+[node name="wardrobe" type="Node3D" parent="."]
+position = Vector3(7.325, 0, 5.35)
+script = ExtResource("e1")
+EntityId = "wardrobe"
+
+[node name="p1" parent="wardrobe" instance=ExtResource("e2")]
+position = Vector3(0, 0.95, 0)
+mesh = SubResource("b14")
+PartId = "p1"
+
+[node name="posters" type="Node3D" parent="."]
+position = Vector3(3.705, 0, 3.64)
+script = ExtResource("e1")
+EntityId = "posters"
+
+[node name="p1" parent="posters" instance=ExtResource("e2")]
+position = Vector3(-0.69, 1.75, -0.04)
+mesh = SubResource("b15")
+PartId = "p1"
+
+[node name="p2" parent="posters" instance=ExtResource("e2")]
+position = Vector3(0.545, 1.75, -1.125)
+mesh = SubResource("b16")
+PartId = "p2"
+
+[node name="p3" parent="posters" instance=ExtResource("e2")]
+position = Vector3(-0.69, 1.4, 0.96)
+mesh = SubResource("b17")
+PartId = "p3"

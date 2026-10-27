@@ -1,0 +1,114 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/home/fixed_room.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/home/fixed_flat.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="e5"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="e6"]
+[ext_resource type="PackedScene" path="res://regions/home/props.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://regions/home/fixed_deep.tscn" id="e8"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/home/shell.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/home/shell_deep.tscn" id="e11"]
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(1.1, 1.4, 0.55)
+
+[node name="Home" type="Node3D"]
+script = ExtResource("e1")
+PrismEnabled = true
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Room" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e3")]
+
+[node name="Flat" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e4")]
+
+[node name="Turnables" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(4.5, 0.02, 3.6)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("e6")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("e5")
+
+[node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e7")]
+
+[node name="Ⅱ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅱ"
+W = 0.42
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Turnables" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Props" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="PitGuard" type="StaticBody3D" parent="Sections/Ⅱ/Props"]
+position = Vector3(4.95, 0.4, 4.225)
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅱ/Props/PitGuard"]
+shape = SubResource("s1")
+
+[node name="Ⅲ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅲ"
+W = 1.6
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅲ"]
+
+[node name="Deep" parent="Sections/Ⅲ/Fixed" instance=ExtResource("e8")]
+
+[node name="Props" type="Node3D" parent="Sections/Ⅲ"]
+
+[node name="SkyLight" type="OmniLight3D" parent="Sections/Ⅲ/Props"]
+position = Vector3(5, 2.4, 1.2)
+light_color = Color(1, 0.8, 0.72, 1)
+light_energy = 2
+omni_range = 9
+
+[node name="RoomLight" type="OmniLight3D" parent="Sections/Ⅲ/Props"]
+position = Vector3(5, 3.9, 5)
+light_color = Color(1, 0.8, 0.72, 1)
+light_energy = 1
+omni_range = 9
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Home" type="Node3D" parent="Buildings"]
+script = ExtResource("e9")
+BuildingId = "home"
+WMin = -0.5
+WMax = 0.9
+
+[node name="Shell" parent="Buildings/Home" instance=ExtResource("e10")]
+
+[node name="Deep" type="Node3D" parent="Buildings"]
+script = ExtResource("e9")
+BuildingId = "deep"
+WMin = 1.3
+WMax = 1.9
+
+[node name="Shell" parent="Buildings/Deep" instance=ExtResource("e11")]
+
+[node name="Items" type="Node" parent="."]
+
+[node name="Devices" type="Node" parent="."]
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Seams" type="Node" parent="."]
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]
