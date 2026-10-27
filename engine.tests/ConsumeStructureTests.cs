@@ -88,7 +88,7 @@ public class ConsumeStructureTests
     }
 
     [Fact]
-    public void AConsumedSeamIsSeveredAsSeveringItWould()
+    public void AConsumedSeamIsSeveredAndReported()
     {
         var world = Region();
 

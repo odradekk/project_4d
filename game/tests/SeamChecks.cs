@@ -137,6 +137,19 @@ public partial class SeamChecks : Node
         Check(region.CurrentSection == "Ⅰ" && Shown("Ⅲ", "skip"), "back in I the seam to III is shown again");
     }
 
+    // A seam is cut by the bite of a grazer, so the checks add one, far off in W where it shows in no section, and let it bite.
+    private void Sever(string seamId)
+    {
+        var biter = new EntityId("biter");
+        if (world.ReadEntity(biter) is EntityReadResult.Missing)
+        {
+            var identity = new Rotation4(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1));
+            var body = new MetaballShape([new Metaball(new("body"), new(0, 0, 0, 0), 1, 1)], .5);
+            world.AddEntity(new GrazerDefinition(biter, new(new(0, 0, 0, 100), identity), new("/checks", "biter"), body));
+        }
+        world.ConsumeStructure(biter, [], [new SeamId(seamId)]);
+    }
+
     // The engine says whether a seam is open and whether it is severed; the display follows without being told.
     private void CheckSeamStates()
     {
@@ -148,7 +161,7 @@ public partial class SeamChecks : Node
         Check(closed.AlbedoColor.V < before.V, "a closed seam is dimmer");
         world.SetSeamOpen(new("needle"), true);
         region.Travel.Display.Refresh("Ⅰ", play.Player.Position);
-        world.SeverSeam(new("needle"));
+        Sever("needle");
         region.Travel.Display.Refresh("Ⅰ", play.Player.Position);
         Check(LightMesh("Ⅱ", "needle").Size.Y < .5f && region.HasNode($"{Light("Ⅱ", "needle")}/Cut"), "a seam that is bitten through shows as a stub with a cut end");
     }
@@ -182,7 +195,7 @@ public partial class SeamChecks : Node
         await play.Frames(3);
         await RaiseAndCross();
         Check(region.CurrentSection == "Ⅱ" && display.BandsIn("Ⅰ").Count == 1, "after crossing, the lens at I shows the band of the seam she came through");
-        world.SeverSeam(new("glass"));
+        Sever("glass");
         Check(display.BandsIn("Ⅰ").Count == 0, "a severed mirror seam has no band");
     }
 
@@ -242,7 +255,7 @@ public partial class SeamChecks : Node
         world.SetSeamOpen(new("skip"), true);
         await play.Frames(2);
         Check(skip.Playing, "and hums again when it opens");
-        world.SeverSeam(new("skip"));
+        Sever("skip");
         await play.Frames(2);
         Check(!skip.Playing, "a severed mirror seam is silent");
 

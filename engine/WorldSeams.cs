@@ -23,20 +23,8 @@ public sealed partial class World
         return new UpdateResult.Updated();
     }
 
-    /// <summary>
-    /// Severs a seam for good. Severing an already severed seam succeeds without a second event.
-    /// Rejected(UnknownId) for an unknown seam.
-    /// </summary>
-    public UpdateResult SeverSeam(SeamId seam)
-    {
-        if (!seams.ContainsKey(seam))
-            return new UpdateResult.Rejected(Fail(FailureCode.UnknownId, "Unknown seam.") with { Seam = seam });
-        Sever(seam);
-        revision++;
-        return new UpdateResult.Updated();
-    }
-
     // Severs a seam that exists, and reports it unless it was severed already. The caller counts the change.
+    // ConsumeStructure is the one way to sever a seam.
     private void Sever(SeamId seam)
     {
         var found = seams[seam];

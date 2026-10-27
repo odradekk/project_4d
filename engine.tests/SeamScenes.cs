@@ -20,6 +20,13 @@ internal static class SeamScenes
     public static World SeamScene(SeamDefinition seam, params EntityDefinition[] entities) =>
         Load(Description(entities) with { Seams = [seam] });
 
+    // A grazer far above everything, which bites the seams a test names.
+    public static GrazerDefinition Biter() => GrazerScenes.Grazer(At(0, 30, 0, w: .18), GrazerScenes.Lump(default));
+
+    // Severs the seams in a scripted bite of the grazer from Biter.
+    public static UpdateResult Sever(this World world, params string[] seams) =>
+        world.ConsumeStructure(GrazerScenes.GrazerId, [], seams.Select(seam => new SeamId(seam)).ToArray());
+
     public static CrossSeamRequest Request(
         string actor = "actor", string seam = "seam", string target = "II", bool hasPrism = true, int slots = 4) =>
         new(new(actor), new(seam), new(target), hasPrism, slots);
