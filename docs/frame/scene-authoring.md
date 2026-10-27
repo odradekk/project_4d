@@ -98,7 +98,7 @@ public sealed record ExpectedCrossing(CrossSeamRequest Request,
 public sealed record ExpectedAdvance(double Delta) : ExpectedStep;
 ```
 
-每个 ExpectedOperation 从原始世界的独立副本开始，不沿用前一谜题的状态。EntityOverrides 以完整实体定义替换同 ID 动态实体初态，类别和身份不变；Seams/SharedValues 按 ID 替换指定初值，其余沿用载入数据；Carry 建立合法初始手持/背包关系。覆盖后仍执行形状和尺寸检查。可用 EntityOverrides 预置角色站位、物品位置、装置限位，步骤表示真实先后顺序。
+每个 ExpectedOperation 从原始世界的独立副本开始，不沿用前一谜题的状态。EntityOverrides 以完整实体定义替换同 ID 动态实体初态，类别和身份不变；Seams/SharedValues 按 ID 替换指定初值（接缝的 Open 和 Severed 一起替换），其余沿用载入数据；Carry 建立初始手持/背包关系，手里按 HoldEntity，背包按 PackEntity，世界不接受就报 InvalidCarry。覆盖后仍执行形状和尺寸检查。可用 EntityOverrides 预置角色站位、物品位置、装置限位，步骤表示真实先后顺序。
 
 ExpectedFailure=null 表示必须成功；非 null 必须得到该失败且世界不变。旋转成功步骤立即 Start 后按配置时长推进到结束，再进入下一步；ExpectedAdvance 用于显式模拟额外时间。Move/Device 同时核对实际位移/位置，比较容差 `1e-9m`（旋转位置为 `1e-9rad`）。此容差只核对预期值，不取代碰撞容差。所有可推导错误均一次收集；步骤失败后停止该序列，继续其他独立操作。
 
@@ -150,7 +150,7 @@ public sealed record LoadError(
 | 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
 | 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
 | 接缝的位置或法线不是有限数；法线不是水平单位向量；Sections 少于两个、重复、不按 W 递增或引用不存在的截面 | InvalidNumber/InvalidGeometry/DuplicateId/InvalidSectionOrder/MissingReference；错误指向 `Position`、`HorizontalNormal`、`Sections` 字段 |
-| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前实现支持楼房元素、固定物、普通物件、四维物品、三维生物和接缝；装置、啃食者、共享量，以及预期操作里的接缝、共享量、携带前置布置和旋转、推进之外的步骤，载入时报此错误，后续任务实现后逐项开放 |
+| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前实现支持楼房元素、固定物、普通物件、四维物品、三维生物和接缝；装置、啃食者、共享量，以及预期操作里的共享量覆盖和旋转、穿缝、推进之外的步骤，载入时报此错误，后续任务实现后逐项开放 |
 | 空或逆向区间、缺口越界/内部重叠 | InvalidInterval；缺口允许端点相接。楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状用独立元素表示，各自使用闭 W 区间；共享边界同时保留两者的切片，按实体与零件 ID 稳定排序。若某个可玩 Section 只应显示一种形状，把换形边界放在两个 Section 之间 |
 | 派生几何不可表示 | 世界变换后的顶点、法线和 UV 必须有限，否则返回 InvalidNumber；在当前 double 精度下，盒子须保留三维体积，输出三角形须有非零面积及正确绕序，否则返回 InvalidGeometry。固定物的 W−ε 与 W+ε 须真正夹住 W，且厚度大于采样距离；报错 Source 定位零件、FaceUvs 或 Pose.Position.W。不设统一坐标上限 |
 | 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状 |
@@ -167,5 +167,7 @@ public sealed record LoadError(
 数值校验在所有构建都返回 LoadError；debug 适配层加载失败时停止区域运行，逐条输出 `ERROR: <Code> <NodePath>.<Property> <Entity> <Operation>[<StepIndex>]: <Detail>`，并在调试文字面板显示同一列表，方便在编辑器定位。release 也不接收非法世界，显示关卡载入失败；诊断文本不作为游戏台词。
 
 基础格式失败时跳过依赖该数据的几何校验，避免把缺失字段当0产生连锁错误，其余独立项继续。错误按 NodePath、Property、Code、Entity、Operation、StepIndex 字典序返回。Contact 含碰撞实体/零件与四维点，错误 Source 指向动作节点或具体导出属性。
+
+出入口净空：引擎用一个盒子代替角色的胶囊检测缝口两端的占据，盒子水平半边长是 PassageRadius，底面是平的。所以缝口附近的凸角离角色站位至少要 PassageRadius×√2，缝口地面不要有坡道或门槛，否则盒子的角会擦到胶囊碰不到的东西，穿缝被拒绝。
 
 验例：同一 Section 缝距 0.79m 返回 SeamTooClose，0.80m通过；球 R=0.25、中心 W=0.21、两 Section W=0/0.42 保持合法；原型的0.71m缝距和不足的负W楼房余量不能直接复制进正式场景。Load 验证使用世界副本，不消耗正式世界事件，不将谜题解法执行后的状态带入初始游戏。

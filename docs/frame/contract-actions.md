@@ -33,7 +33,7 @@ public RotationPlanResult PlanRotation(RotationRequest request);
 public StartRotationResult StartRotation(RotationPlan plan);
 ```
 
-PlanRotation 是只读。调用者提供角色和物体 ID，角色当前 Section/位置、物体姿态及障碍均从世界读取，不能在请求中伪造。目标必须在角色当前 Section 有切片并可操作；固定物、装置和生物返回 WrongEntityKind；不可拿物返回 NotHoldable；正在旋转返回 Busy。StandUp 的目标 Section 必须存在且不同于角色当前 Section；较深转 +W，较浅转 −W。已竖起的物体再次竖起无效；LayDown 仅在 UprightOrigin 执行，否则 WrongSection。Flip 对已竖起物返回 InvalidInput，先放倒后翻面。
+PlanRotation 是只读。调用者提供角色和物体 ID，角色当前 Section/位置、物体姿态及障碍均从世界读取，不能在请求中伪造。目标必须在角色当前 Section 有切片并可操作；固定物、装置和生物返回 WrongEntityKind；不可拿物返回 NotHoldable；正在旋转返回 Busy。StandUp 的目标 Section 必须存在且不同于角色当前 Section；较深转 +W，较浅转 −W。已竖起的物体再次竖起无效；StandUp 还要求竖起终点各零件的端面距任一 Section（含原 Section）至少 0.02m，否则 InvalidInput，因为物件经背包换截面后，载入时按初始截面做的检查不再覆盖；LayDown 仅在 UprightOrigin 执行，否则 WrongSection。Flip 对已竖起物返回 InvalidInput，先放倒后翻面。
 
 F 的铰链和长轴来自物体定义；R 的翻转面由引擎选：角色与目标间若有挡住其连线的竖直建筑/固定物面，选距离角色最近的一面；同距按实体 ID、零件 ID 排序。没有该面则使用通过物体中心、水平法线朝向角色的竖直面；角色水平位置与中心重合时用物体局部长轴的水平投影，仍退化则 +X。障碍绕行与原地翻面均转 π；先预检正角；正角受阻或超出楼房 W 范围时再检查负角，选既畅通又在范围内的一边，正角优先；没有这样的一边时，选在范围内的一边并返回它的轨迹和受阻原因，正角优先；两边都超出范围才返回 OutOfRange。四维球绕自身中心旋转，成功且外观不变，不令球绕侧面的障碍产生位移。
 
@@ -119,12 +119,12 @@ public CrossSeamResult CrossSeam(CrossSeamRequest request);
 
 1. 正在旋转：Busy。
 2. 已竖起，或是 Sphere4 四维对称物：NotPackable。
-3. 未竖起的可转物件且 Reach≥两 Section 的 W 距离：在缝口竖起，不看 Packable。
+3. 未竖起的可转物件且 Reach≥两 Section 的 W 距离：先搬到缝口，再竖起，不看 Packable。
 4. 其余物件：非 Packable 返回 NotPackable；Packable 而 FreeBackpackSlots<1 返回 CapacityExceeded；否则自动入背包。
 
-Reach 恰等于目标距离的物件，末端距目标Section为0，违反统一0.02m间距，载入和动态添加都报错，运行时遇不到。竖起沿用 PlanRotation 的 StandUp（目标为 Target，Target 更深转 +W，更浅转 −W），用物件自己的铰链和当前位置：角色离缝中心不超过 PassageRadius，手里的物件就在缝口，引擎不把它搬到缝的位置。被挡返回 RotationBlocked 和接触。成功时直接取旋转终点，不排 RotationStarted/RotationEnded。它脱离真正随身集合，变成 UprightOrigin=出发 Section 的世界贯穿物；角色穿缝后 Holder 仍抓着它，目标 Slice 随即可读，不再对长物额外乘镜像矩阵。Crossed.Packed 只列这次从手里入背包的物件，Crossed.WedgedItem 是卡缝长物。背包里原有的物件不占空位，随角色按同一变换更新。非对称HiddenRingItem未竖起且Packable时可作为短小物入包并随身穿缝，镜像变换作用于其完整姿态。猫的免棱镜资格不免携带/碰撞规则。
+长物先在 XZ 平面上平移，使铰链落在缝的 XZ 位置（先 X 后 Z，高度不变，沿路按平移碰撞检测），受阻返回 TranslationBlocked 和阻挡的接触；再按 PlanRotation 的 StandUp 竖起（目标为 Target，Target 更深转 +W，更浅转 −W）。PlanRotation 的拒绝（RotationBlocked 附接触、OutOfRange、WrongSection、NoSlice，以及终点端面距 Section 不足 0.02m 的 InvalidInput 等）都原样作为穿缝失败返回。Reach 恰等于目标距离的物件，末端落在目标Section上，载入和动态添加会拒绝它，但物件经背包换截面后可能遇到，StandUp 在运行时返回 InvalidInput。成功时直接取旋转终点，不排 RotationStarted/RotationEnded。它脱离真正随身集合，变成 UprightOrigin=出发 Section 的世界贯穿物；角色穿缝后 Holder 仍抓着它，目标 Slice 随即可读，不再对长物额外乘镜像矩阵。Crossed.Packed 只列这次从手里入背包的物件，Crossed.WedgedItem 是卡缝长物。背包里原有的物件不占空位，随角色按同一变换更新。非对称HiddenRingItem未竖起且Packable时可作为短小物入包并随身穿缝，镜像变换作用于其完整姿态。猫的免棱镜资格不免携带/碰撞规则。
 
-上述全部检查先完成，失败时角色、物品、背包、缝和事件全部不变；成功一次提交，只排一个 SeamCrossed。角色抓着卡缝长物再穿缝，长物算已竖起物，返回 NotPackable，要先 ReleaseEntity。松手后穿回只换 Section，不自动放倒卡缝长物，回来源页后另请求 LayDown。
+上述全部检查先完成，失败时角色、物品、背包、缝和事件全部不变；成功一次提交，只排一个 SeamCrossed。角色抓着卡缝长物再穿缝，长物算已竖起物，返回 NotPackable，要先 ReleaseEntity。长物竖在缝口，回去的落点会被它占据，返回 PassageOccupied，所以要先用 MoveEntity 把它挪开，松手，再穿回。穿回只换 Section，不自动放倒卡缝长物，回到来源截面后另请求 LayDown，放倒沿用那次竖起的逆变换，随当前铰链平移。
 
 手算镜像例：缝平面 YZ，半圈 `M=diag(−1,1,1,−1)`，det4=+1、XYZ 投影 det3=−1。长轴 +X 的长物先 XW 转 +π/2，+X→+W；再把角色 I→II 并左乘 M。长物仍为 +W，不能再乘 M 变成 −W。背包小物与角色一起镜像。这是本契约对原文泛称“携带”的明确解释，已随完整契约批准。
 
