@@ -1,8 +1,12 @@
 namespace FourD;
+
 public sealed class RotationPlan
 {
-    internal RotationPlan(World world, long revision, EntityId entity, Pose4 start, Vec4 pivot, Vec4 axis, double angle, double duration, SectionId? origin, double[] samples, int blocked, IReadOnlyList<Contact> contacts, bool laying = false, bool flip = false)
-        => (World, Revision, Entity, Start, Pivot, Axis, Angle, Duration, Origin, Samples, Blocked, Contacts, Laying, Flip) = (world, revision, entity, start, pivot, axis, angle, duration, origin, samples, blocked, contacts, laying, flip);
+    internal RotationPlan(
+        World world, long revision, EntityId entity, Pose4 start, Vec4 pivot, Vec4 axis, double angle, double duration,
+        SectionId? origin, double[] samples, int blocked, IReadOnlyList<Contact> contacts, bool laying = false, bool flip = false)
+        => (World, Revision, Entity, Start, Pivot, Axis, Angle, Duration, Origin, Samples, Blocked, Contacts, Laying, Flip) =
+            (world, revision, entity, start, pivot, axis, angle, duration, origin, samples, blocked, contacts, laying, flip);
     internal World World { get; }
     internal long Revision { get; }
     internal EntityId Entity { get; }
@@ -17,6 +21,7 @@ public sealed class RotationPlan
     internal IReadOnlyList<Contact> Contacts { get; }
     internal bool Laying { get; }
     internal bool Flip { get; }
+    internal bool StandsUp => !Laying && !Flip;
 }
 public abstract record RotationPlanResult
 {
@@ -26,14 +31,15 @@ public abstract record RotationPlanResult
 }
 public abstract record StartRotationResult
 {
-    public sealed record Started(EntityId Entity,double Duration) : StartRotationResult;
+    public sealed record Started(EntityId Entity, double Duration) : StartRotationResult;
     public sealed record Rejected(Failure Failure) : StartRotationResult;
 }
 public sealed record RotationStarted(EntityId Entity) : SpaceEvent;
 public sealed record RotationEnded(EntityId Entity) : SpaceEvent;
-public sealed record Polyline(IReadOnlyList<double> Positions,bool Closed);
-public sealed record PreviewSample(double Progress,IReadOnlyList<Polyline> Contours,bool Blocked);
-public sealed record RotationPreview(double W,IReadOnlyList<PreviewSample> Samples,IReadOnlyList<Polyline> FoldPlane,IReadOnlyList<Contact> Contacts);
+public sealed record Polyline(IReadOnlyList<double> Positions, bool Closed);
+public sealed record PreviewSample(double Progress, IReadOnlyList<Polyline> Contours, bool Blocked);
+public sealed record RotationPreview(
+    double W, IReadOnlyList<PreviewSample> Samples, IReadOnlyList<Polyline> FoldPlane, IReadOnlyList<Contact> Contacts);
 public abstract record PreviewResult
 {
     public sealed record Preview(RotationPreview Value) : PreviewResult;

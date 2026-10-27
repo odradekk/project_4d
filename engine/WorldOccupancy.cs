@@ -2,45 +2,69 @@ namespace FourD;
 
 public sealed partial class World
 {
+    // A sphere center this close to a box counts as inside it.
+    private const double InsideDistance = 1e-12;
+
     /// <summary>Returns the intersected solid parts, excluding contact within five millimetres.</summary>
     public OccupancyResult QueryOccupancy(OccupancyShape shape, IReadOnlyList<EntityId> excluded)
     {
-        OccupancyResult Rejected(FailureCode code, string detail) => new OccupancyResult.Rejected(new(code,detail,null,null,Array.Empty<Contact>()));
-        if (excluded is null || excluded.Distinct().Count()!=excluded.Count) return Rejected(FailureCode.InvalidInput,"Excluded IDs must be unique.");
-        if (excluded.Any(id=>ReadEntity(id) is EntityReadResult.Missing)) return Rejected(FailureCode.UnknownId,"Unknown excluded ID.");
-        Box4? query=null;
-        if(shape is OccupancyBox b)
+        OccupancyResult Reject(FailureCode code, string detail) => new OccupancyResult.Rejected(Fail(code, detail));
+        if (excluded is null || excluded.Distinct().Count() != excluded.Count)
+            return Reject(FailureCode.InvalidInput, "Excluded IDs must be unique.");
+        if (excluded.Any(id => ReadEntity(id) is EntityReadResult.Missing))
+            return Reject(FailureCode.UnknownId, "Unknown excluded ID.");
+
+        Func<Box4, double[]?> intersection;
+        switch (shape)
         {
-            var axes=new[] {Box4.V(b.Pose.Rotation.X),Box4.V(b.Pose.Rotation.Y),Box4.V(b.Pose.Rotation.Z),Box4.V(b.Pose.Rotation.W)};
-            if(Box4.V(b.Pose.Position).Concat(axes.SelectMany(x=>x)).Concat(Box4.V(b.HalfSize)).Any(v=>!double.IsFinite(v)) || Box4.V(b.HalfSize).Any(v=>v<=0) || !WorldValidation.Rotation(axes))
-                return Rejected(FailureCode.InvalidInput,"Invalid occupancy box.");
-            query=Box4.From(b);
-            if(!query.Representable()) return Rejected(FailureCode.InvalidInput,"Occupancy box cannot be represented.");
+            case OccupancyBox box:
+                if (!IsValid(box)) return Reject(FailureCode.InvalidInput, "Invalid occupancy box.");
+                var query = Box4.From(box);
+                if (!query.Representable()) return Reject(FailureCode.InvalidInput, "Occupancy box cannot be represented.");
+                intersection = solid => Box4.Overlaps(solid, query) ? Box4.IntersectionPoint(solid, query) : null;
+                break;
+            case OccupancySphere sphere when IsValid(sphere):
+                intersection = solid => SphereContact(solid, sphere);
+                break;
+            default:
+                return Reject(FailureCode.InvalidInput, "Invalid occupancy shape.");
         }
-        else if(shape is not OccupancySphere s || Box4.V(s.Center).Any(v=>!double.IsFinite(v)) || !double.IsFinite(s.Radius) || s.Radius<=0)
-            return Rejected(FailureCode.InvalidInput,"Invalid occupancy shape.");
-        var hits=new List<OccupancyHit>();
-        foreach(var group in Boxes().Where(b=>!excluded.Contains(b.Entity)).OrderBy(b=>b.Entity.Value,StringComparer.Ordinal).ThenBy(b=>b.Part.Value,StringComparer.Ordinal).GroupBy(b=>(b.Entity,b.Part)))
-        {
-            foreach(var box in group)
-            {
-                double[]? point;
-                if(query is not null)
+
+        var hits = new List<OccupancyHit>();
+        var solids = Boxes()
+            .Where(box => !excluded.Contains(box.Entity))
+            .OrderBy(box => box.Entity.Value, StringComparer.Ordinal)
+            .ThenBy(box => box.Part.Value, StringComparer.Ordinal)
+            .GroupBy(box => (box.Entity, box.Part));
+        foreach (var part in solids)
+            foreach (var box in part)
+                if (intersection(box) is { } point)
                 {
-                    if(!Box4.Overlaps(box,query,.005)) continue;
-                    point=Box4.IntersectionPoint(box,query);
+                    hits.Add(new(box.Entity, box.Part, Box4.ToVec4(point)));
+                    break;
                 }
-                else
-                {
-                    var sphere=(OccupancySphere)shape; var center=Box4.V(sphere.Center); point=box.Closest(center);
-                    var difference=Box4.Sub(center,point); var distance=Math.Sqrt(Box4.Dot(difference,difference));
-                    var inside=distance<1e-12;
-                    var depth=inside ? sphere.Radius+Enumerable.Range(0,4).Min(i=>box.Half[i]-Math.Abs(Box4.Dot(Box4.Sub(center,box.Center),box.Axes[i]))) : sphere.Radius-distance;
-                    if(depth<=.005) continue;
-                }
-                if(point is not null) { hits.Add(new(box.Entity,box.Part,Box4.Vec(point))); break; }
-            }
-        }
         return new OccupancyResult.Occupancy(hits.AsReadOnly());
+    }
+
+    private static bool IsValid(OccupancySphere sphere) =>
+        Box4.ToArray(sphere.Center).All(double.IsFinite) && double.IsFinite(sphere.Radius) && sphere.Radius > 0;
+
+    private static bool IsValid(OccupancyBox box)
+    {
+        var halfSize = Box4.ToArray(box.HalfSize);
+        return WorldValidation.IsValidPose(box.Pose) && halfSize.All(double.IsFinite) && halfSize.All(length => length > 0);
+    }
+
+    // The nearest point of the box when the sphere embeds deeper than the contact tolerance, otherwise null.
+    private static double[]? SphereContact(Box4 box, OccupancySphere sphere)
+    {
+        var center = Box4.ToArray(sphere.Center);
+        var nearest = box.Closest(center);
+        var offset = Box4.Sub(center, nearest);
+        var distance = Math.Sqrt(Box4.Dot(offset, offset));
+        var depth = distance < InsideDistance
+            ? sphere.Radius + Enumerable.Range(0, 4).Min(i => box.Half[i] - Math.Abs(Box4.Dot(Box4.Sub(center, box.Center), box.Axes[i])))
+            : sphere.Radius - distance;
+        return depth > ContactTolerance ? nearest : null;
     }
 }
