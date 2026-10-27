@@ -5,15 +5,18 @@ namespace FourD;
 /// Decision note: 2026-10-26-region-scene-authoring
 /// Decision note: 2026-10-26-engine-rewrite
 /// </summary>
-public sealed class World
+public sealed partial class World
 {
     internal const double Epsilon = .006;
     internal const double SamplingDistance = .01;
     private readonly SectionDefinition[] sections;
     private readonly StaticEntity[] entities;
-    private World(SectionDefinition[] sections, StaticEntity[] entities)
+    private readonly BuildingDefinition[] buildings;
+    private readonly Dictionary<EntityId, EntityDefinition> staticDefinitions = [];
+    private World(SectionDefinition[] sections, BuildingDefinition[] buildings, StaticEntity[] entities)
     {
         this.sections = sections;
+        this.buildings = buildings;
         this.entities = entities;
     }
     /// <summary>Validates a region and takes independent copies of all accepted data.</summary>
@@ -21,7 +24,7 @@ public sealed class World
     {
         var errors = WorldValidation.Check(description);
         if (errors.Length > 0) return new LoadResult.Invalid(Array.AsReadOnly(errors));
-        var entities = description.Entities.Select(e =>
+        var entities = description.Entities.Where(e => e is not TurnableDefinition).Select(e =>
         {
             var shape = e switch { BuildingElementDefinition b => b.Shape, FixedDefinition f => f.Shape, _ => throw new ArgumentException("Unsupported entity.") };
             var parts = shape.Parts.Select(p => p with { FaceUvs = Array.AsReadOnly(p.FaceUvs.ToArray()) }).ToArray();
@@ -34,7 +37,23 @@ public sealed class World
             var through = e is BuildingElementDefinition && segments.Length > 0 && segments.Max(s => s.Max) - segments.Min(s => s.Min) > 2 * Epsilon;
             return new StaticEntity(e.Id, e.Pose, parts, segments, through);
         }).ToArray();
-        return new LoadResult.Loaded(new(description.Sections.ToArray(), entities));
+        var world = new World(description.Sections.ToArray(), description.Buildings.ToArray(), entities);
+        foreach (var definition in description.Entities)
+        {
+            if (definition is TurnableDefinition turnable) world.AddInitial(turnable);
+            else
+            {
+                var geometry=entities.Single(e=>e.Id==definition.Id);
+                var shape=new BoxAssembly(Array.AsReadOnly(geometry.Parts));
+                world.staticDefinitions.Add(definition.Id,definition switch
+                {
+                    BuildingElementDefinition b => b with { Shape=shape, Gaps=Array.AsReadOnly(b.Gaps.ToArray()) },
+                    FixedDefinition f => f with { Shape=shape },
+                    _ => throw new ArgumentException("Unsupported entity.")
+                });
+            }
+        }
+        return new LoadResult.Loaded(world);
     }
     /// <summary>Returns an independent snapshot, or Rejected(UnknownId) for an unknown section.</summary>
     public SectionGeometryResult GetSectionGeometry(SectionId section)
@@ -47,8 +66,8 @@ public sealed class World
     {
         if (!double.IsFinite(w)) return Reject(FailureCode.InvalidInput, "W must be finite.");
         return new SectionGeometryResult.Geometry(w, Array.AsReadOnly(entities
-            .Where(e => e.Segments.Any(s => w >= s.Min && w <= s.Max))
-            .OrderBy(e => e.Id.Value, StringComparer.Ordinal).Select(e => e.Slice()).ToArray()));
+            .Where(e => e.Segments.Any(s => w >= s.Min && w <= s.Max)).Select(e => e.Slice())
+            .Concat(DynamicSlices(w)).OrderBy(e => e.Entity.Value, StringComparer.Ordinal).ToArray()));
     }
     private static SectionGeometryResult Reject(FailureCode code, string detail) =>
         new SectionGeometryResult.Rejected(new(code, detail, null, null, Array.Empty<Contact>()));
@@ -62,7 +81,7 @@ public sealed class World
         if (max == 0 || double.IsPositiveInfinity(max)) return max;
         return max * Math.Sqrt(differences.Sum(v => (v / max) * (v / max)));
     }
-    private static Interval[] RemainingSegments(Interval range, IReadOnlyList<Interval> gaps)
+    internal static Interval[] RemainingSegments(Interval range, IReadOnlyList<Interval> gaps)
     {
         var result = new List<Interval>();
         var start = range.Min;
