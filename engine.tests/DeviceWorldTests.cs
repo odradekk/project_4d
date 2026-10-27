@@ -40,6 +40,20 @@ public class DeviceWorldTests
     }
 
     [Fact]
+    public void ADeviceBlocksTheRingOfAnItemLikeAnyOtherObstacle()
+    {
+        // Where the ring of the nut passes at W = .3 (HiddenRingTests): x from .3 to .4, and W from .28 to .32.
+        var wall = LoftBox("wall", (.3, .4), (0, 2), (-.5, .5));
+        var device = new DeviceDefinition(
+            new("wall"), Origin, TestSource, Loft(Key(.28, wall), Key(.32, wall)), new DeviceTranslation(Axis3.X, new(0, 1), 0));
+        var world = Scene(FloorOf(new(-.5, 1)), Nut(), Actor(), device);
+
+        var blocked = Assert.IsType<RotationPlanResult.Blocked>(world.PlanRotation(new StandUp(new("actor"), NutId, II)));
+
+        Assert.Equal(new EntityId("wall"), Assert.Single(blocked.Failure.Contacts).Obstacle);
+    }
+
+    [Fact]
     public void ADeviceHasSupportLikeAnyOtherEntity()
     {
         var world = Scene(FloorOf(new(-.5, 1)), Lift());
