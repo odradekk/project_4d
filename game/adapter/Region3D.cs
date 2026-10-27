@@ -16,6 +16,18 @@ namespace Game.Adapter;
 [Tool, GlobalClass]
 public partial class Region3D : Node3D
 {
+    private World? audioWorld;
+    private Dictionary<string, double> sectionPositions = new();
+    public string CurrentSection { get; private set; } = "";
+
+    /// <summary>Returns the engine's distance between the current section and a source section.</summary>
+    public double SectionDistance(string sourceSection)
+    {
+        if (audioWorld is null) throw new InvalidOperationException("Region is not loaded.");
+        return audioWorld.Distance4(new(0, 0, 0, sectionPositions[CurrentSection]),
+            new(0, 0, 0, sectionPositions[sourceSection]));
+    }
+
     private double previewW;
     private bool prismEnabled = true;
     private Node? generated;
@@ -51,6 +63,9 @@ public partial class Region3D : Node3D
         previewPending = false;
         if (!IsInsideTree()) return;
         Loaded = false;
+        audioWorld = null;
+        sectionPositions.Clear();
+        CurrentSection = "";
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
         generated = null;
         var reader = new SceneReader(this);
@@ -94,6 +109,9 @@ public partial class Region3D : Node3D
             worlds.Add(section.Id.Value, viewport.World3D);
         }
         var home = SceneReader.Ancestor<Section3D>(spawn)!;
+        audioWorld = world;
+        sectionPositions = description.Sections.ToDictionary(s => s.Id.Value, s => s.W);
+        CurrentSection = home.SectionId;
         previousWorld = GetViewport().World3D;
         currentWorld = worlds[home.SectionId];
         GetViewport().World3D = currentWorld;
