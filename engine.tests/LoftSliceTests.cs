@@ -16,13 +16,13 @@ public class LoftSliceTests
     [Fact]
     public void AKeyShapeIsTheSliceAtItsW()
     {
-        var world = Scene(Cabinet());
+        var world = Scene(Hanger());
 
-        var flap = world.SliceOf(CabinetId, I)!;
+        var flap = world.SliceOf(HangerId, I)!;
         AssertRange(flap.Range(Axis3.X), -.01, .01);
         AssertRange(flap.Range(Axis3.Y), 1.6, 2);
         AssertRange(flap.Range(Axis3.Z), -.3, .3);
-        var plank = world.SliceOf(CabinetId, II)!;
+        var plank = world.SliceOf(HangerId, II)!;
         AssertRange(plank.Range(Axis3.X), -.01, .01);
         AssertRange(plank.Range(Axis3.Y), .8, 2);
         AssertRange(plank.Range(Axis3.Z), -.1, .1);
@@ -32,13 +32,13 @@ public class LoftSliceTests
     [Fact]
     public void BetweenKeysEveryVertexIsInterpolatedLinearly()
     {
-        var world = Scene(Cabinet());
+        var world = Scene(Hanger());
 
         // Halfway between the flap at W = 0 and the plank at .42, and a quarter of the way.
-        var half = Slice(world, CabinetId, .21);
+        var half = Slice(world, HangerId, .21);
         AssertRange(half.Range(Axis3.Y), 1.2, 2);
         AssertRange(half.Range(Axis3.Z), -.2, .2);
-        var quarter = Slice(world, CabinetId, .105);
+        var quarter = Slice(world, HangerId, .105);
         AssertRange(quarter.Range(Axis3.Y), 1.4, 2);
         AssertRange(quarter.Range(Axis3.Z), -.25, .25);
     }
@@ -57,7 +57,7 @@ public class LoftSliceTests
     [Fact]
     public void ALoftHasNoSliceOutsideItsKeys()
     {
-        var world = Scene(Cabinet());
+        var world = Scene(Hanger());
 
         Assert.Empty(world.SlicesAt(-.3));
         Assert.Empty(world.SlicesAt(.7));
@@ -68,10 +68,10 @@ public class LoftSliceTests
     [Fact]
     public void ASliceAtASharedKeyIsCutOnce()
     {
-        var world = Scene(Cabinet());
+        var world = Scene(Hanger());
 
         // The flap is a 2 cm x 40 cm x 60 cm box: two triangles for each of its six faces, and its surface area.
-        var flap = world.SliceOf(CabinetId, I)!;
+        var flap = world.SliceOf(HangerId, I)!;
         Assert.Equal(36, flap.Parts.Count);
         Assert.Equal(2 * (.02 * .4 + .02 * .6 + .4 * .6), flap.Area(), 9);
     }
@@ -82,9 +82,9 @@ public class LoftSliceTests
         var thin = new DeviceDefinition(
             new("thin"), Origin, TestSource,
             Loft(Key(-Epsilon, Pane(0)), Key(Epsilon, Pane(0))), new DeviceTranslation(Axis3.X, new(0, 1), 0));
-        var world = Scene(Cabinet(), thin);
+        var world = Scene(Hanger(), thin);
 
-        Assert.True(world.SliceOf(CabinetId, I)!.ThroughObject);
+        Assert.True(world.SliceOf(HangerId, I)!.ThroughObject);
         Assert.False(world.SliceOf(thin.Id, I)!.ThroughObject);
     }
 
@@ -110,18 +110,18 @@ public class LoftSliceTests
     [Fact]
     public void ATurnedDeviceShowsEverySliceTurnedByTheSameAngle()
     {
-        var world = Scene(Cabinet());
+        var world = Scene(Hanger());
 
-        world.Driven(CabinetId, Math.PI / 4);
+        world.Driven(HangerId, Math.PI / 4);
 
         // A point (x, y) about the hinge at (0, 2) turns to ((x - y) / sqrt 2, (x + y) / sqrt 2). The flap hangs over
         // x of ±.01 and y from -.4 to 0, the plank to -1.2.
         var root = Math.Sqrt(2);
-        var flap = world.SliceOf(CabinetId, I)!;
+        var flap = world.SliceOf(HangerId, I)!;
         AssertRange(flap.Range(Axis3.X), -.01 / root, .41 / root);
         AssertRange(flap.Range(Axis3.Y), 2 - .41 / root, 2 + .01 / root);
         AssertRange(flap.Range(Axis3.Z), -.3, .3);
-        var plank = world.SliceOf(CabinetId, II)!;
+        var plank = world.SliceOf(HangerId, II)!;
         AssertRange(plank.Range(Axis3.X), -.01 / root, 1.21 / root);
         AssertRange(plank.Range(Axis3.Y), 2 - 1.21 / root, 2 + .01 / root);
         AssertRange(plank.Range(Axis3.Z), -.1, .1);
@@ -251,15 +251,15 @@ public class LoftSliceTests
     [Fact]
     public void AllSlicesAreWoundOutwardWithUnitNormals()
     {
-        var turned = Scene(Cabinet(), Board());
-        turned.Driven(CabinetId, Math.PI / 4);
+        var turned = Scene(Hanger(), Board());
+        turned.Driven(HangerId, Math.PI / 4);
         turned.Driven(BoardId, Math.PI / 6);
         var slices = new[]
         {
-            Scene(Cabinet()).SliceOf(CabinetId, II)!,
+            Scene(Hanger()).SliceOf(HangerId, II)!,
             Scene(Sash()).SliceOf(SashId, II)!,
-            turned.SliceOf(CabinetId, I)!,
-            turned.SliceOf(CabinetId, II)!,
+            turned.SliceOf(HangerId, I)!,
+            turned.SliceOf(HangerId, II)!,
             turned.SliceOf(BoardId, I)!,
             Slice(turned, BoardId, .1)
         };

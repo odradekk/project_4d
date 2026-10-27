@@ -48,7 +48,7 @@ public class DeviceValidationTests
 
     public static IEnumerable<object[]> InvalidDevices()
     {
-        var cabinet = Cabinet();
+        var hanger = Hanger();
         var sash = Sash();
         var pane = Pane(0);
 
@@ -108,9 +108,9 @@ public class DeviceValidationTests
         yield return [sash with { Motion = new DeviceTranslation(Axis3.X, new(0, 1), 1.01) }, LoadErrorCode.InvalidMotion];
         yield return [sash with { Motion = new DeviceTranslation(Axis3.X, new(0, 1), -.01) }, LoadErrorCode.InvalidMotion];
         yield return [sash with { Motion = new DeviceTranslation((Axis3)7, new(0, 1), 0) }, LoadErrorCode.InvalidMotion];
-        yield return [cabinet with { Motion = new DeviceRotation((RotationPlane)9, default, new(0, 1), 0) }, LoadErrorCode.InvalidMotion];
-        yield return [cabinet with { Motion = new DeviceRotation(RotationPlane.XY, new(double.NaN, 0, 0, 0), new(0, 1), 0) }, LoadErrorCode.InvalidNumber];
-        yield return [cabinet with { Motion = new DeviceRotation(RotationPlane.XY, default, new(0, 1), double.NaN) }, LoadErrorCode.InvalidNumber];
+        yield return [hanger with { Motion = new DeviceRotation((RotationPlane)9, default, new(0, 1), 0) }, LoadErrorCode.InvalidMotion];
+        yield return [hanger with { Motion = new DeviceRotation(RotationPlane.XY, new(double.NaN, 0, 0, 0), new(0, 1), 0) }, LoadErrorCode.InvalidNumber];
+        yield return [hanger with { Motion = new DeviceRotation(RotationPlane.XY, default, new(0, 1), double.NaN) }, LoadErrorCode.InvalidNumber];
 
         // A track runs along one of the world axes, with no part in W
         var aboutYBy45 = new Rotation4(new(Math.Sqrt(.5), 0, -Math.Sqrt(.5), 0), Identity4.Y, new(Math.Sqrt(.5), 0, Math.Sqrt(.5), 0), Identity4.W);
@@ -161,8 +161,8 @@ public class DeviceValidationTests
     [Fact]
     public void RotationLimitsMayExceedAFullTurn()
     {
-        var cabinet = Cabinet() with { Motion = new DeviceRotation(RotationPlane.YZ, default, new(-10, 10), 2 * Math.PI) };
+        var hanger = Hanger() with { Motion = new DeviceRotation(RotationPlane.YZ, default, new(-10, 10), 2 * Math.PI) };
 
-        Assert.IsType<LoadResult.Loaded>(World.Load(Description([cabinet])));
+        Assert.IsType<LoadResult.Loaded>(World.Load(Description([hanger])));
     }
 }

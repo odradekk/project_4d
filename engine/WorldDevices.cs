@@ -88,9 +88,10 @@ public sealed partial class World
         }
 
         var (axis, sign) = DeviceKinematics.Track(state.Definition);
-        var (applied, contacts) = Sweep(device, Solids(state, state.Position).Cast<Solid4>().ToArray(), axis, sign * (target - state.Position));
-        if (applied == 0 && contacts.Count > 0) return Reject(FailureCode.TranslationBlocked, "Translation is blocked.", contacts);
-        return Commit(state, target, contacts.Count == 0 ? target : state.Position + sign * applied, contacts);
+        var requested = sign * (target - state.Position);
+        var (applied, contacts) = Sweep(device, Solids(state, state.Position).Cast<Solid4>().ToArray(), axis, requested);
+        if (applied == 0 && requested != 0) return Reject(FailureCode.TranslationBlocked, "Translation is blocked.", contacts);
+        return Commit(state, target, applied == requested ? target : state.Position + sign * applied, contacts);
     }
 
     private DriveDeviceResult.Driven Commit(Device device, double target, double position, IReadOnlyList<Contact> contacts)
@@ -105,21 +106,30 @@ public sealed partial class World
     }
 
     // Where the device first touches an obstacle on its way from its position to the target, turning through poses
-    // that no point of it moves more than the sampling distance between. Empty when the way is clear.
+    // that no point of it moves more than the sampling distance between. A pair of solids is blocked where it embeds
+    // deeper than the contact tolerance, or than it embedded at the start when that was deeper, as in a slide: an
+    // obstacle the device already sits in does not stop it from turning out of it. Empty when the way is clear.
     private IReadOnlyList<Contact> TurnContacts(Device device, DeviceRotation rotation, double target)
     {
         var id = device.Definition.Id;
         var turn = target - device.Position;
         var steps = Math.Max(1, (int)Math.Ceiling(DeviceKinematics.Reach(device.Pieces, rotation) * Math.Abs(turn) / SamplingDistance));
         var obstacles = Solids().Where(solid => solid.Entity != id).Concat(ReservedSolids(id)).ToArray();
+        var started = new Dictionary<(int, int), double>();
         for (var step = 0; step <= steps; step++)
         {
-            var contacts = Solids(device, device.Position + turn * step / steps)
-                .SelectMany(moving => obstacles.Where(moving.BoundsMayOverlap).Select(obstacle => Collision.Touch(moving, obstacle)))
-                .OfType<Contact>()
-                .Select(WithSection)
-                .ToArray();
-            if (contacts.Length > 0) return DistinctContacts(contacts);
+            var pieces = Solids(device, device.Position + turn * step / steps).ToArray();
+            var contacts = new List<Contact>();
+            for (var i = 0; i < pieces.Length; i++)
+                for (var j = 0; j < obstacles.Length; j++)
+                {
+                    if (!pieces[i].BoundsMayOverlap(obstacles[j])) continue;
+                    var depth = Collision.Depth(pieces[i], obstacles[j]);
+                    if (step == 0) started[(i, j)] = depth;
+                    var blockLevel = Math.Max(started.GetValueOrDefault((i, j)), ContactTolerance) + RoundingMargin;
+                    if (depth > blockLevel && Collision.ContactOf(pieces[i], obstacles[j]) is { } contact) contacts.Add(WithSection(contact));
+                }
+            if (contacts.Count > 0) return DistinctContacts(contacts);
         }
         return [];
     }

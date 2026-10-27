@@ -7,7 +7,7 @@ namespace FourD.Tests;
 // W = 0 and .42, and the building "home" spans W from -.5 to 1.
 internal static class DeviceScenes
 {
-    public static readonly EntityId CabinetId = new("cabinet");
+    public static readonly EntityId HangerId = new("hanger");
     public static readonly EntityId SashId = new("sash");
     public static readonly EntityId LiftId = new("lift");
     public static readonly EntityId BoardId = new("board");
@@ -45,14 +45,14 @@ internal static class DeviceScenes
 
     public static LoftShape Loft(params LoftSegment[] segments) => new(segments);
 
-    // A device whose slice in section I is a small flap and in section II a long plank, on one hinge along Z at
-    // y = 2 that swings both toward +x. The flap hangs 40 cm below the hinge and is 60 cm wide, the plank 1.2 m
-    // below and 20 cm wide; both are 2 cm thick. The keys at W = 0 and .42 are the section shapes themselves, with
-    // keys at W = -.2 and .62 holding them over a margin on each side.
+    // A leaf that hangs from a hinge along Z at y = 2 and swings toward +x, and that grows with W: in section I it is
+    // 40 cm long and 60 cm wide, in section II 1.2 m long and 20 cm wide, and it changes linearly between. Both are
+    // 2 cm thick. The keys at W = 0 and .42 are the section shapes themselves, with keys at W = -.2 and .62 holding
+    // them over a margin on each side.
     public static ConvexPart Leaf(double bottom, double halfWidth) => LoftBox("leaf", (-.01, .01), (bottom, 0), (-halfWidth, halfWidth));
 
-    public static DeviceDefinition Cabinet(double initial = 0, double max = Math.PI / 2) => new(
-        CabinetId, At(0, 2, 0), TestSource,
+    public static DeviceDefinition Hanger(double initial = 0, double max = Math.PI / 2) => new(
+        HangerId, At(0, 2, 0), TestSource,
         Loft(Key(-.2, Leaf(-.4, .3)), Key(0, Leaf(-.4, .3)), Key(.42, Leaf(-1.2, .1)), Key(.62, Leaf(-1.2, .1))),
         new DeviceRotation(RotationPlane.XY, default, new(0, max), initial));
 

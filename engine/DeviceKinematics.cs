@@ -17,15 +17,17 @@ internal static class DeviceKinematics
         _ => throw new ArgumentException("Unknown device motion.", nameof(motion))
     };
 
-    // A translation moves the device along its local axis, which is a world axis by validation; a rotation turns it
-    // about the pivot, a point of its own coordinates, in a plane of its own coordinates.
+    // A translation moves the device along the world axis that its track lies on, the same axis a slide is checked
+    // along; a rotation turns it about the pivot, a point of its own coordinates, in a plane of its own coordinates.
     internal static Pose4 PoseAt(DeviceDefinition device, double position)
     {
         var pose = device.Pose;
-        if (device.Motion is DeviceTranslation translation)
+        if (device.Motion is DeviceTranslation)
         {
-            var track = Box4.ToArray(World.LocalAxis(pose.Rotation, translation.Axis));
-            return pose with { Position = World.Add(pose.Position, Box4.ToVec4(Box4.Scale(track, position))) };
+            var (axis, sign) = Track(device);
+            var offset = new double[4];
+            offset[axis] = sign * position;
+            return pose with { Position = World.Add(pose.Position, Box4.ToVec4(offset)) };
         }
         var rotation = (DeviceRotation)device.Motion;
         var (first, second) = Axes(rotation.Plane);

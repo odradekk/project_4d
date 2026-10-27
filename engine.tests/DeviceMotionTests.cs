@@ -4,7 +4,7 @@ using static FourD.Tests.ItemScenes;
 
 namespace FourD.Tests;
 
-// Turning and sliding devices: where they stop, what they report, and the prologue's cabinet and window.
+// Turning and sliding devices: where they stop, what they report, and the prologue's hanger and window.
 public class DeviceMotionTests
 {
     private static readonly SectionId I = new("I");
@@ -20,19 +20,19 @@ public class DeviceMotionTests
     [Fact]
     public void OpeningTheFlapLowersThePlankOnTheSameHingeAtTheSameTime()
     {
-        var world = Scene(Cabinet());
+        var world = Scene(Hanger());
 
-        var driven = world.Driven(CabinetId, Math.PI / 2);
+        var driven = world.Driven(HangerId, Math.PI / 2);
 
         Assert.Equal(Math.PI / 2, driven.Position);
         Assert.Empty(driven.Contacts);
-        Assert.Equal(Math.PI / 2, world.State(CabinetId).DevicePosition);
+        Assert.Equal(Math.PI / 2, world.State(HangerId).DevicePosition);
         // Both leaves hang from the hinge at y = 2 and now point along +x, the flap .4 m long and the plank 1.2 m.
-        var flap = world.SliceOf(CabinetId, I)!;
+        var flap = world.SliceOf(HangerId, I)!;
         AssertRange(flap.Range(Axis3.X), 0, .4);
         AssertRange(flap.Range(Axis3.Y), 1.99, 2.01);
         AssertRange(flap.Range(Axis3.Z), -.3, .3);
-        var plank = world.SliceOf(CabinetId, II)!;
+        var plank = world.SliceOf(HangerId, II)!;
         AssertRange(plank.Range(Axis3.X), 0, 1.2);
         AssertRange(plank.Range(Axis3.Y), 1.99, 2.01);
         AssertRange(plank.Range(Axis3.Z), -.1, .1);
@@ -41,27 +41,27 @@ public class DeviceMotionTests
     [Fact]
     public void ADeviceStartsAtItsInitialPosition()
     {
-        var world = Scene(Cabinet(initial: .3));
+        var world = Scene(Hanger(initial: .3));
 
-        Assert.Equal(.3, world.State(CabinetId).DevicePosition);
+        Assert.Equal(.3, world.State(HangerId).DevicePosition);
         // The flap's far lower corner (.01, -.4) about the hinge.
-        AssertRange(world.SliceOf(CabinetId, I)!.Range(Axis3.X), -.01 * Math.Cos(.3), .01 * Math.Cos(.3) + .4 * Math.Sin(.3));
+        AssertRange(world.SliceOf(HangerId, I)!.Range(Axis3.X), -.01 * Math.Cos(.3), .01 * Math.Cos(.3) + .4 * Math.Sin(.3));
     }
 
     [Fact]
     public void ThePoseOfARotatedDeviceIsTheTurnAboutItsPivot()
     {
-        var cabinet = Cabinet() with { Motion = new DeviceRotation(RotationPlane.XY, new(.5, 0, 0, 0), new(0, Math.PI / 2), 0) };
-        var world = Scene(cabinet);
+        var hanger = Hanger() with { Motion = new DeviceRotation(RotationPlane.XY, new(.5, 0, 0, 0), new(0, Math.PI / 2), 0) };
+        var world = Scene(hanger);
 
-        world.Driven(CabinetId, Math.PI / 2);
+        world.Driven(HangerId, Math.PI / 2);
 
         // A quarter turn about (.5, 2) takes the point (.5, 2) to itself and the local origin (0, 2) to (.5, 1.5).
-        var state = world.State(CabinetId);
+        var state = world.State(HangerId);
         AssertNear(new(.5, 1.5, 0, 0), state.Pose.Position);
         AssertNear(new(0, 1, 0, 0), state.Pose.Rotation.X);
         AssertNear(new(-1, 0, 0, 0), state.Pose.Rotation.Y);
-        var flap = world.SliceOf(CabinetId, I)!;
+        var flap = world.SliceOf(HangerId, I)!;
         AssertRange(flap.Range(Axis3.X), .5, .9);
         AssertRange(flap.Range(Axis3.Y), 1.49, 1.51);
     }
@@ -71,15 +71,15 @@ public class DeviceMotionTests
     {
         // A post that exists only from W = .3, so the flap in section I never meets it but the plank does.
         var post = Block("post", new(.7, 2, 0), new(.1, .4, 1), new Interval(.3, .6));
-        var world = Scene(Cabinet(), post);
+        var world = Scene(Hanger(), post);
 
-        Assert.Empty(world.Driven(CabinetId, Math.PI / 4).Contacts);
-        var failure = world.Refused(CabinetId, Math.PI / 2);
+        Assert.Empty(world.Driven(HangerId, Math.PI / 4).Contacts);
+        var failure = world.Refused(HangerId, Math.PI / 2);
 
         Assert.Equal(FailureCode.RotationBlocked, failure.Code);
-        Assert.Equal(CabinetId, failure.Entity);
+        Assert.Equal(HangerId, failure.Entity);
         var contact = Assert.Single(failure.Contacts);
-        Assert.Equal(CabinetId, contact.Moving);
+        Assert.Equal(HangerId, contact.Moving);
         Assert.Equal(new PartId("leaf"), contact.MovingPart);
         Assert.Equal(new EntityId("post"), contact.Obstacle);
         Assert.InRange(contact.Point.X, .6, .8);
@@ -90,14 +90,14 @@ public class DeviceMotionTests
     public void ARefusedRotationChangesNothing()
     {
         var post = Block("post", new(.7, 2, 0), new(.1, .4, 1), new Interval(.3, .6));
-        var world = Scene(Cabinet(), Actor(), post, Rod());
+        var world = Scene(Hanger(), Actor(), post, Rod());
         var plan = world.AllowedPlan(new StandUp(new("actor"), RodId, II));
-        var before = world.State(CabinetId);
+        var before = world.State(HangerId);
 
-        world.Refused(CabinetId, Math.PI / 2);
+        world.Refused(HangerId, Math.PI / 2);
 
         // The earlier plan still starts, so the world has the same revision, and no event of the device was queued.
-        Assert.Equal(before, world.State(CabinetId));
+        Assert.Equal(before, world.State(HangerId));
         Assert.IsType<StartRotationResult.Started>(world.StartRotation(plan));
         var events = world.StepEvents(.1).Select(occurrence => occurrence.Event);
         Assert.Equal(new SpaceEvent[] { new RotationStarted(RodId) }, events);
@@ -123,10 +123,10 @@ public class DeviceMotionTests
         // A 4 cm cube at the plank's tip where the plank hangs at 45°. The tip is 1.2 m from the hinge, so the turn
         // passes the cube within about 2° of its arc.
         var tip = new Vec3(1.2 * Math.Sin(Math.PI / 4), 2 - 1.2 * Math.Cos(Math.PI / 4), 0);
-        var world = Scene(Cabinet(), Block("cube", tip, new(.02, .02, .1), new Interval(.3, .6)));
+        var world = Scene(Hanger(), Block("cube", tip, new(.02, .02, .1), new Interval(.3, .6)));
 
-        Assert.Empty(world.Driven(CabinetId, .7).Contacts);
-        Assert.Equal(FailureCode.RotationBlocked, world.Refused(CabinetId, Math.PI / 2).Code);
+        Assert.Empty(world.Driven(HangerId, .7).Contacts);
+        Assert.Equal(FailureCode.RotationBlocked, world.Refused(HangerId, Math.PI / 2).Code);
     }
 
     [Fact]
@@ -134,18 +134,32 @@ public class DeviceMotionTests
     {
         // The plank ends level at y = 2 and 1 cm thick there. A block whose underside is at 2.0045 is met by 5.5 mm
         // only in that last pose, and by about 1 mm one sample before it.
-        var world = Scene(Cabinet(), Block("lid", new(.55, 2.1045, 0), new(.05, .1, 1), new Interval(.3, .6)));
+        var world = Scene(Hanger(), Block("lid", new(.55, 2.1045, 0), new(.05, .1, 1), new Interval(.3, .6)));
 
-        Assert.Empty(world.Driven(CabinetId, 1.5).Contacts);
-        Assert.Equal(FailureCode.RotationBlocked, world.Refused(CabinetId, Math.PI / 2).Code);
+        Assert.Empty(world.Driven(HangerId, 1.5).Contacts);
+        Assert.Equal(FailureCode.RotationBlocked, world.Refused(HangerId, Math.PI / 2).Code);
+    }
+
+    // A block on the -x side of the hanging leaf, with its face at x = -.004 so that the leaf's face at x = -.01 is 6 mm
+    // inside it, which is deeper than the 5 mm of contact. It reaches the leaf only in section II.
+    private static World HangerEmbeddedIn(double limitMin = -1) => Scene(
+        Hanger() with { Motion = new DeviceRotation(RotationPlane.XY, default, new(limitMin, 1), 0) },
+        Block("clamp", new(-.504, 1.1, 0), new(.5, .1, 1), new Interval(.45, .6)));
+
+    [Fact]
+    public void ARotationThatStartsEmbeddedCanLeaveTheObstacle()
+    {
+        // Turning toward +x carries the leaf 9 mm away from the block at y = 1.1, which frees it.
+        var driven = HangerEmbeddedIn().Driven(HangerId, .01);
+
+        Assert.Empty(driven.Contacts);
     }
 
     [Fact]
-    public void ARotationThatStartsDeeperInAnObstacleThanTheToleranceIsRefused()
+    public void ARotationThatStartsEmbeddedIsBlockedWhenItGoesDeeper()
     {
-        var world = Scene(Cabinet(), Block("clamp", new(0, 1.5, 0), new(.05, .05, .5), new Interval(.4, .6)));
-
-        var failure = world.Refused(CabinetId, .1);
+        // Turning toward -x pushes the leaf 9 mm further in, to 15 mm.
+        var failure = HangerEmbeddedIn().Refused(HangerId, -.01);
 
         Assert.Equal(FailureCode.RotationBlocked, failure.Code);
         Assert.Equal(new EntityId("clamp"), Assert.Single(failure.Contacts).Obstacle);
@@ -156,11 +170,11 @@ public class DeviceMotionTests
     {
         // A pencil lying on a shelf the plank can reach. Standing, its pillar through W crosses the plank's way.
         var pencil = Rod() with { Pose = At(1.12, 1.5, 0) };
-        Assert.Empty(Scene(Cabinet(), Actor(), pencil).Driven(CabinetId, Math.PI / 2).Contacts);
+        Assert.Empty(Scene(Hanger(), Actor(), pencil).Driven(HangerId, Math.PI / 2).Contacts);
 
-        var world = Scene(Cabinet(), Actor(), pencil);
+        var world = Scene(Hanger(), Actor(), pencil);
         Assert.IsType<StartRotationResult.Started>(world.StartRotation(world.AllowedPlan(new StandUp(new("actor"), RodId, II))));
-        var failure = world.Refused(CabinetId, Math.PI / 2);
+        var failure = world.Refused(HangerId, Math.PI / 2);
 
         Assert.Equal(FailureCode.RotationBlocked, failure.Code);
         Assert.Equal(RodId, Assert.Single(failure.Contacts).Obstacle);
@@ -241,6 +255,22 @@ public class DeviceMotionTests
     }
 
     [Fact]
+    public void ATrackThatIsOffItsAxisByRoundingIsFollowedAlongTheAxisItIsCheckedOn()
+    {
+        // Scene data are single-precision numbers, so a pose may turn the track by a few parts in 10⁷. The device moves
+        // where the slide is checked, along x.
+        var (cos, sin) = (Math.Cos(1e-7), Math.Sin(1e-7));
+        var sash = Sash() with { Pose = At(0, 0, 0, rotation: new(new(cos, sin, 0, 0), new(-sin, cos, 0, 0), Identity4.Z, Identity4.W)) };
+        var world = Scene(sash);
+
+        world.Driven(SashId, .6);
+
+        var pose = world.State(SashId).Pose;
+        Assert.Equal(.6, pose.Position.X);
+        Assert.Equal(0, pose.Position.Y);
+    }
+
+    [Fact]
     public void ALiftStopsUnderAnObjectAboveIt()
     {
         var world = Scene(Lift(), Crate(1.4));
@@ -297,11 +327,11 @@ public class DeviceMotionTests
     [Fact]
     public void ADriveThatIsNotStoppedReportsOnlyItsStartAndEnd()
     {
-        var world = Scene(Cabinet());
-        world.Driven(CabinetId, 1);
+        var world = Scene(Hanger());
+        world.Driven(HangerId, 1);
 
         var events = world.StepEvents(.1).Select(occurrence => occurrence.Event).ToArray();
 
-        Assert.Equal(new SpaceEvent[] { new DeviceMotionStarted(CabinetId, 0, 1), new DeviceMotionEnded(CabinetId, 1) }, events);
+        Assert.Equal(new SpaceEvent[] { new DeviceMotionStarted(HangerId, 0, 1), new DeviceMotionEnded(HangerId, 1) }, events);
     }
 }

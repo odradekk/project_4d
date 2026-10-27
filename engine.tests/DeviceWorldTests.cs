@@ -81,17 +81,17 @@ public class DeviceWorldTests
     {
         var world = Scene();
 
-        var added = Assert.IsType<AddEntityResult.Added>(world.AddEntity(Cabinet(initial: .5)));
+        var added = Assert.IsType<AddEntityResult.Added>(world.AddEntity(Hanger(initial: .5)));
         Assert.Equal(.5, added.Entity.DevicePosition);
         Assert.Equal(Handedness.NotComparable, added.Entity.Handedness);
-        Assert.NotNull(world.SliceOf(CabinetId, I));
-        var duplicate = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Cabinet()));
+        Assert.NotNull(world.SliceOf(HangerId, I));
+        var duplicate = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Hanger()));
         Assert.Equal(FailureCode.DuplicateId, duplicate.Failure.Code);
 
-        Assert.IsType<RemoveEntityResult.Removed>(world.RemoveEntity(CabinetId));
-        Assert.Null(world.SliceOf(CabinetId, I));
-        Assert.IsType<EntityReadResult.Missing>(world.ReadEntity(CabinetId));
-        var reused = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Cabinet()));
+        Assert.IsType<RemoveEntityResult.Removed>(world.RemoveEntity(HangerId));
+        Assert.Null(world.SliceOf(HangerId, I));
+        Assert.IsType<EntityReadResult.Missing>(world.ReadEntity(HangerId));
+        var reused = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Hanger()));
         Assert.Equal(FailureCode.DuplicateId, reused.Failure.Code);
     }
 
@@ -114,10 +114,10 @@ public class DeviceWorldTests
     {
         var world = Scene();
 
-        var rejected = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Cabinet(initial: 2)));
+        var rejected = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Hanger(initial: 2)));
 
         Assert.Equal(FailureCode.InvalidInput, rejected.Failure.Code);
-        Assert.IsType<EntityReadResult.Missing>(world.ReadEntity(CabinetId));
+        Assert.IsType<EntityReadResult.Missing>(world.ReadEntity(HangerId));
     }
 
     [Fact]

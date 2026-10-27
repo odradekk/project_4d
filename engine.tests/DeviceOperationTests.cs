@@ -38,12 +38,12 @@ public class DeviceOperationTests
     }
 
     [Fact]
-    public void TheCabinetCanBeOpenedBeforeAndBlockedAfterAnObstacle()
+    public void AHangerTurnsFreelyBeforeAnObstacleAndIsBlockedAfterIt()
     {
         var post = Block("post", new(.7, 2, 0), new(.1, .4, 1), new Interval(.3, .6));
-        ExpectedStep[] steps = [Drive(CabinetId, Math.PI / 4, Math.PI / 4), Drive(CabinetId, Math.PI / 2, 0, FailureCode.RotationBlocked)];
+        ExpectedStep[] steps = [Drive(HangerId, Math.PI / 4, Math.PI / 4), Drive(HangerId, Math.PI / 2, 0, FailureCode.RotationBlocked)];
 
-        Load(WithOperation(Setup(), steps, Cabinet(), post));
+        Load(WithOperation(Setup(), steps, Hanger(), post));
     }
 
     [Fact]
@@ -62,8 +62,8 @@ public class DeviceOperationTests
     [Fact]
     public void ThePositionIsComparedWithinANanometre()
     {
-        Load(WithOperation(Setup(), [Drive(CabinetId, Math.PI / 2, Math.PI / 2 + 5e-10)], Cabinet()));
-        var beyond = Errors(Setup(), [Drive(CabinetId, Math.PI / 2, Math.PI / 2 + 2e-9)], Cabinet());
+        Load(WithOperation(Setup(), [Drive(HangerId, Math.PI / 2, Math.PI / 2 + 5e-10)], Hanger()));
+        var beyond = Errors(Setup(), [Drive(HangerId, Math.PI / 2, Math.PI / 2 + 2e-9)], Hanger());
 
         Assert.Equal(0, Assert.Single(beyond).StepIndex);
     }
@@ -73,7 +73,7 @@ public class DeviceOperationTests
     {
         var post = Block("post", new(.7, 2, 0), new(.1, .4, 1), new Interval(.3, .6));
 
-        var error = Assert.Single(Errors(Setup(), [Drive(CabinetId, Math.PI / 2, Math.PI / 2)], Cabinet(), post));
+        var error = Assert.Single(Errors(Setup(), [Drive(HangerId, Math.PI / 2, Math.PI / 2)], Hanger(), post));
 
         Assert.Equal(LoadErrorCode.ExpectedOperationFailed, error.Code);
         Assert.Equal(new EntityId("post"), Assert.Single(error.Contacts).Obstacle);
@@ -82,7 +82,7 @@ public class DeviceOperationTests
     [Fact]
     public void AStepThatWasToFailButSucceedsIsReported()
     {
-        var error = Assert.Single(Errors(Setup(), [Drive(CabinetId, Math.PI / 4, 0, FailureCode.RotationBlocked)], Cabinet()));
+        var error = Assert.Single(Errors(Setup(), [Drive(HangerId, Math.PI / 4, 0, FailureCode.RotationBlocked)], Hanger()));
 
         Assert.Equal(LoadErrorCode.ExpectedOperationFailed, error.Code);
         Assert.Equal(0, error.StepIndex);
