@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Game.Adapter;
@@ -21,6 +22,10 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private Interactable3D? target;
     private string? aimedEntity;
     internal bool PointerCaptured => pointerCaptured;
+    internal bool PrismRaised => prism?.Raised ?? false;
+
+    /// <summary>What E does while both arms hold something, such as a cat; null when they are free.</summary>
+    internal Action? PutDown { get; set; }
     public GameHud Hud { get; private set; } = null!;
     public Camera3D Camera => GetNode<Camera3D>("Eyes");
 
@@ -57,6 +62,12 @@ public partial class FirstPersonPlayer : CharacterBody3D
             {
                 captureBeforeNotebook = pointerCaptured;
                 ReleasePointer();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && PutDown is { } putDown)
+            {
+                putDown();
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -136,6 +147,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
     // The prompt of what the crosshair is on if it can be used, else the keys that act on what is held or aimed at.
     private string HintText()
     {
+        if (PutDown is not null) return "E  放下";
         if (target is not null) return $"E  {target.Prompt}";
         if (actions is null || (!actions.Holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return "";
         var upright = actions.Holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);

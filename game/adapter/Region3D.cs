@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FourD;
+using Game.Characters;
 using Game.Player;
 using Game.Rendering;
 using Godot;
@@ -17,8 +18,12 @@ namespace Game.Adapter;
 public partial class Region3D : Node3D
 {
     private Dictionary<string, double> sectionPositions = new();
+    private readonly Dictionary<string, Character3D> characters = [];
     internal World? World { get; private set; }
     internal PlayerActions? Actions { get; private set; }
+
+    /// <summary>The character that stands at the spawn with this entity ID.</summary>
+    public Character3D Character(string entity) => characters[entity];
 
     /// <summary>The section the player is in, as the engine has it.</summary>
     public string CurrentSection => Actions?.CurrentSection ?? "";
@@ -70,6 +75,7 @@ public partial class Region3D : Node3D
         Loaded = false;
         World = null;
         Actions = null;
+        characters.Clear();
         sectionPositions.Clear();
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
         generated = null;
@@ -94,16 +100,19 @@ public partial class Region3D : Node3D
             Loaded = true;
             return;
         }
-        if (reader.Spawns.Count != 1)
-        { Fail([new(LoadErrorCode.InvalidGeometry, new("Sections", "Spawns"), null, null, null, "This static stage requires exactly one player spawn.", [])]); return; }
-        var spawn = reader.Spawns[0];
-        var character = spawn.CharacterScene!.Instantiate();
-        if (character is not FirstPersonPlayer player)
+        var spawned = reader.Spawns.Select(s => (Spawn: s, Node: s.CharacterScene!.Instantiate())).ToArray();
+        var players = spawned.Where(s => s.Node is FirstPersonPlayer).ToArray();
+        var strangers = spawned.Where(s => s.Node is not (FirstPersonPlayer or Character3D)).ToArray();
+        if (players.Length != 1 || strangers.Length > 0)
         {
-            character.Free();
-            Fail([new(LoadErrorCode.InvalidGeometry, new(GetPathTo(spawn), "CharacterScene"), null, null, null, "Assign a FirstPersonPlayer scene.", [])]);
+            foreach (var (_, node) in spawned) node.Free();
+            Fail(players.Length != 1
+                ? [new(LoadErrorCode.InvalidGeometry, new("Sections", "Spawns"), null, null, null, "This static stage requires exactly one player spawn.", [])]
+                : [new(LoadErrorCode.InvalidGeometry, new(GetPathTo(strangers[0].Spawn), "CharacterScene"), null, null, null, "Assign a FirstPersonPlayer or Character3D scene.", [])]);
             return;
         }
+        var spawn = players[0].Spawn;
+        var player = (FirstPersonPlayer)players[0].Node;
         // The authored lettering stays in the scene as a template; the adapter puts a copy on the flat object.
         foreach (var label in reader.Lettering.Values.SelectMany(labels => labels)) label.Visible = false;
         var movable = description.Entities
@@ -111,6 +120,7 @@ public partial class Region3D : Node3D
             .Select(entity => entity.Id)
             .ToHashSet();
         var worlds = new Dictionary<string, World3D>();
+        var sectionNodes = new Dictionary<string, Node>();
         var scenes = new List<SectionScene>();
         foreach (var section in description.Sections)
         {
@@ -141,6 +151,7 @@ public partial class Region3D : Node3D
             });
             viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -25, 0), LightEnergy = 0.8f });
             worlds.Add(section.Id.Value, viewport.World3D);
+            sectionNodes.Add(section.Id.Value, viewport);
         }
         var home = SceneReader.Ancestor<Section3D>(spawn)!;
         World = world;
@@ -160,6 +171,15 @@ public partial class Region3D : Node3D
         Actions.Configure(world, spawn.EntityId, player, prism, scenes,
             new DynamicSlices(world, scenes, reader.Materials, movable, reader.Lettering), new LensOverlay(scenes));
         player.Bind(prism, Actions);
+        // Characters walk in the physics world of their section, so each is a child of that section's viewport.
+        foreach (var (npcSpawn, node) in spawned.Where(s => s.Node is Character3D))
+        {
+            var character = (Character3D)node;
+            character.Transform = SceneReader.RelativeTransform(npcSpawn, this);
+            character.Bind(new CreatureLink(world, npcSpawn.EntityId, spawn.EntityId, player, id => sectionNodes[id]));
+            sectionNodes[SceneReader.Ancestor<Section3D>(npcSpawn)!.SectionId].AddChild(character);
+            characters.Add(npcSpawn.EntityId, character);
+        }
         Diagnostics = "";
         Loaded = true;
     }
