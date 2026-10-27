@@ -70,6 +70,14 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
+## 放样装置的搭法
+
+放样装置相邻关键形状里对应的面必须平行、朝向相同（[实体数据](contract-data.md)）。盒子可以换大小、挪位置，不能在两个关键形状之间转个角度，所以：
+
+- 各截面里形状不同、角度相同的零件，按每个截面要的大小做成同样朝向的盒子，一个关键形状放在一个截面的 W 上。吊柜的翻板（短而宽）和长木板（长而窄）就这样做：铰链沿 Z，两件都以竖直下垂的盒子做关键形状，铰链是同一根线，旋转平面取 XY（不含 W），两个截面里的切片同步转过同样的角度。
+- 角度要在两个截面里不同的零件（翻板竖直、长木板斜撑），不能靠关键形状做，因为这样对应的面不平行。把长木板做成竖直靠在柜前，朝向同翻板一样，放下时由旋转转到坡的角度。两件一开始的角度必须不同时，要先扩充放样的几何描述，或拆成两个装置，由脚本在同一帧里各调一次 DriveDevice。
+- 最外侧关键形状同相邻的关键形状取同样的形状，并比最近的截面再深出一段（例如 0.2m），截面就不会落在装置的端点上。关键形状恰好放在截面的 W 上是允许的，切片就是这个关键形状。
+
 ## 独立前置布置与预期操作
 
 ```csharp
@@ -98,9 +106,9 @@ public sealed record ExpectedCrossing(CrossSeamRequest Request,
 public sealed record ExpectedAdvance(double Delta) : ExpectedStep;
 ```
 
-每个 ExpectedOperation 从原始世界的独立副本开始，不沿用前一谜题的状态。EntityOverrides 以完整实体定义替换同 ID 动态实体初态，类别和身份不变；Seams/SharedValues 按 ID 替换指定初值（接缝的 Open 和 Severed 一起替换），其余沿用载入数据；Carry 建立初始手持/背包关系，手里按 HoldEntity，背包按 PackEntity，世界不接受就报 InvalidCarry。覆盖后仍执行形状和尺寸检查。可用 EntityOverrides 预置角色站位、物品位置、装置限位，步骤表示真实先后顺序。
+每个 ExpectedOperation 从原始世界的独立副本开始，不沿用前一谜题的状态。EntityOverrides 以完整实体定义替换同 ID 动态实体初态，类别和身份不变；Seams/SharedValues 按 ID 替换指定初值（接缝的 Open 和 Severed 一起替换），其余沿用载入数据；Carry 建立初始手持/背包关系，手里按 HoldEntity，背包按 PackEntity，世界不接受就报 InvalidCarry。覆盖后仍执行形状和尺寸检查。可用 EntityOverrides 预置角色站位、物品位置、装置位置，步骤表示真实先后顺序。装置只能被同一实体 ID 的 DeviceDefinition 替换；适配层把 DeviceInitial 写进替换定义的 Motion.Initial，替换后的限位和初始位置照常校验，错误带上 Operation。
 
-ExpectedFailure=null 表示必须成功；非 null 必须得到该失败且世界不变。旋转成功步骤立即 Start 后按配置时长推进到结束，再进入下一步；ExpectedAdvance 用于显式模拟额外时间。Move/Device 同时核对实际位移/位置，比较容差 `1e-9m`（旋转位置为 `1e-9rad`）。此容差只核对预期值，不取代碰撞容差。所有可推导错误均一次收集；步骤失败后停止该序列，继续其他独立操作。
+ExpectedFailure=null 表示必须成功；非 null 必须得到该失败且世界不变。旋转成功步骤立即 Start 后按配置时长推进到结束，再进入下一步；ExpectedAdvance 用于显式模拟额外时间。Move/Device 同时核对实际位移/位置，比较容差 `1e-9m`（旋转位置为 `1e-9rad`）。装置步骤即时完成，不推进时间；ExpectedFailure=null 时装置的实际位置须等于 ExpectedPosition，被障碍挡在 target 之前停下也算成功，位置就是停下处；ExpectedFailure 非 null 时不比较 ExpectedPosition。此容差只核对预期值，不取代碰撞容差。所有可推导错误均一次收集；步骤失败后停止该序列，继续其他独立操作。
 
 前置布置资源的字段如下。ID使用string，枚举原样，四维值按本页数组格式；资源读取后生成完整引擎定义。
 
@@ -150,7 +158,7 @@ public sealed record LoadError(
 | 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
 | 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
 | 接缝的位置或法线不是有限数；法线不是水平单位向量；Sections 少于两个、重复、不按 W 递增或引用不存在的截面 | InvalidNumber/InvalidGeometry/DuplicateId/InvalidSectionOrder/MissingReference；错误指向 `Position`、`HorizontalNormal`、`Sections` 字段 |
-| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前世界接受楼房元素、固定物、可转物、四维物品、三维生物、接缝和装置，啃食者返回该错误；SharedValues 必须为空集合；预期操作接受 ExpectedRotation、ExpectedCrossing 和 ExpectedAdvance 三种步骤，Setup 里的 SharedValues 必须为空，EntityOverrides 只接受同类的可转物、四维物品和三维生物；后续任务实现后逐项开放 |
+| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前世界接受楼房元素、固定物、可转物、四维物品、三维生物、接缝和装置，啃食者返回该错误；SharedValues 必须为空集合；预期操作接受 ExpectedRotation、ExpectedCrossing、ExpectedDevice 和 ExpectedAdvance 四种步骤，Setup 里的 SharedValues 必须为空，EntityOverrides 只接受同类的可转物、四维物品、三维生物和装置；后续任务实现后逐项开放 |
 | 空或逆向区间、缺口越界/内部重叠 | InvalidInterval；缺口允许端点相接。楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状用独立元素表示，各自使用闭 W 区间；共享边界同时保留两者的切片，按实体与零件 ID 稳定排序。若某个可玩 Section 只应显示一种形状，把换形边界放在两个 Section 之间 |
 | 派生几何不可表示 | 世界变换后的顶点、法线和 UV 必须有限，否则返回 InvalidNumber；在当前 double 精度下，盒子须保留三维体积，输出三角形须有非零面积及正确绕序，否则返回 InvalidGeometry。固定物的 W−ε 与 W+ε 须真正夹住 W，且厚度大于采样距离；报错 Source 定位零件、FaceUvs 或 Pose.Position.W。不设统一坐标上限 |
 | 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状。放样的零件还须是闭合、朝外的凸体；相邻关键形状的对应面须平行、朝向相同，对应面的顶点须在四维里共面；每块比采样距离薄也报此错 |
