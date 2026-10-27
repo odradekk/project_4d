@@ -49,7 +49,7 @@ public sealed partial class World
                 if (entry < 0 && (minDepth < -1e-10 || minDepth > .005 + 1e-10 || Box4.Dot(normal, delta) <= 0)) continue;
                 var center = a.Center.ToArray(); center[1] -= Math.Max(entry, 0); var landed = a with { Center = center };
                 var point = Box4.IntersectionPoint(landed, b);
-                if (point is not null) yield return new(entry, new(b.Entity, b.Part, Box4.Vec(point), Box4.Vec(normal)));
+                if (point is not null) yield return new(entry, new(b.Entity, b.Part, Box4.ToVec4(point), Box4.ToVec4(normal)));
             }
     }
     /// <summary>Advances time and places unsupported turnables on their highest support.</summary>

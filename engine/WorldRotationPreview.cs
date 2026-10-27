@@ -29,7 +29,7 @@ public sealed partial class World
         var tangent = new Vec4(-plan.Axis.Z, 0, plan.Axis.X, 0); var min = double.PositiveInfinity; var max = double.NegativeInfinity; var low = double.PositiveInfinity; var high = double.NegativeInfinity; var minW = double.PositiveInfinity; var maxW = double.NegativeInfinity;
         foreach (var progress in plan.Samples) foreach (var part in item.Definition.Shape.Parts)
             {
-                var box = Box4.From(item.Definition, At(plan, progress), part); var center = Box4.Dot(Box4.Sub(box.Center, Box4.V(plan.Pivot)), Box4.V(tangent)); var radius = box.Radius(Box4.V(tangent));
+                var box = Box4.From(item.Definition, At(plan, progress), part); var center = Box4.Dot(Box4.Sub(box.Center, Box4.ToArray(plan.Pivot)), Box4.ToArray(tangent)); var radius = box.Radius(Box4.ToArray(tangent));
                 minW = Math.Min(minW, box.Center[3] - box.Radius([0, 0, 0, 1])); maxW = Math.Max(maxW, box.Center[3] + box.Radius([0, 0, 0, 1]));
                 min = Math.Min(min, center - radius); max = Math.Max(max, center + radius); low = Math.Min(low, box.Center[1] - box.Radius([0, 1, 0, 0])); high = Math.Max(high, box.Center[1] + box.Radius([0, 1, 0, 0]));
             }

@@ -22,14 +22,14 @@ internal static class WorldInterference
                                 {
                                     var obstacle = Box4.From(solid, other, segment);
                                     if (Enumerable.Range(0, 4).Any(i => Math.Abs(moving.Center[i] - obstacle.Center[i]) >= moving.Radius(Unit(i)) + obstacle.Radius(Unit(i)) - .005)) continue;
-                                    if (!Box4.Overlaps(moving, obstacle, .005)) continue;
+                                    if (!Box4.Overlaps(moving, obstacle)) continue;
                                     var point = Box4.IntersectionPoint(moving, obstacle);
                                     if (point is null) continue;
                                     var delta = Box4.Sub(moving.Center, obstacle.Center);
                                     var normal = Box4.SeparatingAxes(moving, obstacle).MinBy(n => moving.Radius(n) + obstacle.Radius(n) - Math.Abs(Box4.Dot(n, delta)))!;
                                     if (Box4.Dot(normal, delta) < 0) normal = normal.Select(v => -v).ToArray();
                                     var section = description.Sections?.FirstOrDefault(s => s is not null && s.W == point[3])?.Id;
-                                    contacts.Add(new(item.Id, part.Id, element.Id, other.Id, Box4.Vec(point), Box4.Vec(normal), section));
+                                    contacts.Add(new(item.Id, part.Id, element.Id, other.Id, Box4.ToVec4(point), Box4.ToVec4(normal), section));
                                 }
                         }
                     }

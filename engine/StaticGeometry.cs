@@ -5,10 +5,6 @@ internal static class GeometryMath
     internal static Vec3 Add(Vec3 a, Vec3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
     internal static Vec3 Scale(Vec3 a, double b) => new(a.X * b, a.Y * b, a.Z * b);
     internal static Vec3 Transform(Rotation3 r, Vec3 p) => Add(Add(Scale(r.X, p.X), Scale(r.Y, p.Y)), Scale(r.Z, p.Z));
-    internal static Vec3 Transform(Rotation4 r, Vec3 p) => new(
-        r.X.X * p.X + r.Y.X * p.Y + r.Z.X * p.Z,
-        r.X.Y * p.X + r.Y.Y * p.Y + r.Z.Y * p.Z,
-        r.X.Z * p.X + r.Y.Z * p.Y + r.Z.Z * p.Z);
 }
 
 // The same closed W segments back slicing and the later support/collision queries.
@@ -32,14 +28,14 @@ internal sealed record StaticEntity(EntityId Id, Pose4 Pose, BoxPart[] Parts, In
                     _ => [new(-h.X, -h.Y, sign * h.Z), new(h.X, -h.Y, sign * h.Z), new(h.X, h.Y, sign * h.Z), new(-h.X, h.Y, sign * h.Z)]
                 };
                 var localNormal = face.Axis switch { Axis3.X => new Vec3(sign, 0, 0), Axis3.Y => new Vec3(0, sign, 0), _ => new Vec3(0, 0, sign) };
-                var normal = GeometryMath.Transform(Pose.Rotation, GeometryMath.Transform(part.Rotation, localNormal));
+                var normal = World.Transform(Pose.Rotation, GeometryMath.Transform(part.Rotation, localNormal));
                 // Reversing W also reverses the projected XYZ orientation.
                 foreach (var index in face.Positive == (Pose.Rotation.W.W > 0) ? new[] { 0, 1, 2, 0, 2, 3 } : new[] { 0, 2, 1, 0, 3, 2 })
                 {
                     var corner = corners[index];
                     var point = GeometryMath.Add(part.Center, GeometryMath.Transform(part.Rotation, corner));
-                    var worldPoint = GeometryMath.Add(new(Pose.Position.X, Pose.Position.Y, Pose.Position.Z), GeometryMath.Transform(Pose.Rotation, point));
-                    positions.AddRange([worldPoint.X, worldPoint.Y, worldPoint.Z]);
+                    var offset = World.Transform(Pose.Rotation, point);
+                    positions.AddRange([Pose.Position.X + offset.X, Pose.Position.Y + offset.Y, Pose.Position.Z + offset.Z]);
                     normals.AddRange([normal.X, normal.Y, normal.Z]);
                     var (u, v) = face.Axis switch { Axis3.X => (corner.Z, corner.Y), Axis3.Y => (corner.X, corner.Z), _ => (corner.X, corner.Y) };
                     uvs.AddRange([(face.Positive ? u : -u) * face.Scale.X + face.Offset.X, v * face.Scale.Y + face.Offset.Y]);

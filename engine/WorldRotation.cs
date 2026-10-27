@@ -8,12 +8,12 @@ public sealed partial class World
     private static Failure RotationFailure(FailureCode code, string detail, EntityId? id = null, IReadOnlyList<Contact>? contacts = null) => new(code, detail, id, null, contacts ?? Array.Empty<Contact>());
     internal static Vec4 Rotate(Vec4 value, Vec4 axis, double angle)
     {
-        var a = Box4.V(axis); var v = Box4.V(value); var dot = Box4.Dot(a, v);
+        var a = Box4.ToArray(axis); var v = Box4.ToArray(value); var dot = Box4.Dot(a, v);
         var halfTurn = angle == Math.PI || angle == -Math.PI;
         var c = halfTurn ? -1 : Math.Cos(angle); var s = halfTurn ? 0 : Math.Sin(angle);
         for (var i = 0; i < 3; i++) v[i] += a[i] * ((c - 1) * dot - s * value.W);
         v[3] = s * dot + c * value.W;
-        return Box4.Vec(v);
+        return Box4.ToVec4(v);
     }
     internal static Vec4 Add(Vec4 a, Vec4 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
     internal static Vec4 Sub(Vec4 a, Vec4 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
@@ -27,7 +27,7 @@ public sealed partial class World
     {
         var boxes = item.Definition.Shape.Parts.Select(p => Box4.From(item.Definition, item.Pose, p)).ToArray();
         var center = Enumerable.Range(0, 3).Select(i => (boxes.Min(b => b.Center[i] - b.Radius(Unit(i))) + boxes.Max(b => b.Center[i] + b.Radius(Unit(i)))) / 2).ToArray();
-        var from = Box4.V(actor.Pose.Position); double[] to = [center[0], center[1], center[2], w]; var ray = Box4.Sub(to, from);
+        var from = Box4.ToArray(actor.Pose.Position); double[] to = [center[0], center[1], center[2], w]; var ray = Box4.Sub(to, from);
         var hits = new List<(double T, Box4 Box, double[] Normal)>();
         foreach (var box in Boxes().Where(b => staticDefinitions.ContainsKey(b.Entity)))
         {
@@ -45,7 +45,7 @@ public sealed partial class World
         if (hit.Box is not null)
         {
             var n = hit.Normal; if (Box4.Dot(n, Box4.Sub(from, to)) < 0) n = n.Select(v => -v).ToArray();
-            return (new(from[0] + hit.T * ray[0], center[1], from[2] + hit.T * ray[2], w), Box4.Vec(n), true);
+            return (new(from[0] + hit.T * ray[0], center[1], from[2] + hit.T * ray[2], w), Box4.ToVec4(n), true);
         }
         var dx = from[0] - to[0]; var dz = from[2] - to[2]; var length = Math.Sqrt(dx * dx + dz * dz);
         if (length <= 1e-10)
@@ -141,13 +141,13 @@ public sealed partial class World
                     {
                         var moving = Box4.From(item.Definition, pose, part);
                         if (Enumerable.Range(0, 4).Any(j => Math.Abs(moving.Center[j] - obstacle.Center[j]) >= moving.Radius(Unit(j)) + obstacle.Radius(Unit(j)) - .005)) continue;
-                        if (!Box4.Overlaps(moving, obstacle, .005)) continue;
+                        if (!Box4.Overlaps(moving, obstacle)) continue;
                         var point = Box4.IntersectionPoint(moving, obstacle); if (point is null) continue;
                         var delta = Box4.Sub(moving.Center, obstacle.Center);
                         var normal = Box4.SeparatingAxes(moving, obstacle).MinBy(n => moving.Radius(n) + obstacle.Radius(n) - Math.Abs(Box4.Dot(n, delta)))!;
                         if (Box4.Dot(normal, delta) < 0) normal = normal.Select(x => -x).ToArray();
                         var contactSection = sections.FirstOrDefault(s => Math.Abs(s.W - point[3]) <= 1e-10)?.Id;
-                        contacts.Add(new(request.Entity, part.Id, obstacle.Entity, obstacle.Part, Box4.Vec(point), Box4.Vec(normal), contactSection));
+                        contacts.Add(new(request.Entity, part.Id, obstacle.Entity, obstacle.Part, Box4.ToVec4(point), Box4.ToVec4(normal), contactSection));
                     }
                 if (contacts.Count > 0) { blocked = i; break; }
             }
@@ -166,7 +166,7 @@ public sealed partial class World
             {
                 var point = box.Center.ToArray();
                 for (var j = 0; j < 4; j++) for (var k = 0; k < 4; k++) point[k] += ((mask & (1 << j)) == 0 ? -1 : 1) * box.Half[j] * box.Axes[j][k];
-                var offset = Box4.Sub(point, Box4.V(pivot)); var along = Box4.Dot(offset, Box4.V(axis));
+                var offset = Box4.Sub(point, Box4.ToArray(pivot)); var along = Box4.Dot(offset, Box4.ToArray(axis));
                 radius = Math.Max(radius, Math.Sqrt(along * along + offset[3] * offset[3]));
             }
         }
@@ -187,7 +187,7 @@ public sealed partial class World
         foreach (var box in boxes) foreach (var other in reserved)
             {
                 if (Enumerable.Range(0, 4).Any(i => Math.Abs(box.Center[i] - other.Center[i]) >= box.Radius(Unit(i)) + other.Radius(Unit(i)) - .005)) continue;
-                if (Box4.Overlaps(box, other, .005)) return true;
+                if (Box4.Overlaps(box, other)) return true;
             }
         return false;
     }

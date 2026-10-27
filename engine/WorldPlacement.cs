@@ -8,8 +8,8 @@ public sealed partial class World
         UpdateResult Reject(FailureCode code, string detail, IReadOnlyList<Contact>? contacts = null) => new UpdateResult.Rejected(new(code, detail, entity, null, contacts ?? Array.Empty<Contact>()));
         if (!dynamicEntities.TryGetValue(entity, out var item)) return Reject(ReadEntity(entity) is EntityReadResult.Found ? FailureCode.WrongEntityKind : FailureCode.UnknownId, "Unknown or unsupported entity.");
         if (rotations.ContainsKey(entity)) return Reject(FailureCode.Busy, "Entity is rotating.");
-        var axes = new[] { Box4.V(pose.Rotation.X), Box4.V(pose.Rotation.Y), Box4.V(pose.Rotation.Z), Box4.V(pose.Rotation.W) };
-        if (Box4.V(pose.Position).Concat(axes.SelectMany(x => x)).Any(v => !double.IsFinite(v)) || !WorldValidation.Rotation(axes)) return Reject(FailureCode.InvalidInput, "Invalid pose.");
+        var axes = new[] { Box4.ToArray(pose.Rotation.X), Box4.ToArray(pose.Rotation.Y), Box4.ToArray(pose.Rotation.Z), Box4.ToArray(pose.Rotation.W) };
+        if (Box4.ToArray(pose.Position).Concat(axes.SelectMany(x => x)).Any(v => !double.IsFinite(v)) || !WorldValidation.Rotation(axes)) return Reject(FailureCode.InvalidInput, "Invalid pose.");
         var origin = item.Origin ?? item.Section!.Value;
         var section = sections.Single(s => s.Id == origin);
         var flat = Math.Abs(pose.Rotation.W.X) <= 1e-10 && Math.Abs(pose.Rotation.W.Y) <= 1e-10 && Math.Abs(pose.Rotation.W.Z) <= 1e-10;
@@ -29,11 +29,11 @@ public sealed partial class World
         var contacts = new List<Contact>();
         foreach (var a in boxes) foreach (var b in Boxes().Where(b => b.Entity != entity))
             {
-                if (!Box4.Overlaps(a, b, .005)) continue;
+                if (!Box4.Overlaps(a, b)) continue;
                 var point = Box4.IntersectionPoint(a, b); if (point is null) continue;
                 var axis = Box4.SeparatingAxes(a, b).MinBy(n => a.Radius(n) + b.Radius(n) - Math.Abs(Box4.Dot(n, Box4.Sub(a.Center, b.Center))))!;
                 if (Box4.Dot(axis, Box4.Sub(a.Center, b.Center)) < 0) axis = axis.Select(x => -x).ToArray();
-                contacts.Add(new(entity, a.Part, b.Entity, b.Part, Box4.Vec(point), Box4.Vec(axis), null));
+                contacts.Add(new(entity, a.Part, b.Entity, b.Part, Box4.ToVec4(point), Box4.ToVec4(axis), null));
             }
         if (contacts.Count > 0) return Reject(FailureCode.TranslationBlocked, "Target pose is occupied.", contacts.AsReadOnly());
         dynamicEntities[entity] = proposed; revision++;
