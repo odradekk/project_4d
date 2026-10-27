@@ -2,6 +2,10 @@ namespace FourD;
 
 public sealed partial class World
 {
+    // How far a device's position may be from the one an expected step names (docs/frame/scene-authoring.md). It only
+    // compares expected values and does not replace the contact tolerance of a collision.
+    private const double ExpectedTolerance = 1e-9;
+
     private static LoadError[] CheckExpectedOperations(WorldDescription description)
     {
         var errors = new List<LoadError>();
@@ -83,11 +87,12 @@ public sealed partial class World
             var original = description.Entities.FirstOrDefault(entity => entity.Id == replacement.Id);
             if (original is null)
                 Report(LoadErrorCode.MissingReference, "Unknown entity override.", entity: replacement.Id);
-            else if (original is not TurnableDefinition and not ItemDefinition and not Creature3Definition || original.GetType() != replacement.GetType())
+            else if (original is not TurnableDefinition and not ItemDefinition and not Creature3Definition and not DeviceDefinition
+                || original.GetType() != replacement.GetType())
                 Report(LoadErrorCode.UnsupportedDefinition, "Override must match a supported dynamic entity kind.", entity: replacement.Id);
         }
         for (var i = 0; i < operation.Steps.Count; i++)
-            if (operation.Steps[i] is not ExpectedRotation and not ExpectedCrossing and not ExpectedAdvance)
+            if (operation.Steps[i] is not ExpectedRotation and not ExpectedCrossing and not ExpectedDevice and not ExpectedAdvance)
                 Report(LoadErrorCode.UnsupportedDefinition, "This expected step is not implemented.", step: i);
         return problems;
     }
@@ -122,6 +127,7 @@ public sealed partial class World
             {
                 ExpectedRotation rotation => rotation.ExpectedFailure,
                 ExpectedCrossing crossing => crossing.ExpectedFailure,
+                ExpectedDevice device => device.ExpectedFailure,
                 _ => null
             };
             var failure = RunStep(world, step);
@@ -129,6 +135,13 @@ public sealed partial class World
             {
                 var detail = $"Expected {expected?.ToString() ?? "success"}; got {failure?.Code.ToString() ?? "success"}.";
                 return [OperationError(operation, LoadErrorCode.ExpectedOperationFailed, detail, i, failure?.Entity, failure?.Contacts)];
+            }
+            // A device that is to move ends where the step says, which is short of its target when something stops it.
+            if (step is ExpectedDevice moved && failure is null)
+            {
+                var position = world.devices[moved.Device].Position;
+                if (!(Math.Abs(position - moved.ExpectedPosition) <= ExpectedTolerance))
+                    return [OperationError(operation, LoadErrorCode.ExpectedOperationFailed, $"Expected position {moved.ExpectedPosition}; got {position}.", i, moved.Device)];
             }
         }
         return [];
@@ -141,6 +154,7 @@ public sealed partial class World
     {
         ExpectedRotation rotation => RunRotation(world, rotation),
         ExpectedCrossing crossing => (world.CrossSeam(crossing.Request) as CrossSeamResult.Rejected)?.Failure,
+        ExpectedDevice device => (world.DriveDevice(device.Device, device.Target) as DriveDeviceResult.Rejected)?.Failure,
         ExpectedAdvance advance => (world.Step(advance.Delta) as StepResult.Rejected)?.Failure,
         _ => null
     };

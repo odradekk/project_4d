@@ -107,12 +107,14 @@ public sealed partial class World
         {
             Creature3Definition actor => AddActor(actor),
             TurnableDefinition or ItemDefinition => AddDynamic(definition),
-            _ => Reject(FailureCode.WrongEntityKind, "Only creatures, turnables and items can currently be added.")
+            DeviceDefinition device => AddDeviceEntity(device),
+            _ => Reject(FailureCode.WrongEntityKind, "Only creatures, turnables, items and devices can currently be added.")
         };
     }
 
     private bool IsUsed(EntityId id) =>
-        entities.Any(entity => entity.Id == id) || dynamicEntities.ContainsKey(id) || actors.ContainsKey(id) || retired.Contains(id);
+        entities.Any(entity => entity.Id == id) || dynamicEntities.ContainsKey(id) || actors.ContainsKey(id) || devices.ContainsKey(id)
+        || retired.Contains(id);
 
     private AddEntityResult AddActor(Creature3Definition actor)
     {
@@ -148,7 +150,7 @@ public sealed partial class World
     {
         if (rotations.ContainsKey(entity) || IsHeld(entity) || HoldsItem(entity))
             return new RemoveEntityResult.Rejected(Fail(FailureCode.EntityInUse, "Entity is rotating, held, or holding an item.", entity));
-        if (actors.Remove(entity) || dynamicEntities.Remove(entity))
+        if (actors.Remove(entity) || dynamicEntities.Remove(entity) || devices.Remove(entity))
         {
             retired.Add(entity);
             revision++;
@@ -169,6 +171,7 @@ public sealed partial class World
     {
         if (actors.TryGetValue(entity, out var actor)) return new EntityReadResult.Found(State(actor));
         if (dynamicEntities.TryGetValue(entity, out var item)) return new EntityReadResult.Found(State(item));
+        if (devices.TryGetValue(entity, out var device)) return new EntityReadResult.Found(State(device));
         if (!staticDefinitions.TryGetValue(entity, out var definition)) return new EntityReadResult.Missing(entity);
         var fixedObject = definition as FixedDefinition;
         return new EntityReadResult.Found(new(
