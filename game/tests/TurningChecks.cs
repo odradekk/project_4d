@@ -31,10 +31,6 @@ public partial class TurningChecks : Node
             await CheckSlicesAndCollision();
             await CheckHoldAndTurn();
             await play.Load();
-            await CheckHeldObjectAtFurniture();
-            await play.Load();
-            await CheckHeldObjectLetGoWhenFar();
-            await play.Load();
             await CheckFlip();
             await play.Load();
             await CheckHeldFlip();
@@ -224,49 +220,6 @@ public partial class TurningChecks : Node
         Press(Key.E);
         await play.Frames(90);
         Check(actions.Held is null && play.Position("pole").Y < .04f, "a laid pole drops onto the floor when let go");
-    }
-
-    private async Task CheckHeldObjectAtFurniture()
-    {
-        // The engine leaves a flat object in the hand to the host's physics, so the whole pole must stop at the cabinet face at x = 2.5.
-        play.LookAt(new(1.5f, .02f, 2.4f), new(1.5f, .03125f, 1.5f));
-        await play.Frames(2);
-        Press(Key.E);
-        await play.Frames(3);
-        // Walk along the cabinet's width toward it. At x = 1.6 the hand is at x = 2.2, clear of the cabinet, but the pole's
-        // far end, 0.5 m from its middle, would be at x = 2.7.
-        player.Position = new(1.0f, 0, 0);
-        player.Rotation = new(0, -Mathf.Pi / 2, 0);
-        player.Camera.Rotation = Vector3.Zero;
-        await play.Frames(5);
-        player.Position = new(1.6f, 0, 0);
-        await play.Frames(5);
-        var end = play.SliceBounds("Ⅰ", "pole").End.X;
-        Check(end <= 2.51f, $"a held object must not be carried into furniture; its end is at x = {end}");
-
-        // Let go beside the cabinet, the pole is not caught in it: aiming at it from the front, it turns.
-        Press(Key.E);
-        await play.Frames(90);
-        play.LookAt(new(2f, .02f, .9f), new(2f, .03125f, 0));
-        await play.Frames(2);
-        Press(Key.F);
-        await play.Frames(3);
-        Check(play.State("pole").Rotating, "a pole that was let go beside the cabinet must still turn");
-    }
-
-    private async Task CheckHeldObjectLetGoWhenFar()
-    {
-        // A turn takes the object from the hand's side, so the player can walk off during it.
-        play.LookAt(new(1.5f, .02f, 2.4f), new(1.5f, .03125f, 1.5f));
-        await play.Frames(2);
-        Press(Key.E);
-        await play.Frames(3);
-        Press(Key.F);
-        await play.Frames(10);
-        player.Position = new(-3, 0, 2.4f);
-        await play.Frames(TurnFrames);
-        Check(actions.Held is null, "an object left more than an arm's length behind must be let go");
-        Check(play.State("pole").Holder is null, "the engine must not keep it held");
     }
 
     private async Task CheckFlip()

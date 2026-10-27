@@ -24,9 +24,19 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
 
     internal IReadOnlyCollection<EntityId> Entities => movable;
 
-    /// <summary>The convex hull of an entity's slice in a section, where the slice is now; null when it has none there.</summary>
-    internal Shape3D? HullOf(SectionId section, EntityId entity) =>
-        nodes.TryGetValue((section, entity), out var node) ? node.GetNode<MeshInstance3D>("Surface").Mesh.CreateConvexShape() : null;
+    /// <summary>
+    /// One convex shape for each part of an entity's slice in a section, where the slice is now; none when it has no slice
+    /// there. A shape per part keeps the gap in a bent object, which one hull of the whole would fill.
+    /// </summary>
+    internal IReadOnlyList<Shape3D> HullsOf(SectionId section, EntityId entity)
+    {
+        if (!nodes.TryGetValue((section, entity), out var node)) return [];
+        var mesh = node.GetNode<MeshInstance3D>("Surface").Mesh;
+        var hulls = new List<Shape3D>();
+        for (var surface = 0; surface < mesh.GetSurfaceCount(); surface++)
+            hulls.Add(new ConvexPolygonShape3D { Points = mesh.SurfaceGetArrays(surface)[(int)Mesh.ArrayType.Vertex].AsVector3Array() });
+        return hulls;
+    }
 
     internal void Refresh()
     {

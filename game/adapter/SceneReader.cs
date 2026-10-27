@@ -121,7 +121,8 @@ internal sealed class SceneReader(Region3D region)
             new(turnable.BuildingId), Shape(turnable, id), properties));
     }
 
-    // The spawn's direction is the creature's ordinary yaw, which the host passes on every frame; its four-dimensional rotation starts as none.
+    // The spawn's direction is the creature's ordinary yaw, which the host passes on every frame;
+    // its four-dimensional rotation starts as none.
     private Creature3Definition Creature(CreatureSpawn3D spawn, Section3D section)
     {
         Map(spawn, "EntityId", "Pose", spawn, "Transform");

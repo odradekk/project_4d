@@ -38,6 +38,7 @@ public sealed partial class PlayerActions : Node
     private DynamicSlices slices = null!;
     private LensOverlay overlay = null!;
     private AudioStreamPlayer scratch = null!;
+    private CharacterBody3D carrier = null!;
     private string? aimed;
     private Vector3 grip;
     private Vector3 lastHand;
@@ -62,6 +63,10 @@ public sealed partial class PlayerActions : Node
         this.overlay = overlay;
         scratch = new AudioStreamPlayer { Name = "Scratch", Stream = GD.Load<AudioStream>("res://audio/scratch.wav") };
         AddChild(scratch);
+        // A body that is never seen: the shape of the carried object is put on it, and it is moved to test the way.
+        carrier = new CharacterBody3D { Name = "Carrier", CollisionLayer = 0, CollisionMask = WorldLayer };
+        carrier.AddCollisionExceptionWith(player);
+        AddChild(carrier);
         // After the player has moved, so that the hand is where the player is this frame.
         ProcessPhysicsPriority = 1;
         lastHand = Hand();
@@ -160,10 +165,14 @@ public sealed partial class PlayerActions : Node
     private string? SectionShowing(EntityId entity)
     {
         var current = State(actor).Section;
-        foreach (var scene in scenes.OrderBy(scene => scene.Id == current ? 0 : 1))
-            if (world.HasSlice(entity, scene.Id) is SlicePresenceResult.Present { HasVolume: true }) return scene.Id.Value;
+        if (current is { } here && Shows(entity, here)) return here.Value;
+        foreach (var scene in scenes)
+            if (scene.Id != current && Shows(entity, scene.Id)) return scene.Id.Value;
         return null;
     }
+
+    private bool Shows(EntityId entity, SectionId section) =>
+        world.HasSlice(entity, section) is SlicePresenceResult.Present { HasVolume: true };
 
     // The point ahead of the body, at the height the player looks toward.
     private Vector3 Hand()
@@ -203,23 +212,25 @@ public sealed partial class PlayerActions : Node
         if (!scratch.Playing) scratch.Play();
     }
 
-    // The engine leaves a flat object in the hand to the host's physics. Its slice moves along x, z and y in turn, the
-    // order of the engine's own sweep, and stops where it would touch anything, so it slides along what blocks it.
+    // The engine leaves a flat object in the hand to the host's physics. The carrier, with the shapes of the object's parts,
+    // moves along x, z and y in turn, the order of the engine's own sweep, and stops where it would touch anything, so it
+    // slides along what blocks it. It also pushes itself out of what it starts in, such as the platform it was resting on.
     private Vector3 CarryThroughWorld(EntityId id, Vector3 delta)
     {
-        if (State(actor).Section is not { } section || slices.HullOf(section, id) is not { } hull) return delta;
-        var space = player.GetWorld3D().DirectSpaceState;
-        var query = new PhysicsShapeQueryParameters3D { Shape = hull, CollisionMask = WorldLayer, Exclude = [player.GetRid()] };
-        var moved = Vector3.Zero;
+        if (State(actor).Section is not { } section) return delta;
+        var hulls = slices.HullsOf(section, id);
+        if (hulls.Count == 0) return delta;
+        foreach (var old in carrier.GetChildren()) old.Free();
+        foreach (var hull in hulls) carrier.AddChild(new CollisionShape3D { Shape = hull });
+        carrier.Position = Vector3.Zero;
         foreach (var axis in new[] { 0, 2, 1 })
         {
             var step = Vector3.Zero;
             step[axis] = delta[axis];
-            query.Transform = new Transform3D(Basis.Identity, moved);
-            query.Motion = step;
-            moved += step * space.CastMotion(query)[0];
+            var collision = carrier.MoveAndCollide(step, testOnly: true, recoveryAsCollision: true);
+            carrier.Position += collision is null ? step : collision.GetTravel();
         }
-        return moved;
+        return carrier.Position;
     }
 
     // Draws, in the section the lens shows, the sweep of what F would do to the held or aimed entity, so that red means
@@ -236,9 +247,18 @@ public sealed partial class PlayerActions : Node
         if (previewDelay > 0) return;
         previewDelay = PreviewInterval;
         var section = new SectionId(target);
-        overlay.ShowPreview(section, PreviewOf(StandOrLayRequest(id), section)?.Value, PreviewOf(new Flip(actor, id), section)?.Value.FoldPlane ?? []);
+        var stand = StandOrLayRequest(id);
+        var sweep = stand is null ? null : PreviewOf(stand, section);
+        var fold = PreviewOf(new Flip(actor, id), section)?.FoldPlane ?? [];
+        overlay.ShowPreview(section, sweep, fold);
     }
 
-    private PreviewResult.Preview? PreviewOf(RotationRequest? request, SectionId section) =>
-        request is not null && PlanOf(world.PlanRotation(request)) is { } plan ? world.GetRotationPreview(plan, section) as PreviewResult.Preview : null;
+    // What the lens shows of the turn the request makes, in the section, whether or not the turn is blocked.
+    private RotationPreview? PreviewOf(RotationRequest request, SectionId section)
+    {
+        var plan = PlanOf(world.PlanRotation(request));
+        if (plan is null) return null;
+        var preview = world.GetRotationPreview(plan, section);
+        return preview is PreviewResult.Preview shown ? shown.Value : null;
+    }
 }
