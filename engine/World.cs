@@ -46,12 +46,12 @@ public sealed partial class World
             else if (definition is Creature3Definition actor) world.actors.Add(actor.Id, new(actor, actor.Pose, 0));
             else
             {
-                var geometry=entities.Single(e=>e.Id==definition.Id);
-                var shape=new BoxAssembly(Array.AsReadOnly(geometry.Parts));
-                world.staticDefinitions.Add(definition.Id,definition switch
+                var geometry = entities.Single(e => e.Id == definition.Id);
+                var shape = new BoxAssembly(Array.AsReadOnly(geometry.Parts));
+                world.staticDefinitions.Add(definition.Id, definition switch
                 {
-                    BuildingElementDefinition b => b with { Shape=shape, Gaps=Array.AsReadOnly(b.Gaps.ToArray()) },
-                    FixedDefinition f => f with { Shape=shape },
+                    BuildingElementDefinition b => b with { Shape = shape, Gaps = Array.AsReadOnly(b.Gaps.ToArray()) },
+                    FixedDefinition f => f with { Shape = shape },
                     _ => throw new ArgumentException("Unsupported entity.")
                 });
             }

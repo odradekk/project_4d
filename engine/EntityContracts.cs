@@ -1,4 +1,5 @@
 namespace FourD;
+
 public sealed record TurnableDefinition(EntityId Id, Pose4 Pose, Source Source, SectionId Section, BuildingId Building, BoxAssembly Shape, TurnableProperties Interaction) : EntityDefinition(Id, Pose, Source);
 public sealed record Creature3Definition(EntityId Id, Pose4 Pose, Source Source, SectionId Section, double PassageRadius, double PassageHeight, bool CanUseSeamsWithoutPrism) : EntityDefinition(Id, Pose, Source);
 public sealed record TurnableProperties(bool Holdable, bool Packable, double HorizontalRadius, Axis3 LongAxis, Vec3 Hinge, double Reach);
