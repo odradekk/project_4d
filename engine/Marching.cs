@@ -16,7 +16,7 @@ internal sealed class Marching(
     // Adds the triangles of the surface of the region where `values` is positive, facing out of the region. The
     // grid has counts[0] x counts[1] x counts[2] nodes, and node (x, y, z) has the index (x * counts[1] + y) * counts[2] + z.
     // `position` gives the place of a node, and `cut` the point of the surface on the edge from a node inside the
-    // region to one outside it. Tetrahedra that share an edge each ask for its cut, so a `cut` that is dear to
+    // region to one outside it. Tetrahedra that share an edge each ask for its cut, so a `cut` that is costly to
     // compute should remember its points.
     internal static void Surface(
         PartId part, int[] counts, double[] values, Func<int, double[]> position, Func<int, int, double[]> cut, SliceBuffer buffer)

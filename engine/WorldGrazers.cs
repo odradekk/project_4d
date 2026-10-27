@@ -69,8 +69,8 @@ public sealed partial class World
     /// slices, the collision and the support, and the next Step settles what stood on them. Each element that is
     /// gone is reported as StructureConsumed, in ID order, and then each seam that is cut as SeamSevered, in ID order;
     /// elements already consumed and seams already severed succeed without an event. Rejected(UnknownId) for an
-    /// unknown grazer, element or seam, and Rejected(WrongEntityKind) for an ID of another kind or a grazer that is
-    /// not one; a rejection changes nothing.
+    /// unknown grazer, element or seam; Rejected(WrongEntityKind) for a grazer ID that names another kind of entity
+    /// and for an element ID that names anything but a building element; a rejection changes nothing.
     /// </summary>
     public UpdateResult ConsumeStructure(EntityId grazer, IReadOnlyList<EntityId> elements, IReadOnlyList<SeamId> seams)
     {

@@ -169,11 +169,11 @@ public class GrazerTests
     [Fact]
     public void AnUnturnedBodyKeepsItsBallsWhereTheyAreOffset()
     {
-        // The ball 2 along X lies in section I, and section II is .42 from it: sqrt(3² - .42²) = 2.97049.
+        // The ball 2 along X lies in section I, and section II is .42 from it: sqrt(3² - .42²) = 2.97045.
         var world = GrazerScene(At(0, 4, 0), Lump(new(2, 0, 0, 0)));
 
         AssertSphere(world.SliceOf(GrazerId, I)!, new(2, 4, 0), LumpRadius);
-        AssertSphere(world.SliceOf(GrazerId, II)!, new(2, 4, 0), 2.97049);
+        AssertSphere(world.SliceOf(GrazerId, II)!, new(2, 4, 0), 2.97045);
     }
 
     [Fact]
