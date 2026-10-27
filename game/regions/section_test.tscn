@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=41 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
@@ -8,6 +8,8 @@
 [ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
 [ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="7"]
 [ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="8"]
+[ext_resource type="Script" path="res://adapter/TurnableObject3D.cs" id="10"]
+[ext_resource type="Script" path="res://adapter/TurnableResource.cs" id="11"]
 [ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="9"]
 
 [sub_resource type="Resource" id="Uv0"]
@@ -76,11 +78,64 @@ albedo_color = Color(0.6, 0.52, 0.35, 1)
 material = SubResource("Mat5")
 size = Vector3(1, 1.2, 1)
 
+[sub_resource type="StandardMaterial3D" id="Mat6"]
+albedo_color = Color(0.8, 0.65, 0.4, 1)
+[sub_resource type="BoxMesh" id="Box6"]
+material = SubResource("Mat6")
+size = Vector3(1, 0.0625, 0.0625)
+
+[sub_resource type="StandardMaterial3D" id="Mat7"]
+albedo_color = Color(0.9, 0.55, 0.6, 1)
+[sub_resource type="BoxMesh" id="Box7"]
+material = SubResource("Mat7")
+size = Vector3(0.25, 0.0625, 0.125)
+
+[sub_resource type="StandardMaterial3D" id="Mat8"]
+albedo_color = Color(0.55, 0.4, 0.25, 1)
+[sub_resource type="BoxMesh" id="Box8"]
+material = SubResource("Mat8")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat9"]
+albedo_color = Color(0.55, 0.45, 0.7, 1)
+[sub_resource type="BoxMesh" id="Box9"]
+material = SubResource("Mat9")
+size = Vector3(0.2, 0.2, 0.2)
+
+[sub_resource type="Resource" id="Turn0"]
+script = ExtResource("11")
+Holdable = true
+HorizontalRadius = 0.5
+Hinge = Vector3(-0.46875, 0, 0)
+Reach = 0.96875
+
+[sub_resource type="Resource" id="Turn1"]
+script = ExtResource("11")
+Holdable = true
+Packable = true
+HorizontalRadius = 0.125
+Hinge = Vector3(-0.0625, 0, 0)
+Reach = 0.1875
+
+[sub_resource type="Resource" id="Turn2"]
+script = ExtResource("11")
+Holdable = true
+HorizontalRadius = 0.25
+Hinge = Vector3(-0.21875, 0, 0)
+Reach = 0.46875
+
 [node name="SectionTest" type="Node3D"]
 script = ExtResource("1")
 PrismEnabled = true
 
 [node name="Sections" type="Node" parent="."]
+
+[node name="Ⅲ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅲ"
+W = -0.6
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅲ"]
 
 [node name="Ⅰ" type="Node3D" parent="Sections"]
 script = ExtResource("2")
@@ -90,6 +145,54 @@ W = 0
 [node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
 
 [node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Turnables" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Pole" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(1.5, 0.03125, 1.5)
+script = ExtResource("10")
+EntityId = "pole"
+BuildingId = "home"
+Interaction = SubResource("Turn0")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Pole"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box6")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Rubber" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(0.5, 0.03125, 1.5)
+script = ExtResource("10")
+EntityId = "rubber"
+BuildingId = "home"
+Interaction = SubResource("Turn1")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Rubber"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box7")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Mark" type="Label3D" parent="Sections/Ⅰ/Turnables/Rubber"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.0325, 0)
+pixel_size = 0.001
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "满"
+font_size = 96
+
+[node name="Crate" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(-2.6, 0.25, -0.9)
+script = ExtResource("10")
+EntityId = "crate"
+BuildingId = "home"
+Interaction = SubResource("Turn2")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Crate"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box8")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Ⅱ" type="Node3D" parent="Sections"]
 script = ExtResource("2")
@@ -207,6 +310,20 @@ WMax = 1
 script = ExtResource("6")
 PartId = "body"
 mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Post" type="Node3D" parent="Buildings/Home"]
+position = Vector3(1.9, 0.49, 0.9)
+script = ExtResource("4")
+EntityId = "Post"
+BuildingId = "home"
+WMin = 0.4
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Post"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box9")
 FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Items" type="Node" parent="."]

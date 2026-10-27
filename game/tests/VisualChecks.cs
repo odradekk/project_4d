@@ -1,18 +1,29 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Game.Adapter;
 using Godot;
+using static Game.Tests.TurningFixture;
 
 namespace Game.Tests;
 
-// Run with --scene res://tests/visual_checks.tscn -- prism|main|disabled|empty|scale2|outline*.
+// Run with --scene res://tests/visual_checks.tscn -- prism|main|disabled|empty|scale2|outline*|upright-outline.
 public partial class VisualChecks : Node
 {
     public override async void _Ready()
     {
         var mode = OS.GetCmdlineUserArgs().FirstOrDefault() ?? "prism";
+        if (mode == "upright-outline")
+        {
+            await UprightOutline();
+            return;
+        }
         var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
-        if (mode == "empty") region.GetNode("Sections/Ⅱ").Free();
+        if (mode == "empty")
+        {
+            region.GetNode("Sections/Ⅱ").Free();
+            region.GetNode("Sections/Ⅲ").Free();
+        }
         if (mode == "disabled") region.PrismEnabled = false;
         if (mode == "scale2") GetWindow().ContentScaleFactor = 2;
         if (mode == "outline-many")
@@ -101,15 +112,53 @@ public partial class VisualChecks : Node
         if (mode != "main")
             Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Right, Pressed = true });
     }
+
+    // Stands the pole up from the hand, then looks at its slice in the other section through the lens.
+    private async Task UprightOutline()
+    {
+        var play = new TurningFixture(this);
+        await play.Load();
+        var player = play.Player;
+        play.LookAt(new(3f, 0, 1.5f), new(1.9f, .03125f, 1.5f));
+        await play.Frames(3);
+        Press(Key.E);
+        await play.Frames(3);
+        // The pole lies along the view when held, so its hinge, where the slice stands, ends 1.07 m ahead and near the middle of the lens.
+        player.Camera.Rotation = new(-.5f, 0, 0);
+        await play.Frames(3);
+        Press(Key.F);
+        await play.Frames(100);
+        // Let go, so that the preview lines do not add to the outline, and look a little beside the slice where it falls.
+        Press(Key.E);
+        await play.Frames(80);
+        var slice = play.Position("pole");
+        var toSlice = slice - player.Camera.GlobalPosition;
+        player.Camera.Rotation = new(Mathf.Atan2(toSlice.Y, new Vector2(toSlice.X, toSlice.Z).Length()) + .15f, 0, 0);
+        Button(MouseButton.Right, true);
+        await play.Frames(10);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        var image = GetViewport().GetTexture().GetImage();
+        var screen = player.Camera.UnprojectPosition(slice);
+        var outline = CyanPixels(image, (int)screen.X - 30, (int)screen.Y - 30, (int)screen.X + 30, (int)screen.Y + 30);
+        if (outline < 20)
+        {
+            GD.PushError($"CHECK FAILED: the upright pole's slice must glow in the lens at {screen}; cyan pixels = {outline}");
+            GetTree().Quit(1);
+            return;
+        }
+        GD.Print($"Upright outline visual check passed: {outline} outline pixels around the slice.");
+        GetTree().Quit();
+    }
+
     private static int CyanPixels(Image image, int x0, int y0, int x1, int y1)
     {
         var count = 0;
         for (var y = y0; y < y1; y++)
-        for (var x = x0; x < x1; x++)
-        {
-            var c = image.GetPixel(x, y);
-            if (c.B > .7f && c.G > .7f && c.R < .82f && c.B > c.R * 1.1f) count++;
-        }
+            for (var x = x0; x < x1; x++)
+            {
+                var c = image.GetPixel(x, y);
+                if (c.B > .7f && c.G > .7f && c.R < .82f && c.B > c.R * 1.1f) count++;
+            }
         return count;
     }
 }

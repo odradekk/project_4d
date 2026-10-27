@@ -13,7 +13,7 @@ public partial class AudioChecks : Node
         {
             var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
             region.GetNode("Sections").AddChild(new Section3D { Name = "Half", SectionId = "Half", W = .21 });
-            region.GetNode("Sections").MoveChild(region.GetNode("Sections/Half"), 1);
+            region.GetNode("Sections").MoveChild(region.GetNode("Sections/Half"), 2);
             AddChild(region);
             Check(GetViewport().AudioListenerEnable3D, "the main viewport must listen to spatial audio");
             Check(region.CurrentSection == "Ⅰ", "listener section must be the spawn section");
