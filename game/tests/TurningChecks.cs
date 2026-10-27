@@ -42,7 +42,10 @@ public partial class TurningChecks : Node
             await CheckTargetSection();
             await play.Load(MakeCrateHeavy);
             await CheckHeavyObject();
-            GD.Print("Turning checks passed: authoring, slices, collision, hold, stand up, lay down, flip, target section, heavy object.");
+            var interactions = 0;
+            await play.Load(region => AddHatch(region, () => interactions++));
+            await CheckHatchWhileHolding(() => interactions);
+            GD.Print("Turning checks passed: authoring, slices, collision, hold, stand up, lay down, flip, target section, heavy object, hatch.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -55,6 +58,29 @@ public partial class TurningChecks : Node
             Input.ActionRelease("move_forward");
             Input.MouseMode = Input.MouseModeEnum.Visible;
         }
+    }
+
+    // An interactable in the middle of the room, like the hatch the player pulls with an object in hand.
+    private static void AddHatch(Region3D region, Action pulled)
+    {
+        var hatch = new Game.Interaction.Interactable3D { Prompt = "拉开", Position = new(1.5f, 1.3f, .6f) };
+        hatch.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = new(.4f, .4f, .4f) } });
+        hatch.Interacted += () => pulled();
+        region.AddChild(hatch);
+    }
+
+    private async Task CheckHatchWhileHolding(Func<int> pulls)
+    {
+        play.LookAt(new(1.5f, .02f, 2.4f), new(1.5f, .03125f, 1.5f));
+        await play.Frames(2);
+        Press(Key.E);
+        await play.Frames(3);
+        play.LookAt(new(1.5f, .02f, 2.4f), new(1.5f, 1.3f, .6f));
+        await play.Frames(2);
+        Check(player.Hud.HintText.Contains("拉开"), $"the interactable's prompt must show while holding; saw '{player.Hud.HintText}'");
+        Press(Key.E);
+        await play.Frames(3);
+        Check(pulls() == 1 && actions.Held == "pole", "E on an interactable must use it and keep what is held");
     }
 
     private static void MakeCrateHeavy(Region3D region)

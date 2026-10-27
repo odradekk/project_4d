@@ -60,15 +60,15 @@ public partial class FirstPersonPlayer : CharacterBody3D
                 GetViewport().SetInputAsHandled();
                 return;
             }
-            if (key.Keycode == Key.E && pointerCaptured && actions is not null && (actions.Holding || aimedEntity is not null))
-            {
-                SayRefusal(actions.Use());
-                GetViewport().SetInputAsHandled();
-                return;
-            }
             if (key.Keycode == Key.E && pointerCaptured && GodotObject.IsInstanceValid(target))
             {
                 target!.Interact();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && actions is not null && (actions.Holding || aimedEntity is not null))
+            {
+                SayRefusal(actions.Use());
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -133,11 +133,11 @@ public partial class FirstPersonPlayer : CharacterBody3D
         MoveAndSlide();
     }
 
-    // The keys that act on what is held, or else on what the crosshair is on.
+    // The prompt of what the crosshair is on if it can be used, else the keys that act on what is held or aimed at.
     private string HintText()
     {
-        if (actions is null || (!actions.Holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity))))
-            return target is null ? "" : $"E  {target.Prompt}";
+        if (target is not null) return $"E  {target.Prompt}";
+        if (actions is null || (!actions.Holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return "";
         var upright = actions.Holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
         var keys = new List<string>();
         if (actions.Holding) keys.Add(upright ? "E  松手" : "E  放下");
