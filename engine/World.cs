@@ -31,7 +31,7 @@ public sealed partial class World
 
     private readonly SectionDefinition[] sections;
     private readonly BuildingDefinition[] buildings;
-    private readonly StaticEntity[] entities;
+    private StaticEntity[] entities;
     private readonly Dictionary<EntityId, EntityDefinition> staticDefinitions = [];
 
     private World(WorldDescription description)
@@ -52,6 +52,9 @@ public sealed partial class World
                     break;
                 case DeviceDefinition device:
                     devices.Add(device.Id, NewDevice(device));
+                    break;
+                case GrazerDefinition grazer:
+                    grazers.Add(grazer.Id, NewGrazer(grazer));
                     break;
                 default:
                     solids.Add(AddStatic(definition));
@@ -129,6 +132,7 @@ public sealed partial class World
             .Select(entity => entity.Slice())
             .Concat(DynamicSlices(w))
             .Concat(DeviceSlices(w))
+            .Concat(GrazerSlices(w))
             .OrderBy(slice => slice.Entity.Value, StringComparer.Ordinal)
             .ToArray();
         return new SectionGeometryResult.Geometry(w, Array.AsReadOnly(slices));

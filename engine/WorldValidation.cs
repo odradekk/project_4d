@@ -103,7 +103,7 @@ internal sealed partial class WorldValidation
             Id(entity.Id.Value, entity.Source, entity.Id);
             if (!ids.Add(entity.Id)) Error(LoadErrorCode.DuplicateId, entity.Source, "Duplicate entity ID.", entity.Id);
             var errorsBeforePose = errors.Count;
-            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: entity is not DeviceDefinition && !DynamicShapes.IsBall(entity));
+            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: entity is not DeviceDefinition && entity is not GrazerDefinition && !DynamicShapes.IsBall(entity));
             Pose4? validPose = errors.Count == errorsBeforePose ? entity.Pose : null;
             switch (entity)
             {
@@ -124,6 +124,9 @@ internal sealed partial class WorldValidation
                     break;
                 case DeviceDefinition device:
                     Device(device, validPose);
+                    break;
+                case GrazerDefinition grazer:
+                    GrazerBody(grazer);
                     break;
                 default:
                     Error(LoadErrorCode.UnsupportedDefinition, entity.Source, "This entity category is not implemented.", entity.Id);

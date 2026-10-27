@@ -10,7 +10,7 @@ public readonly record struct Vec2(double X, double Y);
 public readonly record struct Vec3(double X, double Y, double Z);
 public readonly record struct Vec4(double X, double Y, double Z, double W);
 public readonly record struct Rotation3(Vec3 X, Vec3 Y, Vec3 Z);
-public readonly record struct Rotation4(Vec4 X, Vec4 Y, Vec4 Z, Vec4 W);
+public readonly partial record struct Rotation4(Vec4 X, Vec4 Y, Vec4 Z, Vec4 W);
 public readonly record struct Pose4(Vec4 Position, Rotation4 Rotation);
 public readonly record struct Interval(double Min, double Max);
 public readonly record struct Source(string NodePath, string Property);

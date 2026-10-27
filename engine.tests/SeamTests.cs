@@ -36,10 +36,10 @@ public class SeamTests
     [Fact]
     public void SeveringASeamIsPermanentAndReportedOnce()
     {
-        var world = SeamScene(Seam());
+        var world = SeamScene(Seam(), Biter());
 
-        Assert.IsType<UpdateResult.Updated>(world.SeverSeam(new("seam")));
-        Assert.IsType<UpdateResult.Updated>(world.SeverSeam(new("seam")));
+        Assert.IsType<UpdateResult.Updated>(world.Sever("seam"));
+        Assert.IsType<UpdateResult.Updated>(world.Sever("seam"));
 
         Assert.True(Read(world, "seam").Severed);
         var occurrence = Assert.Single(world.StepEvents(.1));
@@ -51,12 +51,12 @@ public class SeamTests
     [Fact]
     public void EverySeamWriteCountsAsAChangeOfTheWorldEvenWhenNothingChanges()
     {
-        var world = SeamScene(Seam(), Rod(), Actor(x: .1));
+        var world = SeamScene(Seam(), Rod(), Actor(x: .1), Biter());
         Action<World>[] writes =
         [
             world => world.SetSeamOpen(new("seam"), true),
-            world => world.SeverSeam(new("seam")),
-            world => world.SeverSeam(new("seam")),
+            world => world.Sever("seam"),
+            world => world.Sever("seam"),
         ];
 
         foreach (var write in writes)
@@ -109,11 +109,12 @@ public class SeamTests
     [Fact]
     public void SeveringAnUnknownSeamIsRefusedAndChangesNothing()
     {
-        var world = SeamScene(Seam());
+        var world = SeamScene(Seam(), Biter());
 
-        var rejected = Assert.IsType<UpdateResult.Rejected>(world.SeverSeam(new("none")));
+        var rejected = Assert.IsType<UpdateResult.Rejected>(world.Sever("seam", "none"));
 
         Assert.Equal(FailureCode.UnknownId, rejected.Failure.Code);
+        Assert.Equal(new SeamId("none"), rejected.Failure.Seam);
         Assert.False(Read(world, "seam").Severed);
         Assert.Empty(world.StepEvents(.1));
     }

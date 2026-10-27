@@ -2,8 +2,6 @@ namespace FourD;
 
 // Decision note: 2026-10-26-device-translation
 
-public enum RotationPlane { XY, XZ, XW, YZ, YW, ZW }
-
 public sealed record DeviceDefinition(EntityId Id, Pose4 Pose, Source Source, LoftShape Shape, DeviceMotion Motion)
     : EntityDefinition(Id, Pose, Source);
 
