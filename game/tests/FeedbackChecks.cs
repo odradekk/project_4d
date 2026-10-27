@@ -29,7 +29,7 @@ public partial class FeedbackChecks : Node
             await CheckGrabbedSlice();
             await play.Load();
             await CheckClearPreview();
-            await play.Load(AddBoxInSecondSection);
+            await play.Load();
             await CheckBlockedTurns();
             await play.Load(MoveBoxBetweenSections);
             await CheckBlockedBetweenSections();
@@ -45,21 +45,6 @@ public partial class FeedbackChecks : Node
         {
             Input.MouseMode = Input.MouseModeEnum.Visible;
         }
-    }
-
-    // A small box from W = 0.4 on, so that it shows in the second section (W = 0.42) and stops the pole near the end of its stand-up.
-    private static void AddBoxInSecondSection(Region3D region)
-    {
-        var box = (BuildingElement3D)region.GetNode<BuildingElement3D>("Buildings/Home/OnlyII").Duplicate();
-        box.Name = "Block";
-        box.EntityId = "block";
-        box.Position = new(1.9f, .49f, 1.5f);
-        box.WMin = .4;
-        var part = box.GetNode<BoxPart3D>("Part");
-        var mesh = (BoxMesh)part.Mesh.Duplicate();
-        mesh.Size = new(.2f, .2f, .2f);
-        part.Mesh = mesh;
-        region.GetNode("Buildings/Home").AddChild(box);
     }
 
     private async Task CheckGrabbedSlice()
@@ -136,10 +121,13 @@ public partial class FeedbackChecks : Node
 
     private async Task CheckBlockedTurns()
     {
-        // The box in the other section stops the stand-up near its end: pale until the box, red from it.
+        // The post, which shows only in the second section, stops the stand-up near its end: pale until the post, red from it.
+        // The pole is picked up from the east, then carried south along the cabinet to stand in front of the post.
         play.LookAt(new(3f, .02f, 1.5f), new(1.9f, .03125f, 1.5f));
         await play.Frames(2);
         Press(Key.E);
+        await play.Frames(3);
+        await play.Walk(new(3f, 0, .9f));
         await play.Frames(3);
         Button(MouseButton.Right, true);
         await play.Frames(20);

@@ -14,7 +14,11 @@ public partial class VisualChecks : Node
     {
         var mode = OS.GetCmdlineUserArgs().FirstOrDefault() ?? "prism";
         var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
-        if (mode == "empty") region.GetNode("Sections/Ⅱ").Free();
+        if (mode == "empty")
+        {
+            region.GetNode("Sections/Ⅱ").Free();
+            region.GetNode("Sections/Ⅲ").Free();
+        }
         if (mode == "disabled") region.PrismEnabled = false;
         if (mode == "scale2") GetWindow().ContentScaleFactor = 2;
         if (mode == "outline-many")

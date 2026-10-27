@@ -38,7 +38,7 @@ public partial class TurningChecks : Node
             await CheckFlip();
             await play.Load();
             await CheckHeldFlip();
-            await play.Load(AddThirdSection);
+            await play.Load();
             await CheckTargetSection();
             await play.Load(MakeCrateHeavy);
             await CheckHeavyObject();
@@ -72,14 +72,6 @@ public partial class TurningChecks : Node
         Press(Key.E);
         await play.Frames(3);
         Check(actions.Held is null && player.Hud.SubtitleText == "小满：这个拿不动。", $"trying to take it must be explained; saw '{player.Hud.SubtitleText}'");
-    }
-
-    // A section at W = -0.3, shallower than the first, so that standing up toward it turns toward -W.
-    private static void AddThirdSection(Region3D region)
-    {
-        var sections = region.GetNode("Sections");
-        sections.AddChild(new Section3D { Name = "III", SectionId = "Ⅲ", W = -.3 });
-        sections.MoveChild(sections.GetNode("III"), 0);
     }
 
     private void CheckAuthoring()
@@ -300,7 +292,8 @@ public partial class TurningChecks : Node
 
     private async Task CheckTargetSection()
     {
-        // The lens starts on the nearest section, III; scrolling moves it to II. Standing up turns toward the target.
+        // The lens starts on the nearest section, II at W = 0.42; scrolling moves it to III at W = -0.6, shallower than the
+        // first section. Standing up turns toward the target.
         play.LookAt(new(1.5f, .02f, 2.4f), new(1.5f, .03125f, 1.5f));
         await play.Frames(2);
         Press(Key.E);
@@ -309,7 +302,7 @@ public partial class TurningChecks : Node
         await play.Frames(3);
         Press(Key.F);
         await play.Frames(TurnFrames);
-        Check(play.State("pole").Pose.Position.W < 0 && play.HasSlice("Ⅲ", "pole") && play.HasSlice("Ⅰ", "pole"), "a shallower target must stand the pole up toward -W");
+        Check(play.State("pole").Pose.Position.W > 0 && play.HasSlice("Ⅱ", "pole") && !play.HasSlice("Ⅲ", "pole"), "a deeper target must stand the pole up toward +W");
         Press(Key.F);
         await play.Frames(TurnFrames);
         Check(play.State("pole").Section == new SectionId("Ⅰ"), "the pole lies down again in its section");
@@ -317,7 +310,7 @@ public partial class TurningChecks : Node
         await play.Frames(3);
         Press(Key.F);
         await play.Frames(TurnFrames);
-        Check(play.State("pole").Pose.Position.W > 0 && play.HasSlice("Ⅱ", "pole") && !play.HasSlice("Ⅲ", "pole"), "a deeper target must stand the pole up toward +W");
+        Check(play.State("pole").Pose.Position.W < 0 && play.HasSlice("Ⅲ", "pole") && play.HasSlice("Ⅰ", "pole") && !play.HasSlice("Ⅱ", "pole"), "a shallower target must stand the pole up toward -W");
     }
 
     private static string? Hit(World3D world, Vector3 from, Vector3 to)

@@ -20,7 +20,10 @@ public partial class AudioDemo : Node
     public override async void _Ready()
     {
         region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
-        region.GetNode("Sections").AddChild(new Section3D { Name = "III", SectionId = "Ⅲ", W = .84 });
+        // The test region's third section is shallower than the first; here it is the deepest, and so last in order.
+        var third = region.GetNode<Section3D>("Sections/Ⅲ");
+        third.W = .84;
+        region.GetNode("Sections").MoveChild(third, -1);
         AddChild(region);
         region.PrismEnabled = false;
         region.GetNode<Label>("Generated/Prism/Controls").Text = "";
