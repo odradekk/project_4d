@@ -5,8 +5,9 @@ namespace FourD;
 // The slice of a metaball body: the points of a section where the sum of the balls' fields reaches the threshold,
 // meshed on a lattice of cubes with linear interpolation of the field along their edges
 // (docs/frame/contract-views.md). The lattice has a node at the grazer's position and a node at every multiple of the
-// cell from it along the world axes, so a body that moves as a whole keeps its mesh and moves it rigidly with it;
-// only parts that move relative to the body change the mesh.
+// cell from it along the world axes. It follows the position in X, Y and Z but not the turn of the pose: a grazer that
+// moves in XYZ with its turn unchanged keeps its mesh and moves it rigidly with it. When the grazer turns or moves in
+// W, the lattice meets its parts differently, and a part smaller than a cube may appear and vanish.
 internal static class MetaballSlice
 {
     // The one part of a slice: fused balls have no single ball the surface comes from.
@@ -100,12 +101,12 @@ internal static class MetaballSlice
         }
     }
 
-    // The disc of the ball in the section at `section` W from the grazer's position, or null when the section lies
-    // beyond the ball's reach.
-    private static Disc? DiscAt(Metaball ball, Pose4 pose, double section)
+    // The disc of the ball in the section that lies `wFromGrazer` from the grazer's position in W, or null when the
+    // section lies beyond the ball's reach.
+    private static Disc? DiscAt(Metaball ball, Pose4 pose, double wFromGrazer)
     {
         var center = CenterFrom(ball, pose);
-        var offset2 = (section - center[3]) * (section - center[3]);
+        var offset2 = (wFromGrazer - center[3]) * (wFromGrazer - center[3]);
         var radius2 = ball.Radius * ball.Radius;
         return offset2 < radius2 ? new(center, Math.Sqrt(radius2 - offset2), offset2, radius2, ball.Weight) : null;
     }
