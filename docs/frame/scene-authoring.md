@@ -40,7 +40,7 @@ Room (Node3D, Region3D)
 | SphereItem3D（Node3D） | `string EntityId/BuildingId`、`string PartId`、`double W`、`double[] Rotation4`、`double Radius`、`TurnableResource Interaction`、`Material Material`；原点是球心 |
 | HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body；原点同可转物件，Ring 的 `Center` 和 `Rotation4` 取本体的局部坐标 |
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
-| Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape/OpenShape`；节点的 XYZ 是身体原点，旋转只取 `Rotation4`，不读节点自己的旋转；`Shape` 是闭嘴时的身体，`OpenShape` 是张到最大时的身体，球的 ID 和顺序必须与 `Shape` 相同，载入时用引擎在初始姿态上试一次，数值不合法报在 `OpenShape` 上，不填表示嘴不会张开；节点只给出第一帧，之后的移动、转身、张嘴和啃食由游戏层的时间轴（`GrazerTimeline`）按帧交给引擎 |
+| Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape/OpenShape`；形体、时间轴和测试区域见[啃食者搭法](grazer-authoring.md) |
 | CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`、`string DisplayName`（台词前的名字，空则用角色场景自己的）；Section 来自祖先 |
 | Character3D（CharacterBody3D） | 角色场景的根节点，游戏层节点，格式见[角色搭法](character-authoring.md) |
 | Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin，原点放在地面；`Open` 默认 true，`VisualHeight` 默认 3 米，是镜片里细光的高度；Sections 按 W 从浅到深列出 |
@@ -69,13 +69,9 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。
 
-啃食者的测试区域为 `game/regions/grazer_test.tscn`：三个截面，啃食者从 W=11 的深处出发。`game/tests/grazer_demo.tscn` 让它沿时间轴逼近，啃掉一扇门和一道缝，音乐和画面闪烁随它与玩家的四维距离变化（调试启动 `--start=grazer-demo`）。
-
-使用时间轴的两条约定：要啃的楼房元素必须写在时间轴的“咬”里，不能直接调 `ConsumeStructure`，否则引擎里没了，Godot 里节点还在，看得见也撞得到；分段 `Play` 时，后一段的第一个关键帧要接上前一段的最后一个，因为 `Play` 会让啃食者立刻跳到新时间轴的第一个关键帧。
-
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
-放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)。
+放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)；啃食者的形体和时间轴，见[啃食者搭法](grazer-authoring.md)。
 
 ## 独立前置布置与预期操作
 
