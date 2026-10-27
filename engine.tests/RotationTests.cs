@@ -2,7 +2,7 @@ using static FourD.Tests.Fixtures;
 
 namespace FourD.Tests;
 
-// The rotation tests span several files; this one holds the scenes they share.
+// The rotation tests span several files; this one holds the scenes and helpers they share.
 public partial class RotationTests
 {
     // Durations fixed by the engine rules (docs/frame/contract.md).
@@ -70,6 +70,93 @@ public partial class RotationTests
         var actor = Actor(At(0, 1, 1));
         EntityDefinition[] entities = [.. obstacles, LongRod, actor];
         return (Load(Description([SectionI, SectionII], entities)), LongRod, actor);
+    }
+
+    // Short rod with a marker off its axis, in a world with sections at W = -.2, 0 and .2. One obstacle per
+    // blockedW sits in the flip path at that W.
+    private static (World World, TurnableDefinition Item, Creature3Definition Actor) FlipScene(params double[] blockedW)
+    {
+        var item = ShortRod with
+        {
+            Shape = Shape(
+                Part("body", new(.24, .03, .03)),
+                Part("marker", new(.03, .03, .03), center: new(.2, 0, .1))),
+        };
+        var actor = Actor(At(-1, 0, .05));
+        var obstacles = blockedW.Select((w, i) => new BuildingElementDefinition(
+            new($"obstacle{i}"), Origin, TestSource, new("b"), new(w - .01, w + .01), [],
+            Shape(Part("part", new(.02, .02, .02), center: new(0, 0, .1)))));
+        EntityDefinition[] entities = [.. obstacles, item, actor];
+        var minus = new SectionDefinition(new("minus"), -.2, TestSource);
+        var plus = new SectionDefinition(new("plus"), .2, TestSource);
+        var building = new BuildingDefinition(new("b"), new(-1, 1), TestSource);
+        return (Load(new([minus, SectionI, plus], [building], entities, [], [], [])), item, actor);
+    }
+
+    private static Pose4 ShiftedX(Pose4 pose, double dx) =>
+        pose with { Position = pose.Position with { X = pose.Position.X + dx } };
+
+    // The preview's last sample is the flipped object, so its outline must span the same box as the slice.
+    private static void AssertContoursSpanSlice(IReadOnlyList<Polyline> contours, SliceGeometry slice)
+    {
+        var points = Segments(contours).SelectMany(s => new[] { s.A, s.B }).ToArray();
+        Assert.NotEmpty(points);
+        Assert.Equal(slice.Coordinates(Axis3.X).Min(), points.Min(p => p.X), 9);
+        Assert.Equal(slice.Coordinates(Axis3.X).Max(), points.Max(p => p.X), 9);
+        Assert.Equal(slice.Coordinates(Axis3.Y).Min(), points.Min(p => p.Y), 9);
+        Assert.Equal(slice.Coordinates(Axis3.Y).Max(), points.Max(p => p.Y), 9);
+        Assert.Equal(slice.Coordinates(Axis3.Z).Min(), points.Min(p => p.Z), 9);
+        Assert.Equal(slice.Coordinates(Axis3.Z).Max(), points.Max(p => p.Z), 9);
+    }
+
+    // The outline of the object at the end of the planned rotation.
+    private static IReadOnlyList<Polyline> FinalContours(World world, RotationPlan plan, SectionId section) =>
+        Assert.IsType<PreviewResult.Preview>(world.GetRotationPreview(plan, section)).Value.Samples[^1].Contours;
+
+    // After a rotation ends the object can be placed again in X, Y and Z, and keeps its W.
+    private static void AssertCanShiftInXAtW(World world, EntityState end, double w)
+    {
+        Assert.Equal(w, end.Pose.Position.W);
+        Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(end.Id, ShiftedX(end.Pose, .1)));
+        var placed = world.State(end.Id).Pose.Position;
+        Assert.Equal(end.Pose.Position.X + .1, placed.X, 10);
+        Assert.Equal(w, placed.W);
+    }
+
+    private readonly record struct Segment(Vec3 A, Vec3 B)
+    {
+        public double Length => B.Minus(A).Length();
+
+        public Vec3 PointAt(double t) => A.Plus(B.Minus(A).Times(t));
+
+        public bool Contains(Vec3 point)
+        {
+            var direction = B.Minus(A);
+            var fromA = point.Minus(A);
+            var t = fromA.Dot(direction) / direction.Dot(direction);
+            var offLine = fromA.Minus(direction.Times(t));
+            return t >= -1e-8 && t <= 1 + 1e-8 && offLine.Dot(offLine) < 1e-16;
+        }
+
+        // The segment stays at one coordinate along `axis`, and that coordinate is `value`.
+        public bool LiesOnPlane(Axis3 axis, double value) =>
+            Math.Abs(Coordinate(A, axis) - Coordinate(B, axis)) < 1e-8 && Math.Abs(Coordinate(A, axis) - value) < 1e-8;
+
+        private static double Coordinate(Vec3 point, Axis3 axis) =>
+            axis switch { Axis3.X => point.X, Axis3.Y => point.Y, _ => point.Z };
+    }
+
+    private static IEnumerable<Segment> Segments(IReadOnlyList<Polyline> lines)
+    {
+        foreach (var line in lines)
+        {
+            var vertexCount = line.Positions.Count / 3;
+            var segmentCount = line.Closed ? vertexCount : vertexCount - 1;
+            for (var i = 0; i < segmentCount; i++)
+            {
+                yield return new(line.Positions.Vertex(i), line.Positions.Vertex((i + 1) % vertexCount));
+            }
+        }
     }
 
     [Fact]

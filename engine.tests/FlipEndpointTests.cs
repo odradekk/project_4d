@@ -4,23 +4,6 @@ namespace FourD.Tests;
 
 public partial class RotationTests
 {
-    // The preview's last sample is the flipped object, so its outline must span the same box as the slice.
-    private static void AssertContoursSpanSlice(IReadOnlyList<Polyline> contours, SliceGeometry slice)
-    {
-        var points = Segments(contours).SelectMany(s => new[] { s.A, s.B }).ToArray();
-        Assert.NotEmpty(points);
-        Assert.Equal(slice.Coordinates(0).Min(), points.Min(p => p.X), 9);
-        Assert.Equal(slice.Coordinates(0).Max(), points.Max(p => p.X), 9);
-        Assert.Equal(slice.Coordinates(1).Min(), points.Min(p => p.Y), 9);
-        Assert.Equal(slice.Coordinates(1).Max(), points.Max(p => p.Y), 9);
-        Assert.Equal(slice.Coordinates(2).Min(), points.Min(p => p.Z), 9);
-        Assert.Equal(slice.Coordinates(2).Max(), points.Max(p => p.Z), 9);
-    }
-
-    // The outline of the object at the end of the planned rotation.
-    private static IReadOnlyList<Polyline> FinalContours(World world, RotationPlan plan, SectionId section) =>
-        Assert.IsType<PreviewResult.Preview>(world.GetRotationPreview(plan, section)).Value.Samples[^1].Contours;
-
     [Theory]
     [InlineData(false, 0d)]
     [InlineData(true, 0d)]
@@ -49,8 +32,7 @@ public partial class RotationTests
         Assert.Equal(new SectionId("I"), end.Section);
         Assert.False(end.Rotating);
         AssertContoursSpanSlice(contours, Assert.Single(world.SlicesIn(new("I")), s => s.Entity == item.Id));
-        Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(item.Id, ShiftedX(end.Pose, .1)));
-        Assert.Equal(sectionW, end.Pose.Position.W);
+        AssertCanShiftInXAtW(world, end, sectionW);
     }
 
     [Theory]
@@ -67,8 +49,7 @@ public partial class RotationTests
         world.Step(FlipInPlaceSeconds);
 
         var end = world.State(item.Id);
-        Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(item.Id, ShiftedX(end.Pose, .1)));
-        Assert.Equal(sectionW, end.Pose.Position.W);
+        AssertCanShiftInXAtW(world, end, sectionW);
     }
 
     [Fact]

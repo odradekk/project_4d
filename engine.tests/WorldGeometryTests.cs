@@ -24,8 +24,8 @@ public class WorldGeometryTests
         {
             var slice = Assert.Single(world.SlicesAt(w));
             Assert.Equal(108, slice.Positions.Count);
-            Assert.Equal(-1, slice.Coordinates(0).Min());
-            Assert.Equal(1, slice.Coordinates(0).Max());
+            Assert.Equal(-1, slice.Coordinates(Axis3.X).Min());
+            Assert.Equal(1, slice.Coordinates(Axis3.X).Max());
             Assert.True(slice.ThroughObject);
         }
         Assert.Empty(world.SlicesAt(-1.000001));
@@ -60,7 +60,7 @@ public class WorldGeometryTests
         var world = Load(Description(first, second));
 
         Assert.Equal(new EntityId("a"), Assert.Single(world.SlicesAt(0)).Entity);
-        Assert.Equal(2, Assert.Single(world.SlicesAt(.42)).Coordinates(0).Max());
+        Assert.Equal(2, Assert.Single(world.SlicesAt(.42)).Coordinates(Axis3.X).Max());
         Assert.Equal(2, world.SlicesAt(.2).Count);
     }
 

@@ -47,8 +47,8 @@ public class TurnableTests
         Assert.Null(state.Section);
         Assert.Equal(new SectionId("I"), state.UprightOrigin);
         var slice = Assert.Single(world.SlicesIn(new("I")));
-        Assert.Equal(-Epsilon, slice.Coordinates(0).Min(), 10);
-        Assert.Equal(Epsilon, slice.Coordinates(0).Max(), 10);
+        Assert.Equal(-Epsilon, slice.Coordinates(Axis3.X).Min(), 10);
+        Assert.Equal(Epsilon, slice.Coordinates(Axis3.X).Max(), 10);
         Assert.True(world.HasSliceVolume(rod.Id, new("I")));
     }
 
@@ -62,10 +62,10 @@ public class TurnableTests
 
         var slice = Assert.Single(world.SlicesIn(new("I")));
 
-        Assert.Equal(-.21 - Epsilon * Math.Sqrt(2), slice.Coordinates(0).Min(), 10);
-        Assert.Equal(-.21 + Epsilon * Math.Sqrt(2), slice.Coordinates(0).Max(), 10);
-        Assert.Equal(-.1, slice.Coordinates(1).Min(), 10);
-        Assert.Equal(.1, slice.Coordinates(2).Max(), 10);
+        Assert.Equal(-.21 - Epsilon * Math.Sqrt(2), slice.Coordinates(Axis3.X).Min(), 10);
+        Assert.Equal(-.21 + Epsilon * Math.Sqrt(2), slice.Coordinates(Axis3.X).Max(), 10);
+        Assert.Equal(-.1, slice.Coordinates(Axis3.Y).Min(), 10);
+        Assert.Equal(.1, slice.Coordinates(Axis3.Z).Max(), 10);
         for (var i = 0; i < slice.Parts.Count; i += 3)
         {
             Assert.True(slice.IsWoundOutward(i));

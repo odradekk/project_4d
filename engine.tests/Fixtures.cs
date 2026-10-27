@@ -3,7 +3,8 @@ namespace FourD.Tests;
 // Builders and result unwrapping shared by the engine tests. Lengths are in metres, Y is up.
 internal static class Fixtures
 {
-    // Half of the W thickness of a fixed object (docs/frame/contract.md).
+    // Creatures, turnable objects, and fixed objects all extend this far to each side in W
+    // (docs/frame/principles.md and content.md).
     public const double Epsilon = .006;
 
     public static readonly Source TestSource = new("/test", "definition");
@@ -64,9 +65,9 @@ internal static class Fixtures
     public static Vec3 Vertex(this IReadOnlyList<double> triples, int index) =>
         new(triples[index * 3], triples[index * 3 + 1], triples[index * 3 + 2]);
 
-    // All values of one axis (0 = x, 1 = y, 2 = z) of the slice's vertices.
-    public static IEnumerable<double> Coordinates(this SliceGeometry slice, int axis) =>
-        slice.Positions.Where((_, i) => i % 3 == axis);
+    // All values along one axis of the slice's vertices.
+    public static IEnumerable<double> Coordinates(this SliceGeometry slice, Axis3 axis) =>
+        slice.Positions.Where((_, i) => i % 3 == (int)axis);
 
     // The triangle that starts at vertex `first` is counter-clockwise seen from the side its normal points to.
     public static bool IsWoundOutward(this SliceGeometry slice, int first)

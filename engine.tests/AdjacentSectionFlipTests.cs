@@ -44,12 +44,11 @@ public partial class RotationTests
         world.Step(duration);
 
         var end = world.State(item.Id);
-        Assert.Equal(sourceW, end.Pose.Position.W);
         Assert.Equal(item.Section, end.Section);
         Assert.Null(end.UprightOrigin);
         Assert.False(end.Rotating);
         AssertContoursSpanSlice(contours, Assert.Single(world.SlicesIn(item.Section), s => s.Entity == item.Id));
-        Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(item.Id, ShiftedX(end.Pose, .1)));
+        AssertCanShiftInXAtW(world, end, sourceW);
     }
 
     [Theory]

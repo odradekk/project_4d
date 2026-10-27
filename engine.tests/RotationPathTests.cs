@@ -4,30 +4,6 @@ namespace FourD.Tests;
 
 public partial class RotationTests
 {
-    // Short rod with a marker off its axis, in a world with sections at W = -.2, 0 and .2. One obstacle per
-    // blockedW sits in the flip path at that W.
-    private static (World World, TurnableDefinition Item, Creature3Definition Actor) FlipScene(params double[] blockedW)
-    {
-        var item = ShortRod with
-        {
-            Shape = Shape(
-                Part("body", new(.24, .03, .03)),
-                Part("marker", new(.03, .03, .03), center: new(.2, 0, .1))),
-        };
-        var actor = Actor(At(-1, 0, .05));
-        var obstacles = blockedW.Select((w, i) => new BuildingElementDefinition(
-            new($"obstacle{i}"), Origin, TestSource, new("b"), new(w - .01, w + .01), [],
-            Shape(Part("part", new(.02, .02, .02), center: new(0, 0, .1)))));
-        EntityDefinition[] entities = [.. obstacles, item, actor];
-        var minus = new SectionDefinition(new("minus"), -.2, TestSource);
-        var plus = new SectionDefinition(new("plus"), .2, TestSource);
-        var building = new BuildingDefinition(new("b"), new(-1, 1), TestSource);
-        return (Load(new([minus, SectionI, plus], [building], entities, [], [], [])), item, actor);
-    }
-
-    private static Pose4 ShiftedX(Pose4 pose, double dx) =>
-        pose with { Position = pose.Position with { X = pose.Position.X + dx } };
-
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -166,7 +142,7 @@ public partial class RotationTests
         Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(item.Id, TurnedAboutHinge(cos: c, sin: c)));
         var plan = world.AllowedPlan(new LayDown(actor.Id, item.Id));
         Assert.IsType<StartRotationResult.Started>(world.StartRotation(plan));
-        world.Step(1);
+        world.Step(LayDownSeconds);
 
         var pose = world.State(item.Id).Pose;
         Assert.Equal(0, pose.Position.X, 10);

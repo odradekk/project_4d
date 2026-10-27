@@ -4,41 +4,6 @@ namespace FourD.Tests;
 
 public partial class RotationTests
 {
-    private readonly record struct Segment(Vec3 A, Vec3 B)
-    {
-        public double Length => B.Minus(A).Length();
-
-        public Vec3 PointAt(double t) => A.Plus(B.Minus(A).Times(t));
-
-        public bool Contains(Vec3 point)
-        {
-            var direction = B.Minus(A);
-            var fromA = point.Minus(A);
-            var t = fromA.Dot(direction) / direction.Dot(direction);
-            var offLine = fromA.Minus(direction.Times(t));
-            return t >= -1e-8 && t <= 1 + 1e-8 && offLine.Dot(offLine) < 1e-16;
-        }
-
-        // The segment stays at one coordinate along `axis` (0 = x, 1 = y, 2 = z), and that coordinate is `value`.
-        public bool LiesOnPlane(int axis, double value) =>
-            Math.Abs(Coordinate(A, axis) - Coordinate(B, axis)) < 1e-8 && Math.Abs(Coordinate(A, axis) - value) < 1e-8;
-
-        private static double Coordinate(Vec3 point, int axis) => axis switch { 0 => point.X, 1 => point.Y, _ => point.Z };
-    }
-
-    private static IEnumerable<Segment> Segments(IReadOnlyList<Polyline> lines)
-    {
-        foreach (var line in lines)
-        {
-            var vertexCount = line.Positions.Count / 3;
-            var segmentCount = line.Closed ? vertexCount : vertexCount - 1;
-            for (var i = 0; i < segmentCount; i++)
-            {
-                yield return new(line.Positions.Vertex(i), line.Positions.Vertex((i + 1) % vertexCount));
-            }
-        }
-    }
-
     private static bool Covers(IReadOnlyList<Polyline> lines, Vec3 point) => Segments(lines).Any(s => s.Contains(point));
 
     // A rod made of `parts`, hinged at x = -.48, planned to stand up into section II.
@@ -70,7 +35,12 @@ public partial class RotationTests
     // A segment runs along an edge of a box when it lies on face planes in at least two axes.
     private static bool IsBoxEdge(Segment segment, double[] xFaces, double[] yFaces, double[] zFaces)
     {
-        var onFace = new[] { xFaces, yFaces, zFaces }.Select((faces, axis) => faces.Any(f => segment.LiesOnPlane(axis, f)));
+        var onFace = new[]
+        {
+            xFaces.Any(x => segment.LiesOnPlane(Axis3.X, x)),
+            yFaces.Any(y => segment.LiesOnPlane(Axis3.Y, y)),
+            zFaces.Any(z => segment.LiesOnPlane(Axis3.Z, z)),
+        };
         return onFace.Count(on => on) >= 2;
     }
 

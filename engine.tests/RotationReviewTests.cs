@@ -127,7 +127,7 @@ public partial class RotationTests
         };
         Assert.IsType<AddEntityResult.Added>(world.AddEntity(outside));
 
-        var outsideSpace = new OccupancyBox(outside.Pose, new(.1, .03, .03, .006));
+        var outsideSpace = new OccupancyBox(outside.Pose, new(.1, .03, .03, Epsilon));
         foreach (var delta in new[] { .25, .25, .5 })
         {
             world.Step(delta);

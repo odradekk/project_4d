@@ -84,13 +84,28 @@ public class SupportTests
     [Fact]
     public void SideTouchAloneDoesNotSupportAndNoFloorLeavesPositionUnchanged()
     {
-        var wall = Slab("wall", new(1, 0, 0), new(.5, 1, .5));
+        // The wall's -X face (x = .5) touches the cube's whole +X face.
+        var wall = Slab("wall", new(1, 2, 0), new(.5, 1, .5));
         var item = Cube("item", y: 2);
         var world = Load(Description([wall, item]));
 
         Assert.IsType<SupportResult.Unsupported>(world.FindSupport(item.Id));
         Assert.Empty(world.StepEvents(.1));
         Assert.Equal(2, world.State(item.Id).Pose.Position.Y);
+    }
+
+    [Fact]
+    public void SideTouchDoesNotReplaceTheFloorAsSupport()
+    {
+        var wall = Slab("wall", new(1, 2, 0), new(.5, 1, .5));
+        var item = Cube("item", y: 2);
+        var world = Load(Description([Floor(), wall, item]));
+
+        var support = Supported(world, item.Id);
+        Assert.Equal(.5, support.RestingOriginY, 10);
+        Assert.Equal(new EntityId("floor"), Assert.Single(support.Contacts).Support);
+        world.StepEvents(.1);
+        Assert.Equal(.5, world.State(item.Id).Pose.Position.Y, 10);
     }
 
     [Theory]
@@ -128,7 +143,7 @@ public class SupportTests
         var support = Supported(world, item.Id);
         Assert.Equal(.497, support.RestingOriginY, 10);
         var point = Assert.Single(support.Contacts).Point;
-        Assert.InRange(point.W, .003, .006);
+        Assert.InRange(point.W, .003, Epsilon);
         Assert.InRange(point.Y, -.003, 0);
     }
 

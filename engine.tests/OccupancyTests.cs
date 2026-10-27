@@ -4,8 +4,8 @@ namespace FourD.Tests;
 
 public class OccupancyTests
 {
-    // A tilt that mixes all three spatial axes.
-    private static Rotation4 Tilt()
+    // A rotation within 3D space that mixes the x, y, and z axes. It leaves W alone.
+    private static Rotation4 MixedXyzRotation()
     {
         var s = Math.Sqrt(.5);
         return new(new(s, s, 0, 0), new(-.5, .5, s, 0), new(.5, -.5, s, 0), Identity4.W);
@@ -86,7 +86,7 @@ public class OccupancyTests
     [Fact]
     public void MixedFourDimensionalAxisSeparatesBoxesEvenWhenFacesOverlap()
     {
-        var query = new OccupancyBox(new(new(0, 2.25, 0, 0), Tilt()), new(1, 1, .25, Epsilon));
+        var query = new OccupancyBox(new(new(0, 2.25, 0, 0), MixedXyzRotation()), new(1, 1, .25, Epsilon));
 
         Assert.Empty(FixedBoxWorld().OccupancyHits(query));
     }
@@ -98,7 +98,7 @@ public class OccupancyTests
         // this far along it buries it 3 mm, within the 5 mm contact tolerance.
         const double shift = .0978087444407;
         var center = new Vec4(0, 2.25 - shift * Math.Sqrt(2d / 3d), shift / Math.Sqrt(3), 0);
-        var query = new OccupancyBox(new(center, Tilt()), new(1, 1, .25, Epsilon));
+        var query = new OccupancyBox(new(center, MixedXyzRotation()), new(1, 1, .25, Epsilon));
 
         Assert.Empty(FixedBoxWorld().OccupancyHits(query));
     }
