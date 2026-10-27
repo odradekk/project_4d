@@ -134,7 +134,8 @@ public partial class CatSeamChecks : Node
         return lens.GetShaderParameter("band_bottom").AsVector4Array()[0].W;
     }
 
-    // The lens shows II from 1.5 m away, level with the mirror seam. A cat in II hides the band when its body is in the way,
+    // The lens shows II from 1.5 m away, level with the mirror seam, and the cat is held up at the height of the camera, a little
+    // above where it falls from. A cat in II hides the band when its body is in the way,
     // and does not when only the sphere around it that the crosshair picks it up by is.
     private async Task CheckBandBehindACat()
     {
@@ -143,9 +144,9 @@ public partial class CatSeamChecks : Node
         await seam.RaiseLens();
         play.LookAt(new(1.5f, 0, 3), new(1.5f, 1.3f, 1.5f));
         Check(await BandStrength() > 0, "the band is drawn with nothing in the way");
-        catBody.PlaceAt(new(1.5f, 1, 2.2f), 0);
+        catBody.PlaceAt(new(1.5f, 1.1f, 2.2f), 0);
         Check(await BandStrength() == 0, "a cat in the way hides the band");
-        catBody.PlaceAt(new(1.7f, 1, 2.2f), 0);
+        catBody.PlaceAt(new(1.7f, 1.1f, 2.2f), 0);
         Check(await BandStrength() > 0, "a cat beside the way, with only the sphere it is picked up by in it, does not");
     }
 
