@@ -10,8 +10,8 @@ using Godot;
 namespace Game.Tests;
 
 /// <summary>
-/// An engine world with two sections, three seams and a nut with a ring, built in code, and a physics room for each
-/// section with a cat, a schoolmate and the player in them. The authored test region has no seams yet.
+/// An engine world with two sections and a nut with a ring, built in code, and a physics room for each section with a
+/// cat, or two, and the player.
 /// Lengths are in metres; section I is at W = 0 and section II at W = .42.
 /// </summary>
 internal sealed class CatWorld
@@ -26,7 +26,6 @@ internal sealed class CatWorld
     internal World World { get; private set; } = null!;
     internal FirstPersonPlayer Player { get; private set; } = null!;
     internal Character3D Cat { get; private set; } = null!;
-    internal Character3D Mate { get; private set; } = null!;
 
     /// <summary>A second cat, which starts in section II.</summary>
     internal Character3D Kit { get; private set; } = null!;
@@ -48,7 +47,6 @@ internal sealed class CatWorld
         result.Player.Position = new(0, .02f, 3);
         host.AddChild(result.Player);
         result.Cat = result.Character(CharacterFixture.CatScene, "cat", "I");
-        result.Mate = result.Character(CharacterFixture.SchoolmateScene, "mate", "I");
         result.Kit = result.Character(CharacterFixture.CatScene, "kit", "II");
         return result;
     }
@@ -96,19 +94,14 @@ internal sealed class CatWorld
         return new WorldDescription(
             [new(new("I"), 0, Origin), new(new("II"), .42, Origin)],
             [new(new("home"), new(-.5, 1), Origin)],
-            [floor, nut, Creature("player", 0, 3, .2, 1.6), Creature("cat", 1.5, -1, .15, .4, seams: true),
-                Creature("mate", 2, 0, .2, 1.35), Creature("kit", 1.5, -1, .15, .4, seams: true, section: "II")],
-            [Seam("normal", new(2, 0, 0), mirrored: false), Seam("mirror", new(-2, 0, 0), mirrored: true), Seam("closed", new(0, 0, -2), open: false)],
+            [floor, nut, Creature("player", 0, 3, .2, 1.6), Creature("cat", 1.5, -1, .15, .4, seams: true), Creature("kit", 1.5, -1, .15, .4, seams: true, section: "II")],
+            [],
             [],
             []);
     }
 
     private static Creature3Definition Creature(string id, double x, double z, double radius, double height, bool seams = false, string section = "I") =>
         new(new(id), At(x, 0, z, section == "I" ? 0 : .42), Origin, new(section), radius, height, seams);
-
-    // A seam in the YZ plane through its position, so its normal is +X.
-    private static SeamDefinition Seam(string id, Vec3 position, bool mirrored = false, bool open = true) =>
-        new(new(id), position, new(1, 0, 0), [new("I"), new("II")], mirrored, open, false, Origin);
 
     private static Pose4 At(double x, double y, double z, double w) => new(new(x, y, z, w), Identity);
 

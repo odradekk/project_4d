@@ -45,10 +45,7 @@ public partial class TeacherChecks : Node
             await CheckBehindWall();
             await LoadTeacher(Board, "Ⅱ");
             await CheckOtherSection();
-            // A sound that is still playing at exit keeps its stream in use, which Godot reports as an error.
-            RemoveChild(play.Region);
-            play.Region.Free();
-            await play.Frames(10);
+            await play.Unload();
             GD.Print("Teacher checks passed: patrol, chalk and footsteps, seen, not seen.");
             GetTree().Quit();
         }

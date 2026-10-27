@@ -36,6 +36,7 @@ public partial class Cat : Node
     // How far either side of the ring's plane the body is tested against the ring itself, which is thinner than that.
     private const float RingDepth = .1f;
     private const float PathMargin = .02f;
+    private const string HandsFull = "手里还拿着东西呢。";
     // Where the cat is held: in front of the chest.
     private static readonly Vector3 HeldAt = new(0, 1, -.45f);
 
@@ -257,6 +258,12 @@ public partial class Cat : Node
     private void PickUp()
     {
         var player = body.Player;
+        // The arms are for one thing at a time: the cat, or the object in the hand.
+        if (player.HoldsItem)
+        {
+            player.Hud.Say("小满", HandsFull, 2.5);
+            return;
+        }
         body.Posture = Posture.Standing;
         body.Do(_ =>
         {

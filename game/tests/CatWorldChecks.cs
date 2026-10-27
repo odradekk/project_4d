@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using FourD;
 using Game.Characters;
-using Game.Interaction;
 using Godot;
 using static Game.Tests.CatWorld;
 using static Game.Tests.CharacterFixture;
@@ -11,9 +10,8 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// Characters and the engine's seams: a cat crosses between the physics worlds of two sections, is mirrored by a
-/// mirror seam, and is refused where the engine refuses it; a cat holds the player's arms until the player leaves
-/// its section; a cat leaps through a ring that is standing in its section. The world is built in code.
+/// A cat leaps through a ring that is standing in its section, in a world built in code: the ring comes from a nut that
+/// the authored regions have none of.
 /// </summary>
 public partial class CatWorldChecks : Node
 {
@@ -25,13 +23,10 @@ public partial class CatWorldChecks : Node
         {
             world = CatWorld.Build(this);
             await Frames(2);
-            await CheckSeams();
-            await CheckRefusals();
-            await CheckCarriedAcrossSections();
             world.StandNutUp();
             await Frames(2);
             await CheckRing();
-            GD.Print("Cat world checks passed: normal seam, mirror seam, refusals, carried cat, ring.");
+            GD.Print("Cat world checks passed: the leap through a ring.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -43,62 +38,6 @@ public partial class CatWorldChecks : Node
         {
             Input.MouseMode = Input.MouseModeEnum.Visible;
         }
-    }
-
-    private async Task CheckSeams()
-    {
-        var cat = world.Cat;
-        cat.PlaceAt(new(2, 0, 0), 0);
-        Check(cat.CrossSeam("normal", "II") is null, "a cat crosses a normal seam without a prism");
-        Check(cat.Section == "II" && cat.GetParent() == world.Rooms["II"], "a cat that crossed is in the physics world of the target section");
-        Check(cat.Position.DistanceTo(new(2, 0, 0)) < .001f && !cat.Mirrored, "a normal seam keeps the place and the handedness");
-        Check(world.State("cat").Section == new SectionId("II") && world.State("cat").Pose.Position.W == .42, "the engine has the cat in the target section");
-        await Frames(2);
-        Check(cat.CrossSeam("normal", "I") is null && cat.Section == "I" && cat.GetParent() == world.Rooms["I"], "a seam goes both ways");
-
-        // The seam of mirror image is the plane x = -2, so a cat 10 cm before it comes out 10 cm behind it.
-        cat.PlaceAt(new(-1.9f, 0, 0), 0);
-        Check(cat.CrossSeam("mirror", "II") is null, "a cat crosses a mirror seam");
-        Near(cat.Position, new(-2.1f, 0, 0), "a mirror seam puts the cat on the other side of the seam plane");
-        Check(cat.Mirrored && world.State("cat").Handedness == Handedness.Mirrored, "the engine turns the cat into its mirror image");
-        await Frames(2);
-        Check(cat.GetNode<Node3D>("Visual").Scale.X < 0, "a mirrored cat is drawn as its mirror image");
-        Check(Mathf.Abs((float)world.State("cat").Pose.Position.X - cat.Position.X) < .001f, "the engine and the cat agree where the cat is after the crossing");
-        Check(cat.CrossSeam("mirror", "I") is null && !cat.Mirrored, "crossing a mirror seam again restores the cat");
-        await Frames(2);
-    }
-
-    private async Task CheckRefusals()
-    {
-        var cat = world.Cat;
-        cat.PlaceAt(new(0, 0, -2), 0);
-        Check(cat.CrossSeam("closed", "II") == FailureCode.SeamClosed, "a closed seam is refused");
-        cat.PlaceAt(new(3, 0, 0), 0);
-        Check(cat.CrossSeam("normal", "II") == FailureCode.WrongSection, "a seam too far away is refused");
-        var mate = world.Mate;
-        mate.PlaceAt(new(2, 0, 0), 0);
-        Check(mate.CrossSeam("normal", "II") == FailureCode.RequiresPrism, "a character that cannot use seams without a prism is refused");
-        await Frames(2);
-        Check(cat.Section == "I" && cat.GetParent() == world.Rooms["I"] && mate.Section == "I" && mate.GetParent() == world.Rooms["I"],
-            "a refused character stays where it was");
-    }
-
-    private async Task CheckCarriedAcrossSections()
-    {
-        var cat = world.Cat;
-        var player = world.Player;
-        cat.PlaceAt(new(0, 0, 1), 0);
-        player.Position = new(2, .02f, 0);
-        world.World.SynchronizeActor(new("player"), new(2, 0, 0), 0);
-        cat.GetNode<Interactable3D>("Pickup").Interact();
-        await Frames(3);
-        Check(cat.Busy && player.PutDown is not null, "the cat is in the player's arms");
-        var request = new CrossSeamRequest(new("player"), new("normal"), new("II"), HasPrism: true, FreeBackpackSlots: 4);
-        Check(world.World.CrossSeam(request) is CrossSeamResult.Crossed, "the player crosses the seam");
-        await Frames(3);
-        Check(!cat.Busy && player.PutDown is null, "a cat is put down when the player leaves its section");
-        Check(cat.GetNode<Interactable3D>("Pickup").CollisionLayer != 0 && !Brain(cat).Held, "a cat put down can be picked up again");
-        world.World.CrossSeam(request with { Target = new("I") });
     }
 
     private async Task CheckRing()

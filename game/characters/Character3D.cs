@@ -19,6 +19,12 @@ public enum Posture { Standing, Sitting, Lying }
 [GlobalClass]
 public partial class Character3D : CharacterBody3D
 {
+    /// <summary>The physics layer of the bodies of characters, which the crosshair looks through.</summary>
+    public const uint BodyLayer = 2;
+
+    /// <summary>The physics layer of what a character is picked up by: seen by the crosshair, and not by what looks for things to hide a seam.</summary>
+    public const uint PickupLayer = 4;
+
     /// <summary>How close to a point the character has to come for a walk to it to be done.</summary>
     public const float ArrivalRadius = .1f;
 
