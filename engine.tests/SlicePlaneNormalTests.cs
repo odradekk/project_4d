@@ -81,6 +81,25 @@ public class SlicePlaneNormalTests
     }
 
     [Fact]
+    public void PartOfADeviceTakesTheBasisOfTheDevice()
+    {
+        // The leaf of the hanger is in the XY plane of the device in section I: it hangs from a hinge along Z.
+        var world = Scene(DeviceScenes.Hanger());
+
+        AssertDirection(new(0, 0, 1), world.GetSlicePlaneNormal(DeviceScenes.HangerId, I, Axis3.X, Axis3.Y, new("leaf")));
+        AssertDirection(new(0, 1, 0), world.GetSlicePlaneNormal(DeviceScenes.HangerId, I, Axis3.X, Axis3.Z, new("leaf")));
+    }
+
+    [Fact]
+    public void BodyOfAGrazerTakesTheBasisOfTheGrazer()
+    {
+        var shape = GrazerScenes.Lump(new(0, 0, 0, 0));
+
+        AssertDirection(new(0, 0, 1), GrazerScenes.GrazerScene(At(0, 4, 0), shape).GetSlicePlaneNormal(GrazerScenes.GrazerId, I, Axis3.X, Axis3.Y, new("body")));
+        AssertDirection(new(1, 0, 0), GrazerScenes.GrazerScene(At(0, 4, 0, rotation: YawQuarter4), shape).GetSlicePlaneNormal(GrazerScenes.GrazerId, I, Axis3.X, Axis3.Y, new("body")));
+    }
+
+    [Fact]
     public void BallHasNoBasisOfItsOwnAndTakesTheEntitys()
     {
         var turned = Ball() with { Pose = At(0, BallRadius, 0, BallW, rotation: YawQuarter4) };

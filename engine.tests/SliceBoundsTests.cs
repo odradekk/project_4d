@@ -60,6 +60,35 @@ public class SliceBoundsTests
     }
 
     [Fact]
+    public void PartOfADeviceHasBoundsOnlyWhereItsSegmentReaches()
+    {
+        // The flap of the cabinet is 40 cm high, 60 cm wide and 2 cm thick above the hinge at y = 2, in the segment up to
+        // W = .21, so section I cuts it and not the plank of the segment after it.
+        var world = Scene(DeviceScenes.Cabinet());
+
+        AssertBounds(new(-.01, 2, -.3), new(.01, 2.4, .3), world.GetSliceBounds(DeviceScenes.CabinetId, I, new("flap")));
+        Assert.Equal(world.GetSliceBounds(DeviceScenes.CabinetId, I), world.GetSliceBounds(DeviceScenes.CabinetId, I, new("flap")));
+        Assert.IsType<SliceBoundsResult.Empty>(world.GetSliceBounds(DeviceScenes.CabinetId, I, new("plank")));
+        Assert.IsType<SliceBoundsResult.Bounds>(world.GetSliceBounds(DeviceScenes.CabinetId, II, new("plank")));
+        Assert.IsType<SliceBoundsResult.Empty>(world.GetSliceBounds(DeviceScenes.CabinetId, II, new("flap")));
+    }
+
+    [Fact]
+    public void BodyOfAGrazerIsItsOnePartAndTheBallsAreNotParts()
+    {
+        // The lump is a four-dimensional ball of radius 3 whose center is in section I, which cuts it in a sphere of
+        // radius 3 around (0, 4, 0). The mesh is within a few centimetres of the sphere.
+        var world = GrazerScenes.GrazerScene(At(0, 4, 0), GrazerScenes.Lump(new(0, 0, 0, 0)));
+        var body = Assert.IsType<SliceBoundsResult.Bounds>(world.GetSliceBounds(GrazerScenes.GrazerId, I, new("body")));
+
+        Assert.Equal(-3, body.Min.X, .06);
+        Assert.Equal(1, body.Min.Y, .06);
+        Assert.Equal(3, body.Max.Z, .06);
+        Assert.Equal(world.GetSliceBounds(GrazerScenes.GrazerId, I), body);
+        Assert.Equal(FailureCode.UnknownId, Refusal(world.GetSliceBounds(GrazerScenes.GrazerId, I, new("lump"))));
+    }
+
+    [Fact]
     public void BuildingElementHasBoundsWhereItSpansTheSectionAndNoneOutsideItsWRange()
     {
         var world = Scene(Block("block", new(1, .5, 0), new(.2, .5, .3), new(-.2, .2)));

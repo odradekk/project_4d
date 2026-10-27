@@ -113,7 +113,7 @@ QueryOccupancy 返回实际与体积相交的碰撞实体零件，按 EntityId/P
 
 GetSliceBounds 给当前切片的世界XYZ包围范围。part=null时取整件实体，指定PartId时仅取该零件；未知零件返回UnknownId，已知零件在该Section无体积切片返回Empty。零件筛选同样可用SliceGeometry.Parts读取对应三角形。范围中点只是候选目标点，不是解析环心；隐藏圆环物的本体可能偏离圆环，脚本不能拿整体AABB中心当圈心。
 
-GetSlicePlaneNormal 返回局部指定两个轴所张平面在世界XYZ投影后的无向法线轴。普通零件使用零件局部基，圆环零件使用Ring4局部基；part=null使用实体基；球没有自己的局部基，球零件也用实体基。取合成四维旋转后的两轴U/V的XYZ投影u/v，计算c=cross(u,v)；first与second相同返回InvalidInput，||c||≤1e-10时Degenerate，否则归一化。为使结果确定，令归一化向量中按X/Y/Z顺序首个绝对值>1e-10的分量为正；这个符号只是统一表示，不赋予圆环“正面”。无切片返回NoSlice，未知零件返回UnknownId。
+GetSlicePlaneNormal 返回局部指定两个轴所张平面在世界XYZ投影后的无向法线轴。普通零件使用零件局部基，圆环零件使用Ring4局部基；part=null使用实体基；球没有自己的局部基，球零件、装置零件和啃食者的 body 也用实体基。装置的零件号是定义里关键形状的零件号；啃食者的切片只有一个零件 body（融合的球没有单个球对应的表面），元球的 ID 不是零件号。取合成四维旋转后的两轴U/V的XYZ投影u/v，计算c=cross(u,v)；first与second相同返回InvalidInput，||c||≤1e-10时Degenerate，否则归一化。为使结果确定，令归一化向量中按X/Y/Z顺序首个绝对值>1e-10的分量为正；这个符号只是统一表示，不赋予圆环“正面”。无切片返回NoSlice，未知零件返回UnknownId。
 
 圈方向调用指定圆环PartId、first=X、second=Y。圆环自身ZW平面旋转不改变中心圆U/V，返回相同法线轴；即使局部Z转为W也不能因此报告方向退化。中心圆平面投影秩不足才Degenerate，不把方向非退化等同于目标Section存在完整可钻孔；轻微倾斜也不能直接判为无孔。
 

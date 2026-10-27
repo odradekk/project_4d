@@ -59,11 +59,25 @@ public sealed partial class World
         _ => DynamicShapes.Parts(definition)
     };
 
+    // The parts that name triangles of the entity's slices: those of its definition, and the one part of a grazer.
     private static IEnumerable<PartId> PartIds(EntityDefinition definition)
     {
         foreach (var part in BoxParts(definition)) yield return part.Id;
-        if (definition is ItemDefinition { Shape: Sphere4 ball }) yield return ball.Part;
-        if (definition is ItemDefinition { Shape: HiddenRingItem hidden }) yield return hidden.Ring.Part;
+        switch (definition)
+        {
+            case ItemDefinition { Shape: Sphere4 ball }:
+                yield return ball.Part;
+                break;
+            case ItemDefinition { Shape: HiddenRingItem hidden }:
+                yield return hidden.Ring.Part;
+                break;
+            case DeviceDefinition device:
+                foreach (var part in device.Shape.Segments.SelectMany(segment => segment.Keys).SelectMany(key => key.Parts)) yield return part.Id;
+                break;
+            case GrazerDefinition:
+                yield return MetaballSlice.BodyPart;
+                break;
+        }
     }
 
     // The world image of a unit vector along an axis of the part's local frame: a box part's rotation or a ring's,

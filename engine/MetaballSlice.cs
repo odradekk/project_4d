@@ -11,7 +11,7 @@ namespace FourD;
 internal static class MetaballSlice
 {
     // The one part of a slice: fused balls have no single ball the surface comes from.
-    private static readonly PartId BodyPart = new("body");
+    internal static readonly PartId BodyPart = new("body");
 
     // The edge of the cubes of the lattice.
     private const double CellSize = 0.2;
