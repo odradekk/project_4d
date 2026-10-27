@@ -64,9 +64,9 @@ public abstract record MoveEntityResult
 public MoveEntityResult MoveEntity(MoveRequest request);
 ```
 
-HoldEntity 只抓角色当前 Section 中可拿物的现存切片，每个角色最多手持一件，物品只能一个 Holder；竖起物可在任意有切片的 Section 抓取。PackEntity 要求未竖起、Packable、与角色同 Section，且 freeSlots>0；Sphere4始终拒绝NotPackable，非对称HiddenRingItem按其Packable及本体姿态判定，不因ItemDefinition类别一律拒绝。收入背包后整件形体（包括隐藏结构）不参与世界切片/碰撞。freeSlots=0 返回 CapacityExceeded，负值返回 InvalidInput。引擎记录随身关系，不保存背包容量；#15 的四格是游戏常量，宿主传真实空位。ReleaseEntity 从手/背包释放到角色当前 Section 的当前物品姿态；竖起物保持贯穿物姿态及来源。背包取出先 HoldEntity，可在同一角色已有背包关系上转换；释放不能让小物凭空换 W。宿主负责交互距离与背包 UI，引擎负责几何切片及归属不变量。
+HoldEntity 只抓角色当前 Section 中可拿物的现存切片，每个角色最多手持一件，物品只能一个 Holder；竖起物可在任意有切片的 Section 抓取。ID 不存在或类别不对返回 UnknownId/WrongEntityKind，物品正在旋转返回 Busy，不可拿返回 NotHoldable，物品已被持有或角色已持一件返回 EntityInUse，角色当前 Section 无切片返回 NoSlice。PackEntity 要求未竖起、Packable、与角色同 Section，且 freeSlots>0；Sphere4始终拒绝NotPackable，非对称HiddenRingItem按其Packable及本体姿态判定，不因ItemDefinition类别一律拒绝。收入背包后整件形体（包括隐藏结构）不参与世界切片/碰撞。freeSlots=0 返回 CapacityExceeded，负值返回 InvalidInput。引擎记录随身关系，不保存背包容量；#15 的四格是游戏常量，宿主传真实空位。ReleaseEntity 从手/背包释放到角色当前 Section 的当前物品姿态，未被持有返回 InvalidInput；竖起物保持贯穿物姿态及来源。背包取出先 HoldEntity，可在同一角色已有背包关系上转换；释放不能让小物凭空换 W。宿主负责交互距离与背包 UI，引擎负责几何切片及归属不变量。
 
-MoveEntity 只接受被手持的动态可拿物，不能用它挪角色、装置或生物。Delta 为世界 XYZ 位移；普通平放物随角色的常规三维携带位置同步，仍保持所属 W；有 W 跨度的物体进行四维平移扫掠。按 X、Z、Y 顺序逐分量尝试，受阻分量到最早容差内接触位置，其他分量继续，因此可以滑动；返回 Applied 和实际接触。全部零位移且有阻挡返回 TranslationBlocked，状态不变；无阻挡的零请求为成功。正在旋转返回 Busy。
+MoveEntity 只接受被手持的动态可拿物，不能用它挪角色、装置或生物。Delta 为世界 XYZ 位移；普通平放物随角色的常规三维携带位置同步，仍保持所属 W；有 W 跨度的物体进行四维平移扫掠。按 X、Z、Y 顺序逐分量尝试，受阻分量停在与障碍表面刚接触的位置，其他分量继续，因此可以滑动；返回 Applied 和实际接触。扫掠不让任何一对形体嵌得比起点更深：起点已相贴或嵌在容差内的障碍，不挡住沿表面滑动或离开。全部零位移且有阻挡返回 TranslationBlocked，状态不变；无阻挡的零请求为成功。未被手持或 Delta 非有限数返回 InvalidInput，正在旋转返回 Busy。有接触的成功移动在下一次 Step 交付 MovementBlocked。
 
 例如 Delta=(0.1,0,0.2)，X 方向整段受墙阻挡而 Z 畅通，Applied=(0,0,0.2)，结果 Moved 附 X 接触，供宿主刮擦音和镜片标点。多个 Section 的切片与夹层几何共同参与检测。
 
