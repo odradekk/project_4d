@@ -1,6 +1,7 @@
 using System;
 using FourD;
 using Game.Adapter;
+using Game.Player;
 using Godot;
 
 namespace Game.Characters;
@@ -18,10 +19,15 @@ public enum Posture { Standing, Sitting, Lying }
 [GlobalClass]
 public partial class Character3D : CharacterBody3D
 {
+    /// <summary>How close to a point the character has to come for a walk to it to be done.</summary>
+    public const float ArrivalRadius = .1f;
+
     private const float Gravity = 9.8f;
-    private const float ArrivalRadius = .1f;
 
     [Signal] public delegate void ActionFinishedEventHandler();
+
+    /// <summary>The character was told to do something else, or to stop, while it was doing something.</summary>
+    [Signal] public delegate void ActionReplacedEventHandler();
 
     /// <summary>The speaker shown with the lines it says.</summary>
     [Export] public string DisplayName { get; set; } = "";
@@ -47,7 +53,21 @@ public partial class Character3D : CharacterBody3D
     /// <summary>Whether the engine has the character's body turned into its mirror image.</summary>
     public bool Mirrored => link.Handedness == Handedness.Mirrored;
 
-    internal void Bind(CreatureLink creature) => link = creature;
+    /// <summary>The player, whose lines share the screen with the character's and whose section the character can be in.</summary>
+    public FirstPersonPlayer Player { get; private set; } = null!;
+
+    /// <summary>The region the character is in, which the sounds that follow it need; null for a character placed by hand.</summary>
+    public Region3D? Region { get; private set; }
+
+    /// <summary>Whether the engine has the character in the same section as the player.</summary>
+    public bool WithPlayer => link.WithPlayer;
+
+    internal void Bind(CreatureLink creature, FirstPersonPlayer player, Region3D? region = null)
+    {
+        link = creature;
+        Player = player;
+        Region = region;
+    }
 
     public override void _Ready()
     {
@@ -58,9 +78,9 @@ public partial class Character3D : CharacterBody3D
     }
 
     /// <summary>Runs <paramref name="next"/> with the frame's time in place of what the character was doing, until it returns true.</summary>
-    public void Do(Func<double, bool> next) => action = next;
+    public void Do(Func<double, bool> next) => Replace(next);
 
-    public void Stop() => action = null;
+    public void Stop() => Replace(null);
 
     /// <summary>Walks, or runs, to the point and stands there. The height of the point does not count.</summary>
     public void GoTo(Vector3 point, bool run = false)
@@ -81,7 +101,7 @@ public partial class Character3D : CharacterBody3D
         Posture = Posture.Sitting;
     }
 
-    public void Say(string line, double seconds) => link.Player.Hud.Say(DisplayName, line, seconds);
+    public void Say(string line, double seconds) => Player.Hud.Say(DisplayName, line, seconds);
 
     /// <summary>Puts the character down at a place and a direction, as at the start of a scene.</summary>
     public void PlaceAt(Vector3 position, float yaw)
@@ -106,8 +126,11 @@ public partial class Character3D : CharacterBody3D
         if (new Vector2(offset.X, offset.Z).LengthSquared() > 1e-6f) Rotation = new(0, Mathf.Atan2(-offset.X, -offset.Z), 0);
     }
 
-    /// <summary>Asks for a walk toward the point this frame, which the character takes after its step. True once it is there.</summary>
-    public bool WalkTo(Vector3 point, float speed)
+    /// <summary>
+    /// Asks for one frame's walk toward the point, which the character takes after the step that asked. True once it is
+    /// there. The step functions of commands call it every frame; <see cref="GoTo"/> is the command.
+    /// </summary>
+    internal bool WalkTo(Vector3 point, float speed)
     {
         var offset = point - Position;
         offset.Y = 0;
@@ -116,6 +139,13 @@ public partial class Character3D : CharacterBody3D
         Face(point);
         intent = offset / distance * Mathf.Min(speed, distance / (float)GetPhysicsProcessDeltaTime());
         return false;
+    }
+
+    private void Replace(Func<double, bool>? next)
+    {
+        var interrupted = action is not null;
+        action = next;
+        if (interrupted) EmitSignal(SignalName.ActionReplaced);
     }
 
     /// <summary>Moves the character without physics this frame, such as along a jump.</summary>

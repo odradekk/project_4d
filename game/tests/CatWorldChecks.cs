@@ -97,7 +97,7 @@ public partial class CatWorldChecks : Node
         Check(world.World.CrossSeam(request) is CrossSeamResult.Crossed, "the player crosses the seam");
         await Frames(3);
         Check(!cat.Busy && player.PutDown is null, "a cat is put down when the player leaves its section");
-        Check(cat.GetNode<Interactable3D>("Pickup").CollisionLayer == 2, "a cat put down can be picked up again");
+        Check(cat.GetNode<Interactable3D>("Pickup").CollisionLayer != 0 && !Brain(cat).Held, "a cat put down can be picked up again");
         world.World.CrossSeam(request with { Target = new("I") });
     }
 
@@ -126,20 +126,56 @@ public partial class CatWorldChecks : Node
         Check(Brain(kit).JumpThroughRing("nut", Ring), "the same cat goes at the ring again from the front");
         kit.Stop();
 
-        // A crate in the hole is in the way of the cat's body.
-        var crate = new TurnableDefinition(new("crate"),
-            new(new(-.21, .9, -1, .42), new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1))),
-            new("/test", "crate"), new("II"), new("home"),
-            new(new BoxPart[]
-            {
-                new(new("body"), default, new(.05, .05, .05), new(new(1, 0, 0), new(0, 1, 0), new(0, 0, 1)),
-                    [new(Axis3.X, false, new(1, 1), new(0, 0)), new(Axis3.X, true, new(1, 1), new(0, 0)), new(Axis3.Y, false, new(1, 1), new(0, 0)),
-                     new(Axis3.Y, true, new(1, 1), new(0, 0)), new(Axis3.Z, false, new(1, 1), new(0, 0)), new(Axis3.Z, true, new(1, 1), new(0, 0))])
-            }),
-            new TurnableProperties(Holdable: true, Packable: false, HorizontalRadius: .05, LongAxis: Axis3.X, Hinge: new(-.03, 0, 0), Reach: .08));
-        Check(world.World.AddEntity(crate) is AddEntityResult.Added, "a crate is put in the hole");
+        // Things in the way of the body along its arc stop it: a crate under the arc before the ring, one beside its rising part.
         kit.PlaceAt(new(1.5f, 0, -1), 0);
+        foreach (var (id, center, half) in new[] { ("under", new Vector3(.39f, .3f, -1), new Vector3(.1f, .3f, .1f)), ("rising", new Vector3(.6f, .45f, -1), new Vector3(.1f, .1f, .1f)) })
+        {
+            world.AddCrate(id, center, half);
+            Check(!Brain(kit).JumpThroughRing("nut", Ring) && !kit.Busy, $"a cat does not leap when something is in its way at the {id} part of the arc");
+            world.World.RemoveEntity(new(id));
+        }
+
+        // A crate lying low under the high part of the arc is not in the way of a cat that flies over it.
+        world.AddCrate("low", new(.09f, .05f, -1), new(.1f, .05f, .1f));
+        await Leap(kit, new(-1.41f, 0, -1), "a cat leaps over what lies low under its arc");
+        world.World.RemoveEntity(new("low"));
+
+        // A crate over the cat's landing, higher than the cat is by then, is not in the way either.
+        kit.PlaceAt(new(1.5f, 0, -1), 0);
+        world.AddCrate("shelf", new(-1.31f, .9f, -1), new(.1f, .1f, .1f));
+        await Leap(kit, new(-1.41f, 0, -1), "a cat leaps under what hangs over its landing");
+        world.World.RemoveEntity(new("shelf"));
+
+        // A thin crate low beside the foot of the arc is met by the body as it comes down: the cat leaps the shortest way.
+        kit.PlaceAt(new(1.5f, 0, -1), 0);
+        world.AddCrate("thin", new(-1.05f, .26f, -1), new(.04f, .04f, .1f));
+        await Leap(kit, new(-.81f, 0, -1), "a cat that would meet a crate at the foot of its arc leaps a shorter way");
+        world.World.RemoveEntity(new("thin"));
+
+        // A wall behind the ring leaves less room: the cat leaps a shorter way, and does not leap where there is no room.
+        kit.PlaceAt(new(1.5f, 0, -1), 0);
+        world.AddCrate("wall", new(-1.31f, .6f, -1), new(.1f, .6f, .3f));
+        await Leap(kit, new(-1.01f, 0, -1), "a cat leaps a shorter way where there is a wall behind the ring");
+        world.World.RemoveEntity(new("wall"));
+        kit.PlaceAt(new(1.5f, 0, -1), 0);
+        world.AddCrate("near", new(-.81f, .6f, -1), new(.1f, .6f, .3f));
+        Check(!Brain(kit).JumpThroughRing("nut", Ring) && !kit.Busy, "a cat does not leap where the wall is too close behind the ring");
+        world.World.RemoveEntity(new("near"));
+
+        // A crate in the hole is in the way too.
+        world.AddCrate("crate", new(-.21f, .9f, -1), new(.05f, .05f, .05f));
         Check(!Brain(kit).JumpThroughRing("nut", Ring) && !kit.Busy, "a cat does not leap at a ring with something in its hole");
+        Check(!Brain(kit).JumpThroughRing("nut", Ring, "floor") && !kit.Busy, "something else that is ignored does not let the cat leap");
+        // The toy that leads the cat through is in the hole, and does not count.
+        Check(Brain(kit).JumpThroughRing("nut", Ring, "crate"), "a cat leaps at a ring with only an ignored thing in the way");
+    }
+
+    // The cat leaps through the ring from where it stands and lands near the place.
+    private async Task Leap(Character3D kit, Vector3 landing, string message)
+    {
+        Check(Brain(kit).JumpThroughRing("nut", Ring), message);
+        while (kit.Busy) await Frames(1);
+        Check(Apart(kit.Position, landing) < .15f, $"{message}; it landed at {kit.Position}");
     }
 
     private async Task Frames(int count)

@@ -176,7 +176,8 @@ public partial class Region3D : Node3D
         {
             var character = (Character3D)node;
             character.Transform = SceneReader.RelativeTransform(npcSpawn, this);
-            character.Bind(new CreatureLink(world, npcSpawn.EntityId, spawn.EntityId, player, id => sectionNodes[id]));
+            if (npcSpawn.DisplayName != "") character.DisplayName = npcSpawn.DisplayName;
+            character.Bind(new CreatureLink(world, npcSpawn.EntityId, spawn.EntityId, id => sectionNodes[id]), player, this);
             sectionNodes[SceneReader.Ancestor<Section3D>(npcSpawn)!.SectionId].AddChild(character);
             characters.Add(npcSpawn.EntityId, character);
         }

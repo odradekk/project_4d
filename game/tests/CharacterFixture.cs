@@ -19,7 +19,7 @@ internal static class CharacterFixture
 
     /// <summary>Adds a creature spawn to a section of the test region, before the region is added to the tree.</summary>
     internal static void AddSpawn(Region3D region, string section, string id, string scene, Vector3 position,
-        double radius, double height, bool seams = false) =>
+        double radius, double height, bool seams = false, string name = "") =>
         region.GetNode($"Sections/{section}/Spawns").AddChild(new CreatureSpawn3D
         {
             Name = id,
@@ -28,14 +28,15 @@ internal static class CharacterFixture
             PassageRadius = radius,
             PassageHeight = height,
             CanUseSeamsWithoutPrism = seams,
+            DisplayName = name,
             CharacterScene = GD.Load<PackedScene>(scene)
         });
 
     internal static void AddCat(Region3D region, string id, Vector3 position, string section = "Ⅰ") =>
         AddSpawn(region, section, id, CatScene, position, .15, .4, seams: true);
 
-    internal static void AddSchoolmate(Region3D region, string id, Vector3 position) =>
-        AddSpawn(region, "Ⅰ", id, SchoolmateScene, position, .2, 1.35);
+    internal static void AddSchoolmate(Region3D region, string id, Vector3 position, string name = "") =>
+        AddSpawn(region, "Ⅰ", id, SchoolmateScene, position, .2, 1.35, name: name);
 
     internal static void AddTeacher(Region3D region, string id, Vector3 position, string section = "Ⅰ") =>
         AddSpawn(region, section, id, TeacherScene, position, .25, 1.7);

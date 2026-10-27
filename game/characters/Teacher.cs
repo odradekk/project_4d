@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Game.Adapter;
 using Game.Audio;
 using Game.Flow;
 using Game.Player;
@@ -43,7 +42,15 @@ public partial class Teacher : Node
     /// <summary>Restored when the player has been seen; the teacher goes back to the board.</summary>
     public SceneCheckpoint? Checkpoint { get; set; }
 
-    public override void _Ready() => body = GetParent<Character3D>();
+    public override void _Ready()
+    {
+        body = GetParent<Character3D>();
+        // Whoever tells the teacher to do something else, the chalk and the footsteps stop.
+        body.ActionReplaced += Silence;
+    }
+
+    /// <summary>Stops the patrol: the teacher stands where it is and the sounds stop.</summary>
+    public void Stop() => body.Stop();
 
     /// <summary>
     /// Goes to the first point of the route and writes there for the given time, facing away from the second point, which
@@ -65,14 +72,14 @@ public partial class Teacher : Node
     {
         var sound = new SectionSound { Stream = GD.Load<AudioStream>($"res://audio/{file}.wav") };
         // The listener is in the main viewport, with the player; a sound in the teacher's own viewport would not be heard.
-        body.Link.Player.AddSibling(sound);
-        sound.Configure(SceneReader.Ancestor<Region3D>(body)!, body.Section);
+        body.Player.AddSibling(sound);
+        sound.Configure(body.Region!, body.Section);
         return sound;
     }
 
     private bool Tick(double delta)
     {
-        if (phase != Phase.Caught && Sees(body.Link.Player)) Catch(body.Link.Player);
+        if (phase != Phase.Caught && Sees(body.Player)) Catch(body.Player);
         switch (phase)
         {
             case Phase.ToBoard when body.WalkTo(route[0], body.WalkSpeed):
@@ -123,6 +130,12 @@ public partial class Teacher : Node
         Write();
     }
 
+    private void Silence()
+    {
+        chalk?.Stop();
+        footsteps?.Stop();
+    }
+
     private void Sound(SectionSound sound, bool wanted)
     {
         sound.Position = body.Position + Vector3.Up;
@@ -132,7 +145,7 @@ public partial class Teacher : Node
 
     private bool Sees(FirstPersonPlayer player)
     {
-        if (!body.Link.WithPlayer || !player.PrismRaised) return false;
+        if (!body.WithPlayer || !player.PrismRaised) return false;
         var eyes = body.Position + Vector3.Up * EyeHeight;
         var target = player.Camera.GlobalPosition;
         var offset = target - eyes;

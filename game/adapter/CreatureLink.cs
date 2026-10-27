@@ -1,6 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using FourD;
-using Game.Player;
 using Godot;
 
 namespace Game.Adapter;
@@ -13,12 +14,11 @@ namespace Game.Adapter;
 /// </summary>
 /// <param name="player">The creature the engine knows as the player, whose section decides <see cref="WithPlayer"/>.</param>
 /// <param name="sectionNode">The node that holds the characters of a section, in that section's physics world.</param>
-internal sealed class CreatureLink(World world, string id, string player, FirstPersonPlayer playerNode, Func<string, Node> sectionNode)
+internal sealed class CreatureLink(World world, string id, string player, Func<string, Node> sectionNode)
 {
     // Half the W thickness of an ordinary object, docs/frame/principles.md. A box that tests a creature's path has it.
     private const double Epsilon = .006;
 
-    internal FirstPersonPlayer Player => playerNode;
     internal string Section => State(id).Section!.Value.Value;
     internal Handedness Handedness => State(id).Handedness;
     internal bool WithPlayer => State(id).Section == State(player).Section;
@@ -52,13 +52,17 @@ internal sealed class CreatureLink(World world, string id, string player, FirstP
         return result is SliceDirectionResult.Direction direction ? V(direction.UnitDirection) : null;
     }
 
-    /// <summary>Whether nothing solid is in the box at <paramref name="center"/>, turned by <paramref name="yaw"/>, in the creature's section.</summary>
-    internal bool IsClear(Vector3 center, float yaw, Vector3 halfSize)
+    /// <summary>
+    /// Whether nothing solid is in the box at <paramref name="center"/>, turned by <paramref name="yaw"/>, in the creature's
+    /// section, not counting the entities in <paramref name="ignored"/>.
+    /// </summary>
+    internal bool IsClear(Vector3 center, float yaw, Vector3 halfSize, IEnumerable<string> ignored)
     {
         var w = State(id).Pose.Position.W;
         var pose = SceneReader.PoseOf(new Transform3D(new Basis(Vector3.Up, yaw), center), w);
         var box = new OccupancyBox(pose, new(halfSize.X, halfSize.Y, halfSize.Z, Epsilon));
-        return world.QueryOccupancy(box, []) is OccupancyResult.Occupancy { Hits.Count: 0 };
+        var excluded = ignored.Distinct().Select(entity => new EntityId(entity)).ToArray();
+        return world.QueryOccupancy(box, excluded) is OccupancyResult.Occupancy { Hits.Count: 0 };
     }
 
     private EntityState State(string entity) => ((EntityReadResult.Found)world.ReadEntity(new EntityId(entity))).Entity;

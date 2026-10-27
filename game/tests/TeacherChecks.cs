@@ -36,6 +36,8 @@ public partial class TeacherChecks : Node
             await LoadTeacher(Board);
             await CheckPatrol();
             await LoadTeacher(Board);
+            await CheckOtherCommandsSilenceTheTeacher();
+            await LoadTeacher(Board);
             await CheckSpotted();
             await LoadTeacher(Board);
             await CheckNotSpotted();
@@ -85,6 +87,27 @@ public partial class TeacherChecks : Node
         Check(!Sound("footsteps").Playing, "the footsteps stop when the teacher writes");
         // The sounds are heard from where the teacher is.
         Check(Apart(Sound("chalk").Position, body.Position) < .01f, "the chalk sounds at the teacher");
+    }
+
+    private async Task CheckOtherCommandsSilenceTheTeacher()
+    {
+        var commands = new (string Name, Action Command)[]
+        {
+            ("stopped", teacher.Stop),
+            ("sent somewhere", () => body.GoTo(new(-4, .02f, 0)))
+        };
+        foreach (var (name, command) in commands)
+        {
+            teacher.Patrol(Route, 100);
+            await play.Frames(5);
+            Check(Sound("chalk").Playing, "the teacher writes with the chalk sounding");
+            command();
+            await play.Frames(120);
+            Check(!Sound("chalk").Playing && !Sound("footsteps").Playing, $"a teacher that is {name} is silent");
+        }
+        teacher.Stop();
+        teacher.Patrol(Route, 100);
+        await play.Until(() => Sound("chalk").Playing, 4, "a teacher that was stopped must write with the chalk sounding when it patrols again");
     }
 
     private async Task CheckSpotted()

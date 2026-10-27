@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FourD;
@@ -62,13 +63,24 @@ internal sealed class CatWorld
 
     internal static Cat Brain(Character3D cat) => cat.GetNode<Cat>("Cat");
 
+    /// <summary>Puts a crate with the given center and half size down in section II; it lies flat and cannot reach another section.</summary>
+    internal void AddCrate(string id, Vector3 center, Vector3 half)
+    {
+        var uvs = Box(new(1, 1, 1), default).Parts[0].FaceUvs;
+        var shape = new BoxAssembly([new(new("body"), default, new(half.X, half.Y, half.Z), new(new(1, 0, 0), new(0, 1, 0), new(0, 0, 1)), uvs)]);
+        var hinge = half.X - .02;
+        var crate = new TurnableDefinition(new(id), At(center.X, center.Y, center.Z, .42), Origin, new("II"), new("home"), shape,
+            new TurnableProperties(Holdable: true, Packable: false, HorizontalRadius: Math.Sqrt(half.X * half.X + half.Z * half.Z), LongAxis: Axis3.X, Hinge: new(-hinge, 0, 0), Reach: half.X + hinge));
+        if (World.AddEntity(crate) is not AddEntityResult.Added) throw new InvalidOperationException($"The crate {id} cannot be added.");
+    }
+
     // The engine state of an entity, for the checks.
     internal EntityState State(string id) => ((EntityReadResult.Found)World.ReadEntity(new EntityId(id))).Entity;
 
     private Character3D Character(string scene, string id, string section)
     {
         var character = GD.Load<PackedScene>(scene).Instantiate<Character3D>();
-        character.Bind(new CreatureLink(World, id, "player", Player, name => Rooms[name]));
+        character.Bind(new CreatureLink(World, id, "player", name => Rooms[name]), Player);
         Rooms[section].AddChild(character);
         character.PlaceAt(new((float)State(id).Pose.Position.X, 0, (float)State(id).Pose.Position.Z), 0);
         return character;

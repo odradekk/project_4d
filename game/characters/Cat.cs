@@ -6,9 +6,12 @@ using Godot;
 namespace Game.Characters;
 
 /// <summary>
-/// What a cat does, as commands to the <see cref="Character3D"/> it is a child of. Each command replaces the one before it.
-/// Walking, running and crossing a seam are the character's own commands. A cat can use seams without a prism, and the
-/// engine tells whether it is mirrored after it has.
+/// What a cat does, as commands to the <see cref="Character3D"/> it is a child of. Each command replaces the one before it,
+/// and ends the carrying if the player had the cat in the arms. Walking, running and crossing a seam are the character's own
+/// commands. A cat can use seams without a prism, and the engine tells whether it is mirrored after it has.
+/// The cat goes straight at where it is told to go and slides along what is in the way. Where the way bends, round a hole
+/// or up a stair, the script gives it the points to go through: <see cref="Follow"/> takes them, and <see cref="Chase"/> takes
+/// any function for its target.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 [GlobalClass]
@@ -24,10 +27,14 @@ public partial class Cat : Node
     private const float JumpSpeed = 3f;
     private const float FleeDistance = 3f;
     private const double FleeSeconds = 3;
-    // The ring is looked at head on when the cat's line to it is within about 35 degrees of the ring's axis.
+    // The ring is looked at head on when the cat's line to it is within about 37 degrees of the ring's axis.
     private const float FacesCat = .8f;
-    // How far before the ring the cat starts its leap, and how far past it that leap ends.
-    private const float RunUp = 1.2f;
+    // How far before the ring the cat starts its leap and how far past it the leap ends, longest first.
+    private static readonly float[] Reaches = [1.2f, 1f, .8f, .6f];
+    // The length of a box that tests the body along the arc.
+    private const float LegLength = .2f;
+    // How far either side of the ring's plane the body is tested against the ring itself, which is thinner than that.
+    private const float RingDepth = .1f;
     private const float PathMargin = .02f;
     // Where the cat is held: in front of the chest.
     private static readonly Vector3 HeldAt = new(0, 1, -.45f);
@@ -36,12 +43,22 @@ public partial class Cat : Node
     private Interactable3D pickup = null!;
     private uint pickupLayer;
 
+    /// <summary>Emitted when the player picks the cat up.</summary>
+    [Signal] public delegate void PickedUpEventHandler();
+
+    /// <summary>Emitted when the player no longer has the cat in the arms: put down, or the cat was told to do something else.</summary>
+    [Signal] public delegate void PutDownEventHandler();
+
+    /// <summary>Whether the player has the cat in the arms.</summary>
+    public bool Held { get; private set; }
+
     public override void _Ready()
     {
         body = GetParent<Character3D>();
         pickup = body.GetNode<Interactable3D>("Pickup");
         pickupLayer = pickup.CollisionLayer;
         pickup.Interacted += PickUp;
+        body.ActionReplaced += Release;
     }
 
     /// <summary>Walks to random places within the radius of a point, and rests between them.</summary>
@@ -65,17 +82,20 @@ public partial class Cat : Node
         });
     }
 
-    /// <summary>Keeps close to the player, running when it falls far behind. It waits while the engine has the player in another section.</summary>
-    public void Follow()
+    /// <summary>
+    /// Keeps close to the player, running when it falls far behind. It waits while the engine has the player in another section.
+    /// <paramref name="around"/> turns the player's place into the place to walk to first, where the way is not straight.
+    /// </summary>
+    public void Follow(Func<Vector3, Vector3>? around = null)
     {
         var walking = false;
         Begin(_ =>
         {
-            if (!body.Link.WithPlayer) return false;
-            var player = body.Link.Player.Position;
+            if (!body.WithPlayer) return false;
+            var player = body.Player.Position;
             var distance = Flat(player - body.Position).Length();
             walking = distance > (walking ? FollowDistance : FollowDistance + FollowSlack);
-            if (walking) body.WalkTo(player, distance > RunDistance ? body.RunSpeed : body.WalkSpeed);
+            if (walking) body.WalkTo(around?.Invoke(player) ?? player, distance > RunDistance ? body.RunSpeed : body.WalkSpeed);
             return false;
         });
     }
@@ -115,10 +135,13 @@ public partial class Cat : Node
         body.Face(facing);
     }
 
-    /// <summary>Stands and keeps its eyes on a point.</summary>
-    public void Stare(Vector3 point) => Begin(_ =>
+    /// <summary>Keeps its eyes on a point, in the posture it has.</summary>
+    public void Stare(Vector3 point) => Stare(() => point);
+
+    /// <summary>Keeps its eyes on a moving target, in the posture it has. It stays as it faces while there is no target.</summary>
+    public void Stare(Func<Vector3?> target) => body.Do(_ =>
     {
-        body.Face(point);
+        if (target() is { } at) body.Face(at);
         return false;
     });
 
@@ -137,10 +160,12 @@ public partial class Cat : Node
     }
 
     /// <summary>
-    /// Runs up to a ring and leaps through its hole, landing on the other side. Does nothing and says false when the
-    /// ring has no slice in the cat's section, is not seen head on, or when the cat's body would meet something on the way.
+    /// Runs up to a ring and leaps through its hole, landing as far on the other side as it started on this one, or nearer
+    /// if there is a wall behind the ring. Does nothing and says false when the ring has no slice in the cat's section, is
+    /// not seen head on, or when the cat's body would meet something on the way along the arc. The entities in
+    /// <paramref name="ignored"/>, such as the toy that leads the cat, do not count as in the way.
     /// </summary>
-    public bool JumpThroughRing(string entity, string part)
+    public bool JumpThroughRing(string entity, string part, params string[] ignored)
     {
         var link = body.Link;
         if (link.SliceBounds(entity, part) is not { } ring || link.SlicePlaneNormal(entity, part, Axis3.X, Axis3.Y) is not { } axis) return false;
@@ -150,23 +175,58 @@ public partial class Cat : Node
         var alignment = axisOnGround.Dot(Flat(hole - body.Position).Normalized());
         if (Mathf.Abs(alignment) < FacesCat) return false;
         var along = axisOnGround * Mathf.Sign(alignment);
-        var halfSize = new Vector3(body.Radius + PathMargin, body.Height / 2 + PathMargin, RunUp);
-        if (!link.IsClear(hole, Mathf.Atan2(along.X, along.Z), halfSize)) return false;
-        var level = new Vector3(hole.X, body.Position.Y, hole.Z);
-        var start = level - along * RunUp;
-        var landing = level + along * RunUp;
         // The top of the arc is over the ring's plane, with the middle of the cat level with the middle of the hole.
-        var rise = Mathf.Max(hole.Y - body.Height / 2 - body.Position.Y, JumpRise);
-        Func<double, bool>? jump = null;
-        Begin(delta =>
+        var ground = body.Position.Y;
+        var rise = Mathf.Max(hole.Y - body.Height / 2 - ground, JumpRise);
+        var level = new Vector3(hole.X, ground, hole.Z);
+        // A wall behind the ring leaves less room to land: the leap is shortened until its path is free.
+        foreach (var reach in Reaches)
         {
-            if (jump is null)
+            if (!LeapIsClear(level, along, reach, rise, ignored)) continue;
+            var start = level - along * reach;
+            Func<double, bool>? jump = null;
+            Begin(delta =>
             {
-                if (!body.WalkTo(start, body.RunSpeed)) return false;
-                jump = Jump(landing, rise);
+                if (jump is null)
+                {
+                    if (!body.WalkTo(start, body.RunSpeed)) return false;
+                    // The run-up ends a few centimetres from the start: the leap goes from there, through the middle of the hole,
+                    // to the place as far beyond it.
+                    jump = Jump(new Vector3(2 * level.X - body.Position.X, ground, 2 * level.Z - body.Position.Z), rise);
+                }
+                return jump(delta);
+            });
+            return true;
+        }
+        return false;
+    }
+
+    // Whether the body gets along a leap that is `reach` long on each side of the ring: through the hole in the plane of
+    // the ring, and past it on both sides in boxes along the arc, each as high as the arc is over its length. The feet
+    // follow a parabola that is on the ground at both ends and `rise` above it over the ring.
+    private bool LeapIsClear(Vector3 level, Vector3 along, float reach, float rise, string[] ignored)
+    {
+        var yaw = Mathf.Atan2(along.X, along.Z);
+        var beyond = body.Radius + PathMargin;
+        float Feet(float depth) => level.Y + rise * (1 - depth * depth / (reach * reach));
+        bool Clear(float from, float to, float low, float high, float halfWidth) =>
+            body.Link.IsClear(new Vector3(level.X, (low + high) / 2, level.Z) + along * (from + to) / 2, yaw,
+                new(halfWidth, (high - low) / 2, (to - from) / 2), ignored);
+        var apex = Feet(0);
+        if (!Clear(-RingDepth, RingDepth, apex - PathMargin, apex + body.Height + PathMargin, beyond)) return false;
+        foreach (var side in new[] { -1, 1 })
+            for (var near = RingDepth; near < reach; near += LegLength)
+            {
+                // The body is up to its radius beyond its middle, which is in the leg, and the run-up ends within the
+                // arrival radius of its mark, so the leg is wider away from the ring.
+                var far = Mathf.Min(near + LegLength, reach);
+                var inner = Mathf.Max(near - beyond, RingDepth);
+                var outer = far + beyond;
+                var low = Mathf.Max(Feet(far), level.Y) + PathMargin;
+                var high = Feet(near) + body.Height + PathMargin;
+                var halfWidth = beyond + Character3D.ArrivalRadius * far / reach;
+                if (!Clear(Mathf.Min(side * inner, side * outer), Mathf.Max(side * inner, side * outer), low, high, halfWidth)) return false;
             }
-            return jump(delta);
-        });
         return true;
     }
 
@@ -196,23 +256,36 @@ public partial class Cat : Node
 
     private void PickUp()
     {
-        var player = body.Link.Player;
-        pickup.CollisionLayer = 0;
-        player.PutDown = PutDown;
-        Begin(_ =>
+        var player = body.Player;
+        body.Posture = Posture.Standing;
+        body.Do(_ =>
         {
             // Crossing a seam takes both hands for the prism: a cat held when the player leaves its section is put down.
-            if (!body.Link.WithPlayer) PutDown();
+            if (!body.WithPlayer) LetGo();
             else body.Warp(player.Position + player.Basis * HeldAt);
             return false;
         });
+        Held = true;
+        pickup.CollisionLayer = 0;
+        player.PutDown = LetGo;
+        EmitSignal(SignalName.PickedUp);
     }
 
-    private void PutDown()
+    // The player puts the cat down, or the cat is let go for want of the player's section.
+    private void LetGo()
     {
-        pickup.CollisionLayer = pickupLayer;
-        body.Link.Player.PutDown = null;
+        Release();
         body.Stop();
+    }
+
+    // Any other command to the cat or its body ends the carrying, whoever gives it.
+    private void Release()
+    {
+        if (!Held) return;
+        Held = false;
+        pickup.CollisionLayer = pickupLayer;
+        body.Player.PutDown = null;
+        EmitSignal(SignalName.PutDown);
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);

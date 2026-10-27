@@ -14,6 +14,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private const float RunSpeed = 3.8f;
     private const float LookSensitivity = 0.0025f;
     private const float PitchLimit = 1.5f;
+    // The physics layer of the bodies of characters, which the crosshair looks through: a cat in the arms is in its way.
+    private const uint CharacterLayer = 2;
     private float pitch;
     private bool pointerCaptured;
     private PrismView? prism;
@@ -65,15 +67,15 @@ public partial class FirstPersonPlayer : CharacterBody3D
                 GetViewport().SetInputAsHandled();
                 return;
             }
-            if (key.Keycode == Key.E && pointerCaptured && PutDown is { } putDown)
-            {
-                putDown();
-                GetViewport().SetInputAsHandled();
-                return;
-            }
             if (key.Keycode == Key.E && pointerCaptured && GodotObject.IsInstanceValid(target))
             {
                 target!.Interact();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && PutDown is { } putDown)
+            {
+                putDown();
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -120,7 +122,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         if (pointerCaptured && !Hud.NotebookOpen)
         {
             var from = Camera.GlobalPosition;
-            var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f);
+            var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f, ~CharacterLayer);
             query.Exclude = [GetRid()];
             var hit = GetWorld3D().DirectSpaceState.IntersectRay(query);
             if (hit.Count > 0)
@@ -147,8 +149,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
     // The prompt of what the crosshair is on if it can be used, else the keys that act on what is held or aimed at.
     private string HintText()
     {
-        if (PutDown is not null) return "E  放下";
         if (target is not null) return $"E  {target.Prompt}";
+        if (PutDown is not null) return "E  放下";
         if (actions is null || (!actions.Holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return "";
         var upright = actions.Holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
         var keys = new List<string>();

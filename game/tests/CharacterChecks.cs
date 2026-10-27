@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using FourD;
 using Game.Adapter;
 using Game.Characters;
-using Game.Interaction;
 using Game.Player;
 using Godot;
 using static Game.Tests.CharacterFixture;
@@ -36,13 +35,13 @@ public partial class CharacterChecks : Node
             await CheckGoTo();
             await CheckWander();
             await CheckFollow();
+            await CheckFollowAround();
             await CheckChase();
             await CheckJump();
             await CheckPerchSitAndStare();
             await CheckFlee();
-            await CheckCarry();
             await CheckSchoolmate();
-            GD.Print("Character checks passed: spawns, sync, go to, wander, follow, chase, jump, perch, sit, stare, flee, carry, schoolmate.");
+            GD.Print("Character checks passed: spawns, sync, go to, wander, follow, chase, jump, perch, sit, stare, flee, schoolmates.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -59,7 +58,8 @@ public partial class CharacterChecks : Node
     private static void AddCharacters(Region3D region)
     {
         AddCat(region, "cat", CatSpawn);
-        AddSchoolmate(region, "mate", new(-3, .02f, -1));
+        AddSchoolmate(region, "mate", new(-3, .02f, -1), "同桌");
+        AddSchoolmate(region, "extra", new(-3.5f, .02f, -1));
     }
 
     private async Task CheckSpawns()
@@ -142,6 +142,23 @@ public partial class CharacterChecks : Node
         Check(catBody.Busy, "following goes on until the cat is told something else");
     }
 
+    private async Task CheckFollowAround()
+    {
+        // The cabinet stands between the cat and the player. A cat goes straight and stays at the cabinet, unless it is given a way round.
+        catBody.PlaceAt(new(1.8f, .02f, 0), 0);
+        player.Position = new(4.5f, .02f, 0);
+        cat.Follow();
+        await play.Frames(6 * 60);
+        Check(catBody.Position.X < 2.6f, $"a cat that follows goes straight and does not get round a cabinet; it is at {catBody.Position}");
+        var passed = false;
+        cat.Follow(goal =>
+        {
+            passed |= catBody.Position.Z > 1.2f;
+            return passed ? goal : new Vector3(3.2f, 0, 1.5f);
+        });
+        await play.Until(() => Apart(catBody.Position, player.Position) < 1.05f, 10, "a cat that follows by the points it is given gets round the cabinet");
+    }
+
     private async Task CheckChase()
     {
         // The engine's slice of the rubber is what the cat runs after, wherever the rubber is moved.
@@ -195,7 +212,15 @@ public partial class CharacterChecks : Node
         cat.Stare(corner);
         catBody.Rotation = new(0, 2, 0);
         await play.Frames(2);
-        Check(catBody.Posture == Posture.Standing && Forward(catBody).Dot(toCorner) > .99f && catBody.Busy, "a staring cat keeps its eyes on the point");
+        Check(catBody.Posture == Posture.Sitting && Forward(catBody).Dot(toCorner) > .99f && catBody.Busy, "a staring cat keeps its eyes on the point, sitting as it was");
+
+        var watched = new Vector3(3, 0, 3);
+        cat.Stare(() => watched);
+        await play.Frames(2);
+        Check(Forward(catBody).Dot(Flat(watched - catBody.Position).Normalized()) > .99f, "a staring cat looks at a target");
+        watched = new Vector3(-3, 0, 3);
+        await play.Frames(2);
+        Check(Forward(catBody).Dot(Flat(watched - catBody.Position).Normalized()) > .99f, "a staring cat turns its eyes with a target that moves");
     }
 
     private async Task CheckFlee()
@@ -208,28 +233,6 @@ public partial class CharacterChecks : Node
         Check(Mathf.Abs(Apart(catBody.Position, scare) - 4) < .2f && catBody.Position.X < CatSpawn.X, $"a scared cat runs away from what scared it; it is at {catBody.Position}");
     }
 
-    private async Task CheckCarry()
-    {
-        catBody.PlaceAt(new(-1.5f, .02f, 3), 0);
-        await play.Frames(3);
-        play.LookAt(new(-1.5f, .02f, 4.2f), catBody.Position + new Vector3(0, .2f, 0));
-        await play.Frames(2);
-        Check(player.Hud.HintText == "E  抱起", $"the prompt offers to pick the cat up; saw '{player.Hud.HintText}'");
-        Press(Key.E);
-        await play.Frames(3);
-        Check(catBody.Busy && player.PutDown is not null && player.Hud.HintText == "E  放下", "a picked-up cat is in the player's arms");
-        Check(catBody.GetNode<Interactable3D>("Pickup").CollisionLayer == 0, "a cat in the arms cannot be aimed at");
-        player.Position = new(2, .02f, 3);
-        await play.Frames(3);
-        var held = player.Position + player.Basis * new Vector3(0, 1, -.45f);
-        Check(catBody.Position.DistanceTo(held) < .05f, $"the cat goes where the player goes; it is at {catBody.Position}, the arms at {held}");
-        Press(Key.E);
-        await play.Frames(90);
-        Check(!catBody.Busy && player.PutDown is null, "E puts the cat down");
-        Check(catBody.Position.Y < .05f, $"a cat put down lands on the floor; it is at {catBody.Position}");
-        Check(catBody.GetNode<Interactable3D>("Pickup").CollisionLayer == 2, "a cat on the floor can be picked up again");
-    }
-
     private async Task CheckSchoolmate()
     {
         mate.Sit();
@@ -240,7 +243,10 @@ public partial class CharacterChecks : Node
         await play.UntilIdle(mate, 4);
         Check(mate.Posture == Posture.Standing && Apart(mate.Position, new(-3, 0, 0)) < .15f, "a schoolmate stands and walks to a point");
         mate.Say("你怎么变的？", 2);
-        Check(player.Hud.SubtitleText == "同桌：你怎么变的？", $"a schoolmate's line carries its name; saw '{player.Hud.SubtitleText}'");
+        Check(player.Hud.SubtitleText == "同桌：你怎么变的？", $"a schoolmate's line carries the name its spawn gives; saw '{player.Hud.SubtitleText}'");
+        player.Hud.ClearText();
+        play.Region.Character("extra").Say("好。", 2);
+        Check(player.Hud.SubtitleText == "同学：好。", $"a schoolmate whose spawn gives no name has the name of its scene; saw '{player.Hud.SubtitleText}'");
         Check(mate.CrossSeam("none", "Ⅱ") == FailureCode.UnknownId, "a character cannot cross a seam that is not there");
     }
 }
