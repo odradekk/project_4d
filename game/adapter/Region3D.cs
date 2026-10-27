@@ -19,8 +19,10 @@ public partial class Region3D : Node3D
 {
     private Dictionary<string, double> sectionPositions = new();
     private readonly Dictionary<string, Character3D> characters = [];
+    private Dictionary<string, World3D> worlds = new();
     internal World? World { get; private set; }
     internal PlayerActions? Actions { get; private set; }
+    internal SeamTravel? Travel { get; private set; }
 
     /// <summary>The character that stands at the spawn with this entity ID.</summary>
     public Character3D Character(string entity) => characters[entity];
@@ -76,6 +78,7 @@ public partial class Region3D : Node3D
         World = null;
         Actions = null;
         characters.Clear();
+        Travel = null;
         sectionPositions.Clear();
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
         generated = null;
@@ -119,7 +122,7 @@ public partial class Region3D : Node3D
             .Where(entity => entity is not (BuildingElementDefinition or FixedDefinition or Creature3Definition))
             .Select(entity => entity.Id)
             .ToHashSet();
-        var worlds = new Dictionary<string, World3D>();
+        worlds = new Dictionary<string, World3D>();
         var sectionNodes = new Dictionary<string, Node>();
         var scenes = new List<SectionScene>();
         foreach (var section in description.Sections)
@@ -163,14 +166,15 @@ public partial class Region3D : Node3D
         generated.AddChild(player);
         prism = new PrismView { Name = "Prism" };
         generated.AddChild(prism);
-        prism.Configure(player.Camera, description.Sections.Where(s => s.Id.Value != home.SectionId)
-            .OrderBy(s => world.Distance4(new(0, 0, 0, s.W), new(0, 0, 0, home.W))).ThenBy(s => s.W).ThenBy(s => s.Id.Value, StringComparer.Ordinal)
-            .Select(s => (s.Id.Value, worlds[s.Id.Value])).ToArray(), PrismEnabled);
+        prism.Configure(player.Camera, LensTargets(home.SectionId), PrismEnabled);
         Actions = new PlayerActions { Name = "Actions" };
         generated.AddChild(Actions);
         Actions.Configure(world, spawn.EntityId, player, prism, scenes,
             new DynamicSlices(world, scenes, reader.Materials, movable, reader.Lettering), new LensOverlay(scenes));
-        player.Bind(prism, Actions);
+        Travel = new SeamTravel { Name = "Travel" };
+        generated.AddChild(Travel);
+        Travel.Configure(world, spawn.EntityId, player, prism, Actions, new SeamDisplay(world, reader.Seams, scenes, generated), EnterSection);
+        player.Bind(prism, Actions, Travel);
         // Characters walk in the physics world of their section, so each is a child of that section's viewport.
         foreach (var (npcSpawn, node) in spawned.Where(s => s.Node is Character3D))
         {
@@ -183,6 +187,21 @@ public partial class Region3D : Node3D
         }
         Diagnostics = "";
         Loaded = true;
+    }
+
+    // The sections the lens can show from a section, nearest first.
+    private (string Id, World3D World)[] LensTargets(string home) => sectionPositions.Keys.Where(id => id != home)
+        .OrderBy(id => World!.Distance4(new(0, 0, 0, sectionPositions[id]), new(0, 0, 0, sectionPositions[home])))
+        .ThenBy(id => sectionPositions[id]).ThenBy(id => id, StringComparer.Ordinal)
+        .Select(id => (id, worlds[id])).ToArray();
+
+    // The player has crossed a seam: the view, the physics and the lens move to the section she is in now, and the lens
+    // shows the one she came from.
+    private void EnterSection(string from, string to)
+    {
+        currentWorld = worlds[to];
+        GetViewport().World3D = currentWorld;
+        prism!.SetTargets(LensTargets(to), from);
     }
 
     private void Fail(IReadOnlyList<LoadError> errors)

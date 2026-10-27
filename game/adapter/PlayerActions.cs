@@ -51,6 +51,9 @@ public sealed partial class PlayerActions : Node
     public bool HeldIsUpright => HeldId() is { } id && State(id).UprightOrigin is not null;
     public string CurrentSection => State(actor).Section?.Value ?? "";
 
+    /// <summary>Whether the player is a mirror image, as the engine has her: it turns the view and the controls over.</summary>
+    public bool Mirrored => State(actor).Handedness == Handedness.Mirrored;
+
     internal void Configure(World world, string actor, FirstPersonPlayer player, PrismView prism,
         IReadOnlyList<SectionScene> scenes, DynamicSlices slices, LensOverlay overlay)
     {
@@ -89,16 +92,28 @@ public sealed partial class PlayerActions : Node
         {
             return world.ReleaseEntity(held) is CarryResult.Rejected released ? Refuse(released.Failure) : null;
         }
-        if (aimed is null) return null;
-        var item = new EntityId(aimed);
+        return aimed is null ? null : Hold(new EntityId(aimed));
+    }
+
+    /// <summary>Takes an entity into the hand from the world, or from the backpack.</summary>
+    internal Refusal? Hold(EntityId item)
+    {
         if (world.HoldEntity(actor, item) is CarryResult.Rejected rejected) return Refuse(rejected.Failure);
-        // A flat object comes to the hand; a slice stays where it is and moves with the hand from there.
-        var position = Position(State(item));
-        grip = IsUpright(aimed) ? position - Hand() : Vector3.Zero;
-        wasRotating = false;
+        Regrip();
         // The held slice has no collision body, which the hand's check against walls must not run into on the next frame.
         slices.Refresh();
         return null;
+    }
+
+    /// <summary>
+    /// Makes the held entity stay where it is relative to the hand. A flat object comes to the hand; a slice stays
+    /// where it is and moves with the hand from there, as a long item does that stood up in a seam.
+    /// </summary>
+    internal void Regrip()
+    {
+        var item = HeldId()!.Value;
+        grip = State(item).UprightOrigin is not null ? Position(State(item)) - Hand() : Vector3.Zero;
+        wasRotating = false;
     }
 
     /// <summary>F: stands the held or aimed entity toward the prism's target section, or lays an upright one down.</summary>
@@ -125,10 +140,11 @@ public sealed partial class PlayerActions : Node
 
     private EntityId? Subject() => HeldId() ?? (aimed is null ? null : new EntityId(aimed));
 
+    // What is in the backpack is not in the hand.
     private EntityId? HeldId()
     {
         foreach (var id in slices.Entities)
-            if (State(id).Holder == actor) return id;
+            if (State(id) is { InBackpack: false } held && held.Holder == actor) return id;
         return null;
     }
 
@@ -158,8 +174,16 @@ public sealed partial class PlayerActions : Node
         _ => null
     };
 
-    private Refusal Refuse(Failure failure) =>
+    internal Refusal Refuse(Failure failure) =>
         new(failure.Code, failure.Contacts.Count > 0 ? SectionShowing(failure.Contacts[0].Obstacle) : null);
+
+    /// <summary>
+    /// Why the engine refused a crossing. The engine says in which section the blocking contact is; only a contact between
+    /// sections leaves that open, and then the section that shows the obstacle is the answer.
+    /// </summary>
+    internal Refusal RefuseCrossing(Failure failure) => failure.Contacts.Count > 0 && failure.Contacts[0].Section is { } section
+        ? new(failure.Code, section.Value)
+        : Refuse(failure);
 
     // The player's section when the entity has a slice there, otherwise the first other section that has one.
     private string? SectionShowing(EntityId entity)

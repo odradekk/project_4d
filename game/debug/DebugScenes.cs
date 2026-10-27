@@ -6,7 +6,12 @@ public static class DebugScenes
     public static string? Find(string id)
     {
 #if DEBUG
-        return id switch { "systems-demo" => "res://tests/systems_demo.tscn", _ => null };
+        return id switch
+        {
+            "systems-demo" => "res://tests/systems_demo.tscn",
+            "seam-demo" => "res://tests/seam_demo.tscn",
+            _ => null
+        };
 #else
         return null;
 #endif

@@ -1,0 +1,290 @@
+[gd_scene load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="4"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="7"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="8"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="9"]
+[ext_resource type="Script" path="res://adapter/TurnableObject3D.cs" id="10"]
+[ext_resource type="Script" path="res://adapter/TurnableResource.cs" id="11"]
+[ext_resource type="Script" path="res://adapter/Seam3D.cs" id="12"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("8")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("8")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("8")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("8")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("8")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("8")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="MatFloor"]
+albedo_color = Color(0.42, 0.45, 0.49, 1)
+[sub_resource type="BoxMesh" id="BoxFloor"]
+material = SubResource("MatFloor")
+size = Vector3(10, 0.2, 10)
+
+[sub_resource type="StandardMaterial3D" id="MatWall"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+[sub_resource type="BoxMesh" id="BoxWall"]
+material = SubResource("MatWall")
+size = Vector3(10, 3, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="MatPole"]
+albedo_color = Color(0.8, 0.65, 0.4, 1)
+[sub_resource type="BoxMesh" id="BoxPole"]
+material = SubResource("MatPole")
+size = Vector3(1, 0.0625, 0.0625)
+
+[sub_resource type="StandardMaterial3D" id="MatCrate"]
+albedo_color = Color(0.55, 0.4, 0.25, 1)
+[sub_resource type="BoxMesh" id="BoxCrate"]
+material = SubResource("MatCrate")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="MatSmall"]
+albedo_color = Color(0.9, 0.55, 0.6, 1)
+[sub_resource type="BoxMesh" id="BoxSmall"]
+material = SubResource("MatSmall")
+size = Vector3(0.25, 0.0625, 0.125)
+
+[sub_resource type="Resource" id="TurnPole"]
+script = ExtResource("11")
+Holdable = true
+HorizontalRadius = 0.5
+Hinge = Vector3(-0.46875, 0, 0)
+Reach = 0.96875
+
+[sub_resource type="Resource" id="TurnCrate"]
+script = ExtResource("11")
+Holdable = true
+HorizontalRadius = 0.25
+Hinge = Vector3(-0.21875, 0, 0)
+Reach = 0.46875
+
+[sub_resource type="Resource" id="TurnSmall"]
+script = ExtResource("11")
+Holdable = true
+Packable = true
+HorizontalRadius = 0.125
+Hinge = Vector3(-0.0625, 0, 0)
+Reach = 0.1875
+
+[node name="SeamTest" type="Node3D"]
+script = ExtResource("1")
+PrismEnabled = true
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅲ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅲ"
+W = -0.6
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Ⅱ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅱ"
+W = 0.42
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(0, 0.02, 3)
+script = ExtResource("7")
+EntityId = "xiaoman"
+PassageRadius = 0.35
+CharacterScene = ExtResource("9")
+
+[node name="Turnables" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Pole" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(-1.5, 0.03125, 2.6)
+script = ExtResource("10")
+EntityId = "pole"
+BuildingId = "home"
+Interaction = SubResource("TurnPole")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Pole"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxPole")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Crate" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(3, 0.25, 2.5)
+script = ExtResource("10")
+EntityId = "crate"
+BuildingId = "home"
+Interaction = SubResource("TurnCrate")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Crate"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxCrate")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Rubber" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(-1.0, 0.03125, 2)
+script = ExtResource("10")
+EntityId = "rubber"
+BuildingId = "home"
+Interaction = SubResource("TurnSmall")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Rubber"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxSmall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Ruler" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(-0.5, 0.03125, 2)
+script = ExtResource("10")
+EntityId = "ruler"
+BuildingId = "home"
+Interaction = SubResource("TurnSmall")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Ruler"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxSmall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Key" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(0.0, 0.03125, 2)
+script = ExtResource("10")
+EntityId = "key"
+BuildingId = "home"
+Interaction = SubResource("TurnSmall")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Key"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxSmall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Bun" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(0.5, 0.03125, 2)
+script = ExtResource("10")
+EntityId = "bun"
+BuildingId = "home"
+Interaction = SubResource("TurnSmall")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Bun"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxSmall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Note" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(1.0, 0.03125, 2)
+script = ExtResource("10")
+EntityId = "note"
+BuildingId = "home"
+Interaction = SubResource("TurnSmall")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Note"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxSmall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Home" type="Node3D" parent="Buildings"]
+script = ExtResource("3")
+BuildingId = "home"
+WMin = -1.0
+WMax = 1.0
+
+[node name="Floor" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, -0.1, 0)
+script = ExtResource("4")
+EntityId = "Floor"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Floor"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloor")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="SharedWall" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 1.5, -4)
+script = ExtResource("4")
+EntityId = "SharedWall"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/SharedWall"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxWall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Items" type="Node" parent="."]
+
+[node name="Devices" type="Node" parent="."]
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Seams" type="Node3D" parent="."]
+
+[node name="Needle" type="Node3D" parent="Seams"]
+position = Vector3(-1.5, 0, 1.5)
+script = ExtResource("12")
+SeamId = "needle"
+Sections = PackedStringArray("Ⅰ", "Ⅱ")
+
+[node name="Glass" type="Node3D" parent="Seams"]
+position = Vector3(1.5, 0, 1.5)
+script = ExtResource("12")
+SeamId = "glass"
+Sections = PackedStringArray("Ⅰ", "Ⅱ")
+Mirrored = true
+
+[node name="Skip" type="Node3D" parent="Seams"]
+position = Vector3(0, 0, -1.5)
+script = ExtResource("12")
+SeamId = "skip"
+Sections = PackedStringArray("Ⅲ", "Ⅰ")
+
+[node name="Cut" type="Node3D" parent="Seams"]
+position = Vector3(3.5, 0, -1.5)
+script = ExtResource("12")
+SeamId = "cut"
+Sections = PackedStringArray("Ⅰ", "Ⅱ")
+Severed = true
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]
