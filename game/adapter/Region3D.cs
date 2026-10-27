@@ -135,7 +135,7 @@ public partial class Region3D : Node3D
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled
             };
             generated.AddChild(viewport);
-            var scene = new SectionScene(section.Id);
+            var scene = new SectionScene(section.Id, section.W);
             scenes.Add(scene);
             viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
                 scene.MaskIds, movable));
@@ -170,7 +170,7 @@ public partial class Region3D : Node3D
         Actions = new PlayerActions { Name = "Actions" };
         generated.AddChild(Actions);
         Actions.Configure(world, spawn.EntityId, player, prism, scenes,
-            new DynamicSlices(world, scenes, reader.Materials, movable, reader.Lettering), new LensOverlay(scenes));
+            new DynamicSlices(world, scenes, reader.Materials, movable, reader.Lettering), new LensOverlay(scenes), this);
         Travel = new SeamTravel { Name = "Travel" };
         generated.AddChild(Travel);
         Travel.Configure(world, spawn.EntityId, player, prism, Actions, new SeamDisplay(world, reader.Seams, scenes, generated), EnterSection);

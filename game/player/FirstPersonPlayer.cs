@@ -39,6 +39,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         prism = view;
         actions = hands;
         travel = seams;
+        hands.DeviceBlocked += refusal => Say(RefusalLines.ForDevice(refusal, hands.CurrentSection));
     }
 
     public override void _Ready()
@@ -78,7 +79,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
                 return;
             }
             // E uses what the crosshair is on, else lets go of what is in the hand, else puts down what is in the arms,
-            // else takes what the crosshair is on; the keys shown follow the same order.
+            // else pulls the device the crosshair is on, else takes what the crosshair is on; the keys shown follow the same order.
             if (key.Keycode == Key.E && pointerCaptured && actions is { Holding: true })
             {
                 SayRefusal(actions.Use());
@@ -88,6 +89,12 @@ public partial class FirstPersonPlayer : CharacterBody3D
             if (key.Keycode == Key.E && pointerCaptured && PutDown is { } putDown)
             {
                 putDown();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && actions is not null && aimedEntity is not null && actions.IsDevice(aimedEntity))
+            {
+                actions.Pull();
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -184,6 +191,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         var keys = new List<string>();
         var holding = actions is { Holding: true };
         if (PutDown is not null && !holding) keys.Add("E  放下");
+        else if (!holding && aimedEntity is not null && actions is not null && actions.IsDevice(aimedEntity)) keys.Add("E  拉动");
         if (actions is null || (!holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return keys;
         var upright = holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
         if (holding) keys.Add(upright ? "E  松手" : "E  放下");

@@ -30,16 +30,17 @@ internal sealed class LensOverlay
     }
 
     /// <summary>
-    /// Draws in one section the outlines a turn sweeps, pale until the first obstruction and red from it, and the
-    /// fold planes of a flip, replacing what was drawn before.
+    /// Draws in one section the outlines a turn sweeps, pale until the first obstruction and red from it, the fold planes of a
+    /// flip, and the dashed outline of the ring that standing the object up would bring there, replacing what was drawn before.
     /// </summary>
-    internal void ShowPreview(SectionId section, RotationPreview? sweep, IEnumerable<Polyline> foldPlanes)
+    internal void ShowPreview(SectionId section, RotationPreview? sweep, IEnumerable<Polyline> foldPlanes, RotationPreview? hidden)
     {
         ClearPreview();
         List<Vector3> clear = [], blocked = [], fold = [];
         foreach (var sample in sweep?.Samples ?? [])
             foreach (var contour in sample.Contours) AddSegments(sample.Blocked ? blocked : clear, contour);
         foreach (var plane in foldPlanes) AddSegments(fold, plane);
+        foreach (var sample in hidden?.Samples ?? []) DashedOutline.AddDashes(sample.Blocked ? blocked : clear, sample.Contours);
         var mesh = new ArrayMesh();
         AddSurface(mesh, clear, Clear);
         AddSurface(mesh, blocked, Blocked);

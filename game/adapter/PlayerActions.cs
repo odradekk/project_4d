@@ -44,6 +44,11 @@ public sealed partial class PlayerActions : Node
     private Vector3 lastHand;
     private bool wasRotating;
     private double previewDelay;
+    private DeviceDrive devices = null!;
+    private BallShadows shadows = null!;
+    // What the preview on show was made for. The engine's plan is read again only when this changes, and at most every
+    // PreviewInterval, since planning a turn of a nut takes tens of milliseconds.
+    private (string Subject, string Target, Vector3 Feet, int Version)? previewed;
 
     /// <summary>The entity in the hand: a flat object carried, or the slice of an upright one gripped.</summary>
     internal string? Held => HeldId()?.Value;
@@ -54,8 +59,11 @@ public sealed partial class PlayerActions : Node
     /// <summary>Whether the player is a mirror image, as the engine has her: it turns the view and the controls over.</summary>
     public bool Mirrored => State(actor).Handedness == Handedness.Mirrored;
 
+    /// <summary>Raised with the reason when a device that the player pulled is stopped by something in its way.</summary>
+    internal event Action<Refusal>? DeviceBlocked;
+
     internal void Configure(World world, string actor, FirstPersonPlayer player, PrismView prism,
-        IReadOnlyList<SectionScene> scenes, DynamicSlices slices, LensOverlay overlay)
+        IReadOnlyList<SectionScene> scenes, DynamicSlices slices, LensOverlay overlay, Region3D region)
     {
         this.world = world;
         this.actor = new(actor);
@@ -64,6 +72,8 @@ public sealed partial class PlayerActions : Node
         this.scenes = scenes;
         this.slices = slices;
         this.overlay = overlay;
+        devices = new DeviceDrive(world, scenes, slices, overlay, this, region, refusal => DeviceBlocked?.Invoke(refusal));
+        shadows = new BallShadows(world, scenes, slices);
         scratch = new AudioStreamPlayer { Name = "Scratch", Stream = GD.Load<AudioStream>("res://audio/scratch.wav") };
         AddChild(scratch);
         // A body that is never seen: the shape of the carried object is put on it, and it is moved to test the way.
@@ -80,7 +90,21 @@ public sealed partial class PlayerActions : Node
     public void Aim(string? entity) => aimed = entity;
 
     /// <summary>Whether the player may pick up, grip and turn the entity.</summary>
-    public bool IsHoldable(string entity) => State(new EntityId(entity)).Definition is TurnableDefinition { Interaction.Holdable: true };
+    public bool IsHoldable(string entity) => State(new EntityId(entity)).Definition switch
+    {
+        TurnableDefinition turnable => turnable.Interaction.Holdable,
+        ItemDefinition item => item.Interaction.Holdable,
+        _ => false
+    };
+
+    /// <summary>Whether the entity is a device, which E moves and nothing picks up.</summary>
+    public bool IsDevice(string entity) => devices.IsDevice(new EntityId(entity));
+
+    /// <summary>E on the aimed device: it starts moving to the far end of its way, or back. Why it stops comes with DeviceBlocked.</summary>
+    public void Pull()
+    {
+        if (aimed is not null && devices.IsDevice(new EntityId(aimed))) devices.Pull(new EntityId(aimed));
+    }
 
     /// <summary>The upright state of an entity: its slice stands in W instead of lying in its section.</summary>
     public bool IsUpright(string entity) => State(new EntityId(entity)).UprightOrigin is not null;
@@ -132,8 +156,10 @@ public sealed partial class PlayerActions : Node
         var position = player.Position;
         world.SynchronizeActor(actor, new(position.X, position.Y, position.Z), player.Rotation.Y);
         Follow();
+        devices.Step(delta);
         world.Step(delta);
         slices.Refresh();
+        shadows.Refresh(slices.Version, delta);
         overlay.Tick(delta);
         UpdatePreview(delta);
     }
@@ -174,16 +200,13 @@ public sealed partial class PlayerActions : Node
         _ => null
     };
 
-    internal Refusal Refuse(Failure failure) =>
-        new(failure.Code, failure.Contacts.Count > 0 ? SectionShowing(failure.Contacts[0].Obstacle) : null);
-
     /// <summary>
-    /// Why the engine refused a crossing. The engine says in which section the blocking contact is; only a contact between
+    /// Why the engine refused an action. The engine says in which section the blocking contact is; only a contact between
     /// sections leaves that open, and then the section that shows the obstacle is the answer.
     /// </summary>
-    internal Refusal RefuseCrossing(Failure failure) => failure.Contacts.Count > 0 && failure.Contacts[0].Section is { } section
+    internal Refusal Refuse(Failure failure) => failure.Contacts.Count > 0 && failure.Contacts[0].Section is { } section
         ? new(failure.Code, section.Value)
-        : Refuse(failure);
+        : new(failure.Code, failure.Contacts.Count > 0 ? SectionShowing(failure.Contacts[0].Obstacle) : null);
 
     // The player's section when the entity has a slice there, otherwise the first other section that has one.
     private string? SectionShowing(EntityId entity)
@@ -228,7 +251,9 @@ public sealed partial class PlayerActions : Node
             return;
         }
         var delta = hand + grip - position;
-        if (state.UprightOrigin is null) delta = CarryThroughWorld(id, delta);
+        // A flat object lies in the section, where the host's physics checks it too; the engine alone checks what reaches into
+        // other sections, such as a ball or an upright slice.
+        if (state.Section is not null) delta = CarryThroughWorld(id, delta);
         var moved = world.MoveEntity(new MoveRequest(id, new(delta.X, delta.Y, delta.Z)));
         var contacts = moved is MoveEntityResult.Moved applied ? applied.Contacts : ((MoveEntityResult.Rejected)moved).Failure.Contacts;
         if (contacts.Count == 0 || !handMoved) return;
@@ -257,32 +282,38 @@ public sealed partial class PlayerActions : Node
         return carrier.Position;
     }
 
-    // Draws, in the section the lens shows, the sweep of what F would do to the held or aimed entity, so that red means
-    // F, and the fold plane of what R would do.
+    // Draws, in the section the lens shows, the sweep of what F would do to the held or aimed entity, so that red means F; the
+    // sweep of R when F has no path. The fold plane of R is drawn too, and the dashed ring that standing a nut up would bring.
     private void UpdatePreview(double delta)
     {
         if (!prism.Raised || prism.TargetSection is not { } target || Subject() is not { } id)
         {
             previewDelay = 0;
+            previewed = null;
             overlay.ClearPreview();
             return;
         }
-        previewDelay -= delta;
-        if (previewDelay > 0) return;
+        previewDelay = Math.Max(0, previewDelay - delta);
+        var inputs = (id.Value, target, player.Position, slices.Version);
+        if (inputs.Equals(previewed) || previewDelay > 0) return;
+        previewed = inputs;
         previewDelay = PreviewInterval;
         var section = new SectionId(target);
         var stand = StandOrLayRequest(id);
-        var sweep = stand is null ? null : PreviewOf(stand, section);
-        var fold = PreviewOf(new Flip(actor, id), section)?.FoldPlane ?? [];
-        overlay.ShowPreview(section, sweep, fold);
+        var (planned, sweep, ring) = stand is null ? (false, null, null) : PreviewOf(stand, section);
+        var (_, flip, _) = PreviewOf(new Flip(actor, id), section);
+        overlay.ShowPreview(section, planned ? sweep : flip, flip?.FoldPlane ?? [], ring);
     }
 
-    // What the lens shows of the turn the request makes, in the section, whether or not the turn is blocked.
-    private RotationPreview? PreviewOf(RotationRequest request, SectionId section)
+    // What the lens shows of the turn the request makes, in the section, whether or not the turn is blocked; whether the turn
+    // has a path at all; and for a nut that is stood up, the ring that it leaves there. A nut shows its ring and not the sweep,
+    // since cutting the tilted ring at every step takes tens of milliseconds.
+    private (bool Planned, RotationPreview? Sweep, RotationPreview? Ring) PreviewOf(RotationRequest request, SectionId section)
     {
-        var plan = PlanOf(world.PlanRotation(request));
-        if (plan is null) return null;
-        var preview = world.GetRotationPreview(plan, section);
-        return preview is PreviewResult.Preview shown ? shown.Value : null;
+        if (PlanOf(world.PlanRotation(request)) is not { } plan) return (false, null, null);
+        if (request is StandUp && Shown(world.GetHiddenStructurePreview(plan, section)) is { } ring) return (true, null, ring);
+        return (true, Shown(world.GetRotationPreview(plan, section)), null);
     }
+
+    private static RotationPreview? Shown(PreviewResult result) => (result as PreviewResult.Preview)?.Value;
 }
