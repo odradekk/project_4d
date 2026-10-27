@@ -39,8 +39,8 @@ public sealed partial class World
         foreach (var definition in description.Entities)
             switch (definition)
             {
-                case TurnableDefinition turnable:
-                    AddInitial(turnable);
+                case TurnableDefinition or ItemDefinition:
+                    AddInitial(definition);
                     break;
                 case Creature3Definition actor:
                     actors.Add(actor.Id, new(actor, actor.Pose, 0));

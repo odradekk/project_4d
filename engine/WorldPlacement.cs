@@ -2,7 +2,7 @@ namespace FourD;
 
 public sealed partial class World
 {
-    /// <summary>Atomically places an unheld turnable at a validated full four-dimensional pose.</summary>
+    /// <summary>Atomically places an unheld turnable or item at a validated full four-dimensional pose.</summary>
     public UpdateResult PlaceEntity(EntityId entity, Pose4 pose)
     {
         UpdateResult Reject(FailureCode code, string detail, IReadOnlyList<Contact>? contacts = null) =>
@@ -10,39 +10,48 @@ public sealed partial class World
         if (!dynamicEntities.TryGetValue(entity, out var item))
             return Reject(KindOrUnknown(entity), "Unknown or unsupported entity.");
         if (rotations.ContainsKey(entity)) return Reject(FailureCode.Busy, "Entity is rotating.");
+        if (item.Holder is not null) return Reject(FailureCode.EntityInUse, "Entity is held.");
         if (!WorldValidation.IsValidPose(pose)) return Reject(FailureCode.InvalidInput, "Invalid pose.");
 
-        var origin = item.Origin ?? item.Section!.Value;
-        var section = sections.Single(candidate => candidate.Id == origin);
-        var flat = WorldValidation.IsFlat(pose.Rotation);
-        if (flat && pose.Position.W != section.W)
-            return Reject(FailureCode.WrongSection, "Flat object must return to its origin section.");
-        var unchanged = pose.Rotation == item.Pose.Rotation && pose.Position.W == item.Pose.Position.W;
-        var proposed = item with
+        // A ball has no section to lie in or stand up from, so any pose is open to it.
+        var definition = item.Definition;
+        var ball = DynamicShapes.IsBall(definition);
+        var proposed = item with { Pose = pose };
+        if (!ball)
         {
-            Pose = pose,
-            Section = flat ? origin : null,
-            Origin = flat ? null : origin,
-            Upright = unchanged ? item.Upright : null
-        };
-        if (!flat && Slice(proposed, section.W) is null)
-            return Reject(FailureCode.NoSlice, "Object must retain a slice in its origin section.");
+            var origin = item.Origin ?? item.Section!.Value;
+            var section = sections.Single(candidate => candidate.Id == origin);
+            var flat = WorldValidation.IsFlat(pose.Rotation);
+            if (flat && pose.Position.W != section.W)
+                return Reject(FailureCode.WrongSection, "Flat object must return to its origin section.");
+            var unchanged = pose.Rotation == item.Pose.Rotation && pose.Position.W == item.Pose.Position.W;
+            proposed = item with
+            {
+                Pose = pose,
+                Section = flat ? origin : null,
+                Origin = flat ? null : origin,
+                Upright = unchanged ? item.Upright : null
+            };
+            if (!flat && Slice(proposed, section.W, bodyOnly: true) is null)
+                return Reject(FailureCode.NoSlice, "Object must retain a slice in its origin section.");
+        }
 
-        var boxes = Box4.From(item.Definition, pose);
+        var boxes = DynamicShapes.Boxes(definition, pose);
         if (boxes.Any(box => !box.Representable()))
             return Reject(FailureCode.InvalidInput, "Pose cannot represent nondegenerate box geometry.");
-        var longAxis = LocalAxis(pose.Rotation, item.Definition.Interaction.LongAxis);
-        if (Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
+        var longAxis = LocalAxis(pose.Rotation, DynamicShapes.Interaction(definition).LongAxis);
+        if (!ball && Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
             return Reject(FailureCode.InvalidInput, "Upright part end is too close to a section.");
-        var owner = buildings.Single(building => building.Id == item.Definition.Building);
-        if (boxes.Any(box => box.WSpan.Min < owner.WRange.Min || box.WSpan.Max > owner.WRange.Max))
+        var solids = DynamicShapes.Solids(definition, pose);
+        var owner = buildings.Single(building => building.Id == DynamicShapes.Building(definition));
+        if (solids.Any(solid => solid.WSpan.Min < owner.WRange.Min || solid.WSpan.Max > owner.WRange.Max))
             return Reject(FailureCode.OutOfRange, "Object extends outside its building.");
-        if (IntersectsReservation(boxes, entity))
+        if (IntersectsReservation(solids, entity))
             return Reject(FailureCode.TranslationBlocked, "Target intersects a reserved rotation sweep.");
 
-        var obstacles = Boxes().Where(box => box.Entity != entity).ToArray();
-        var contacts = boxes
-            .SelectMany(moving => obstacles.Select(obstacle => Box4.Touch(moving, obstacle)).OfType<Contact>())
+        var obstacles = Solids().Where(solid => solid.Entity != entity).ToArray();
+        var contacts = solids
+            .SelectMany(moving => obstacles.Where(moving.BoundsMayOverlap).Select(obstacle => Collision.Touch(moving, obstacle)).OfType<Contact>())
             .ToList();
         if (contacts.Count > 0) return Reject(FailureCode.TranslationBlocked, "Target pose is occupied.", contacts.AsReadOnly());
 

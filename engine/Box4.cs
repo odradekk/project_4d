@@ -2,6 +2,7 @@ namespace FourD;
 
 // Four-dimensional oriented boxes are shared by occupancy, placement and support.
 internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, double[][] Axes, double[] Half)
+    : Solid4(Entity, Part, Center)
 {
     // Relative pivot below which the box is flat in double precision.
     private const double DegenerateVolume = 1e-14;
@@ -18,13 +19,10 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
             [.. ToArray(part.HalfSize), (segment.Max - segment.Min) / 2]);
     }
 
-    internal static Box4 From(TurnableDefinition entity, Pose4 pose, BoxPart part) =>
-        new(entity.Id, part.Id, PartCenter(pose, part),
+    internal static Box4 From(EntityId entity, Pose4 pose, BoxPart part) =>
+        new(entity, part.Id, PartCenter(pose, part),
             [.. PartAxes(pose.Rotation, part), ToArray(pose.Rotation.W)],
             [.. ToArray(part.HalfSize), World.Epsilon]);
-
-    internal static Box4[] From(TurnableDefinition entity, Pose4 pose) =>
-        entity.Shape.Parts.Select(part => From(entity, pose, part)).ToArray();
 
     internal static Box4 From(OccupancyBox box) =>
         new(default, default, ToArray(box.Pose.Position), AxesOf(box.Pose.Rotation), ToArray(box.HalfSize));
@@ -58,19 +56,19 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     internal static double[] Cross3(double[] a, double[] b) =>
         [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 
-    internal double Radius(double[] axis) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Dot(Axes[i], axis)));
+    internal override double Radius(double[] axis) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Dot(Axes[i], axis)));
 
     // Radius along a coordinate axis, without building the axis vector.
-    internal double Extent(int coordinate) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Axes[i][coordinate]));
+    internal override double Extent(int coordinate) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Axes[i][coordinate]));
 
-    internal Interval WSpan
+    internal override Solid4 Moved(double[] offset) => this with { Center = Shifted(offset) };
+
+    internal override double Reach(double[] pivot, double[] axis) => Enumerable.Range(0, 16).Max(mask =>
     {
-        get
-        {
-            var extent = Extent(3);
-            return new(Center[3] - extent, Center[3] + extent);
-        }
-    }
+        var offset = Sub(Corner(mask), pivot);
+        var along = Dot(offset, axis);
+        return Math.Sqrt(along * along + offset[3] * offset[3]);
+    });
 
     // A section at w cuts the box inside its W range. At the very edge it cuts only a box with a single
     // W-facing axis, whose flat face then lies in the section.
@@ -127,23 +125,25 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     private static double Depth(Box4 a, Box4 b, double[] axis, double[] delta) =>
         a.Radius(axis) + b.Radius(axis) - Math.Abs(Dot(axis, delta));
 
-    // Whether the boxes embed deeper than the contact tolerance along every separating axis.
-    internal static bool Overlaps(Box4 a, Box4 b)
+    // How deep the boxes embed: the least overlap of their projections on a separating axis. It is zero when they
+    // touch and negative, by the widest gap along an axis, when they are apart.
+    internal static double Depth(Box4 a, Box4 b)
     {
         var delta = Sub(a.Center, b.Center);
-        return SeparatingAxes(a, b).All(axis => Depth(a, b, axis, delta) > World.ContactTolerance);
+        return SeparatingAxes(a, b).Min(axis => Depth(a, b, axis, delta));
     }
 
-    // Cheap rejection on the axis-aligned bounds: false as soon as, on some coordinate axis, they overlap by no more
-    // than the contact tolerance. Surfaces that merely touch count as not overlapping.
-    internal bool BoundsMayOverlap(Box4 other) =>
-        Enumerable.Range(0, 4).All(i => Math.Abs(Center[i] - other.Center[i]) < Extent(i) + other.Extent(i) - World.ContactTolerance);
+    // Whether the boxes embed deeper than the contact tolerance.
+    internal static bool Overlaps(Box4 a, Box4 b) => Depth(a, b) > World.ContactTolerance;
 
     // The contact where `moving` embeds into `obstacle` deeper than the contact tolerance, or null.
-    // The normal points from the obstacle toward `moving`, and Section is left for the caller.
-    internal static Contact? Touch(Box4 moving, Box4 obstacle)
+    internal static Contact? Touch(Box4 moving, Box4 obstacle) => Overlaps(moving, obstacle) ? ContactOf(moving, obstacle) : null;
+
+    // Where boxes that touch or overlap meet, or null when no point of them is common. The normal points from
+    // the obstacle toward `moving`, and Section is left for the caller.
+    internal static Contact? ContactOf(Box4 moving, Box4 obstacle)
     {
-        if (!Overlaps(moving, obstacle) || IntersectionPoint(moving, obstacle) is not { } point) return null;
+        if (IntersectionPoint(moving, obstacle) is not { } point) return null;
         var delta = Sub(moving.Center, obstacle.Center);
         var normal = SeparatingAxes(moving, obstacle).MinBy(axis => Depth(moving, obstacle, axis, delta))!;
         if (Dot(normal, delta) < 0) normal = Scale(normal, -1);
@@ -213,6 +213,37 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
             }
         }
         return true;
+    }
+
+    // Distance from a point to the box, or minus the distance to its nearest face for a point inside.
+    internal double SignedDistance(double[] point)
+    {
+        var offset = Sub(point, Center);
+        var outside = 0d;
+        var inside = double.PositiveInfinity;
+        for (var i = 0; i < 4; i++)
+        {
+            var excess = Math.Abs(Dot(offset, Axes[i])) - Half[i];
+            if (excess > 0) outside += excess * excess;
+            inside = Math.Min(inside, -excess);
+        }
+        return outside > 0 ? Math.Sqrt(outside) : -inside;
+    }
+
+    // The nearest point of the box surface to `point`, and the outward unit normal of the surface there.
+    internal (double[] Point, double[] Normal) Nearest(double[] point)
+    {
+        if (SignedDistance(point) > 0)
+        {
+            var closest = Closest(point);
+            var away = Sub(point, closest);
+            return (closest, Scale(away, 1 / Math.Sqrt(Dot(away, away))));
+        }
+        var offset = Sub(point, Center);
+        var face = Enumerable.Range(0, 4).MinBy(i => Half[i] - Math.Abs(Dot(offset, Axes[i])));
+        var normal = Scale(Axes[face], Dot(offset, Axes[face]) < 0 ? -1 : 1);
+        var depth = Half[face] - Math.Abs(Dot(offset, Axes[face]));
+        return (point.Select((value, i) => value + depth * normal[i]).ToArray(), normal);
     }
 
     internal double[] Closest(double[] point)

@@ -103,7 +103,7 @@ internal sealed partial class WorldValidation
             Id(entity.Id.Value, entity.Source, entity.Id);
             if (!ids.Add(entity.Id)) Error(LoadErrorCode.DuplicateId, entity.Source, "Duplicate entity ID.", entity.Id);
             var errorsBeforePose = errors.Count;
-            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id);
+            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: !DynamicShapes.IsBall(entity));
             Pose4? validPose = errors.Count == errorsBeforePose ? entity.Pose : null;
             switch (entity)
             {
@@ -115,6 +115,9 @@ internal sealed partial class WorldValidation
                     break;
                 case TurnableDefinition turnable:
                     Turnable(turnable, validPose);
+                    break;
+                case ItemDefinition item:
+                    Item(item, validPose);
                     break;
                 case Creature3Definition creature:
                     Creature(creature);
@@ -255,14 +258,15 @@ internal sealed partial class WorldValidation
             Error(LoadErrorCode.InvalidGeometry, source, "Solid thickness must exceed sampling distance.", entity);
     }
 
-    private void Pose(Pose4 pose, Source source, EntityId entity)
+    // A ball is the one entity whose initial pose may tilt into W.
+    private void Pose(Pose4 pose, Source source, EntityId entity, bool mustBeFlat = true)
     {
         if (!IsFinite(pose))
         {
             Error(LoadErrorCode.InvalidNumber, source, "Pose components must be finite.", entity);
             return;
         }
-        if (!Rotation(Box4.AxesOf(pose.Rotation)) || !IsFlat(pose.Rotation))
+        if (!Rotation(Box4.AxesOf(pose.Rotation)) || (mustBeFlat && !IsFlat(pose.Rotation)))
             Error(LoadErrorCode.InvalidPose, source, "Static pose must be right-handed orthonormal and preserve the W axis.", entity);
     }
 
