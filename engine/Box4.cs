@@ -74,7 +74,8 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
         }
     }
 
-    // A section at w cuts the box inside its W range. At the very edge it cuts only a box with a single W-facing axis, whose flat face lies in the section.
+    // A section at w cuts the box inside its W range. At the very edge it cuts only a box with a single
+    // W-facing axis, whose flat face then lies in the section.
     internal bool IsCutBy(double w)
     {
         var span = WSpan;

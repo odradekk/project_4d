@@ -28,11 +28,11 @@ public sealed partial class World
     internal static Vec4 Add(Vec4 a, Vec4 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
     internal static Vec4 Sub(Vec4 a, Vec4 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
 
-    internal static Vec4 Transform(Rotation4 r, Vec3 v) => new(
-        r.X.X * v.X + r.Y.X * v.Y + r.Z.X * v.Z,
-        r.X.Y * v.X + r.Y.Y * v.Y + r.Z.Y * v.Z,
-        r.X.Z * v.X + r.Y.Z * v.Y + r.Z.Z * v.Z,
-        r.X.W * v.X + r.Y.W * v.Y + r.Z.W * v.Z);
+    internal static Vec4 Transform(Rotation4 rotation, Vec3 point) => new(
+        rotation.X.X * point.X + rotation.Y.X * point.Y + rotation.Z.X * point.Z,
+        rotation.X.Y * point.X + rotation.Y.Y * point.Y + rotation.Z.Y * point.Z,
+        rotation.X.Z * point.X + rotation.Y.Z * point.Y + rotation.Z.Z * point.Z,
+        rotation.X.W * point.X + rotation.Y.W * point.Y + rotation.Z.W * point.Z);
 
     // The world direction of a local axis.
     internal static Vec4 LocalAxis(Rotation4 rotation, Axis3 axis) => axis switch
@@ -131,10 +131,16 @@ public sealed partial class World
     {
         var item = dynamicEntities[plan.Entity];
         if (plan.Laying && before.Upright is { } upright)
+        {
             // Lying down retraces the stand-up, shifted by however far the hinge has moved since.
-            item = item with { Pose = upright.Start with { Position = Add(upright.Start.Position, Sub(plan.Pivot, upright.Pivot)) } };
+            var position = Add(upright.Start.Position, Sub(plan.Pivot, upright.Pivot));
+            item = item with { Pose = upright.Start with { Position = position } };
+        }
         else if (plan.Laying)
-            item = item with { Pose = item.Pose with { Position = item.Pose.Position with { W = sections.Single(section => section.Id == plan.Origin).W } } };
+        {
+            var originW = sections.Single(section => section.Id == plan.Origin).W;
+            item = item with { Pose = item.Pose with { Position = item.Pose.Position with { W = originW } } };
+        }
         dynamicEntities[plan.Entity] = item with
         {
             Section = plan.Laying ? plan.Origin : plan.Flip ? before.Section : null,

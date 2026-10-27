@@ -36,11 +36,16 @@ internal sealed partial class WorldValidation
         if (turnable.Shape?.Parts is null || turnable.Shape.Parts.Count == 0 || turnable.Shape.Parts.Any(part => part is null)) return;
 
         double Along(Vec3 vector) => interaction.LongAxis switch { Axis3.X => vector.X, Axis3.Y => vector.Y, _ => vector.Z };
-        double Spread(Vec3 axis, double halfSize) => Math.Abs(Along(axis)) * halfSize;
-        var bounds = turnable.Shape.Parts.Select(part => (
-            Min: Along(part.Center) - Spread(part.Rotation.X, part.HalfSize.X) - Spread(part.Rotation.Y, part.HalfSize.Y) - Spread(part.Rotation.Z, part.HalfSize.Z),
-            Max: Along(part.Center) + Spread(part.Rotation.X, part.HalfSize.X) + Spread(part.Rotation.Y, part.HalfSize.Y) + Spread(part.Rotation.Z, part.HalfSize.Z)))
-            .ToArray();
+        (double Min, double Max) Bounds(BoxPart part)
+        {
+            double Spread(Vec3 axis, double halfSize) => Math.Abs(Along(axis)) * halfSize;
+            var center = Along(part.Center);
+            var x = Spread(part.Rotation.X, part.HalfSize.X);
+            var y = Spread(part.Rotation.Y, part.HalfSize.Y);
+            var z = Spread(part.Rotation.Z, part.HalfSize.Z);
+            return (center - x - y - z, center + x + y + z);
+        }
+        var bounds = turnable.Shape.Parts.Select(Bounds).ToArray();
         var hinge = Along(interaction.Hinge);
         if (hinge - bounds.Min(bound => bound.Min) < World.SectionClearance
             || Math.Abs(bounds.Max(bound => bound.Max) - hinge - interaction.Reach) > World.RoundingMargin)

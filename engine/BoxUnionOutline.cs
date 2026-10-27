@@ -13,7 +13,8 @@ internal static class BoxUnionOutline
     private sealed record Face(int Solid, Plane Plane);
 
     private static double Length(double[] vector) => Math.Sqrt(Box4.Dot3(vector, vector));
-    private static double[] AddScaled(double[] a, double[] b, double scale) => [a[0] + b[0] * scale, a[1] + b[1] * scale, a[2] + b[2] * scale];
+    private static double[] AddScaled(double[] a, double[] b, double scale) =>
+        [a[0] + b[0] * scale, a[1] + b[1] * scale, a[2] + b[2] * scale];
 
     internal static IReadOnlyList<Polyline> At(IEnumerable<Box4> boxes, double w)
     {
@@ -55,8 +56,9 @@ internal static class BoxUnionOutline
         var length = Length(cross);
         if (length <= World.RoundingMargin) yield break;
         var direction = Box4.Scale(cross, 1 / length);
+        var towardFirst = Box4.Scale(Box4.Cross3(second.Plane.Normal, cross), first.Plane.Limit);
         var point = Box4.Scale(
-            AddScaled(Box4.Scale(Box4.Cross3(second.Plane.Normal, cross), first.Plane.Limit), Box4.Cross3(cross, first.Plane.Normal), second.Plane.Limit),
+            AddScaled(towardFirst, Box4.Cross3(cross, first.Plane.Normal), second.Plane.Limit),
             1 / (length * length));
         if (Clip(solids[first.Solid], point, direction) is not { } firstRange
             || Clip(solids[second.Solid], point, direction) is not { } secondRange)

@@ -17,10 +17,10 @@ public sealed partial class World
 
     private static Handedness PoseHandedness(Pose4 pose)
     {
-        var r = pose.Rotation;
-        var determinant = r.X.X * (r.Y.Y * r.Z.Z - r.Y.Z * r.Z.Y)
-            - r.Y.X * (r.X.Y * r.Z.Z - r.X.Z * r.Z.Y)
-            + r.Z.X * (r.X.Y * r.Y.Z - r.X.Z * r.Y.Y);
+        var rotation = pose.Rotation;
+        var determinant = rotation.X.X * (rotation.Y.Y * rotation.Z.Z - rotation.Y.Z * rotation.Z.Y)
+            - rotation.Y.X * (rotation.X.Y * rotation.Z.Z - rotation.X.Z * rotation.Z.Y)
+            + rotation.Z.X * (rotation.X.Y * rotation.Y.Z - rotation.X.Z * rotation.Y.Y);
         return determinant switch
         {
             > RoundingMargin => Handedness.Normal,

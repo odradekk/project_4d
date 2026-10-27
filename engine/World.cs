@@ -74,7 +74,8 @@ public sealed partial class World
                     Shape = new(Array.AsReadOnly(parts)),
                     Gaps = Array.AsReadOnly(element.Gaps.ToArray())
                 });
-                var through = segments.Length > 0 && segments.Max(segment => segment.Max) - segments.Min(segment => segment.Min) > 2 * Epsilon;
+                var through = segments.Length > 0
+                    && segments.Max(segment => segment.Max) - segments.Min(segment => segment.Min) > 2 * Epsilon;
                 return new(element.Id, element.Pose, parts, segments, through);
             default:
                 var fixedObject = (FixedDefinition)definition;
