@@ -8,7 +8,7 @@ using Godot;
 
 namespace Game.Adapter;
 
-/// <summary>Why the engine refused a player action, and the section where the first obstruction lies.</summary>
+/// <summary>Why the engine refused a player action, and the section that shows the first obstacle, null when none does.</summary>
 public sealed record Refusal(FailureCode Code, string? Section);
 
 /// <summary>
@@ -27,8 +27,6 @@ public sealed partial class PlayerActions : Node
     private const float WallMargin = .1f;
     // A flat object in the hand is kept out of walls this way; an upright slice is stopped by the engine instead.
     private const uint WorldLayer = 1;
-    // An obstruction this close in W to a section counts as lying in that section.
-    private const double PageReach = .08;
     private const double PreviewInterval = .15;
 
     private World world = null!;
@@ -154,15 +152,16 @@ public sealed partial class PlayerActions : Node
         _ => null
     };
 
-    private Refusal Refuse(Failure failure)
+    private Refusal Refuse(Failure failure) =>
+        new(failure.Code, failure.Contacts.Count > 0 ? SectionShowing(failure.Contacts[0].Obstacle) : null);
+
+    // The player's section when the entity has a slice there, otherwise the first other section that has one.
+    private string? SectionShowing(EntityId entity)
     {
-        string? section = null;
-        if (failure.Contacts.Count > 0)
-        {
-            var w = failure.Contacts[0].Point.W;
-            section = scenes.FirstOrDefault(scene => world.Distance4(new(0, 0, 0, scene.W), new(0, 0, 0, w)) <= PageReach)?.Id.Value;
-        }
-        return new(failure.Code, section);
+        var current = State(actor).Section;
+        foreach (var scene in scenes.OrderBy(scene => scene.Id == current ? 0 : 1))
+            if (world.HasSlice(entity, scene.Id) is SlicePresenceResult.Present { HasVolume: true }) return scene.Id.Value;
+        return null;
     }
 
     // The point ahead of the body, at the height the player looks toward.

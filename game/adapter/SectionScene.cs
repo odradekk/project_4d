@@ -5,10 +5,9 @@ using Godot;
 namespace Game.Adapter;
 
 /// <summary>What the adapter adds to one section's world beside its static geometry.</summary>
-internal sealed class SectionScene(SectionId id, double w)
+internal sealed class SectionScene(SectionId id)
 {
     internal SectionId Id { get; } = id;
-    internal double W { get; } = w;
 
     /// <summary>The slices of the entities that move, rebuilt whenever they change.</summary>
     internal Node3D Dynamic { get; } = new() { Name = "Dynamic" };

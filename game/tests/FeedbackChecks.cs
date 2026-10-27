@@ -31,6 +31,8 @@ public partial class FeedbackChecks : Node
             await CheckClearPreview();
             await play.Load(AddBoxInSecondSection);
             await CheckBlockedTurns();
+            await play.Load(MoveBoxBetweenSections);
+            await CheckBlockedBetweenSections();
             GD.Print("Feedback checks passed: grabbed slice, marks, scraping, preview, refusals.");
             GetTree().Quit();
         }
@@ -146,20 +148,39 @@ public partial class FeedbackChecks : Node
         Press(Key.E);
         await play.Frames(3);
 
-        // The crate stands next to a box that begins between the sections.
+        // The crate stands next to a box that shows in the second section, where the lens shows it too.
         player.Hud.ClearText();
         play.LookAt(new(-2.6f, .02f, .4f), new(-2.6f, .25f, -.9f));
         await play.Frames(2);
         Press(Key.F);
         await play.Frames(3);
         Check(!play.State("crate").Rotating, "a blocked turn must not start");
-        Check(player.Hud.SubtitleText == "小满：转不过去……好像卡在两页中间了。", $"a blocked turn between sections is explained; saw '{player.Hud.SubtitleText}'");
+        Check(player.Hud.SubtitleText == "小满：转不过去……那一页有东西挡着。", $"an obstruction that shows in another section is named; saw '{player.Hud.SubtitleText}'");
 
         var home = play.Actions.CurrentSection;
         Check(RefusalLines.For(new(FailureCode.RotationBlocked, home), home) == "转不开……这边太挤了。", "an obstruction in this section is crowding");
+        Check(RefusalLines.For(new(FailureCode.OutOfRange, null), home) is { } outside && outside.Contains("转出屋子"), "a turn that leaves the building is explained");
         Check(RefusalLines.For(new(FailureCode.WrongSection, null), home) is { } line && line.Contains("原来那一页"), "laying down elsewhere is explained");
         Check(RefusalLines.For(new(FailureCode.NotHoldable, null), home) is { } heavy && heavy.Contains("拿不动"), "an object that cannot be held is explained");
         Check(RefusalLines.For(new(FailureCode.InvalidInput, null), home) is null, "other refusals stay silent");
+    }
+
+    // The box next to the crate is moved to W = 0.1 to 0.3, between the sections, where no section shows it.
+    private static void MoveBoxBetweenSections(Region3D region)
+    {
+        var box = region.GetNode<BuildingElement3D>("Buildings/Home/OnlyII");
+        box.WMin = .1;
+        box.WMax = .3;
+    }
+
+    private async Task CheckBlockedBetweenSections()
+    {
+        play.LookAt(new(-2.6f, .02f, .4f), new(-2.6f, .25f, -.9f));
+        await play.Frames(2);
+        Press(Key.F);
+        await play.Frames(3);
+        Check(!play.State("crate").Rotating, "a blocked turn must not start");
+        Check(player.Hud.SubtitleText == "小满：转不过去……好像卡在两页中间了。", $"an obstruction that no section shows is named so; saw '{player.Hud.SubtitleText}'");
     }
 
     private IEnumerable<Color> PreviewColors(string section)

@@ -115,7 +115,7 @@ public partial class Region3D : Node3D
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled
             };
             generated.AddChild(viewport);
-            var scene = new SectionScene(section.Id, section.W);
+            var scene = new SectionScene(section.Id);
             scenes.Add(scene);
             viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
                 scene.MaskIds, movable));
