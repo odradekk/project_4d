@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；当前静态阶段已实现 Region、Section、楼房元素、固定物件、盒子零件和宿主玩家出生点，其余节点随对应能力实现。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件和玩家出生点，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未读取，初始姿态只取 Transform。
 
 ## 节点与导出属性
 
@@ -36,7 +36,7 @@ Room (Node3D, Region3D)
 | Building3D（Node3D） | `string BuildingId`、`double WMin`、`double WMax` |
 | BuildingElement3D（Node3D） | `string EntityId`、`string BuildingId`、`double WMin/WMax`、`A<IntervalResource> Gaps`；BoxPart3D 子节点给 Shape |
 | FixedObject3D（Node3D） | `string EntityId`；BoxPart3D 子节点给 Shape；Section 从祖先取得 |
-| TurnableObject3D（Node3D） | `string EntityId/BuildingId`、`double[] Rotation4`、`TurnableResource Interaction`；Section 从祖先取得；BoxPart3D 子节点给 Shape |
+| TurnableObject3D（Node3D） | `string EntityId/BuildingId`、`double[] Rotation4`、`TurnableResource Interaction`；Section 从祖先取得；BoxPart3D 子节点给 Shape；Label3D 子节点是字样模板：物件平放时，适配层在它所在的截面里按物件当前姿态放一份副本，翻面后字样成镜像，转动途中和竖起时不显示 |
 | SphereItem3D（Node3D） | `string EntityId/BuildingId`、`string PartId`、`double W`、`double[] Rotation4`、`double Radius`、`TurnableResource Interaction` |
 | HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body |
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
@@ -46,7 +46,7 @@ Room (Node3D, Region3D)
 | BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
 | ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
 
-视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。完整生物接口接入后，出生点创建 Creature3Definition；当前静态阶段只读取 EntityId、CharacterScene 和祖先 Section，用出生点的 XYZ 变换创建唯一的 FirstPersonPlayer，不向引擎载入尚未支持的生物定义，也不另存 W 或手性。普通角色场景可以是 CharacterBody3D + CollisionShape3D + Camera3D，NPC/猫不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
+视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。出生点创建 Creature3Definition：位置取出生点的 XYZ，W 取所属 Section，四维旋转为单位旋转；同时用出生点的 XYZ 变换创建唯一的 FirstPersonPlayer。适配层每个物理帧用 SynchronizeActor 把角色的位置和朝向交给引擎，不另存 W 或手性。普通角色场景可以是 CharacterBody3D + CollisionShape3D + Camera3D，NPC/猫不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
 
 | Resource | 全部导出字段 |
 |---|---|
