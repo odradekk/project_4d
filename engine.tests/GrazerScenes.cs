@@ -37,6 +37,12 @@ internal static class GrazerScenes
         .Sum(t => slice.Positions.Vertex(3 * t).Minus(center)
             .Dot(slice.Positions.Vertex(3 * t + 1).Minus(center).Cross(slice.Positions.Vertex(3 * t + 2).Minus(center))) / 6);
 
+    // The triangles of the slice with an area of more than `minArea`. Triangles without area, where the surface passes
+    // through a node of the lattice, may or may not be left out as the rounding of their places falls.
+    public static int TrianglesLargerThan(this SliceGeometry slice, double minArea) => Enumerable.Range(0, slice.Parts.Count / 3)
+        .Count(t => slice.Positions.Vertex(3 * t + 1).Minus(slice.Positions.Vertex(3 * t))
+            .Cross(slice.Positions.Vertex(3 * t + 2).Minus(slice.Positions.Vertex(3 * t))).Length() / 2 > minArea);
+
     // The smallest and largest values along one axis of the slice's vertices.
     public static (double Min, double Max) Extent(this SliceGeometry slice, Axis3 axis)
     {

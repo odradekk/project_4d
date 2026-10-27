@@ -43,8 +43,7 @@ public sealed partial class World
             var buffer = new SliceBuffer();
             MetaballSlice.Append(grazer.Shape, grazer.Pose, w, buffer);
             if (buffer.Parts.Count == 0) continue;
-            var span = MetaballSlice.WSpan(grazer.Shape, grazer.Pose);
-            yield return buffer.ToSlice(grazer.Definition.Id, span.Max - span.Min > 2 * Epsilon + RoundingMargin);
+            yield return buffer.ToSlice(grazer.Definition.Id, MetaballSlice.ReachesBeyondALayer(grazer.Shape, grazer.Pose));
         }
     }
 

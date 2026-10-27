@@ -76,17 +76,17 @@ public class GrazerTests
     }
 
     [Fact]
-    public void TheMeshLiesOnTheWorldsLatticeOfCubes()
+    public void TheMeshLiesOnTheLatticeThatStartsAtTheGrazersPosition()
     {
-        // A ball of radius .005 whose center is the lattice node (0, 1, 0) has only that node in its body: the field
-        // is 1 there and 0 at its neighbours, .2 m away. With the threshold .5 the surface cuts each edge from the
-        // node halfway, .1 m out, whichever way the edge runs.
+        // A ball of radius .005 at the grazer's position has only the node there in its body: the field is 1 at the
+        // node and 0 at its neighbours, .2 m away. With the threshold .5 the surface cuts each edge from the node
+        // halfway, .1 m out, whichever way the edge runs.
         var tiny = new MetaballShape([Ball("tiny", default, radius: .005)], .5);
-        var world = GrazerScene(At(0, 1, 0), tiny);
+        var world = GrazerScene(At(.03, 1.07, -.02), tiny);
 
         var slice = world.SliceOf(GrazerId, I)!;
 
-        foreach (var (axis, middle) in new[] { (Axis3.X, 0d), (Axis3.Y, 1d), (Axis3.Z, 0d) })
+        foreach (var (axis, middle) in new[] { (Axis3.X, .03), (Axis3.Y, 1.07), (Axis3.Z, -.02) })
         {
             var (min, max) = slice.Extent(axis);
             Assert.Equal(middle - .1, min, 9);
@@ -95,9 +95,72 @@ public class GrazerTests
         // Its field reaches only 1 cm in W, less than the layer of an ordinary object.
         Assert.False(slice.ThroughObject);
 
-        // Half a cube along, there is no node in the body and so nothing to mesh.
-        world.Frame(At(.1, 1, 0), tiny);
+        // Half a cube along from the grazer's position, there is no node in the body and so nothing to mesh.
+        world.Frame(At(.03, 1.07, -.02), new([Ball("tiny", new(.1, 0, 0, 0), radius: .005)], .5));
         Assert.Null(world.SliceOf(GrazerId, I));
+    }
+
+    [Fact]
+    public void AGrazerThatMovesAsAWholeKeepsItsMeshAndMovesItRigidly()
+    {
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
+        var before = world.SliceOf(GrazerId, I)!;
+
+        // Not a whole number of cubes in any direction.
+        world.Frame(At(.07, 3.97, .11, w: 1.8), Lump(default));
+
+        var after = world.SliceOf(GrazerId, I)!;
+        Assert.Equal(before.Positions.Count, after.Positions.Count);
+        var shift = new[] { .07, -.03, .11 };
+        for (var i = 0; i < before.Positions.Count; i++)
+            Assert.Equal(before.Positions[i] + shift[i % 3], after.Positions[i], 9);
+    }
+
+    [Fact]
+    public void ASmallPartDoesNotFlickerWhileTheWholeGrazerMovesAHundredthOfAMetre()
+    {
+        // A lump and six small balls beside it, each making a body 12 cm in radius, less than a cube. Which of them
+        // the lattice catches depends on where it lies from the grazer's position, which does not change.
+        Metaball[] feelers = Enumerable.Range(0, 6)
+            .Select(i => Ball($"feeler{i}", new(9, .13 * i - .3, .07 * i, 0), radius: .2))
+            .ToArray();
+        var shape = new MetaballShape([LumpBall(default), .. feelers], LumpThreshold);
+        var world = GrazerScene(At(0, 4, 0), shape);
+        var sizes = new List<int>();
+
+        for (var step = 0; step < 30; step++)
+        {
+            world.Frame(At(.01 * step, 4 + .01 * step, -.01 * step), shape);
+            sizes.Add(world.SliceOf(GrazerId, I)!.TrianglesLargerThan(1e-10));
+        }
+
+        Assert.Single(sizes.Distinct());
+    }
+
+    [Fact]
+    public void ABodyOfExactlyTheMostNodesKeepsTheUsualCubes()
+    {
+        // Balls .005 in radius at the grazer's position and 25 m along X: the lattice runs from node -1 to node 126,
+        // which is the 128 nodes it may have. Each ball has the cube of its node around it, .1 m out.
+        var world = GrazerScene(At(0, 4, 0), new([Ball("near", default, radius: .005), Ball("far", new(25, 0, 0, 0), radius: .005)], .5));
+
+        var (min, max) = world.SliceOf(GrazerId, I)!.Extent(Axis3.X);
+
+        Assert.Equal(-.1, min, 9);
+        Assert.Equal(25.1, max, 9);
+    }
+
+    [Fact]
+    public void ABodyOneCubeOverTheMostNodesGetsCubesTwiceAsBig()
+    {
+        // The far ball is 25.4 m along, so the lattice would have 130 nodes. The cubes are .4 m, the near ball makes
+        // a cube of .2 m out around its node, and the far ball lies 63.5 cubes along, with no node in its body.
+        var world = GrazerScene(At(0, 4, 0), new([Ball("near", default, radius: .005), Ball("far", new(25.4, 0, 0, 0), radius: .005)], .5));
+
+        var (min, max) = world.SliceOf(GrazerId, I)!.Extent(Axis3.X);
+
+        Assert.Equal(-.2, min, 9);
+        Assert.Equal(.2, max, 9);
     }
 
     [Fact]
@@ -180,16 +243,14 @@ public class GrazerTests
     public void ANewFrameMovesTheSliceAtOnce()
     {
         var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
-        var before = world.SliceOf(GrazerId, I)!;
 
-        // A move of whole cubes, so the mesh moves with it.
         world.Frame(At(.4, 4, -.6, w: 1.8), Lump(default));
 
-        var after = world.SliceOf(GrazerId, I)!;
-        Assert.Equal(before.Extent(Axis3.X).Min + .4, after.Extent(Axis3.X).Min, 9);
-        Assert.Equal(before.Extent(Axis3.X).Max + .4, after.Extent(Axis3.X).Max, 9);
-        Assert.Equal(before.Extent(Axis3.Z).Min - .6, after.Extent(Axis3.Z).Min, 9);
-        Assert.Equal(before.Extent(Axis3.Z).Max - .6, after.Extent(Axis3.Z).Max, 9);
+        var slice = world.SliceOf(GrazerId, I)!;
+        var (xMin, xMax) = slice.Extent(Axis3.X);
+        var (zMin, zMax) = slice.Extent(Axis3.Z);
+        Assert.Equal(.4, (xMin + xMax) / 2, MeshError);
+        Assert.Equal(-.6, (zMin + zMax) / 2, MeshError);
     }
 
     [Fact]
