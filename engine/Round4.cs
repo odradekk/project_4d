@@ -27,8 +27,6 @@ internal sealed record Round4(EntityId Entity, PartId Part, double[] Center, dou
     internal override double Extent(int coordinate) =>
         Major * Math.Sqrt(U[coordinate] * U[coordinate] + V[coordinate] * V[coordinate]) + Tube;
 
-    internal override Solid4 Moved(double[] offset) => this with { Center = Shifted(offset) };
-
     // The circle's points lie within Major times the norm of the 2 x 2 map from (cos, sin) to (axis, W).
     internal override double Reach(double[] pivot, double[] axis)
     {
@@ -39,13 +37,10 @@ internal sealed record Round4(EntityId Entity, PartId Part, double[] Center, dou
         return centerReach + Major * spread + Tube;
     }
 
-    internal double[] CorePoint(double angle)
-    {
-        double cos = Math.Cos(angle), sin = Math.Sin(angle);
-        var point = Center.ToArray();
-        for (var i = 0; i < 4; i++) point[i] += Major * (cos * U[i] + sin * V[i]);
-        return point;
-    }
+    internal double[] CorePoint(double angle) => CorePoint(Math.Cos(angle), Math.Sin(angle));
+
+    private double[] CorePoint(double cos, double sin) =>
+        Center.Select((value, i) => value + Major * (cos * U[i] + sin * V[i])).ToArray();
 
     // The point of the circle nearest to `point`.
     internal double[] NearestCore(double[] point)
@@ -54,9 +49,14 @@ internal sealed record Round4(EntityId Entity, PartId Part, double[] Center, dou
         var a = Box4.Dot(offset, U);
         var b = Box4.Dot(offset, V);
         var across = Math.Sqrt(a * a + b * b);
-        var (cos, sin) = across > 0 ? (a / across, b / across) : (1d, 0d);
-        return Center.Select((value, i) => value + Major * (cos * U[i] + sin * V[i])).ToArray();
+        return across > 0 ? CorePoint(a / across, b / across) : CorePoint(1, 0);
     }
+
+    // How far the section at w is from the circle along W: zero when the circle crosses it.
+    internal double GapTo(double w) => Math.Max(0, Math.Abs(w - Center[3]) - Major * Math.Sqrt(U[3] * U[3] + V[3] * V[3]));
+
+    // Whether the circle is nearer to the section at w than a hidden ring may be: its tube radius, ε and 2 cm.
+    internal bool TooCloseToSection(double w) => GapTo(w) < Tube + World.Epsilon + World.SectionClearance;
 
     internal double CoreDistance(double[] point) => CoreDistance(point[0], point[1], point[2], point[3]);
 
@@ -103,6 +103,7 @@ internal sealed record Round4(EntityId Entity, PartId Part, double[] Center, dou
         var leftValue = distance(CorePoint(left));
         var rightValue = distance(CorePoint(right));
         for (var i = 0; i < RefinementSteps; i++)
+        {
             if (leftValue < rightValue)
             {
                 high = right;
@@ -117,6 +118,7 @@ internal sealed record Round4(EntityId Entity, PartId Part, double[] Center, dou
                 right = low + GoldenRatio * (high - low);
                 rightValue = distance(CorePoint(right));
             }
+        }
         return leftValue < rightValue ? (leftValue, left) : (rightValue, right);
     }
 }

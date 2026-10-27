@@ -36,6 +36,10 @@ public sealed partial class World
                 return Reject(FailureCode.NoSlice, "Object must retain a slice in its origin section.");
         }
 
+        var rings = DynamicShapes.Rounds(definition, pose).Where(round => round.Major > 0);
+        if (proposed.Origin is null && rings.Any(ring => sections.Any(section => ring.TooCloseToSection(section.W))))
+            return Reject(FailureCode.InvalidInput, "Hidden ring is too close to a section.");
+
         var boxes = DynamicShapes.Boxes(definition, pose);
         if (boxes.Any(box => !box.Representable()))
             return Reject(FailureCode.InvalidInput, "Pose cannot represent nondegenerate box geometry.");
@@ -43,9 +47,7 @@ public sealed partial class World
         if (!ball && Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
             return Reject(FailureCode.InvalidInput, "Upright part end is too close to a section.");
         var solids = DynamicShapes.Solids(definition, pose);
-        var owner = buildings.Single(building => building.Id == DynamicShapes.Building(definition));
-        if (solids.Any(solid => solid.WSpan.Min < owner.WRange.Min || solid.WSpan.Max > owner.WRange.Max))
-            return Reject(FailureCode.OutOfRange, "Object extends outside its building.");
+        if (LeavesBuilding(definition, solids)) return Reject(FailureCode.OutOfRange, "Object extends outside its building.");
         if (IntersectsReservation(solids, entity))
             return Reject(FailureCode.TranslationBlocked, "Target intersects a reserved rotation sweep.");
 
@@ -58,6 +60,13 @@ public sealed partial class World
         dynamicEntities[entity] = proposed;
         revision++;
         return new UpdateResult.Updated();
+    }
+
+    // Whether any of the solids reaches out of the W range of the building the entity belongs to.
+    private bool LeavesBuilding(EntityDefinition definition, IEnumerable<Solid4> solids)
+    {
+        var range = buildings.Single(building => building.Id == DynamicShapes.Building(definition)).WRange;
+        return solids.Any(solid => solid.WSpan.Min < range.Min - RoundingMargin || solid.WSpan.Max > range.Max + RoundingMargin);
     }
 
     // A part end within the section clearance would lose its slice to rounding error.

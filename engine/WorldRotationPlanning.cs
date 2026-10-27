@@ -41,6 +41,9 @@ public sealed partial class World
             var opposite = TraceRotation(request, item, motion with { Angle = -motion.Angle }, samples);
             if (opposite.Blocked < 0) plan = opposite;
         }
+        // The way must stay inside the building: its W range is the only space the world has around the item.
+        if (LeavesBuilding(item.Definition, plan.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(plan, progress)))))
+            return Reject(FailureCode.OutOfRange, "Rotation leaves the building.", request.Entity);
         return plan.Blocked < 0
             ? new RotationPlanResult.Allowed(plan)
             : new RotationPlanResult.Blocked(plan, Fail(FailureCode.RotationBlocked, "Rotation is obstructed.", request.Entity, plan.Contacts));

@@ -3,6 +3,11 @@ namespace FourD;
 // Contact between any two solids.
 internal static class Collision
 {
+    // Locating a depth stops when the interval is this narrow, far below any distance that matters. It follows
+    // the secant for this many steps and then bisects.
+    private const double Narrow = 1e-13;
+    private const int SecantSteps = 12;
+
     // How deep `a` embeds into `b`: zero when they just touch, negative when they are apart.
     internal static double Depth(Solid4 a, Solid4 b) => (a, b) switch
     {
@@ -16,11 +21,8 @@ internal static class Collision
     internal static bool Overlaps(Solid4 a, Solid4 b) => Depth(a, b) > World.ContactTolerance;
 
     // The contact where `moving` embeds into `obstacle` deeper than the contact tolerance, or null.
-    internal static Contact? Touch(Solid4 moving, Solid4 obstacle) => (moving, obstacle) switch
-    {
-        (Box4 first, Box4 second) => Box4.Touch(first, second),
-        _ => Overlaps(moving, obstacle) ? ContactOf(moving, obstacle) : null
-    };
+    internal static Contact? Touch(Solid4 moving, Solid4 obstacle) =>
+        Overlaps(moving, obstacle) ? ContactOf(moving, obstacle) : null;
 
     // Where two solids that touch or overlap meet: a point inside both, and the unit normal from `obstacle`
     // toward `moving`. Section is left for the caller. Null only for boxes that have no point in common.
@@ -83,6 +85,29 @@ internal static class Collision
         return null;
     }
 
+    // Moving along `direction` (a unit vector), up to `limit`, `moving` is blocked by `obstacle` where it first
+    // embeds `blockLevel` deep. This returns the distance of the last place before that where the depth is no more
+    // than `allowed`, which is at least the depth at the start, or null when it is never blocked. The depth may fall
+    // and rise again on the way, as it does for a ring, so the search keeps the latest stretch in which the depth
+    // rose past `allowed`.
+    internal static double? StopBefore(Solid4 moving, Solid4 obstacle, double[] direction, double allowed, double blockLevel, double limit)
+    {
+        double DepthAt(double distance) => Depth(moving.Moved(Box4.Scale(direction, distance)), obstacle);
+        double distance = 0, depth = DepthAt(0);
+        ((double Distance, double Gap) Start, (double Distance, double Gap) End)? rise = null;
+        while (distance < limit)
+        {
+            // The depth cannot pass the level it is heading for before the gap to it is closed.
+            var level = depth <= allowed ? allowed : blockLevel;
+            var next = Math.Min(limit, distance + Math.Max(World.SamplingDistance, level - depth));
+            var nextDepth = DepthAt(next);
+            if (depth <= allowed && nextDepth > allowed) rise = ((distance, depth - allowed), (next, nextDepth - allowed));
+            if (nextDepth >= blockLevel) return Locate(DepthAt, allowed, rise!.Value.Start, rise.Value.End);
+            (distance, depth) = (next, nextDepth);
+        }
+        return null;
+    }
+
     // The last distance below `level` between two distances, where the depth is below it at the first and not at
     // the second; each comes with how far its depth is from the level. The first steps follow the secant through
     // the two ends, and halve the end that stays behind (the Illinois method), which is fast when the depth is
@@ -112,8 +137,4 @@ internal static class Collision
         }
         return low;
     }
-
-    // The search stops when the interval is this narrow, far below any distance that matters.
-    private const double Narrow = 1e-13;
-    private const int SecantSteps = 12;
 }

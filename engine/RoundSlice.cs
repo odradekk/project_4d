@@ -18,6 +18,9 @@ internal static class RoundSlice
     private const int MaxCells = 64;
     private const int SurfaceSteps = 12;
 
+    // A plane normal with at least this much of its length along Y is taken for vertical when a plane is spanned.
+    private const double NearlyVertical = .9;
+
     // The six tetrahedra of a cube, each running along one of its diagonals from corner 0 to corner 7.
     // Corner i has bit 0 for x, bit 1 for y and bit 2 for z.
     private static readonly int[][] Tetrahedra =
@@ -43,8 +46,7 @@ internal static class RoundSlice
     // can put a touching section a hair inside, which leaves no slice worth keeping.
     private static double ThickestRadius(Round4 round, double w)
     {
-        var spread = round.Major * Math.Sqrt(round.U[3] * round.U[3] + round.V[3] * round.V[3]);
-        var gap = Math.Max(0, Math.Abs(w - round.Center[3]) - spread);
+        var gap = round.GapTo(w);
         return gap >= round.Tube - World.RoundingMargin ? 0 : Math.Sqrt(round.Tube * round.Tube - gap * gap);
     }
 
@@ -82,16 +84,10 @@ internal static class RoundSlice
             }
     }
 
-    // A torus of the given tube radius around the circle.
+    // A torus of the given tube radius around the circle, as a sweep along the circle and around the tube.
     private static void FlatRing(Round4 ring, double radius, SliceBuffer buffer)
     {
         var normal = Box4.Cross3(ring.U, ring.V);
-        double[] Circle(double angle) =>
-        [
-            ring.Center[0] + ring.Major * (Math.Cos(angle) * ring.U[0] + Math.Sin(angle) * ring.V[0]),
-            ring.Center[1] + ring.Major * (Math.Cos(angle) * ring.U[1] + Math.Sin(angle) * ring.V[1]),
-            ring.Center[2] + ring.Major * (Math.Cos(angle) * ring.U[2] + Math.Sin(angle) * ring.V[2])
-        ];
         var points = new double[CircleSegments + 1, TubeSegments + 1][];
         for (var i = 0; i <= CircleSegments; i++)
             for (var j = 0; j <= TubeSegments; j++)
@@ -107,7 +103,7 @@ internal static class RoundSlice
 
         for (var i = 0; i < CircleSegments; i++)
         {
-            var middle = Circle(2 * Math.PI * (i + .5) / CircleSegments);
+            var middle = ring.CorePoint(2 * Math.PI * (i + .5) / CircleSegments);
             for (var j = 0; j < TubeSegments; j++)
             {
                 double[] a = points[i, j], b = points[i + 1, j], c = points[i + 1, j + 1], d = points[i, j + 1];
@@ -220,16 +216,16 @@ internal static class RoundSlice
         }
     }
 
-    // The segments where the surface of the slice crosses the plane through the center of the slice that is
-    // normal to its circle, found on a grid of squares in that plane. A ball, which has no circle, is cut by the
-    // horizontal plane.
+    // The segments where the surface of the slice crosses the plane of the ring's circle, through the circle's
+    // center, found on a grid of squares in that plane. A ball, which has no circle, is cut by the horizontal
+    // plane through its center.
     internal static IReadOnlyList<Polyline> Outline(Round4 round, double w)
     {
         var radius = ThickestRadius(round, w);
         if (radius == 0) return [];
         var normal = PlaneNormal(round);
         // The first axis of the plane is horizontal unless the normal is nearly vertical, and the second completes them.
-        var helper = Math.Abs(normal[1]) < .9 ? new double[] { 0, 1, 0 } : new double[] { 1, 0, 0 };
+        var helper = Math.Abs(normal[1]) < NearlyVertical ? new double[] { 0, 1, 0 } : new double[] { 1, 0, 0 };
         var across = Box4.Cross3(normal, helper);
         var first = Box4.Scale(across, 1 / Math.Sqrt(Box4.Dot3(across, across)));
         var second = Box4.Cross3(normal, first);

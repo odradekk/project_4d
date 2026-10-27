@@ -85,11 +85,9 @@ internal sealed partial class WorldValidation
     private void HiddenStructure(ItemDefinition item, Ring4 ring, Pose4 pose)
     {
         var round = Round4.From(item.Id, ring, pose);
-        var spread = round.Major * Math.Sqrt(round.U[3] * round.U[3] + round.V[3] * round.V[3]);
         foreach (var section in sections.Values)
         {
-            var nearest = Math.Max(0, Math.Abs(section.W - round.Center[3]) - spread);
-            if (nearest < ring.TubeRadius + World.Epsilon + World.SectionClearance)
+            if (round.TooCloseToSection(section.W))
                 Error(LoadErrorCode.HiddenStructureTooClose, Field(item.Source, "Shape.Ring.Center"),
                     $"Ring is too close to section {section.Id.Value}.", item.Id);
         }

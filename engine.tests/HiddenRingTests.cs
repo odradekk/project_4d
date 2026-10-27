@@ -3,10 +3,11 @@ using static FourD.Tests.ItemScenes;
 
 namespace FourD.Tests;
 
-// The nut of the size norms (docs/frame/content.md): an ordinary body with a ring that rests between sections
-// I and II until the nut is stood up toward II. In these scenes the ring has a 20 cm radius and a 5 cm tube, its
-// center is .41 m along the nut's long axis and .2 m deep, and the nut's hinge is at x = -.01. Standing up turns
-// the point (x, W) = (.42, .2) about the hinge into (-.2, .42), so the ring's center ends at x = -.21, W = .42.
+// A nut after the one in docs/frame/rules.md: a 6 cm body with a ring that rests between sections I and II (at
+// W = .2) until the nut is stood up toward II. The size norms give the body length, the W of the ring and a tube
+// width of .05 m, which is taken here as the tube radius. The rest is this test's own: the ring has a 20 cm radius,
+// its center is .41 m along the nut's long axis, and the nut's hinge is at x = -.01. Standing up turns the point
+// (x, W) = (.42, .2) about the hinge into (-.2, .42), so the ring's center ends at x = -.21, W = .42.
 public class HiddenRingTests
 {
     private static readonly SectionId I = new("I");
@@ -157,6 +158,32 @@ public class HiddenRingTests
         Assert.Empty(TrianglesOf(world.SliceOf(NutId, I)!, RingPart));
         AssertNear(new(0, .03, 0, 0), world.State(NutId).Pose.Position);
         Assert.Equal(I, world.State(NutId).Section);
+    }
+
+    [Fact]
+    public void NutStoodUpWithOnlyItsRingInTheOriginSectionCannotBePlaced()
+    {
+        // Turned a quarter turn into W at W = -.41, the body is at W -.44 to -.38, away from section I, while the ring's
+        // center, .41 along the long axis, is at W = 0 and cuts it.
+        var world = Resting();
+
+        var rejected = Assert.IsType<UpdateResult.Rejected>(world.PlaceEntity(NutId, At(0, .03, 0, -.41, XwQuarterTurn)));
+
+        Assert.Equal(FailureCode.NoSlice, rejected.Failure.Code);
+    }
+
+    [Fact]
+    public void NutCannotBePlacedWhereItsFlatRingWouldBeTooCloseToASection()
+    {
+        // A section at W = -.15 is clear of the ring at W = .1 but not of the ring turned over to W = -.1.
+        var sections = new SectionDefinition[] { new(new("minus"), -.15, TestSource), SectionI, SectionII };
+        var description = Description([Nut(ringW: .1), Player]) with { Sections = sections };
+        var world = Load(description);
+
+        var rejected = Assert.IsType<UpdateResult.Rejected>(world.PlaceEntity(NutId, At(0, .03, 0, 0, XwHalfTurn)));
+
+        Assert.Equal(FailureCode.InvalidInput, rejected.Failure.Code);
+        Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(NutId, At(.2, .03, 0)));
     }
 
     [Fact]

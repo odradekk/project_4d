@@ -45,14 +45,14 @@ public sealed partial class World
         var tangent = new Vec4(-plan.Axis.Z, 0, plan.Axis.X, 0);
         var tangentAxis = Box4.ToArray(tangent);
         var pivot = Box4.ToArray(plan.Pivot);
-        var boxes = plan.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(plan, progress))).ToArray();
-        if (w < boxes.Min(box => box.WSpan.Min) || w > boxes.Max(box => box.WSpan.Max)) return Array.Empty<Polyline>();
+        var solids = plan.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(plan, progress))).ToArray();
+        if (w < solids.Min(solid => solid.WSpan.Min) || w > solids.Max(solid => solid.WSpan.Max)) return Array.Empty<Polyline>();
 
-        double Along(Solid4 box) => Box4.Dot(Box4.Sub(box.Center, pivot), tangentAxis);
-        var min = boxes.Min(box => Along(box) - box.Radius(tangentAxis));
-        var max = boxes.Max(box => Along(box) + box.Radius(tangentAxis));
-        var low = boxes.Min(box => box.Center[1] - box.Extent(1));
-        var high = boxes.Max(box => box.Center[1] + box.Extent(1));
+        double Along(Solid4 solid) => Box4.Dot(Box4.Sub(solid.Center, pivot), tangentAxis);
+        var min = solids.Min(solid => Along(solid) - solid.Radius(tangentAxis));
+        var max = solids.Max(solid => Along(solid) + solid.Radius(tangentAxis));
+        var low = solids.Min(solid => solid.Center[1] - solid.Extent(1));
+        var high = solids.Max(solid => solid.Center[1] + solid.Extent(1));
         double[] Corner(double along, double y) => [plan.Pivot.X + along * tangent.X, y, plan.Pivot.Z + along * tangent.Z];
         double[] points = [.. Corner(min, low), .. Corner(max, low), .. Corner(max, high), .. Corner(min, high)];
         return Array.AsReadOnly(new[] { new Polyline(Array.AsReadOnly(points), true) });

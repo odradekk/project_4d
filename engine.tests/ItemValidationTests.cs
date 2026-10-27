@@ -85,6 +85,22 @@ public class ItemValidationTests
     }
 
     [Theory]
+    [InlineData(.5, true)] // the circle spans W .1 to .3 around the ring's W of .2: 10 cm from section I, 12 cm from II
+    [InlineData(.8, false)] // it spans W .04 to .36: 4 cm from section I
+    public void TiltedHiddenRingKeepsItsWholeCircleClearOfEverySection(double sine, bool loads)
+    {
+        // The circle's plane is turned into W, so the circle reaches .2 * sine either side of its center.
+        var nut = Nut();
+        var hidden = (HiddenRingItem)nut.Shape;
+        var tilted = nut with { Shape = hidden with { Ring = hidden.Ring with { Rotation = XwRotation(Math.Sqrt(1 - sine * sine), sine) } } };
+
+        var errors = Errors(buildingMin: -1, tilted);
+
+        if (loads) Assert.Empty(errors);
+        else Assert.Equal(LoadErrorCode.HiddenStructureTooClose, Assert.Single(errors.Select(error => error.Code).Distinct()));
+    }
+
+    [Theory]
     [InlineData(-.47, true)]
     [InlineData(-.46, false)]
     public void BuildingHoldsTheRingWhicheverWayTheNutStandsUp(double buildingMin, bool loads)

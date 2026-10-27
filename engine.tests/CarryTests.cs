@@ -222,6 +222,36 @@ public class CarryTests
     }
 
     [Fact]
+    public void FlatObjectCannotBeCarriedInToWhereAFlipInProgressWillLand()
+    {
+        // The rod flips end for end: its marker, at z = .1, ends up at x = -.2. A small cube carried there meanwhile
+        // would overlap it, so the carry is refused, with the rod's sweep as the obstacle.
+        var rod = Rod() with
+        {
+            Shape = Shape(Part("body", new(.24, .03, .03)), Part("marker", new(.03, .03, .03), center: new(.2, 0, .1)))
+        };
+        var cube = Rod() with
+        {
+            Id = new("cube"),
+            Pose = At(-.2, 0, .5),
+            Shape = Box(new(.03, .03, .03)),
+            Interaction = new TurnableProperties(Holdable: true, Packable: false, HorizontalRadius: .03, LongAxis: Axis3.X, Hinge: new(-.01, 0, 0), Reach: .04)
+        };
+        var other = Actor("other");
+        var flipper = Actor() with { Pose = At(-1, 0, .05) };
+        var world = Scene(rod, cube, flipper, other);
+        world.HoldEntity(other.Id, cube.Id);
+        world.StartRotation(world.AllowedPlan(new Flip(flipper.Id, RodId)));
+        world.StepEvents(.6);
+
+        var rejected = Assert.IsType<MoveEntityResult.Rejected>(world.MoveEntity(new(cube.Id, new(0, 0, -.4))));
+
+        Assert.Equal(FailureCode.TranslationBlocked, rejected.Failure.Code);
+        Assert.Equal(RodId, rejected.Failure.Contacts[0].Obstacle);
+        Assert.Equal(.5, world.State(cube.Id).Pose.Position.Z);
+    }
+
+    [Fact]
     public void HeldBallStopsWhereItsSliceInAnotherSectionMeetsAWall()
     {
         // The wall in II is 1 m away at x = .98 and spans W .414 to .426. The ball's center is .204 from it in W, so
@@ -246,6 +276,27 @@ public class CarryTests
 
         Assert.Equal(new Vec3(2, 0, .2), moved.Applied);
         Assert.Empty(moved.Contacts);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void HeightIsTriedLastSoTheBallLandsOnWhatItHasMovedOver(bool alongX)
+    {
+        // The platform's top is at y = .3 from .3 on along x (or z). Moving along that axis first takes the ball, whose
+        // lowest point is at y = .35, over the platform's edge, and lowering it then stops it on the platform
+        // (center at .3 + .25), .05 down. Lowering first would have taken it to the ground, below the platform.
+        var platform = alongX
+            ? Block("platform", new(1.3, .15, 0), new(1, .15, 2), new(-.5, 1))
+            : Block("platform", new(0, .15, 1.3), new(2, .15, 1), new(-.5, 1));
+        var world = Scene(platform, Ball(y: .6), Player);
+        world.HoldEntity(Player.Id, BallId);
+
+        var moved = Move(world, BallId, alongX ? new(.5, -1, 0) : new(0, -1, .5));
+
+        Assert.Equal(-.05, moved.Applied.Y, 9);
+        Assert.Equal(alongX ? .5 : 0, moved.Applied.X);
+        Assert.Equal(alongX ? 0 : .5, moved.Applied.Z);
     }
 
     [Fact]

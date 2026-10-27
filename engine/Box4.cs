@@ -61,8 +61,6 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     // Radius along a coordinate axis, without building the axis vector.
     internal override double Extent(int coordinate) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Axes[i][coordinate]));
 
-    internal override Solid4 Moved(double[] offset) => this with { Center = Shifted(offset) };
-
     internal override double Reach(double[] pivot, double[] axis) => Enumerable.Range(0, 16).Max(mask =>
     {
         var offset = Sub(Corner(mask), pivot);
@@ -132,12 +130,6 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
         var delta = Sub(a.Center, b.Center);
         return SeparatingAxes(a, b).Min(axis => Depth(a, b, axis, delta));
     }
-
-    // Whether the boxes embed deeper than the contact tolerance.
-    internal static bool Overlaps(Box4 a, Box4 b) => Depth(a, b) > World.ContactTolerance;
-
-    // The contact where `moving` embeds into `obstacle` deeper than the contact tolerance, or null.
-    internal static Contact? Touch(Box4 moving, Box4 obstacle) => Overlaps(moving, obstacle) ? ContactOf(moving, obstacle) : null;
 
     // Where boxes that touch or overlap meet, or null when no point of them is common. The normal points from
     // the obstacle toward `moving`, and Section is left for the caller.

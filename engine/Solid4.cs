@@ -10,10 +10,10 @@ internal abstract record Solid4(EntityId Entity, PartId Part, double[] Center)
     // Half the extent of the axis-aligned bounds along a coordinate axis.
     internal abstract double Extent(int coordinate);
 
-    internal abstract Solid4 Moved(double[] offset);
-
-    // The largest distance of any point of the solid from `pivot`, measured in the plane of `axis` and W.
+    // A bound on the distance of any point of the solid from `pivot`, measured in the plane of `axis` and W.
     internal abstract double Reach(double[] pivot, double[] axis);
+
+    internal Solid4 Moved(double[] offset) => this with { Center = Center.Select((value, i) => value + offset[i]).ToArray() };
 
     internal Interval WSpan
     {
@@ -28,6 +28,4 @@ internal abstract record Solid4(EntityId Entity, PartId Part, double[] Center)
     // than the contact tolerance. Surfaces that merely touch count as not overlapping.
     internal bool BoundsMayOverlap(Solid4 other) =>
         Enumerable.Range(0, 4).All(i => Math.Abs(Center[i] - other.Center[i]) < Extent(i) + other.Extent(i) - World.ContactTolerance);
-
-    protected double[] Shifted(double[] offset) => Center.Select((value, i) => value + offset[i]).ToArray();
 }
