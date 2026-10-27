@@ -2,7 +2,7 @@
 
 A first-person Chinese cosmic-horror game about four-dimensional beings: PS1-style low poly, China in 2000, dread without jump scares. A father searches for his daughter, who slipped through a prism into deeper sections of 4D space.
 
-Status: the design docs are settled and the project skeleton exists (4D engine library, its tests, Godot project), with no engine or game code yet.
+Status: implementation is underway. The design docs and approved engine contract define the target behavior and API.
 
 ## Map
 
