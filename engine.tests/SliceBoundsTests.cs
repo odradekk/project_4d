@@ -46,6 +46,20 @@ public class SliceBoundsTests
     }
 
     [Fact]
+    public void PartTurnedOnItsOwnHasTheBoundsOfTheTurnedBox()
+    {
+        // A box of half size (.5, .2, .3) turned a quarter about Y takes +X to -Z and +Z to +X, so it spans .3 along X and .5 along Z.
+        var turned = new Rotation3(new(0, 0, -1), new(0, 1, 0), new(1, 0, 0));
+        var shape = Shape(Part("part", new(.5, .2, .3), center: new(0, .5, 0), rotation: turned));
+        var wall = new BuildingElementDefinition(new("wall"), Origin, TestSource, new("home"), new(-.5, 1), [], shape);
+        var post = new FixedDefinition(new("post"), Origin, TestSource, I, shape);
+        var world = Scene(wall, post);
+
+        foreach (var id in new EntityId[] { new("wall"), new("post") })
+            AssertBounds(new(-.3, .3, -.5), new(.3, .7, .5), world.GetSliceBounds(id, I, new("part")));
+    }
+
+    [Fact]
     public void BuildingElementHasBoundsWhereItSpansTheSectionAndNoneOutsideItsWRange()
     {
         var world = Scene(Block("block", new(1, .5, 0), new(.2, .5, .3), new(-.2, .2)));

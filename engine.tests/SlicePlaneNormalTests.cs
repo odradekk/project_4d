@@ -65,6 +65,31 @@ public class SlicePlaneNormalTests
     }
 
     [Fact]
+    public void PartOfABuildingElementOrAFixedObjectHasItsOwnBasis()
+    {
+        // The part is turned a quarter about Y, so its X and Y span the YZ plane while the entity's still span XY.
+        var part = Part("part", new(.5, .2, .3), center: new(0, .5, 0), rotation: YawQuarter);
+        var wall = new BuildingElementDefinition(new("wall"), Origin, TestSource, new("home"), new(-.5, 1), [], Shape(part));
+        var post = new FixedDefinition(new("post"), Origin, TestSource, I, Shape(part));
+        var world = Scene(wall, post);
+
+        foreach (var id in new EntityId[] { new("wall"), new("post") })
+        {
+            AssertDirection(new(1, 0, 0), world.GetSlicePlaneNormal(id, I, Axis3.X, Axis3.Y, new("part")));
+            AssertDirection(new(0, 0, 1), world.GetSlicePlaneNormal(id, I, Axis3.X, Axis3.Y));
+        }
+    }
+
+    [Fact]
+    public void BallHasNoBasisOfItsOwnAndTakesTheEntitys()
+    {
+        var turned = Ball() with { Pose = At(0, BallRadius, 0, BallW, rotation: YawQuarter4) };
+
+        AssertDirection(new(0, 0, 1), Scene(Ball()).GetSlicePlaneNormal(BallId, I, Axis3.X, Axis3.Y, new("ball")));
+        AssertDirection(new(1, 0, 0), Scene(turned).GetSlicePlaneNormal(BallId, I, Axis3.X, Axis3.Y, new("ball")));
+    }
+
+    [Fact]
     public void PartBasisIsTurnedByTheEntityPose()
     {
         // The part's X and Y are -Z and Y, which the pose's quarter turn about Z takes to -Z and -X: cross(-Z, -X) = +Y.

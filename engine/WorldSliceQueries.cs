@@ -47,7 +47,7 @@ public sealed partial class World
         var length = Math.Sqrt(Box4.Dot3(normal, normal));
         if (length <= RoundingMargin) return new SliceDirectionResult.Degenerate();
 
-        var unit = normal.Take(3).Select(value => value / length).ToArray();
+        var unit = normal.Select(value => value / length).ToArray();
         var sign = unit.First(value => Math.Abs(value) > RoundingMargin) < 0 ? -1 : 1;
         return new SliceDirectionResult.Direction(new(sign * unit[0], sign * unit[1], sign * unit[2]));
     }
@@ -59,8 +59,12 @@ public sealed partial class World
         _ => DynamicShapes.Parts(definition)
     };
 
-    private static IEnumerable<PartId> PartIds(EntityDefinition definition) =>
-        BoxParts(definition).Select(part => part.Id).Concat(DynamicShapes.Rounds(definition, definition.Pose).Select(round => round.Part));
+    private static IEnumerable<PartId> PartIds(EntityDefinition definition)
+    {
+        foreach (var part in BoxParts(definition)) yield return part.Id;
+        if (definition is ItemDefinition { Shape: Sphere4 ball }) yield return ball.Part;
+        if (definition is ItemDefinition { Shape: HiddenRingItem hidden }) yield return hidden.Ring.Part;
+    }
 
     // The world image of a unit vector along an axis of the part's local frame: a box part's rotation or a ring's,
     // both turned by the entity's pose. A part without a frame of its own, a ball, takes the entity's.
