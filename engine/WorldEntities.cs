@@ -21,6 +21,9 @@ public sealed partial class World
         var determinant = rotation.X.X * (rotation.Y.Y * rotation.Z.Z - rotation.Y.Z * rotation.Z.Y)
             - rotation.Y.X * (rotation.X.Y * rotation.Z.Z - rotation.X.Z * rotation.Z.Y)
             + rotation.Z.X * (rotation.X.Y * rotation.Y.Z - rotation.X.Z * rotation.Y.Y);
+        // A determinant within the rounding margin of 0 is a degenerate XYZ projection with no handedness
+        // (docs/frame/contract-views.md). It compares a computed value, so it uses the rounding margin and not
+        // the tolerance for host matrices.
         return determinant switch
         {
             > RoundingMargin => Handedness.Normal,

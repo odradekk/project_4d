@@ -7,7 +7,8 @@ namespace FourD;
 /// </summary>
 public sealed partial class World
 {
-    // Slack for floating-point rounding in comparisons that are exact in real arithmetic.
+    // Slack for floating-point rounding in comparisons that are exact in real arithmetic
+    // (docs/frame/scene-authoring.md: a numeric rounding margin of 1e-10 m).
     internal const double RoundingMargin = 1e-10;
 
     // Half the W thickness of an ordinary object (ε).

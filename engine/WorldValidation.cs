@@ -2,6 +2,10 @@ namespace FourD;
 
 internal sealed partial class WorldValidation
 {
+    // Error allowed in a rotation the host passes in (docs/frame/contract.md: Rotation4 allows an orthogonal error
+    // of 1e-10). The host converts its matrices from Godot floats, so they are not exact even where they should be.
+    private const double MatrixTolerance = 1e-10;
+
     private readonly List<LoadError> errors = [];
     private readonly Dictionary<SectionId, SectionDefinition> sections = [];
     private readonly Dictionary<BuildingId, BuildingDefinition> buildings = [];
@@ -271,9 +275,9 @@ internal sealed partial class WorldValidation
 
     // A flat pose keeps the local W axis on the world W axis, so the object lies within one section.
     internal static bool IsFlat(Rotation4 rotation) =>
-        Math.Abs(rotation.W.X) <= World.RoundingMargin
-        && Math.Abs(rotation.W.Y) <= World.RoundingMargin
-        && Math.Abs(rotation.W.Z) <= World.RoundingMargin;
+        Math.Abs(rotation.W.X) <= MatrixTolerance
+        && Math.Abs(rotation.W.Y) <= MatrixTolerance
+        && Math.Abs(rotation.W.Z) <= MatrixTolerance;
 
     internal static bool IsValidPose(Pose4 pose) => IsFinite(pose) && Rotation(Box4.AxesOf(pose.Rotation));
 
@@ -285,9 +289,9 @@ internal sealed partial class WorldValidation
             {
                 var dot = 0d;
                 for (var k = 0; k < axes.Length; k++) dot += axes[i][k] * axes[j][k];
-                if (Math.Abs(dot - (i == j ? 1 : 0)) > World.RoundingMargin) return false;
+                if (Math.Abs(dot - (i == j ? 1 : 0)) > MatrixTolerance) return false;
             }
-        return Math.Abs(Determinant(axes) - 1) <= World.RoundingMargin;
+        return Math.Abs(Determinant(axes) - 1) <= MatrixTolerance;
     }
 
     // Gaussian elimination with partial pivoting; a singular matrix gives 0.
