@@ -60,7 +60,7 @@ internal static class DeviceScenes
     // The cabinet of scene 8 in a room. The hinge is a line along Z at y = 2, the floor's top is at y = 0 and the
     // ceiling's underside at y = 3. In section I the device is a flap standing up from the hinge, 40 cm high, 60 cm wide
     // and 2 cm thick. In section II it is a plank 2.2 m long, 20 cm wide and 2 cm thick that leans out from the hinge
-    // by the angle whose tangent is 2, so that its end is at x = .98, y = 2.98 under the ceiling. The two are two
+    // by the angle whose tangent is 2, so that its end is at x = 1.97, y = 2.98 under the ceiling. The two are two
     // segments of one loft that change shape at W = .21, between the sections, and they share one hinge and one turn.
     // A turn of -π/2 opens the flap to lie along +x and lays the plank down as a slope to the floor, its end at
     // x = .98, y = .03.

@@ -1,6 +1,6 @@
 # 四维引擎公共契约
 
-[框架目录](README.md) · [数据](contract-data.md) · [动作与推进](contract-actions.md) · [抓取与布置](contract-carry.md) · [截面与查询](contract-views.md) · [场景标注与载入校验](scene-authoring.md)
+[框架目录](README.md) · [数据](contract-data.md) · [动作与推进](contract-actions.md) · [抓取与布置](contract-carry.md) · [截面与查询](contract-views.md) · [场景标注与载入校验](scene-authoring.md) · [装置搭法](device-authoring.md)
 
 > 状态：用户已于 2026-10-27 批准。本文是 #2 确定的公共契约，不表示所有能力已实现。各实现以这些类型、结果和实例为测试依据。存档只约定签名，白模阶段不实现保存格式。
 
