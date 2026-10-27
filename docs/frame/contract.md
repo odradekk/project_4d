@@ -1,6 +1,6 @@
 # 四维引擎公共契约
 
-[框架目录](README.md) · [数据](contract-data.md) · [动作与推进](contract-actions.md) · [截面与查询](contract-views.md) · [场景标注与载入校验](scene-authoring.md)
+[框架目录](README.md) · [数据](contract-data.md) · [动作与推进](contract-actions.md) · [抓取与布置](contract-carry.md) · [截面与查询](contract-views.md) · [场景标注与载入校验](scene-authoring.md)
 
 > 状态：用户已于 2026-10-27 批准。本文是 #2 确定的公共契约，不表示所有能力已实现。各实现以这些类型、结果和实例为测试依据。存档只约定签名，白模阶段不实现保存格式。
 
@@ -12,7 +12,7 @@
 |---|---|
 | 世界 | 本页的 `Load` |
 | 实体 | [数据](contract-data.md)的 `AddEntity`、`RemoveEntity`、`ReadEntity` |
-| 动作 | [动作与推进](contract-actions.md)的规划、启动、平移、装置、穿缝、共享量与编排 |
+| 动作 | [动作与推进](contract-actions.md)的规划、启动、装置、穿缝、共享量与编排，以及[抓取与布置](contract-carry.md)的抓取、放下、平移与受控布置 |
 | 推进 | [动作与推进](contract-actions.md)的 `Step` |
 | 截面 | [截面与查询](contract-views.md)的切片、预览与隐藏轮廓 |
 | 查询 | [截面与查询](contract-views.md)的支撑、占据、存在、距离、手性等 |
@@ -129,7 +129,7 @@ public sealed record Failure(
     EntityId? Entity, SeamId? Seam, IReadOnlyList<Contact> Contacts);
 ```
 
-`Detail` 是开发诊断文本；游戏根据 Code、实体与碰撞信息选择中文台词，不解析文本。碰撞点是世界四维坐标，法线由障碍指向运动物；点若恰在可玩 Section 上附该 ID，否则 Section=null，表示夹层，不伪称另一页；例如球碰到另一截面里的墙，点常在夹层，宿主要在目标截面里标记它，须自己把点投到该截面。多接触按运动进度、障碍 EntityId、零件号排序；同一进度多接触全部保留。以最早接触解释拒绝并标红后续预览。距离不超过容差的表面相贴不算阻挡；碰撞查询排除运动物自身与三维生物，不整体排除最初支撑面，只忽略其相贴接触。
+`Detail` 是开发诊断文本；游戏根据 Code、实体与碰撞信息选择中文台词，不解析文本。碰撞点是世界四维坐标，法线由障碍指向运动物；点若恰在可玩 Section 上附该 ID，否则 Section=null，表示夹层，不伪称另一页；例如球碰到另一截面里的墙，点常在夹层；宿主要在目标截面里标记它，直接取点的 XYZ 即可。多接触按运动进度、障碍 EntityId、零件号排序；同一进度多接触全部保留。以最早接触解释拒绝并标红后续预览。距离不超过容差的表面相贴不算阻挡；碰撞查询排除运动物自身与三维生物，不整体排除最初支撑面，只忽略其相贴接触。
 
 无 ID、非法数字、越界目标等是明确失败；不要求调用者捕获异常来处理正常受阻。进程资源耗尽等运行环境异常不属于玩法结果。
 

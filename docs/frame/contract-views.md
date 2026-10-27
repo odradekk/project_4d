@@ -46,7 +46,7 @@ Godot 三角形正面使用顺时针，适配层对每个三角形交换第二�
 
 Polyline 的 Positions 是 3K 个 double，K≥2；Closed=true 时隐含最后一点连第一点，不重复首点。预览 Samples 从 Progress=0 到 1 严格递增，包含旋转碰撞采样点及终点；轮廓是该进度切片的真实外边线。最早受阻进度及之后的 Blocked=true，此前 false；Contacts 使用相同计划的碰撞点。FoldPlane 是翻转面与目标 Section/运动包围盒相交的线框，不是无穷平面。未扫过目标 Section 时 Samples 的轮廓可全空，宿主不画跨页线。
 
-GetHiddenStructurePreview 只接受隐藏圆环物的 StandUp 计划：返回最终进度 1 中隐藏零件的真实轮廓，即使原始计划 Blocked 也可看最终落点，由宿主画虚线。结果只有进度 1 一个样本，其 Blocked 与计划是否受阻一致，FoldPlane 为空，Contacts 取计划的碰撞点。球和圆环（含旋转预览里的）没有棱边，轮廓取切片曲面与过圆环中心、同中心圆所在平面重合的平面（球用过球心的水平面）的交线，每段两点；环体因此得到内外两圈。其他计划返回 WrongEntityKind。过期/其他世界计划都分别返回 StalePlan/ForeignPlan；读取不能偷偷重新规划。
+GetHiddenStructurePreview 只接受隐藏圆环物的 StandUp 计划：返回最终进度 1 中隐藏零件的真实轮廓，即使原始计划 Blocked 也可看最终落点，由宿主画虚线。结果只有进度 1 一个样本，其 Blocked 与计划是否受阻一致，FoldPlane 为空，Contacts 取计划的碰撞点。球和圆环（含旋转预览里的）没有棱边，轮廓取切片曲面与过圆环中心、同中心圆所在平面重合的平面的交线，每段两点；环体因此得到内外两圈。球没有中心圆，用过球心的水平面。圆环中心圆倾入 W 时，它所在的是四维平面，轮廓用该平面在 XYZ 里的投影，投影退化成一条线时也用过圆环中心的水平面。其他计划返回 WrongEntityKind。过期/其他世界计划都分别返回 StalePlan/ForeignPlan；读取不能偷偷重新规划。
 
 ## 支撑、占据、切片与方向
 
