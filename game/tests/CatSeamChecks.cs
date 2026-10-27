@@ -174,6 +174,9 @@ public partial class CatSeamChecks : Node
         await play.Frames(3);
         Check(seam.InBackpack.SequenceEqual(["rubber"]) && play.Actions.Held is null && seam.Said == "小满：手里抱着猫呢。",
             $"with the cat in the arms nothing comes out of the backpack; she said \"{seam.Said}\"");
+        // The pole lies where the player will stand 0.8 m before it, on the floor and at rest, whatever happened to it before.
+        Check(seam.World.PlaceEntity(new("pole"), play.State("pole").Pose with { Position = new(-1, .03125, 3.8, 0) }) is UpdateResult.Updated, "the pole is put on the floor");
+        await play.Frames(5);
         var pole = play.Position("pole");
         play.LookAt(new(pole.X, .02f, pole.Z - .8f), pole);
         await play.Frames(3);
@@ -181,6 +184,10 @@ public partial class CatSeamChecks : Node
         Press(Key.E);
         await play.Frames(3);
         Check(!cat.Held && play.Actions.Held is null, "E puts the cat down before it takes the object");
+        // The cat lands between her and the pole, where its pick-up sphere is in the way of the crosshair: it is moved aside.
+        await play.Frames(60);
+        catBody.PlaceAt(new(-4, .02f, 1), 0);
+        await play.Frames(3);
         Press(Key.E);
         await play.Frames(3);
         Check(play.Actions.Held == "pole", "and the next E takes it");
