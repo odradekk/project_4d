@@ -29,17 +29,17 @@ internal sealed class LensOverlay
         foreach (var scene in scenes) scene.Overlay.AddChild(new Node3D { Name = "Contacts" });
     }
 
-    /// <summary>Draws the swept outlines and fold plane of the previews in one section, replacing what was drawn before.</summary>
-    internal void ShowPreview(SectionId section, IEnumerable<RotationPreview> previews)
+    /// <summary>
+    /// Draws in one section the outlines a turn sweeps, pale until the first obstruction and red from it, and the
+    /// fold planes of a flip, replacing what was drawn before.
+    /// </summary>
+    internal void ShowPreview(SectionId section, RotationPreview? sweep, IEnumerable<Polyline> foldPlanes)
     {
         ClearPreview();
         List<Vector3> clear = [], blocked = [], fold = [];
-        foreach (var preview in previews)
-        {
-            foreach (var sample in preview.Samples)
-                foreach (var contour in sample.Contours) AddSegments(sample.Blocked ? blocked : clear, contour);
-            foreach (var plane in preview.FoldPlane) AddSegments(fold, plane);
-        }
+        foreach (var sample in sweep?.Samples ?? [])
+            foreach (var contour in sample.Contours) AddSegments(sample.Blocked ? blocked : clear, contour);
+        foreach (var plane in foldPlanes) AddSegments(fold, plane);
         var mesh = new ArrayMesh();
         AddSurface(mesh, clear, Clear);
         AddSurface(mesh, blocked, Blocked);

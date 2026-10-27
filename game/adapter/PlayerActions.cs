@@ -222,7 +222,8 @@ public sealed partial class PlayerActions : Node
         return moved;
     }
 
-    // Draws, in the section the lens shows, the sweep of what F and R would do to the held or aimed entity.
+    // Draws, in the section the lens shows, the sweep of what F would do to the held or aimed entity, so that red means
+    // F, and the fold plane of what R would do.
     private void UpdatePreview(double delta)
     {
         if (!prism.Raised || prism.TargetSection is not { } target || Subject() is not { } id)
@@ -235,11 +236,9 @@ public sealed partial class PlayerActions : Node
         if (previewDelay > 0) return;
         previewDelay = PreviewInterval;
         var section = new SectionId(target);
-        RotationRequest?[] requests = [StandOrLayRequest(id), new Flip(actor, id)];
-        var previews = new List<RotationPreview>();
-        foreach (var request in requests.OfType<RotationRequest>())
-            if (PlanOf(world.PlanRotation(request)) is { } plan && world.GetRotationPreview(plan, section) is PreviewResult.Preview preview)
-                previews.Add(preview.Value);
-        overlay.ShowPreview(section, previews);
+        overlay.ShowPreview(section, PreviewOf(StandOrLayRequest(id), section)?.Value, PreviewOf(new Flip(actor, id), section)?.Value.FoldPlane ?? []);
     }
+
+    private PreviewResult.Preview? PreviewOf(RotationRequest? request, SectionId section) =>
+        request is not null && PlanOf(world.PlanRotation(request)) is { } plan ? world.GetRotationPreview(plan, section) as PreviewResult.Preview : null;
 }

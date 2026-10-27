@@ -102,9 +102,17 @@ public partial class FeedbackChecks : Node
 
     private async Task CheckClearPreview()
     {
-        // Hold the pole east of its middle, so that flipping it also sweeps through the other section.
+        // Aimed at but not held, the pole lying on the floor shows the sweep of its stand-up.
         play.LookAt(new(3f, .02f, 1.5f), new(1.9f, .03125f, 1.5f));
         await play.Frames(2);
+        Button(MouseButton.Right, true);
+        await play.Frames(20);
+        var aimed = PreviewColors("Ⅱ").ToArray();
+        Check(aimed.Contains(LensOverlay.Clear) && !aimed.Contains(LensOverlay.Blocked), "the clear sweep of an aimed object must be drawn pale");
+        Button(MouseButton.Right, false);
+        await play.Frames(20);
+
+        // Held east of its middle, flipping the pole also sweeps through the other section.
         Press(Key.E);
         await play.Frames(3);
         Check(!PreviewColors("Ⅱ").Any(), "without the lens raised nothing is drawn");
@@ -133,6 +141,10 @@ public partial class FeedbackChecks : Node
         await play.Frames(20);
         var colors = PreviewColors("Ⅱ").ToArray();
         Check(colors.Contains(LensOverlay.Clear) && colors.Contains(LensOverlay.Blocked), "a blocked sweep is pale up to the obstacle and red from it");
+        // The slice moves toward the hinge as the turn goes on, so what the turn passes first lies farther out in x.
+        var pale = PreviewLines("Ⅱ", LensOverlay.Clear).Select(vertex => vertex.X).ToArray();
+        var red = PreviewLines("Ⅱ", LensOverlay.Blocked).Select(vertex => vertex.X).ToArray();
+        Check(pale.Average() > red.Average(), "the red of a blocked sweep must come after the pale");
         Button(MouseButton.Right, false);
         Press(Key.F);
         await play.Frames(3);
@@ -145,6 +157,11 @@ public partial class FeedbackChecks : Node
         player.Hud.ClearText();
         play.LookAt(new(-2.6f, .02f, .4f), new(-2.6f, .25f, -.9f));
         await play.Frames(2);
+        Button(MouseButton.Right, true);
+        await play.Frames(20);
+        var crate = PreviewColors("Ⅱ").ToArray();
+        Check(crate.Contains(LensOverlay.Blocked) && !crate.Contains(LensOverlay.Clear), "the box stops the crate before it reaches the section: all red");
+        Button(MouseButton.Right, false);
         Press(Key.F);
         await play.Frames(3);
         Check(!play.State("crate").Rotating, "a blocked turn must not start");
@@ -174,6 +191,14 @@ public partial class FeedbackChecks : Node
         await play.Frames(3);
         Check(!play.State("crate").Rotating, "a blocked turn must not start");
         Check(player.Hud.SubtitleText == "小满：转不过去……好像卡在两页中间了。", $"an obstruction that no section shows is named so; saw '{player.Hud.SubtitleText}'");
+    }
+
+    private IEnumerable<Vector3> PreviewLines(string section, Color color)
+    {
+        var preview = play.Region.GetNodeOrNull<MeshInstance3D>($"Generated/{section}/Overlay/Preview");
+        for (var i = 0; preview?.Mesh is not null && i < preview.Mesh.GetSurfaceCount(); i++)
+            if (((StandardMaterial3D)preview.Mesh.SurfaceGetMaterial(i)).AlbedoColor == color)
+                foreach (var vertex in preview.Mesh.SurfaceGetArrays(i)[(int)Mesh.ArrayType.Vertex].AsVector3Array()) yield return vertex;
     }
 
     private IEnumerable<Color> PreviewColors(string section)
