@@ -1,6 +1,6 @@
 namespace FourD;
 
-internal sealed class WorldValidation
+internal sealed partial class WorldValidation
 {
     private readonly List<LoadError> errors = [];
     private const double MatrixTolerance = 1e-10;
@@ -66,14 +66,23 @@ internal sealed class WorldValidation
                 case FixedDefinition f:
                     if (!sections.TryGetValue(f.Section, out var section)) Error(LoadErrorCode.MissingReference, f.Source, "Unknown section.", f.Id);
                     else if (double.IsFinite(section.W) && f.Pose.Position.W != section.W) Error(LoadErrorCode.InvalidPose, f.Source, "Fixed position W must equal its section W.", f.Id);
-                    FixedThickness(f);
+                    FixedThickness(f.Pose, f.Source, f.Id);
                     Shape(f.Shape, f.Source, f.Id, validPose);
+                    break;
+                case TurnableDefinition t:
+                    if (!sections.TryGetValue(t.Section, out var initialSection)) Error(LoadErrorCode.MissingReference, Field(t.Source, "Section"), "Unknown section.", t.Id);
+                    else if (double.IsFinite(initialSection.W) && t.Pose.Position.W != initialSection.W) Error(LoadErrorCode.InvalidPose, Field(t.Source, "Pose.Position.W"), "Initial W must equal section W.", t.Id);
+                    if (!buildings.TryGetValue(t.Building, out var owner)) Error(LoadErrorCode.MissingReference, Field(t.Source, "Building"), "Unknown building.", t.Id);
+                    FixedThickness(t.Pose, t.Source, t.Id);
+                    Shape(t.Shape, t.Source, t.Id, validPose);
+                    Interaction(t, owner, sections.Values);
                     break;
                 default:
                     Error(LoadErrorCode.UnsupportedDefinition, e.Source, "This entity category is not implemented.", e.Id);
                     break;
             }
         }
+        errors.AddRange(WorldInterference.Check(d, errors));
         Unsupported(d.Seams, s => s.Source, root, "Seams");
         Unsupported(d.SharedValues, s => s.Source, root, "SharedValues");
         Unsupported(d.ExpectedOperations, s => s.Source, root, "ExpectedOperations");
@@ -122,7 +131,7 @@ internal sealed class WorldValidation
     }
     private void Thickness(double value, Source source, EntityId entity)
     {
-        if (value > 0 && value <= World.SamplingDistance) Error(LoadErrorCode.InvalidGeometry, source, "Positive solid thickness must exceed the sweep sampling distance.", entity);
+        if (value > 0 && value <= World.SamplingDistance) Error(LoadErrorCode.InvalidGeometry, source, "Solid thickness must exceed sampling distance.", entity);
     }
     private void Pose(Pose4 pose, Source source, EntityId entity)
     {
@@ -149,7 +158,7 @@ internal sealed class WorldValidation
             if (ToArray(part.HalfSize).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, Field(location, "HalfSize"), "Box lengths must be finite.", entity);
             else if (part.HalfSize.X <= 0 || part.HalfSize.Y <= 0 || part.HalfSize.Z <= 0) Error(LoadErrorCode.InvalidGeometry, Field(location, "HalfSize"), "Box half sizes must be positive.", entity);
             else if (2 * Math.Min(part.HalfSize.X, Math.Min(part.HalfSize.Y, part.HalfSize.Z)) <= World.SamplingDistance)
-                Error(LoadErrorCode.InvalidGeometry, Field(location, "HalfSize"), "Box thickness must exceed the sweep sampling distance.", entity);
+                Error(LoadErrorCode.InvalidGeometry, Field(location, "HalfSize"), "Box thickness must exceed sampling distance.", entity);
             double[][] axes = [ToArray(part.Rotation.X), ToArray(part.Rotation.Y), ToArray(part.Rotation.Z)];
             if (axes.SelectMany(a => a).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, Field(location, "Rotation"), "Part rotation must be finite.", entity);
             else if (!Rotation(axes)) Error(LoadErrorCode.InvalidPose, Field(location, "Rotation"), "Part rotation must be right-handed orthonormal.", entity);
@@ -163,15 +172,15 @@ internal sealed class WorldValidation
             if (errors.Count == beforePart && validPose is Pose4 pose) DerivedGeometry(part, pose, location, entity);
         }
     }
-    private void FixedThickness(FixedDefinition definition)
+    private void FixedThickness(Pose4 pose, Source source, EntityId entity)
     {
-        var w = definition.Pose.Position.W;
+        var w = pose.Position.W;
         if (!double.IsFinite(w)) return;
         var min = w - World.Epsilon;
         var max = w + World.Epsilon;
         if (!(min < w && w < max) || max - min <= World.SamplingDistance)
-            Error(LoadErrorCode.InvalidGeometry, definition.Source with { Property = $"{definition.Source.Property}.Pose.Position.W" },
-                "Fixed W thickness must remain positive and exceed the sweep sampling distance at this coordinate precision.", definition.Id);
+            Error(LoadErrorCode.InvalidGeometry, source with { Property = $"{source.Property}.Pose.Position.W" },
+                "W thickness must exceed the sampling distance at this coordinate precision.", entity);
     }
     private void DerivedGeometry(BoxPart part, Pose4 pose, Source source, EntityId entity)
     {
@@ -187,7 +196,7 @@ internal sealed class WorldValidation
         var corners = vertices.Distinct().ToArray();
         if (corners.Length != 8 || !HasVolume(corners))
         {
-            Error(LoadErrorCode.InvalidGeometry, source, "Transformed box must retain eight corners and three-dimensional volume at coordinate precision.", entity);
+            Error(LoadErrorCode.InvalidGeometry, source, "Transformed box must retain eight corners and volume.", entity);
             return;
         }
         for (var i = 0; i < vertices.Length; i += 3)
@@ -218,7 +227,7 @@ internal sealed class WorldValidation
     private static double Dot(Vec3 a, Vec3 b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
     private static double[] ToArray(Vec3 v) => [v.X, v.Y, v.Z];
     private static double[] ToArray(Vec4 v) => [v.X, v.Y, v.Z, v.W];
-    private static bool Rotation(double[][] axes)
+    internal static bool Rotation(double[][] axes)
     {
         for (var i = 0; i < axes.Length; i++)
             for (var j = 0; j < axes.Length; j++)
