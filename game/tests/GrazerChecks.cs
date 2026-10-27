@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FourD;
@@ -11,8 +12,8 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// Grazers on the grazer test region: the timeline, the authored body, the path the engine is given, the slices in the main
-/// view and the lens, and the bite. The grazer's own clock is stopped, so every check moves time itself.
+/// Grazers on the grazer test region: the authored grazer, the path the engine is given, the slices in the main view and the
+/// lens, and the bite. The grazer's own clock is stopped, so every check moves time itself.
 /// </summary>
 public partial class GrazerChecks : Node
 {
@@ -26,9 +27,6 @@ public partial class GrazerChecks : Node
         play = new TurningFixture(this);
         try
         {
-            CheckTimeline();
-            CheckBadTimelines();
-            CheckBody();
             await Load();
             CheckAuthoring();
             CheckAuthoringErrors();
@@ -39,8 +37,13 @@ public partial class GrazerChecks : Node
             await Load();
             await CheckSlices();
             await Load();
+            CheckLensAfterTheEnd();
+            await Load();
+            CheckHoldingStill();
+            await Load();
             await CheckBite();
-            GD.Print("Grazer checks passed: timeline, body, authoring, path, slices, bite.");
+            await CheckBiteOfOddNames();
+            GD.Print("Grazer checks passed: authoring, path, slices, bite.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -59,73 +62,6 @@ public partial class GrazerChecks : Node
         await play.Load(scene: GrazerDemo.Scene);
         grazers.SetProcess(false);
     }
-
-    private static GrazerKey Key(double time, Vec4 position, double angle, double mouth) =>
-        new(time, position, [new(RotationPlane.XZ, angle), new(RotationPlane.XW, 2 * angle)], mouth);
-
-    private static GrazerTimeline Straight() => new(
-        [Key(0, new(0, 0, 0, 10), 0, 0), Key(10, new(2, 1, -4, 0), 1, 1), Key(14, new(2, 3, -4, 0), 1, 1)],
-        [new(10, [new EntityId("a")], []), new(12, [], [new SeamId("s")])]);
-
-    private void CheckTimeline()
-    {
-        var timeline = Straight();
-        Check(timeline.Duration == 14, "a timeline lasts until its last key");
-        var start = timeline.At(0);
-        Check(start.Position == new Vec4(0, 0, 0, 10) && start.Mouth == 0, "at time 0 the first key");
-        var middle = timeline.At(5);
-        Check(middle.Position == new Vec4(1, .5, -2, 5) && middle.Mouth == .5, "half way between two keys is half way in position and mouth");
-        Check(middle.Turns.Select(turn => (turn.Plane, turn.Angle)).SequenceEqual([(RotationPlane.XZ, .5), (RotationPlane.XW, 1.0)]),
-            "half way is half way in each plane's angle, with the planes in the keys' order");
-        Check(timeline.At(10).Position == new Vec4(2, 1, -4, 0), "at a key time, the key");
-        Check(timeline.At(12).Position == new Vec4(2, 2, -4, 0), "between the later keys, the later segment");
-        Check(timeline.At(-3).Position == new Vec4(0, 0, 0, 10) && timeline.At(99).Position == new Vec4(2, 3, -4, 0),
-            "before the start the first key, after the end the last");
-        Check(timeline.At(99).Time == 14, "the key out of range is at the time it was clamped to");
-    }
-
-    private static void CheckBadTimelines()
-    {
-        GrazerKey Plain(double time, double mouth = 0, RotationPlane plane = RotationPlane.XZ) => new(time, new(0, 0, 0, 0), [new(plane, 0)], mouth);
-        void Rejected(GrazerKey[] keys, GrazerBite[] bites, string reason)
-        {
-            try { _ = new GrazerTimeline(keys, bites); }
-            catch (ArgumentException) { return; }
-            throw new InvalidOperationException($"a timeline must be refused: {reason}");
-        }
-        Rejected([Plain(0)], [], "one key");
-        Rejected([Plain(1), Plain(2)], [], "the first key is not at time 0");
-        Rejected([Plain(0), Plain(0)], [], "two keys at one time");
-        Rejected([Plain(0), Plain(2), Plain(1)], [], "keys out of order");
-        Rejected([Plain(0), new(1, new(0, double.NaN, 0, 0), [new(RotationPlane.XZ, 0)], 0)], [], "a position that is not a number");
-        Rejected([Plain(0), new(1, new(0, 0, 0, 0), [new(RotationPlane.XZ, double.PositiveInfinity)], 0)], [], "an angle that is not finite");
-        Rejected([Plain(0), Plain(1, mouth: 1.1)], [], "a mouth past 1");
-        Rejected([Plain(0, mouth: -.1), Plain(1)], [], "a mouth below 0");
-        Rejected([Plain(0), Plain(1, plane: RotationPlane.XW)], [], "keys that turn in different planes");
-        Rejected([Plain(0), new(1, new(0, 0, 0, 0), [], 0)], [], "keys with different numbers of turns");
-        Rejected([Plain(0), Plain(1)], [new(1.5, [], [])], "a bite after the end");
-        Rejected([Plain(0), Plain(2)], [new(1, [], []), new(.5, [], [])], "bites out of order");
-        _ = new GrazerTimeline([Plain(0), Plain(1)], [new(1, [], [])]);
-    }
-
-    private static void CheckBody()
-    {
-        MetaballShape Shape(double x, double radius, double threshold) =>
-            new([new Metaball(new("a"), new(x, 0, 0, 0), radius, 1), new Metaball(new("b"), new(0, x, 0, 2 * x), radius, 2)], threshold);
-        var body = new GrazerBody(Shape(1, .5, .25), Shape(3, 1.5, .75));
-        Check(Same(body.At(0), body.Shut) && Same(body.At(1), body.Open!), "the mouth shut is the shut shape and wide open the open shape");
-        var half = body.At(.5);
-        Check(half.Balls[0].Center == new Vec4(2, 0, 0, 0) && half.Balls[1].Center == new Vec4(0, 2, 0, 4),
-            "half open is half way between the ball centers");
-        Check(half.Balls[0].Radius == 1 && half.Balls[1].Weight == 2 && half.Threshold == .5 && half.Balls[1].Id == new PartId("b"),
-            "and between radii and thresholds, with the weights and IDs kept");
-        Check(Same(new GrazerBody(Shape(1, .5, .25), null).At(.7), Shape(1, .5, .25)), "a mouth that cannot open leaves the body as it is");
-        Check(GrazerBody.SameBalls(Shape(1, .5, .25), Shape(3, 1, .5)), "shapes with the same balls in the same order can be opened between");
-        Check(!GrazerBody.SameBalls(Shape(1, .5, .25), new([new Metaball(new("a"), new(0, 0, 0, 0), 1, 1)], 1)), "a ball fewer is not the same body");
-        Check(!GrazerBody.SameBalls(Shape(1, .5, .25), new([.. Shape(1, .5, .25).Balls.Reverse()], .25)), "the same balls in another order are not the same body");
-    }
-
-    private static bool Same(MetaballShape a, MetaballShape b) => a.Threshold == b.Threshold && a.Balls.SequenceEqual(b.Balls);
 
     private void CheckAuthoring()
     {
@@ -151,14 +87,17 @@ public partial class GrazerChecks : Node
         node.OpenShape = (MetaballShapeResource)open!.Duplicate(true);
         node.OpenShape.Balls[0].Id = "another";
         Check(Reports("OpenShape"), "an open shape with other balls is reported at OpenShape");
+        node.OpenShape = (MetaballShapeResource)open.Duplicate(true);
+        node.OpenShape.Balls[5].Radius = 0;
+        Check(Reports("OpenShape"), "an open shape that the engine refuses is reported at OpenShape when the region loads");
         node.OpenShape = open;
         var shut = node.Shape;
         node.Shape = (MetaballShapeResource)shut!.Duplicate(true);
         node.Shape.Balls[3].Radius = 0;
-        Check(Reports("Shape"), "a ball with no radius is reported at Shape by the engine's check");
+        Check(Reports("Shape.Balls[3].Radius"), "a ball with no radius is reported at its place in Shape, by the engine's check");
         node.Shape.Balls[3].Radius = .45;
         node.Shape.Balls[3].Center = [1, 2, 3];
-        Check(Reports("Shape"), "a ball center that is not four numbers is reported at Shape");
+        Check(Reports("Shape.Balls[3].Center"), "a ball center that is not four numbers is reported at its place in Shape");
         node.Shape = null;
         Check(Reports("Shape"), "a missing shape is reported at Shape");
         node.Shape = shut;
@@ -170,6 +109,20 @@ public partial class GrazerChecks : Node
         Check(loaded is LoadResult.Loaded { World: var world } && ((EntityReadResult.Found)world.ReadEntity(Grazer)).Entity.Pose.Rotation.X == new Vec4(0, 1, 0, 0),
             "Rotation4 is read a column at a time");
         node.Rotation4 = [];
+        // Trying the open shape at load leaves the grazer shut: with its first frame in section I, the slice is as wide as the
+        // ring of lips, 2 m round plus what the surface adds, and not 3 m round as with the mouth open.
+        node.W = 0;
+        var shutLoad = new SceneReader(play.Region).Load();
+        node.W = 11;
+        var width = shutLoad is LoadResult.Loaded { World: var shutWorld } ? WidthOf(shutWorld) : -1;
+        Check(width is > 2 and < 3.2, $"the region loads with the grazer's mouth shut: {width} m wide");
+    }
+
+    private static double WidthOf(World world)
+    {
+        var slice = ((SectionGeometryResult.Geometry)world.GetSectionGeometry(new("Ⅰ"))).Entities.First(entity => entity.Entity == Grazer);
+        var xs = slice.Positions.Where((_, index) => index % 3 == 0).ToArray();
+        return xs.Max() - xs.Min();
     }
 
     private void CheckPath()
@@ -189,15 +142,24 @@ public partial class GrazerChecks : Node
         Near4(end.Rotation.X, new(0, 0, 0, 1), "XW turned by a right angle takes +X to +W");
         grazers.Advance(5);
         Check(play.State("grazer").Pose == end, "a grazer that has finished stays where it ended");
-        try
+        GrazerKey Still(double time) => new(time, new(0, 1, -2, 10), [new(RotationPlane.XW, 0)], 0);
+        void Refused(string what, string grazer, IReadOnlyList<EntityId> elements, IReadOnlyList<SeamId> seams)
         {
-            grazers.Play("nobody", timeline);
+            try
+            {
+                grazers.Play(grazer, new GrazerTimeline([Still(0), Still(10)], [new(5, elements, seams)]));
+            }
+            catch (ArgumentException)
+            {
+                return;
+            }
+            throw new InvalidOperationException($"playing must be refused for {what}");
         }
-        catch (ArgumentException)
-        {
-            return;
-        }
-        throw new InvalidOperationException("playing a grazer that is not in the region must be refused");
+        Refused("a grazer that is not in the region", "nobody", [], []);
+        Refused("a bite of an element that is not there", "grazer", [new("nothing")], []);
+        Refused("a bite of something that is not a building element", "grazer", [Grazer], []);
+        Refused("a bite of a seam that is not there", "grazer", [], [new("nowhere")]);
+        Check(!grazers.IsPlaying("grazer"), "a refused timeline does not start");
     }
 
     private static void Near4(Vec4 actual, Vec4 expected, string message) =>
@@ -234,7 +196,7 @@ public partial class GrazerChecks : Node
         grazers.Advance(0);
         Check(play.HasSlice("Ⅲ", "grazer"), "the lens shows the grazer's slice in the section it looks at");
         Check(!play.HasSlice("Ⅱ", "grazer") && !play.HasSlice("Ⅰ", "grazer"), "and only there");
-        Check(play.Mask("Ⅲ", "grazer") == Colors.Black, "the slice of a creature has no glowing outline in the lens");
+        Check(play.Mask("Ⅲ", "grazer") != Colors.Black, "the slice has the glowing outline of a through-object in the lens");
         prism.SetRaised(false);
         grazers.Advance(0);
         Check(!play.HasSlice("Ⅲ", "grazer"), "with the lens down, the slice there is dropped");
@@ -250,6 +212,48 @@ public partial class GrazerChecks : Node
         grazers.Advance(0);
         Check(prism.TargetSection == "Ⅱ" && EngineSlices("Ⅱ") && play.HasSlice("Ⅱ", "grazer") && !play.HasSlice("Ⅲ", "grazer"),
             "the lens shows the slice of the section it looks at, which the engine cuts");
+    }
+
+    private void CheckLensAfterTheEnd()
+    {
+        grazers.Play("grazer", GrazerDemo.Timeline());
+        grazers.Advance(99);
+        Check(!grazers.IsPlaying("grazer") && EngineSlices("Ⅱ") && !play.HasSlice("Ⅱ", "grazer"), "after the timeline, a section nobody looks at is not drawn");
+        prism.SetRaised(true);
+        grazers.Advance(0);
+        Check(prism.TargetSection == "Ⅱ" && play.HasSlice("Ⅱ", "grazer"), "raising the lens then shows the slice in the section it looks at");
+        prism.SetRaised(false);
+        grazers.Advance(0);
+        Check(!play.HasSlice("Ⅱ", "grazer"), "and lowering it drops the slice");
+    }
+
+    private void CheckHoldingStill()
+    {
+        GrazerKey Still(double time) => new(time, new(0, 1.4, -2.2, .1), [new(RotationPlane.XZ, .3)], .2);
+        grazers.Play("grazer", new GrazerTimeline([Still(0), Still(10)], []));
+        grazers.Advance(1);
+        var slice = play.Region.GetNode("Generated/Ⅰ/Dynamic/grazer").GetInstanceId();
+        grazers.Advance(1);
+        Check(play.Region.GetNode("Generated/Ⅰ/Dynamic/grazer").GetInstanceId() == slice, "a grazer that holds still is not cut again");
+    }
+
+    // An ID may hold characters that Godot does not keep in a node name.
+    private async Task CheckBiteOfOddNames()
+    {
+        await play.Load(region =>
+        {
+            region.GetNode<BuildingElement3D>("Buildings/Home/Door").EntityId = "Door.1";
+            region.GetNode<Seam3D>("Seams/Needle").SeamId = "needle.1";
+        }, GrazerDemo.Scene);
+        grazers.SetProcess(false);
+        Check(play.Region.HasNode("Generated/Ⅰ/Geometry/Door_1"), "Godot names the node of Door.1 Door_1");
+        GrazerKey Still(double time) => new(time, new(0, 1.4, -2.2, .1), [], 0);
+        grazers.Play("grazer", new GrazerTimeline([Still(0), Still(1)], [new(1, [new("Door.1")], [new("needle.1")])]));
+        grazers.Advance(1);
+        Check(!play.Region.HasNode("Generated/Ⅰ/Geometry/Door_1") && !play.Region.HasNode("Generated/Ⅱ/Geometry/Door_1"),
+            "the bitten element is gone from the section worlds, whatever its ID");
+        await play.Frames(3);
+        Check(play.Region.HasNode("Generated/Ⅱ/Overlay/Seams/needle_1/Cut"), "and the bitten seam, whatever its ID, shows as cut");
     }
 
     private async Task CheckBite()
@@ -270,6 +274,9 @@ public partial class GrazerChecks : Node
         Check(play.Region.HasNode("Generated/Ⅱ/Overlay/Seams/needle/Cut"), "the seam shows as cut");
         grazers.Advance(10);
         Check(world.ReadEntity(door) is EntityReadResult.Missing, "a bite is taken once");
+        grazers.Play("grazer", GrazerDemo.Timeline());
+        grazers.Advance(30);
+        Check(grazers.IsPlaying("grazer"), "a timeline that bites what is already bitten plays on");
 
         bool Severed() => ((SeamReadResult.Found)world.ReadSeam(new SeamId("needle"))).Seam.Severed;
     }

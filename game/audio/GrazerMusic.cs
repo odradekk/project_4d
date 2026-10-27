@@ -84,6 +84,10 @@ public partial class GrazerMusic : Node
         bass.Stop();
         pulse.Stop();
         scrape.Stop();
+        // The audio thread fades a stopped sound out before it lets go of it, and a program that ends before that, as a
+        // headless run does, reports the sound as still in use. A mix step lasts about 25 ms. The players are stopped by now,
+        // since the children of a node leave the tree first, so whether anything was playing is read from the layers.
+        if (Levels.Bass > 0) OS.DelayMsec(100);
         if (region is not null) AudioServer.SetBusVolumeDb(environment, environmentDb);
     }
 

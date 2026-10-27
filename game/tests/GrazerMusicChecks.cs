@@ -90,6 +90,7 @@ public partial class GrazerMusicChecks : Node
         music.Advance(10);
         Check(music.Levels.Bass == 1 && music.Levels.Rhythm is > 0 and < 1, "nearer, all the bass and the first of the rhythm");
         Check(bass.VolumeDb > farBass, "the nearer the bass, the louder");
+        Check(AudioServer.GetBusVolumeDb(environment) == quiet, "outside the danger distance the other sounds stay as they were");
         var slow = music.Beats;
         var slowScrape = scrape.VolumeDb;
         Check(slow > 0 && scrape.Playing, "the pulse beats and the scraping comes in");

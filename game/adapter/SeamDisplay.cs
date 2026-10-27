@@ -94,7 +94,7 @@ internal sealed class SeamDisplay
         foreach (var scene in scenes.Where(scene => mark.Sections.Contains(scene.Id.Value)))
         {
             var seams = scene.Overlay.GetNode("Seams");
-            seams.GetNodeOrNull(mark.Id)?.Free();
+            seams.GetNodeOrNull(NodeName.Of(mark.Id))?.Free();
             if (mark.Sections.Contains(current)) seams.AddChild(Light(mark, state));
         }
     }

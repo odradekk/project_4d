@@ -11,8 +11,13 @@ namespace Game.Adapter;
 /// <summary>
 /// Plays the timelines of the region's grazers. Each frame it gives the engine the grazer's interpolated pose and body,
 /// takes the bites that are due, and keeps the grazer's slice in the section of the main view and the section the lens
-/// looks at equal to the engine's. A grazer stops and blocks nothing, so its slice has no collision, and its slice is
-/// not outlined in the lens, which is for through-objects.
+/// looks at equal to the engine's. A grazer stops and blocks nothing, so its slice has no collision.
+/// <para>
+/// Building elements are bitten only through a timeline, which also takes them out of the section worlds: a script that
+/// calls <c>ConsumeStructure</c> itself leaves the element's nodes standing, to be seen and walked into, in a world where
+/// the engine has none. <see cref="Play"/> puts the grazer at the first key of the new timeline at once, so a timeline that
+/// follows another starts where the last one ended.
+/// </para>
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 public sealed partial class GrazerChoreography : Node
@@ -23,9 +28,13 @@ public sealed partial class GrazerChoreography : Node
         internal double Elapsed { get; set; }
         internal int Bitten { get; set; }
         internal bool Playing { get; set; } = true;
+
+        // The last key that was given to the engine, so that a grazer holding still is not given the same frame again.
+        internal GrazerKey? Sent { get; set; }
     }
 
     private readonly Dictionary<EntityId, Track> tracks = [];
+    private readonly HashSet<EntityId> bitten = [];
     private readonly List<Node3D> drawn = [];
     private World world = null!;
     private EntityId actor;
@@ -48,10 +57,24 @@ public sealed partial class GrazerChoreography : Node
     }
 
     /// <summary>
-    /// Starts the grazer on its timeline from the beginning, or again. The grazer stays where the timeline ends. ArgumentException
-    /// for a grazer that is not in the region.
+    /// Starts the grazer on its timeline from the beginning, or again. The grazer stays where the timeline ends.
+    /// ArgumentException, with nothing started, for a grazer that is not in the region and for a bite of an element that is
+    /// not a building element of the region or of a seam that is not in it.
     /// </summary>
-    public void Play(string grazer, GrazerTimeline timeline) => tracks[Known(grazer)] = new Track(timeline);
+    public void Play(string grazer, GrazerTimeline timeline)
+    {
+        var id = Known(grazer);
+        foreach (var bite in timeline.Bites)
+        {
+            foreach (var element in bite.Elements.Where(element => !bitten.Contains(element)))
+                if (world.ReadEntity(element) is not EntityReadResult.Found { Entity.Definition: BuildingElementDefinition })
+                    throw new ArgumentException($"{element.Value} is not a building element of the region.", nameof(timeline));
+            foreach (var seam in bite.Seams)
+                if (world.ReadSeam(seam) is SeamReadResult.Missing)
+                    throw new ArgumentException($"{seam.Value} is not a seam of the region.", nameof(timeline));
+        }
+        tracks[id] = new Track(timeline);
+    }
 
     /// <summary>Whether the grazer is still on its timeline.</summary>
     public bool IsPlaying(string grazer) => tracks.TryGetValue(Known(grazer), out var track) && track.Playing;
@@ -64,7 +87,7 @@ public sealed partial class GrazerChoreography : Node
     /// <summary>Moves every grazer on its timeline on by <paramref name="delta"/> seconds and brings the slices up to date.</summary>
     public void Advance(double delta)
     {
-        foreach (var (id, track) in tracks.Where(entry => entry.Value.Playing).ToArray())
+        foreach (var (id, track) in tracks.Where(entry => entry.Value.Playing))
         {
             track.Elapsed = Math.Min(track.Elapsed + delta, track.Timeline.Duration);
             track.Playing = SetFrame(id, track) && TakeBites(id, track) && track.Elapsed < track.Timeline.Duration;
@@ -81,8 +104,10 @@ public sealed partial class GrazerChoreography : Node
     private bool SetFrame(EntityId id, Track track)
     {
         var key = track.Timeline.At(track.Elapsed);
+        if (track.Sent is { } sent && sent.Position == key.Position && sent.Mouth == key.Mouth && sent.Turns.SequenceEqual(key.Turns)) return true;
         var pose = new Pose4(key.Position, Rotation4.FromPlaneAngles(key.Turns));
         if (world.SetGrazerFrame(id, pose, bodies[id].At(key.Mouth)) is UpdateResult.Rejected rejected) return Stop(id, rejected.Failure);
+        track.Sent = key;
         changed = true;
         return true;
     }
@@ -95,8 +120,11 @@ public sealed partial class GrazerChoreography : Node
             var bite = bites[track.Bitten++];
             if (world.ConsumeStructure(id, bite.Elements, bite.Seams) is UpdateResult.Rejected rejected) return Stop(id, rejected.Failure);
             // The engine has taken the elements whole: they have no slice, collision or support. Their nodes follow.
-            foreach (var scene in scenes)
-                foreach (var element in bite.Elements) scene.Geometry.GetNodeOrNull(element.Value)?.Free();
+            foreach (var element in bite.Elements)
+            {
+                bitten.Add(element);
+                foreach (var scene in scenes) scene.Geometry.GetNodeOrNull(NodeName.Of(element.Value))?.Free();
+            }
         }
         return true;
     }
@@ -130,7 +158,7 @@ public sealed partial class GrazerChoreography : Node
             var geometry = (SectionGeometryResult.Geometry)world.GetSectionGeometry(scene.Id);
             foreach (var slice in geometry.Entities.Where(slice => bodies.ContainsKey(slice.Entity)))
             {
-                var node = SliceMesh.Entity(slice with { ThroughObject = false }, materials, scene.MaskIds, null);
+                var node = SliceMesh.Entity(slice, materials, scene.MaskIds, null);
                 scene.Dynamic.AddChild(node);
                 drawn.Add(node);
             }

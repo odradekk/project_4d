@@ -18,6 +18,7 @@ internal sealed partial class SceneReader(Region3D region)
     internal readonly Dictionary<EntityId, GrazerBody> Grazers = [];
 
     private readonly HashSet<Source> unavailableParts = [];
+    private readonly List<(Source Source, GrazerDefinition Grazer, MetaballShape Open)> openShapes = [];
     private readonly Dictionary<Source, Source> sources = [];
     internal WorldDescription? Description { get; private set; }
     internal LoadResult Load()
@@ -28,6 +29,7 @@ internal sealed partial class SceneReader(Region3D region)
             Errors.AddRange(invalid.Errors
                 .Where(e => !(e.Code == LoadErrorCode.InvalidGeometry && unavailableParts.Contains(e.Source)))
                 .Select(e => e with { Source = Locate(e.Source) }));
+        else if (result is LoadResult.Loaded loaded) TryOpenShapes(loaded.World);
         return Errors.Count > 0 ? new LoadResult.Invalid(Errors) : result;
     }
 
@@ -167,12 +169,11 @@ internal sealed partial class SceneReader(Region3D region)
     {
         var id = new EntityId(grazer.EntityId);
         Map(grazer, "EntityId", "Pose", grazer, "Rotation4");
-        Map(grazer, "EntityId", "Shape", grazer, "Shape");
-        Map(grazer, "EntityId", "Shape.Threshold", grazer, "Shape");
-        Map(grazer, "EntityId", "Shape.Balls", grazer, "Shape");
+        foreach (var place in new[] { "Shape", "Shape.Threshold", "Shape.Balls" })
+            Map(grazer, "EntityId", place, grazer, place);
         for (var i = 0; i < (grazer.Shape?.Balls.Count ?? 0); i++)
             foreach (var suffix in new[] { "", ".Id", ".Center", ".Radius", ".Weight" })
-                Map(grazer, "EntityId", $"Shape.Balls[{i}]{suffix}", grazer, "Shape");
+                Map(grazer, "EntityId", $"Shape.Balls[{i}]{suffix}", grazer, $"Shape.Balls[{i}]{suffix}");
         var shut = Metaballs(grazer, grazer.Shape, "Shape");
         var open = grazer.OpenShape is null ? null : Metaballs(grazer, grazer.OpenShape, "OpenShape");
         if (open is not null && !GrazerBody.SameBalls(shut, open))
@@ -186,8 +187,23 @@ internal sealed partial class SceneReader(Region3D region)
             EmissionEnergyMultiplier = .3f
         };
         var position = RelativeTransform(grazer, region).Origin;
-        return new(id, new(new(Typed(position.X), Typed(position.Y), Typed(position.Z), grazer.W), Rotation4Of(grazer)),
+        var definition = new GrazerDefinition(id, new(new(Typed(position.X), Typed(position.Y), Typed(position.Z), grazer.W), Rotation4Of(grazer)),
             At(grazer, "EntityId"), shut);
+        if (open is not null && GrazerBody.SameBalls(shut, open)) openShapes.Add((At(grazer, "OpenShape"), definition, open));
+        return definition;
+    }
+
+    // The engine checks the shape a grazer starts with and no other. The open shape is tried once here, so that its numbers are
+    // reported when the region loads and not when a mouth first opens; the shapes between it and the shut one are mixes of
+    // the two, which the engine checks on the frame that uses them.
+    private void TryOpenShapes(World world)
+    {
+        foreach (var (source, grazer, open) in openShapes)
+        {
+            if (world.SetGrazerFrame(grazer.Id, grazer.Pose, open) is UpdateResult.Rejected rejected)
+                Errors.Add(new(LoadErrorCode.InvalidGeometry, source, grazer.Id, null, null, rejected.Failure.Detail, []));
+            world.SetGrazerFrame(grazer.Id, grazer.Pose, grazer.Shape);
+        }
     }
 
     private MetaballShape Metaballs(Grazer3D grazer, MetaballShapeResource? shape, string property)
@@ -199,11 +215,19 @@ internal sealed partial class SceneReader(Region3D region)
             return new([], 1);
         }
         var balls = new List<Metaball>();
-        foreach (var ball in shape.Balls)
+        for (var i = 0; i < shape.Balls.Count; i++)
         {
-            if (ball is null) Error(grazer, property, "A metaball resource is missing.");
-            else if (ball.Center.Length != 4) Error(grazer, property, $"The center of ball {ball.Id} needs four numbers: X, Y, Z and W.");
-            else balls.Add(new(new(ball.Id), new(ball.Center[0], ball.Center[1], ball.Center[2], ball.Center[3]), ball.Radius, ball.Weight));
+            var ball = shape.Balls[i];
+            var place = $"{property}.Balls[{i}]";
+            if (ball is null)
+            {
+                Error(grazer, place, "A metaball resource is missing.");
+                continue;
+            }
+            if (ball.Center.Length != 4) Error(grazer, place + ".Center", $"The center of ball {ball.Id} needs four numbers: X, Y, Z and W.");
+            // A ball with a center that cannot be read still takes its place, so that the engine's errors name the right balls.
+            var center = ball.Center.Length == 4 ? new Vec4(ball.Center[0], ball.Center[1], ball.Center[2], ball.Center[3]) : default;
+            balls.Add(new(new(ball.Id), center, ball.Radius, ball.Weight));
         }
         return new(balls, shape.Threshold);
     }

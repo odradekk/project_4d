@@ -61,14 +61,16 @@ public sealed class GrazerTimeline
         while (keys[next].Time < time) next++;
         var (from, to) = (keys[next - 1], keys[next]);
         var u = (time - from.Time) / (to.Time - from.Time);
-        var turns = from.Turns.Zip(to.Turns, (a, b) => new PlaneAngle(a.Plane, double.Lerp(a.Angle, b.Angle, u))).ToArray();
-        return new(time, Lerp(from.Position, to.Position, u), turns, double.Lerp(from.Mouth, to.Mouth, u));
+        var turns = from.Turns.Zip(to.Turns, (a, b) => new PlaneAngle(a.Plane, Lerp(a.Angle, b.Angle, u))).ToArray();
+        return new(time, Lerp(from.Position, to.Position, u), turns, Lerp(from.Mouth, to.Mouth, u));
     }
 
     private static bool IsFinite(GrazerKey key) =>
         new[] { key.Position.X, key.Position.Y, key.Position.Z, key.Position.W }.Concat(key.Turns.Select(turn => turn.Angle)).All(double.IsFinite);
 
-    // Each component alone, as the contract asks of the host: a timeline interpolates scalars.
-    internal static Vec4 Lerp(Vec4 a, Vec4 b, double u) =>
-        new(double.Lerp(a.X, b.X, u), double.Lerp(a.Y, b.Y, u), double.Lerp(a.Z, b.Z, u), double.Lerp(a.W, b.W, u));
+    // Each component alone, as the contract asks of the host: a timeline interpolates scalars. Two equal values give that
+    // value, which the sum of two weighted halves does not always do to the last bit.
+    private static double Lerp(double a, double b, double u) => a == b ? a : double.Lerp(a, b, u);
+
+    internal static Vec4 Lerp(Vec4 a, Vec4 b, double u) => new(Lerp(a.X, b.X, u), Lerp(a.Y, b.Y, u), Lerp(a.Z, b.Z, u), Lerp(a.W, b.W, u));
 }
