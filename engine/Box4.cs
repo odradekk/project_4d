@@ -112,7 +112,7 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     }
 
     // The four-dimensional vector orthogonal to three vectors.
-    private static double[] Cross(double[] x, double[] y, double[] z)
+    internal static double[] Cross(double[] x, double[] y, double[] z)
     {
         double Minor(int p, int q, int r) =>
             x[p] * (y[q] * z[r] - y[r] * z[q]) - x[q] * (y[p] * z[r] - y[r] * z[p]) + x[r] * (y[p] * z[q] - y[q] * z[p]);
@@ -143,14 +143,16 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     }
 
     // The average of the vertices of the overlap, or null when the boxes do not intersect.
-    internal static double[]? IntersectionPoint(Box4 a, Box4 b)
+    internal static double[]? IntersectionPoint(Box4 a, Box4 b) => IntersectionPoint([.. a.Planes(), .. b.Planes()]);
+
+    // The average of the vertices of the convex region inside all the planes, or null when there is none.
+    internal static double[]? IntersectionPoint((double[] Normal, double Limit)[] planes)
     {
-        var planes = a.Planes().Concat(b.Planes()).ToArray();
         var vertices = new List<double[]>();
-        for (var i = 0; i < 13; i++)
-            for (var j = i + 1; j < 14; j++)
-                for (var k = j + 1; k < 15; k++)
-                    for (var l = k + 1; l < 16; l++)
+        for (var i = 0; i < planes.Length - 3; i++)
+            for (var j = i + 1; j < planes.Length - 2; j++)
+                for (var k = j + 1; k < planes.Length - 1; k++)
+                    for (var l = k + 1; l < planes.Length; l++)
                     {
                         var vertex = Solve(planes[i], planes[j], planes[k], planes[l]);
                         if (vertex is not null && planes.All(plane => Dot(plane.Normal, vertex) <= plane.Limit + VertexSlack))

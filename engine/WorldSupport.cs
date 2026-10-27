@@ -20,6 +20,8 @@ public sealed partial class World
         foreach (var item in dynamicEntities.Values.Where(item => !item.Packed))
             foreach (var solid in DynamicShapes.Solids(item.Definition, item.Pose))
                 yield return solid;
+        foreach (var solid in DeviceSolids())
+            yield return solid;
     }
 
     /// <summary>Finds the highest actual contact while translating the entity downward.</summary>
