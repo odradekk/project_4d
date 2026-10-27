@@ -52,6 +52,7 @@ public sealed partial class World
     /// Replaces a grazer's pose and shape with the host's frame; the next slice shows it. The pose must be a valid
     /// four-dimensional pose, and the shape the same as one that loads. Rejected(InvalidInput) for either that is not,
     /// Rejected(UnknownId) or Rejected(WrongEntityKind) for an ID that is not a grazer; a rejection changes nothing.
+    /// A grazer blocks and supports nothing, so a frame changes no plan, and plans made before it stay valid.
     /// </summary>
     public UpdateResult SetGrazerFrame(EntityId grazer, Pose4 pose, MetaballShape shape)
     {
@@ -60,7 +61,6 @@ public sealed partial class World
         var frame = found.Definition with { Pose = pose, Shape = shape };
         if (FirstFailure(WorldValidation.CheckGrazer(frame), grazer) is { } failure) return new UpdateResult.Rejected(failure);
         grazers[grazer] = found with { Pose = pose, Shape = CopyOf(shape) };
-        revision++;
         return new UpdateResult.Updated();
     }
 

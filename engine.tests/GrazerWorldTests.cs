@@ -140,14 +140,15 @@ public class GrazerWorldTests
     }
 
     [Fact]
-    public void AFrameCountsAsAChangeOfTheWorld()
+    public void AFrameDoesNotMakeARotationPlanStale()
     {
+        // A grazer blocks nothing, so the plan a player made is as good after the grazer moves.
         var world = GrazerScene(At(0, 1, 0, w: .18), Lump(default), Rod(), Actor(x: .1));
         var plan = world.AllowedPlan(new StandUp(new("actor"), RodId, new("II")));
 
-        world.Frame(At(0, 1, 0, w: .18), Lump(default));
+        world.Frame(At(1, 1, 0, w: .4), Lump(default));
+        world.Frame(At(2, 1, 0, w: .6), new([Ball("lump", default, radius: .6)], LumpThreshold));
 
-        var stale = Assert.IsType<StartRotationResult.Rejected>(world.StartRotation(plan));
-        Assert.Equal(FailureCode.StalePlan, stale.Failure.Code);
+        Assert.IsType<StartRotationResult.Started>(world.StartRotation(plan));
     }
 }
