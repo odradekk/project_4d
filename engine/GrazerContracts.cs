@@ -12,3 +12,5 @@ public sealed record GrazerDefinition(EntityId Id, Pose4 Pose, Source Source, Me
 public sealed record MetaballShape(IReadOnlyList<Metaball> Balls, double Threshold);
 
 public sealed record Metaball(PartId Id, Vec4 Center, double Radius, double Weight);
+
+public sealed record StructureConsumed(EntityId Grazer, EntityId Element) : SpaceEvent;

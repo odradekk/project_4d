@@ -114,7 +114,7 @@ public sealed partial class World
 
     private bool IsUsed(EntityId id) =>
         entities.Any(entity => entity.Id == id) || dynamicEntities.ContainsKey(id) || actors.ContainsKey(id) || devices.ContainsKey(id)
-        || grazers.ContainsKey(id) || retired.Contains(id);
+        || grazers.ContainsKey(id) || consumed.Contains(id) || retired.Contains(id);
 
     private AddEntityResult AddActor(Creature3Definition actor)
     {

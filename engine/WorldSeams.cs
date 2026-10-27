@@ -29,14 +29,19 @@ public sealed partial class World
     /// </summary>
     public UpdateResult SeverSeam(SeamId seam)
     {
-        if (!seams.TryGetValue(seam, out var found))
+        if (!seams.ContainsKey(seam))
             return new UpdateResult.Rejected(Fail(FailureCode.UnknownId, "Unknown seam.") with { Seam = seam });
-        if (!found.Severed)
-        {
-            seams[seam] = found with { Severed = true };
-            Enqueue(new SeamSevered(seam), time);
-        }
+        Sever(seam);
         revision++;
         return new UpdateResult.Updated();
+    }
+
+    // Severs a seam that exists, and reports it unless it was severed already. The caller counts the change.
+    private void Sever(SeamId seam)
+    {
+        var found = seams[seam];
+        if (found.Severed) return;
+        seams[seam] = found with { Severed = true };
+        Enqueue(new SeamSevered(seam), time);
     }
 }

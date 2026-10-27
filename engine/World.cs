@@ -31,7 +31,7 @@ public sealed partial class World
 
     private readonly SectionDefinition[] sections;
     private readonly BuildingDefinition[] buildings;
-    private readonly StaticEntity[] entities;
+    private StaticEntity[] entities;
     private readonly Dictionary<EntityId, EntityDefinition> staticDefinitions = [];
 
     private World(WorldDescription description)

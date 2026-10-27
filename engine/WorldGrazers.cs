@@ -9,6 +9,9 @@ public sealed partial class World
 
     private readonly Dictionary<EntityId, Grazer> grazers = [];
 
+    // The building elements that grazers have consumed, whose IDs stay taken.
+    private readonly HashSet<EntityId> consumed = [];
+
     private static Grazer NewGrazer(GrazerDefinition definition)
     {
         var shape = CopyOf(definition.Shape);
@@ -57,6 +60,39 @@ public sealed partial class World
         var frame = found.Definition with { Pose = pose, Shape = shape };
         if (FirstFailure(WorldValidation.CheckGrazer(frame), grazer) is { } failure) return new UpdateResult.Rejected(failure);
         grazers[grazer] = found with { Pose = pose, Shape = CopyOf(shape) };
+        revision++;
+        return new UpdateResult.Updated();
+    }
+
+    /// <summary>
+    /// Removes whole building elements and severs seams, as the scripted bite of a grazer. The elements leave the
+    /// slices, the collision and the support, and the next Step settles what stood on them. Each element that is
+    /// gone is reported as StructureConsumed, in ID order, and then each seam that is cut as SeamSevered, in ID order;
+    /// elements already consumed and seams already severed succeed without an event. Rejected(UnknownId) for an
+    /// unknown grazer, element or seam, and Rejected(WrongEntityKind) for an ID of another kind or a grazer that is
+    /// not one; a rejection changes nothing.
+    /// </summary>
+    public UpdateResult ConsumeStructure(EntityId grazer, IReadOnlyList<EntityId> elements, IReadOnlyList<SeamId> seams)
+    {
+        UpdateResult Reject(FailureCode code, string detail, EntityId? entity = null, SeamId? seam = null) =>
+            new UpdateResult.Rejected(Fail(code, detail, entity) with { Seam = seam });
+        if (elements is null || seams is null) return Reject(FailureCode.InvalidInput, "Elements and seams are required.", grazer);
+        if (!grazers.ContainsKey(grazer)) return Reject(KindOrUnknown(grazer), "Unknown entity or not a grazer.", grazer);
+        foreach (var element in elements)
+            if (!consumed.Contains(element) && staticDefinitions.GetValueOrDefault(element) is not BuildingElementDefinition)
+                return Reject(KindOrUnknown(element), "Unknown entity or not a building element.", element);
+        foreach (var seam in seams)
+            if (ReadSeam(seam) is SeamReadResult.Missing) return Reject(FailureCode.UnknownId, "Unknown seam.", seam: seam);
+
+        var gone = elements.Except(consumed).OrderBy(id => id.Value, StringComparer.Ordinal).ToArray();
+        foreach (var element in gone)
+        {
+            Enqueue(new StructureConsumed(grazer, element), time);
+            staticDefinitions.Remove(element);
+            consumed.Add(element);
+        }
+        entities = entities.Where(entity => !consumed.Contains(entity.Id)).ToArray();
+        foreach (var seam in seams.OrderBy(id => id.Value, StringComparer.Ordinal)) Sever(seam);
         revision++;
         return new UpdateResult.Updated();
     }
