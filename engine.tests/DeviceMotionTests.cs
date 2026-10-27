@@ -67,6 +67,46 @@ public class DeviceMotionTests
     }
 
     [Fact]
+    public void ARotationInTheDevicesOwnPlaneIsCarriedOverByItsPose()
+    {
+        // The pose turns the device a quarter about y, so that local x, y and z become world -z, y and x. The leaf then
+        // swings, in the local XY plane about the pivot at local x = .2, from hanging along -y to pointing along local
+        // x, which is world -z. A point (x, y) of the leaf goes to (.2 - y, x - .2), so the flap, with local y from
+        // -.4 to 0, ends at local x from .2 to .6 and local y from -.21 to -.19.
+        var aboutY = new Rotation4(new(0, 0, -1, 0), new(0, 1, 0, 0), new(1, 0, 0, 0), new(0, 0, 0, 1));
+        var hanger = Hanger() with
+        {
+            Pose = new(new(0, 2, 0, 0), aboutY),
+            Motion = new DeviceRotation(RotationPlane.XY, new(.2, 0, 0, 0), new(0, Math.PI / 2), 0)
+        };
+        var world = Scene(hanger);
+
+        world.Driven(HangerId, Math.PI / 2);
+
+        var flap = world.SliceOf(HangerId, I)!;
+        AssertRange(flap.Range(Axis3.X), -.3, .3);
+        AssertRange(flap.Range(Axis3.Y), 1.79, 1.81);
+        AssertRange(flap.Range(Axis3.Z), -.6, -.2);
+        var plank = world.SliceOf(HangerId, II)!;
+        AssertRange(plank.Range(Axis3.X), -.1, .1);
+        AssertRange(plank.Range(Axis3.Y), 1.79, 1.81);
+        AssertRange(plank.Range(Axis3.Z), -1.4, -.2);
+    }
+
+    [Fact]
+    public void ASlideStartsFromWhereTheDeviceStands()
+    {
+        var post = Block("post", new(-.3, .5, 0), new(.05, .3, .5), new Interval(.3, .6));
+        var world = Scene(Sash(), post);
+        world.Driven(SashId, .2);
+
+        var driven = world.Driven(SashId, 1);
+
+        Assert.Equal(.25, driven.Position, 9);
+        Assert.Equal(new EntityId("post"), Assert.Single(driven.Contacts).Obstacle);
+    }
+
+    [Fact]
     public void ARotationIsBlockedByAnObstacleThatIsInAnotherSection()
     {
         // A post that exists only from W = .3, so the flap in section I never meets it but the plank does.

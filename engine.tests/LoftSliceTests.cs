@@ -236,6 +236,21 @@ public class LoftSliceTests
     }
 
     [Fact]
+    public void AMiddleKeyThatOnlyTouchesTheSectionAtAnEdgeStillLeavesThePieceBelowItCut()
+    {
+        var world = Scene(SlabWithMiddleKey(At(0, 1, 0), new DeviceRotation(RotationPlane.XW, default, new(0, 1), 0)));
+
+        world.Driven(new("slab"), Math.PI / 4);
+
+        // The edge x' = 0 of the middle key is in the section, and the piece with w' from -.1 to 0 is cut there as the
+        // board of a single piece would be: x from 0 to .1 / sin(π/4).
+        var cut = Slice(world, new("slab"), 0);
+        AssertRange(cut.Range(Axis3.X), 0, .1 / Math.Sin(Math.PI / 4));
+        AssertRange(cut.Range(Axis3.Y), 1, 1.2);
+        AssertRange(cut.Range(Axis3.Z), 0, .2);
+    }
+
+    [Fact]
     public void ASectionThatOnlyTouchesADeviceCutsNothing()
     {
         var world = Scene(Board());
