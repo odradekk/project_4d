@@ -149,7 +149,7 @@ public sealed record LoadError(
 |---|---|
 | 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
 | 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
-| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前世界接受楼房元素、固定物、可转物、四维物品和三维生物，装置和啃食者返回该错误；Seams、SharedValues 必须为空集合；后续任务实现后逐项开放 |
+| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前世界接受楼房元素、固定物、可转物、四维物品和三维生物，装置和啃食者返回该错误；Seams、SharedValues 必须为空集合；预期操作只接受 ExpectedRotation 和 ExpectedAdvance 两种步骤，Setup 里的 Seams、SharedValues、Carry 必须为空，EntityOverrides 只接受同类的可转物、四维物品和三维生物；后续任务实现后逐项开放 |
 | 空或逆向区间、缺口越界/内部重叠 | InvalidInterval；缺口允许端点相接。楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状用独立元素表示，各自使用闭 W 区间；共享边界同时保留两者的切片，按实体与零件 ID 稳定排序。若某个可玩 Section 只应显示一种形状，把换形边界放在两个 Section 之间 |
 | 派生几何不可表示 | 世界变换后的顶点、法线和 UV 必须有限，否则返回 InvalidNumber；在当前 double 精度下，盒子须保留三维体积，输出三角形须有非零面积及正确绕序，否则返回 InvalidGeometry。固定物的 W−ε 与 W+ε 须真正夹住 W，且厚度大于采样距离；报错 Source 定位零件、FaceUvs 或 Pose.Position.W。不设统一坐标上限 |
 | 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状 |
