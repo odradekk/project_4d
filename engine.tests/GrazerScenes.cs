@@ -9,15 +9,18 @@ internal static class GrazerScenes
 {
     public static readonly EntityId GrazerId = new("grazer");
 
-    // A ball of radius .5 and weight 1 whose field reaches this threshold at distance .3 from its center, since
-    // (1 - .3² / .5²)² = .64² = .4096. Alone, it makes a four-dimensional ball of radius .3.
-    public const double LumpRadius = .3;
+    // A ball of radius 5 and weight 1 whose field reaches this threshold at distance 3 from its center, since
+    // (1 - 3² / 5²)² = .64² = .4096. Alone, it makes a four-dimensional ball of radius 3. That is fifteen cells of
+    // the lattice (docs/frame/contract-views.md: .2 m) from the center to the surface, so the mesh stays near the sphere.
+    public const double LumpRadius = 3;
     public const double LumpThreshold = .4096;
 
     public static Metaball Ball(string id, Vec4 center, double radius = .5, double weight = 1) =>
         new(new(id), center, radius, weight);
 
-    public static MetaballShape Lump(Vec4 center) => new([Ball("lump", center)], LumpThreshold);
+    public static Metaball LumpBall(Vec4 center, double radius = 5, double weight = 1) => Ball("lump", center, radius, weight);
+
+    public static MetaballShape Lump(Vec4 center) => new([LumpBall(center)], LumpThreshold);
 
     public static GrazerDefinition Grazer(Pose4 pose, MetaballShape shape) => new(GrazerId, pose, TestSource, shape);
 

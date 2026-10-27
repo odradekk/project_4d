@@ -5,16 +5,16 @@ using static FourD.Tests.ItemScenes;
 namespace FourD.Tests;
 
 // The slices of a grazer's metaball body (docs/frame/contract-views.md) and the frames the host feeds it
-// (docs/frame/contract-actions.md). The body of one lump is a four-dimensional ball of radius .3, so its slice a
-// distance d from the center is a sphere of radius sqrt(.3² - d²); the numbers below use the triples (.18, .24, .3).
+// (docs/frame/contract-actions.md). The body of one lump is a four-dimensional ball of radius 3, so its slice a
+// distance d from the center is a sphere of radius sqrt(3² - d²); the numbers below use the triple (1.8, 2.4, 3).
 public class GrazerTests
 {
     private static readonly SectionId I = new("I");
     private static readonly SectionId II = new("II");
 
-    // The mesh follows the field along the edges of cubes of 2 cm, so its vertices lie within a millimetre of the
-    // sphere, and within a few where the sphere is only a few cells across.
-    private const double MeshError = .001;
+    // The mesh follows the field along the edges of cubes of .2 m, which puts its vertices within a tenth of a cube
+    // of the sphere, and a little more where the sphere is only a few cubes across.
+    private const double MeshError = .02;
 
     private static void AssertSphere(SliceGeometry slice, Vec3 center, double radius, double tolerance = MeshError)
     {
@@ -33,13 +33,14 @@ public class GrazerTests
     [Fact]
     public void ASliceOfALumpIsASphereOfTheRadiusItsDistanceFromTheBodyLeaves()
     {
-        var world = GrazerScene(At(0, 1, 0, w: .18), Lump(default));
+        // Section I is 1.8 from the center in W, and section II, .42 nearer, is 1.38 from it: sqrt(9 - 1.38²) = 2.66376.
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
 
         var inI = world.SliceOf(GrazerId, I)!;
         var inII = world.SliceOf(GrazerId, II)!;
 
-        AssertSphere(inI, new(0, 1, 0), .24);
-        AssertSphere(inII, new(0, 1, 0), .18);
+        AssertSphere(inI, new(0, 4, 0), 2.4);
+        AssertSphere(inII, new(0, 4, 0), 2.66376);
         Assert.All(new[] { inI, inII }, slice =>
         {
             Assert.True(slice.ThroughObject);
@@ -56,30 +57,30 @@ public class GrazerTests
     [Fact]
     public void ASliceGrowsToTheBodyRadiusAtItsCenterAndVanishesAtItsPoles()
     {
-        var world = GrazerScene(At(0, 1, 0, w: .18), Lump(default));
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
 
-        AssertSphere(world.SlicesAt(.18).Single(slice => slice.Entity == GrazerId), new(0, 1, 0), LumpRadius);
-        // sqrt(.3² - .29²) = .0768: a small lump has appeared out of nothing.
-        AssertSphere(world.SlicesAt(.18 + .29).Single(slice => slice.Entity == GrazerId), new(0, 1, 0), .0768, 3 * MeshError);
-        AssertSphere(world.SlicesAt(.18 - .29).Single(slice => slice.Entity == GrazerId), new(0, 1, 0), .0768, 3 * MeshError);
-        Assert.DoesNotContain(world.SlicesAt(.18 + LumpRadius), slice => slice.Entity == GrazerId);
-        Assert.DoesNotContain(world.SlicesAt(.18 - LumpRadius - .01), slice => slice.Entity == GrazerId);
+        AssertSphere(world.SlicesAt(1.8).Single(slice => slice.Entity == GrazerId), new(0, 4, 0), LumpRadius);
+        // A lump has appeared out of nothing, sqrt(3² - 2.4²) = 1.8 across.
+        AssertSphere(world.SlicesAt(1.8 + 2.4).Single(slice => slice.Entity == GrazerId), new(0, 4, 0), 1.8);
+        AssertSphere(world.SlicesAt(1.8 - 2.4).Single(slice => slice.Entity == GrazerId), new(0, 4, 0), 1.8);
+        Assert.DoesNotContain(world.SlicesAt(1.8 + LumpRadius), slice => slice.Entity == GrazerId);
+        Assert.DoesNotContain(world.SlicesAt(1.8 - LumpRadius - .01), slice => slice.Entity == GrazerId);
     }
 
     [Fact]
     public void AHeavierBallNeedsAHigherThresholdForTheSameBody()
     {
-        var world = GrazerScene(At(0, 1, 0, w: .18), new([Ball("lump", default, weight: 2)], 2 * LumpThreshold));
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), new([LumpBall(default, weight: 2)], 2 * LumpThreshold));
 
-        AssertSphere(world.SliceOf(GrazerId, I)!, new(0, 1, 0), .24);
+        AssertSphere(world.SliceOf(GrazerId, I)!, new(0, 4, 0), 2.4);
     }
 
     [Fact]
-    public void TheMeshLiesOnTheWorldsLatticeOfTwoCentimetreCubes()
+    public void TheMeshLiesOnTheWorldsLatticeOfCubes()
     {
         // A ball of radius .005 whose center is the lattice node (0, 1, 0) has only that node in its body: the field
-        // is 1 there and 0 at its neighbours. With the threshold .5 the surface cuts each edge from the node halfway,
-        // 1 cm out, whichever way the edge runs.
+        // is 1 there and 0 at its neighbours, .2 m away. With the threshold .5 the surface cuts each edge from the
+        // node halfway, .1 m out, whichever way the edge runs.
         var tiny = new MetaballShape([Ball("tiny", default, radius: .005)], .5);
         var world = GrazerScene(At(0, 1, 0), tiny);
 
@@ -88,105 +89,127 @@ public class GrazerTests
         foreach (var (axis, middle) in new[] { (Axis3.X, 0d), (Axis3.Y, 1d), (Axis3.Z, 0d) })
         {
             var (min, max) = slice.Extent(axis);
-            Assert.Equal(middle - .01, min, 9);
-            Assert.Equal(middle + .01, max, 9);
+            Assert.Equal(middle - .1, min, 9);
+            Assert.Equal(middle + .1, max, 9);
         }
         // Its field reaches only 1 cm in W, less than the layer of an ordinary object.
         Assert.False(slice.ThroughObject);
 
         // Half a cube along, there is no node in the body and so nothing to mesh.
-        world.Frame(At(.01, 1, 0), tiny);
+        world.Frame(At(.1, 1, 0), tiny);
         Assert.Null(world.SliceOf(GrazerId, I));
+    }
+
+    [Fact]
+    public void ABodyTooWideForTheLatticeIsMeshedInCoarserCubes()
+    {
+        // A lump of radius 240 has a field of radius 400, so it is 4000 cubes across: 6e10 nodes, more than an array
+        // can hold. The lattice keeps to 128 nodes a side by taking cubes a whole number of times the usual, here
+        // 32 × .2 = 6.4 m, so the mesh is coarser and still the sphere.
+        var world = GrazerScene(At(0, 250, 0, w: .18), new([LumpBall(default, radius: 400)], LumpThreshold));
+
+        var slice = world.SliceOf(GrazerId, I)!;
+
+        // sqrt(240² - .18²) is 240 to within a millimetre. Errors of a tenth of a cube, 64 cm, would be too much.
+        AssertSphere(slice, new(0, 250, 0), 240, tolerance: .2);
     }
 
     [Fact]
     public void BallsFuseWhereTheirFieldsAddUp()
     {
-        // Balls .3 m either side of the middle. On the plane between them each gives (1 - (.3² + .2²) / .5²)² = .48²,
-        // so a threshold of 2 × .48² = .4608 puts the neck at radius .2. Each lump alone reaches .5 × sqrt(1 - sqrt(.4608)) from its center.
-        var shape = new MetaballShape([Ball("left", new(-.3, 0, 0, 0)), Ball("right", new(.3, 0, 0, 0))], .4608);
-        var world = GrazerScene(At(0, 1, 0), shape);
+        // Balls 3 m either side of the middle. On the plane between them each gives (1 - (3² + 2²) / 5²)² = .48²,
+        // so a threshold of 2 × .48² = .4608 puts the neck at radius 2. Each lump alone reaches 5 × sqrt(1 - sqrt(.4608))
+        // from its center, which is 2.8336.
+        var shape = new MetaballShape([LumpBall(new(-3, 0, 0, 0)) with { Id = new("left") }, LumpBall(new(3, 0, 0, 0)) with { Id = new("right") }], .4608);
+        var world = GrazerScene(At(0, 4, 0), shape);
 
         var slice = world.SliceOf(GrazerId, I)!;
 
+        // The plane x = 0 is a plane of the lattice, so the surface has vertices on it, all on the neck.
         var neck = Enumerable.Range(0, slice.Parts.Count)
             .Select(slice.Positions.Vertex)
-            .Where(vertex => Math.Abs(vertex.X) < .01)
-            .Select(vertex => Math.Sqrt(Math.Pow(vertex.Y - 1, 2) + vertex.Z * vertex.Z))
+            .Where(vertex => Math.Abs(vertex.X) < .1)
+            .Select(vertex => Math.Sqrt(Math.Pow(vertex.Y - 4, 2) + vertex.Z * vertex.Z))
             .ToArray();
         Assert.NotEmpty(neck);
-        Assert.All(neck, radius => Assert.InRange(radius, .2 - 2 * MeshError, .2 + 2 * MeshError));
+        Assert.All(neck, radius => Assert.InRange(radius, 2 - MeshError, 2 + 2 * MeshError));
         var (left, right) = slice.Extent(Axis3.X);
-        var reach = .3 + .5 * Math.Sqrt(1 - Math.Sqrt(.4608));
-        Assert.Equal(-reach, left, 2);
-        Assert.Equal(reach, right, 2);
+        Assert.Equal(-5.8336, left, 1.5 * MeshError);
+        Assert.Equal(5.8336, right, 1.5 * MeshError);
     }
 
     [Fact]
     public void BallsTooFarApartMakeSeparateLumps()
     {
-        var shape = new MetaballShape([Ball("left", new(-.6, 0, 0, 0)), Ball("right", new(.6, 0, 0, 0))], LumpThreshold);
-        var world = GrazerScene(At(0, 1, 0), shape);
+        var shape = new MetaballShape([LumpBall(new(-6, 0, 0, 0)) with { Id = new("left") }, LumpBall(new(6, 0, 0, 0)) with { Id = new("right") }], LumpThreshold);
+        var world = GrazerScene(At(0, 4, 0), shape);
 
         var slice = world.SliceOf(GrazerId, I)!;
 
-        Assert.DoesNotContain(slice.Coordinates(Axis3.X), x => Math.Abs(x) < .25);
-        Assert.Equal(-.6 - LumpRadius, slice.Extent(Axis3.X).Min, 2);
+        Assert.DoesNotContain(slice.Coordinates(Axis3.X), x => Math.Abs(x) < 2.5);
+        Assert.Equal(-9, slice.Extent(Axis3.X).Min, 1.5 * MeshError);
     }
 
     [Fact]
     public void ATurnedBodyBringsItsBallsIntoAnotherSection()
     {
-        // A quarter turn in XW takes the ball .42 along local X to W = .42, which is section II.
-        var world = GrazerScene(At(0, 1, 0, rotation: XwQuarterTurn), Lump(new(.42, 0, 0, 0)));
+        // A quarter turn in XW takes the ball 2 along local X to W = 2: section I is 2 from it, section II 1.58, and
+        // sqrt(3² - 2²) = 2.23607, sqrt(3² - 1.58²) = 2.55021.
+        var world = GrazerScene(At(0, 4, 0, rotation: XwQuarterTurn), Lump(new(2, 0, 0, 0)));
 
-        AssertSphere(world.SliceOf(GrazerId, II)!, new(0, 1, 0), LumpRadius);
+        AssertSphere(world.SliceOf(GrazerId, I)!, new(0, 4, 0), 2.23607);
+        AssertSphere(world.SliceOf(GrazerId, II)!, new(0, 4, 0), 2.55021);
+
+        // At 3.6 the ball has gone beyond the reach of both sections.
+        world.Frame(At(0, 4, 0, rotation: XwQuarterTurn), Lump(new(3.6, 0, 0, 0)));
         Assert.False(world.HasSliceVolume(GrazerId, I));
+        Assert.False(world.HasSliceVolume(GrazerId, II));
     }
 
     [Fact]
     public void AnUnturnedBodyKeepsItsBallsWhereTheyAreOffset()
     {
-        var world = GrazerScene(At(0, 1, 0), Lump(new(.42, 0, 0, 0)));
+        // The ball 2 along X lies in section I, and section II is .42 from it: sqrt(3² - .42²) = 2.97049.
+        var world = GrazerScene(At(0, 4, 0), Lump(new(2, 0, 0, 0)));
 
-        AssertSphere(world.SliceOf(GrazerId, I)!, new(.42, 1, 0), LumpRadius);
-        Assert.False(world.HasSliceVolume(GrazerId, II));
+        AssertSphere(world.SliceOf(GrazerId, I)!, new(2, 4, 0), LumpRadius);
+        AssertSphere(world.SliceOf(GrazerId, II)!, new(2, 4, 0), 2.97049);
     }
 
     [Fact]
     public void ANewFrameMovesTheSliceAtOnce()
     {
-        var world = GrazerScene(At(0, 1, 0, w: .18), Lump(default));
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
         var before = world.SliceOf(GrazerId, I)!;
 
-        world.Frame(At(.1, 1, -.2, w: .18), Lump(default));
+        // A move of whole cubes, so the mesh moves with it.
+        world.Frame(At(.4, 4, -.6, w: 1.8), Lump(default));
 
         var after = world.SliceOf(GrazerId, I)!;
-        // A move of whole cells, so the mesh moves with it.
-        Assert.Equal(before.Extent(Axis3.X).Min + .1, after.Extent(Axis3.X).Min, 9);
-        Assert.Equal(before.Extent(Axis3.X).Max + .1, after.Extent(Axis3.X).Max, 9);
-        Assert.Equal(before.Extent(Axis3.Z).Min - .2, after.Extent(Axis3.Z).Min, 9);
-        Assert.Equal(before.Extent(Axis3.Z).Max - .2, after.Extent(Axis3.Z).Max, 9);
+        Assert.Equal(before.Extent(Axis3.X).Min + .4, after.Extent(Axis3.X).Min, 9);
+        Assert.Equal(before.Extent(Axis3.X).Max + .4, after.Extent(Axis3.X).Max, 9);
+        Assert.Equal(before.Extent(Axis3.Z).Min - .6, after.Extent(Axis3.Z).Min, 9);
+        Assert.Equal(before.Extent(Axis3.Z).Max - .6, after.Extent(Axis3.Z).Max, 9);
     }
 
     [Fact]
     public void ANewShapeChangesTheSliceAtOnce()
     {
-        var world = GrazerScene(At(0, 1, 0, w: .18), Lump(default));
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
 
-        // The mouth opens: the ball grows to radius .6 at the same weight, so its field reaches the threshold at
-        // .6 × sqrt(1 - sqrt(.4096)) = .6 × sqrt(.36) = .36, and the section .18 from the center cuts a sphere of
-        // radius sqrt(.36² - .18²) = .3118.
-        world.Frame(At(0, 1, 0, w: .18), new([Ball("lump", default, radius: .6)], LumpThreshold));
+        // The mouth opens: the ball grows to radius 6 at the same weight, so its field reaches the threshold at
+        // 6 × sqrt(1 - sqrt(.4096)) = 6 × sqrt(.36) = 3.6, and the section 1.8 from the center cuts a sphere of
+        // radius sqrt(3.6² - 1.8²) = 3.11769.
+        world.Frame(At(0, 4, 0, w: 1.8), new([LumpBall(default, radius: 6)], LumpThreshold));
 
-        AssertSphere(world.SliceOf(GrazerId, I)!, new(0, 1, 0), Math.Sqrt(.36 * .36 - .18 * .18));
+        AssertSphere(world.SliceOf(GrazerId, I)!, new(0, 4, 0), 3.11769);
     }
 
     [Fact]
     public void BothViewsReadTheSameFrameAndTheSameSectionTwiceGivesTheSameMesh()
     {
-        var world = GrazerScene(At(0, 1, 0, w: .18), Lump(default));
-        var again = GrazerScene(At(0, 1, 0, w: .18), Lump(default));
+        var world = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
+        var again = GrazerScene(At(0, 4, 0, w: 1.8), Lump(default));
 
         var main = world.SliceOf(GrazerId, I)!;
         var lens = world.SliceOf(GrazerId, I)!;

@@ -22,7 +22,7 @@ public class ConsumeStructureTests
     // A region with the grazer, two seams and the entities given.
     private static World Region(params EntityDefinition[] more)
     {
-        var description = Description([Grazer(At(0, 3, 0, w: .18), Lump(default)), .. more]);
+        var description = Description([Grazer(At(0, 30, 0, w: .18), Lump(default)), .. more]);
         return Load(description with { Seams = [Seam(id: "s1"), Seam(id: "s2", position: new(1, 0, 0))] });
     }
 

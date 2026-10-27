@@ -125,7 +125,16 @@ internal static class RoundSlice
         ];
         var values = Enumerable.Range(0, counts[0] * counts[1] * counts[2]).Select(node => field(Position(node))).ToArray();
 
-        Marching.Surface(ring.Part, counts, values, Position, (inside, outside) => OnSurface(Position(inside), Position(outside), field), buffer);
+        // Each edge is cut once, however many tetrahedra share it.
+        var cuts = new Dictionary<(int, int), double[]>();
+        double[] Cut(int inside, int outside)
+        {
+            if (!cuts.TryGetValue((inside, outside), out var point))
+                cuts[(inside, outside)] = point = OnSurface(Position(inside), Position(outside), field);
+            return point;
+        }
+
+        Marching.Surface(ring.Part, counts, values, Position, Cut, buffer);
     }
 
     // The point of the edge from a point inside to one outside where the field is zero, by halving the edge.

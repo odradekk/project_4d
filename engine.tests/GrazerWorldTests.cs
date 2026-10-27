@@ -14,7 +14,7 @@ public class GrazerWorldTests
     [Fact]
     public void AGrazerBlocksNothingAndSupportsNothing()
     {
-        // The lump hangs between the ball and the floor, and its top, .3 above its center, reaches into the ball.
+        // The lump is 3 m in radius: it takes in the floor, the ball and the box that is queried.
         var world = GrazerScene(At(0, .5, 0, w: .21), Lump(default), FloorOf(new(-.5, 1)), Ball(y: 1));
 
         var hits = world.OccupancyHits(new OccupancyBox(At(0, .78, 0, w: .21), new(.05, .05, .05, .05)));
@@ -60,17 +60,17 @@ public class GrazerWorldTests
     [Fact]
     public void TheWorldKeepsItsOwnCopyOfTheBalls()
     {
-        var balls = new[] { Ball("lump", default) };
+        var balls = new[] { LumpBall(default) };
         var world = GrazerScene(At(0, 1, 0, w: .18), new(balls, LumpThreshold));
         var loaded = world.SliceOf(GrazerId, I)!.Positions;
-        balls[0] = Ball("lump", default, radius: 5);
+        balls[0] = LumpBall(default, radius: 50);
 
         Assert.Equal(loaded, world.SliceOf(GrazerId, I)!.Positions);
 
-        balls[0] = Ball("lump", default);
+        balls[0] = LumpBall(default);
         world.Frame(At(0, 1, 0, w: .18), new(balls, LumpThreshold));
         var framed = world.SliceOf(GrazerId, I)!.Positions;
-        balls[0] = Ball("lump", default, radius: 5);
+        balls[0] = LumpBall(default, radius: 50);
 
         Assert.Equal(framed, world.SliceOf(GrazerId, I)!.Positions);
     }
@@ -147,7 +147,7 @@ public class GrazerWorldTests
         var plan = world.AllowedPlan(new StandUp(new("actor"), RodId, new("II")));
 
         world.Frame(At(1, 1, 0, w: .4), Lump(default));
-        world.Frame(At(2, 1, 0, w: .6), new([Ball("lump", default, radius: .6)], LumpThreshold));
+        world.Frame(At(2, 1, 0, w: .6), new([LumpBall(default, radius: 6)], LumpThreshold));
 
         Assert.IsType<StartRotationResult.Started>(world.StartRotation(plan));
     }
