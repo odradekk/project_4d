@@ -42,14 +42,12 @@ Room (Node3D, Region3D)
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
 | Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape` |
 | CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`、`string DisplayName`（台词前的名字，空则用角色场景自己的）；Section 来自祖先 |
-| Character3D（CharacterBody3D，角色场景的根节点；游戏层节点，脚本在 `game/characters/`，不在 `game/adapter/`） | `string DisplayName`、`float WalkSpeed/RunSpeed`；必须有子节点 Shape（胶囊形的 CollisionShape3D）和 Visual（Node3D，装着模型）；碰撞层 2，碰撞掩码 1，准星的射线看不到层 2；猫再带子节点 Cat 和 Pickup（Interactable3D，球形，碰撞层 4，提示「抱起」），老师再带子节点 Teacher |
+| Character3D（CharacterBody3D） | 角色场景的根节点，游戏层节点，格式见[角色搭法](character-authoring.md) |
 | Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin，原点放在地面；`Open` 默认 true，`VisualHeight` 默认 3 米，是镜片里细光的高度；Sections 按 W 从浅到深列出 |
 | BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
 | ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
 
 视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。每个出生点创建一个 Creature3Definition：位置取出生点的 XYZ，W 取所属 Section，四维旋转为单位旋转。出生点的 CharacterScene 决定它是谁：根节点是 FirstPersonPlayer 的是玩家，一个区域恰有一个；根节点是 Character3D 的是猫、老师、同桌等角色，数量不限。每个角色放在所属 Section 的物理世界里，位置和朝向取自出生点的 XYZ 变换，穿缝后由适配层移到目标 Section 的物理世界。适配层每个物理帧用 SynchronizeActor 把角色的位置和朝向交给引擎，不另存 W 或手性。玩家场景是 CharacterBody3D + CollisionShape3D + Camera3D，猫和其他角色不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
-
-角色没有寻路，只朝目标走直线，被挡住就沿障碍滑行。路线弯折的地方，比如绕过塌洞、上折返的楼梯，由场景脚本给出路径点：老师的 `Patrol` 按路径点走，猫的 `Follow` 接受一个把玩家位置换成当前要去的点的函数，`Chase` 的目标本来就是函数。玩家可以抱起猫，抱着时再给猫（或它的身体）任何命令都会把猫放下，穿缝也会放下它。双臂一次只拿一样：手里有东西时抱不起猫，抱着猫时取不出背包里的东西。E 键依次作用于准星对着的 Interactable3D、手里的物品、抱着的猫、准星对着的物件，屏幕上的提示按同一顺序。
 
 | Resource | 全部导出字段 |
 |---|---|
@@ -73,7 +71,7 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
-放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)。
+放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)。
 
 ## 独立前置布置与预期操作
 
