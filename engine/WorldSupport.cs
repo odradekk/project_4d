@@ -20,6 +20,8 @@ public sealed partial class World
         foreach (var item in dynamicEntities.Values.Where(item => !item.Packed))
             foreach (var solid in DynamicShapes.Solids(item.Definition, item.Pose))
                 yield return solid;
+        foreach (var solid in DeviceSolids())
+            yield return solid;
     }
 
     /// <summary>Finds the highest actual contact while translating the entity downward.</summary>
@@ -54,7 +56,7 @@ public sealed partial class World
     private static SupportCandidate? Landing(Solid4 moving, Solid4 support) =>
         moving is Box4 box && support is Box4 other ? BoxLanding(box, other) : RoundLanding(moving, support);
 
-    // Where `moving`, translated straight down, comes to rest on `support` when one of them is round; null when it
+    // Where `moving`, translated straight down, comes to rest on `support` when they are not both boxes; null when it
     // never lands. It lands where the solids first touch, or stays where it is when it already touches.
     private static SupportCandidate? RoundLanding(Solid4 moving, Solid4 support)
     {

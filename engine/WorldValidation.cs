@@ -103,7 +103,7 @@ internal sealed partial class WorldValidation
             Id(entity.Id.Value, entity.Source, entity.Id);
             if (!ids.Add(entity.Id)) Error(LoadErrorCode.DuplicateId, entity.Source, "Duplicate entity ID.", entity.Id);
             var errorsBeforePose = errors.Count;
-            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: !DynamicShapes.IsBall(entity));
+            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: entity is not DeviceDefinition && !DynamicShapes.IsBall(entity));
             Pose4? validPose = errors.Count == errorsBeforePose ? entity.Pose : null;
             switch (entity)
             {
@@ -121,6 +121,9 @@ internal sealed partial class WorldValidation
                     break;
                 case Creature3Definition creature:
                     Creature(creature);
+                    break;
+                case DeviceDefinition device:
+                    Device(device, validPose);
                     break;
                 default:
                     Error(LoadErrorCode.UnsupportedDefinition, entity.Source, "This entity category is not implemented.", entity.Id);
@@ -258,7 +261,7 @@ internal sealed partial class WorldValidation
             Error(LoadErrorCode.InvalidGeometry, source, "Solid thickness must exceed sampling distance.", entity);
     }
 
-    // A ball is the one entity whose initial pose may tilt into W.
+    // A ball and a device may start with a pose that tilts into W.
     private void Pose(Pose4 pose, Source source, EntityId entity, bool mustBeFlat = true)
     {
         if (!IsFinite(pose))

@@ -50,6 +50,9 @@ public sealed partial class World
                 case Creature3Definition actor:
                     actors.Add(actor.Id, new(actor, actor.Pose, 0, actor.Section));
                     break;
+                case DeviceDefinition device:
+                    devices.Add(device.Id, NewDevice(device));
+                    break;
                 default:
                     solids.Add(AddStatic(definition));
                     break;
@@ -125,6 +128,7 @@ public sealed partial class World
             .Where(entity => entity.Segments.Any(segment => w >= segment.Min && w <= segment.Max))
             .Select(entity => entity.Slice())
             .Concat(DynamicSlices(w))
+            .Concat(DeviceSlices(w))
             .OrderBy(slice => slice.Entity.Value, StringComparer.Ordinal)
             .ToArray();
         return new SectionGeometryResult.Geometry(w, Array.AsReadOnly(slices));

@@ -3,7 +3,7 @@ namespace FourD;
 internal static class BoxSlice
 {
     // A corner of the box (or a point on one of its edges): its position in the box and in the world.
-    private sealed record Point(double[] Local, double[] World);
+    internal sealed record Point(double[] Local, double[] World);
 
     // Appends one part's unindexed triangles, with a PartId for each vertex.
     internal static void Append(Box4 box, BoxPart part, double w,
@@ -83,7 +83,7 @@ internal static class BoxSlice
         first.Count == second.Count && second.All(point => first.Any(other => other.Local.SequenceEqual(point.Local)));
 
     // Orders the points counterclockwise around their center, seen from outside the face.
-    private static void SortAroundCenter(List<Point> points, double[] normal)
+    internal static void SortAroundCenter(List<Point> points, double[] normal)
     {
         var center = Enumerable.Range(0, 3).Select(i => points.Average(point => point.World[i])).ToArray();
         var reference = Math.Abs(normal[0]) < 0.9 ? new[] { 1d, 0, 0 } : new[] { 0d, 1, 0 };
@@ -98,7 +98,7 @@ internal static class BoxSlice
     }
 
     // The vertices of the polygon as a triangle fan, leaving out triangles that do not face outward.
-    private static IEnumerable<Point> FanVertices(List<Point> points, double[] normal)
+    internal static IEnumerable<Point> FanVertices(List<Point> points, double[] normal)
     {
         for (var i = 1; i + 1 < points.Count; i++)
         {
@@ -110,7 +110,7 @@ internal static class BoxSlice
         }
     }
 
-    private static double[] Uv(double[] local, int axis, bool positive, FaceUv? face)
+    internal static double[] Uv(double[] local, int axis, bool positive, FaceUv? face)
     {
         var (x, y) = axis switch
         {

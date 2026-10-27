@@ -14,7 +14,10 @@ internal static class Collision
         (Box4 first, Box4 second) => Box4.Depth(first, second),
         (Round4 round, Box4 box) => round.Tube - round.MinOverCore(box.SignedDistance).Value,
         (Box4 box, Round4 round) => Depth(round, box),
+        (Round4 round, Loft4 loft) => round.Tube - round.MinOverCore(loft.SignedDistance).Value,
+        (Loft4 loft, Round4 round) => Depth(round, loft),
         (Round4 first, Round4 second) => first.Tube + second.Tube - first.MinOverCore(second.CoreDistance).Value,
+        (Loft4 or Box4, Loft4 or Box4) => ConvexContact.Depth(a, b),
         _ => throw new ArgumentException("Unknown solid kind.")
     };
 
@@ -25,7 +28,7 @@ internal static class Collision
         Overlaps(moving, obstacle) ? ContactOf(moving, obstacle) : null;
 
     // Where two solids that touch or overlap meet: a point inside both, and the unit normal from `obstacle`
-    // toward `moving`. Section is left for the caller. Null only for boxes that have no point in common.
+    // toward `moving`. Section is left for the caller. Null only for convex solids that have no point in common.
     internal static Contact? ContactOf(Solid4 moving, Solid4 obstacle)
     {
         switch (moving, obstacle)
@@ -33,24 +36,34 @@ internal static class Collision
             case (Box4 first, Box4 second):
                 return Box4.ContactOf(first, second);
             case (Round4 round, Box4 box):
-                var (distance, core) = round.MinOverCore(box.SignedDistance);
-                var (surface, normal) = box.Nearest(core);
-                return new(round.Entity, round.Part, box.Entity, box.Part, Box4.ToVec4(distance >= 0 ? surface : core), Box4.ToVec4(normal), null);
-            case (Box4 box, Round4 round):
-                var seen = ContactOf(round, box)!;
+                return RoundAgainst(round, box, box.SignedDistance, box.Nearest);
+            case (Round4 round, Loft4 loft):
+                return RoundAgainst(round, loft, loft.SignedDistance, loft.Nearest);
+            case (Box4 or Loft4, Round4 round):
+                var seen = ContactOf(round, moving)!;
                 return seen with
                 {
-                    Moving = box.Entity,
-                    MovingPart = box.Part,
+                    Moving = moving.Entity,
+                    MovingPart = moving.Part,
                     Obstacle = round.Entity,
                     ObstaclePart = round.Part,
                     Normal = new(-seen.Normal.X, -seen.Normal.Y, -seen.Normal.Z, -seen.Normal.W)
                 };
             case (Round4 first, Round4 second):
                 return RoundContact(first, second);
+            case (Loft4 or Box4, Loft4 or Box4):
+                return ConvexContact.ContactOf(moving, obstacle);
             default:
                 throw new ArgumentException("Unknown solid kind.");
         }
+    }
+
+    // Where a round solid meets a convex one, given the convex solid's distance to a point and nearest surface point.
+    private static Contact RoundAgainst(Round4 round, Solid4 obstacle, Func<double[], double> signedDistance, Func<double[], (double[] Point, double[] Normal)> nearest)
+    {
+        var (distance, core) = round.MinOverCore(signedDistance);
+        var (surface, normal) = nearest(core);
+        return new(round.Entity, round.Part, obstacle.Entity, obstacle.Part, Box4.ToVec4(distance >= 0 ? surface : core), Box4.ToVec4(normal), null);
     }
 
     private static Contact RoundContact(Round4 moving, Round4 obstacle)

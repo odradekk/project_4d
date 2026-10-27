@@ -1,7 +1,7 @@
 namespace FourD;
 
-// A convex or tubular piece of a body, used for collision and support. Boxes and rounds are the two kinds:
-// a round is a point or a circle thickened by a radius, so a ball is a round whose circle has no extent.
+// A convex or tubular piece of a body, used for collision and support. Boxes, rounds and pieces of lofts are the
+// kinds: a round is a point or a circle thickened by a radius, so a ball is a round whose circle has no extent.
 internal abstract record Solid4(EntityId Entity, PartId Part, double[] Center)
 {
     // Half the extent of the solid along a unit vector.
