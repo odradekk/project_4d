@@ -81,7 +81,7 @@ internal sealed class LoftPiece
 
     // The unit vector orthogonal to the hyperplane through three points of a face at one key and a point of the same
     // face at the other.
-    internal static double[] FacetNormal(double[] first, double[] second, double[] third, double[] across) =>
+    private static double[] FacetNormal(double[] first, double[] second, double[] third, double[] across) =>
         Unit(Box4.Cross(Box4.Sub(second, first), Box4.Sub(third, first), Box4.Sub(across, first)));
 
     // The normal of the lateral facet of a face (given by its vertices at the lower key), pointing away from the middle.
@@ -91,5 +91,5 @@ internal sealed class LoftPiece
         return Box4.Dot(normal, Box4.Sub(middle, Vertices[face[0]])) > 0 ? Box4.Scale(normal, -1) : normal;
     }
 
-    internal static double[] Unit(double[] vector) => Box4.Scale(vector, 1 / Math.Sqrt(Box4.Dot(vector, vector)));
+    private static double[] Unit(double[] vector) => Box4.Scale(vector, 1 / Math.Sqrt(Box4.Dot(vector, vector)));
 }

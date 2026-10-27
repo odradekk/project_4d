@@ -1,11 +1,11 @@
 namespace FourD;
 
 // A convex piece of a lofted device placed in the world. The center is the middle of its axis-aligned bounds, and the
-// offsets, facet limits and extents are all relative to it, so that moving the piece moves only the center. The
-// corners are kept where they were placed, because a section may cut exactly through a key of the loft, and a corner
-// rebuilt from the center and an offset can differ from it by a rounding error.
+// facet limits and extents are relative to it, so that moving the piece moves only the center. The corners are kept
+// where they were placed, because a section may cut exactly through a key of the loft, and a corner rebuilt from the
+// center and an offset can differ from it by a rounding error.
 internal sealed record Loft4(
-    EntityId Entity, PartId Part, double[] Center, LoftPiece Piece, double[][] Placed, double[] Home, double[][] Offsets,
+    EntityId Entity, PartId Part, double[] Center, LoftPiece Piece, double[][] Placed, double[] Home,
     double[] Extents, double[][] Normals, double[] Limits, double[][] Directions)
     : Solid4(Entity, Part, Center)
 {
@@ -21,7 +21,7 @@ internal sealed record Loft4(
         var normals = piece.Facets.Select(facet => Turned(facet.Normal)).ToArray();
         // The limit of a facet is how far its plane lies from the center along its normal.
         var limits = piece.Facets.Select((facet, i) => facet.Vertices.Max(vertex => Box4.Dot(normals[i], offsets[vertex]))).ToArray();
-        return new(entity, piece.Part, center, piece, corners, center, offsets, extents, normals, limits, piece.Directions.Select(Turned).ToArray());
+        return new(entity, piece.Part, center, piece, corners, center, extents, normals, limits, piece.Directions.Select(Turned).ToArray());
     }
 
     internal double[][] Corners()
@@ -30,7 +30,9 @@ internal sealed record Loft4(
         return Placed.Select(corner => corner.Select((value, i) => value + shift[i]).ToArray()).ToArray();
     }
 
-    internal override double Radius(double[] axis) => Offsets.Max(offset => Math.Abs(Box4.Dot(offset, axis)));
+    // Only an upper bound of the half extent along the axis, since the piece is not symmetric about its center. Nothing
+    // asks it of a piece of a loft, which is never turned as an item is.
+    internal override double Radius(double[] axis) => Corners().Max(corner => Math.Abs(Box4.Dot(Box4.Sub(corner, Center), axis)));
 
     internal override double Extent(int coordinate) => Extents[coordinate];
 

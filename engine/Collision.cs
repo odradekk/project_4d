@@ -28,7 +28,7 @@ internal static class Collision
         Overlaps(moving, obstacle) ? ContactOf(moving, obstacle) : null;
 
     // Where two solids that touch or overlap meet: a point inside both, and the unit normal from `obstacle`
-    // toward `moving`. Section is left for the caller. Null only for boxes that have no point in common.
+    // toward `moving`. Section is left for the caller. Null only for convex solids that have no point in common.
     internal static Contact? ContactOf(Solid4 moving, Solid4 obstacle)
     {
         switch (moving, obstacle)
