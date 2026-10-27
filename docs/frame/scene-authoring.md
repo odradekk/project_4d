@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件和玩家出生点，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未读取，初始姿态只取 Transform。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件和玩家出生点，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。
 
 ## 节点与导出属性
 
@@ -36,12 +36,12 @@ Room (Node3D, Region3D)
 | Building3D（Node3D） | `string BuildingId`、`double WMin`、`double WMax` |
 | BuildingElement3D（Node3D） | `string EntityId`、`string BuildingId`、`double WMin/WMax`、`A<IntervalResource> Gaps`；BoxPart3D 子节点给 Shape |
 | FixedObject3D（Node3D） | `string EntityId`；BoxPart3D 子节点给 Shape；Section 从祖先取得 |
-| TurnableObject3D（Node3D） | `string EntityId/BuildingId`、`double[] Rotation4`、`TurnableResource Interaction`；Section 从祖先取得；BoxPart3D 子节点给 Shape；Label3D 子节点是字样模板：物件平放时，适配层在它所在的截面里按物件当前姿态放一份副本，翻面后字样成镜像，转动途中和竖起时不显示 |
+| TurnableObject3D（Node3D） | `string EntityId/BuildingId`、`double[] Rotation4`（尚未导出）、`TurnableResource Interaction`；Section 从祖先取得；节点原点放在握持点，平放物拿起时瞬移到手点；BoxPart3D 子节点给 Shape；Label3D 子节点是字样模板：物件平放时，适配层在它所在的截面里按物件当前姿态放一份副本，翻面后字样成镜像，转动途中和竖起时不显示 |
 | SphereItem3D（Node3D） | `string EntityId/BuildingId`、`string PartId`、`double W`、`double[] Rotation4`、`double Radius`、`TurnableResource Interaction` |
 | HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body |
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
 | Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape` |
-| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`；Section 来自祖先 |
+| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`；Section 来自祖先 |
 | Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin |
 | BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
 | ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
@@ -149,7 +149,7 @@ public sealed record LoadError(
 |---|---|
 | 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
 | 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
-| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前静态世界仅接受 BuildingElementDefinition 和 FixedDefinition，Seams、SharedValues、ExpectedOperations 必须为空集合；后续任务实现后逐项开放 |
+| 当前实现尚未支持的定义 | UnsupportedDefinition；不忽略未实现的数据。当前世界接受楼房元素、固定物、可转物、四维物品和三维生物，装置和啃食者返回该错误；Seams、SharedValues 必须为空集合；后续任务实现后逐项开放 |
 | 空或逆向区间、缺口越界/内部重叠 | InvalidInterval；缺口允许端点相接。楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状用独立元素表示，各自使用闭 W 区间；共享边界同时保留两者的切片，按实体与零件 ID 稳定排序。若某个可玩 Section 只应显示一种形状，把换形边界放在两个 Section 之间 |
 | 派生几何不可表示 | 世界变换后的顶点、法线和 UV 必须有限，否则返回 InvalidNumber；在当前 double 精度下，盒子须保留三维体积，输出三角形须有非零面积及正确绕序，否则返回 InvalidGeometry。固定物的 W−ε 与 W+ε 须真正夹住 W，且厚度大于采样距离；报错 Source 定位零件、FaceUvs 或 Pose.Position.W。不设统一坐标上限 |
 | 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状 |
