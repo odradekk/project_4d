@@ -16,6 +16,14 @@ public partial class SectionSound : AudioStreamPlayer3D
     private string busName = "";
     private AudioEffectLowPassFilter? filter;
 
+    /// <summary>Makes sure the bus that the environment sounds are mixed into exists.</summary>
+    public static void EnsureEnvironmentBus()
+    {
+        if (AudioServer.GetBusIndex(EnvironmentBus) >= 0) return;
+        AudioServer.AddBus();
+        AudioServer.SetBusName(AudioServer.BusCount - 1, EnvironmentBus);
+    }
+
     /// <summary>Assigns a loaded region and source section before playback. Add this node to the main viewport first.</summary>
     public void Configure(Region3D region, string section)
     {
@@ -25,11 +33,7 @@ public partial class SectionSound : AudioStreamPlayer3D
         this.section = section;
         if (filter is null)
         {
-            if (AudioServer.GetBusIndex(EnvironmentBus) < 0)
-            {
-                AudioServer.AddBus();
-                AudioServer.SetBusName(AudioServer.BusCount - 1, EnvironmentBus);
-            }
+            EnsureEnvironmentBus();
             AudioServer.AddBus();
             var index = AudioServer.BusCount - 1;
             busName = $"SectionSound-{GetInstanceId()}";

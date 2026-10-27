@@ -177,6 +177,14 @@ public sealed partial class PlayerActions : Node
     internal Refusal Refuse(Failure failure) =>
         new(failure.Code, failure.Contacts.Count > 0 ? SectionShowing(failure.Contacts[0].Obstacle) : null);
 
+    /// <summary>
+    /// Why the engine refused a crossing. The engine says in which section the blocking contact is; only a contact between
+    /// sections leaves that open, and then the section that shows the obstacle is the answer.
+    /// </summary>
+    internal Refusal RefuseCrossing(Failure failure) => failure.Contacts.Count > 0 && failure.Contacts[0].Section is { } section
+        ? new(failure.Code, section.Value)
+        : Refuse(failure);
+
     // The player's section when the entity has a slice there, otherwise the first other section that has one.
     private string? SectionShowing(EntityId entity)
     {

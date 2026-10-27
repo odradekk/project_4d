@@ -33,6 +33,8 @@ public partial class BackpackChecks : Node
             await seam.Load();
             await CheckPackFromHand();
             await seam.Load();
+            await CheckSlotsKeepTheirPlace();
+            await seam.Load();
             await CheckHandIntoBackpack();
             await seam.Load();
             await CheckTakeOutBlocked();
@@ -62,6 +64,26 @@ public partial class BackpackChecks : Node
         seam.Pack("rubber");
         await play.Frames(3);
         Check(play.Actions.Held is null && !play.HasSlice("Ⅰ", "rubber"), "what is packed from the hand is no longer drawn or held");
+    }
+
+    // "bun" sorts before "rubber", and must not push the rubber into the second slot; a slot that is emptied stays empty
+    // until something new comes, and the number key of a thing is the number it has.
+    private async Task CheckSlotsKeepTheirPlace()
+    {
+        seam.Pack("rubber");
+        seam.Pack("bun");
+        await play.Frames(3);
+        Check(bar.Texts[0].Contains("rubber") && bar.Texts[1].Contains("bun"), $"things stay in the slots they came into: {string.Join(" | ", bar.Texts)}");
+        Press(Key.Key1);
+        await play.Frames(5);
+        Check(play.Actions.Held == "rubber" && bar.Texts[0].Contains('—') && bar.Texts[1].Contains("bun"), $"a slot that is emptied stays empty: {string.Join(" | ", bar.Texts)}");
+        seam.Pack("key");
+        await play.Frames(3);
+        Check(bar.Texts[0].Contains("key") && bar.Texts[1].Contains("bun"), $"the next thing takes the first empty slot: {string.Join(" | ", bar.Texts)}");
+        Press(Key.Key2);
+        await play.Frames(2);
+        Check(play.Actions.Held == "rubber", "the hand is full, and the number key of the bun does not take it out");
+        Check(seam.InBackpack.SequenceEqual(["key", "bun"]), "and the backpack still holds the key and the bun in their slots");
     }
 
     private async Task CheckHandIntoBackpack()
@@ -139,7 +161,7 @@ public partial class BackpackChecks : Node
         AddChild(demo);
         await play.Frames(5);
         var region = demo.GetNode<Region3D>("Region");
-        Check(region.Travel!.Backpack.Items.Select(item => item.Value).SequenceEqual(["rubber", "ruler"]), "the debug scene presets the backpack");
+        Check(region.Travel!.Backpack.Contents.Select(item => item?.Value).SequenceEqual(["rubber", "ruler", null, null]), "the debug scene presets the backpack");
         Check(region.Actions!.Held == "pole", "the debug scene presets the hand");
         Check(!region.HasNode("Generated/Ⅰ/Dynamic/rubber") && !region.HasNode("Generated/Ⅱ/Dynamic/rubber"), "what it put in the backpack is not drawn in the world");
         var presetBar = region.GetNode<FirstPersonPlayer>("Generated/Player").Hud.GetNode<BackpackBar>("Backpack");

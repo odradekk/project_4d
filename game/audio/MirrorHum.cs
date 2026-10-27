@@ -15,6 +15,7 @@ public partial class MirrorHum : AudioStreamPlayer3D
     public override void _Ready()
     {
         Stream = GD.Load<AudioStream>("res://audio/mirror_hum.wav");
+        SectionSound.EnsureEnvironmentBus();
         Bus = SectionSound.EnvironmentBus;
         UnitSize = 1;
         MaxDistance = Range;

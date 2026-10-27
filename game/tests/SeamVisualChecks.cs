@@ -9,9 +9,10 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// Pixel checks of the lens, in a window: run with --scene res://tests/seam_visual_checks.tscn -- lens|band|flip.
+/// Pixel checks of the lens, in a window: run with --scene res://tests/seam_visual_checks.tscn -- lens|band|flip|near|wall.
 /// The player stands at (1.5, 0, 3) facing the mirror seam at (1.5, 0, 1.5), 1.5 m away, in the middle of the view.
-/// A red post stands in the first section and a blue one in the second, both to the right of the seam.
+/// A red post stands in the first section and a blue one in the second, both to the right of the seam, and a red one
+/// right beside the seam in the second.
 /// </summary>
 public partial class SeamVisualChecks : Node
 {
@@ -26,11 +27,11 @@ public partial class SeamVisualChecks : Node
         play = new TurningFixture(this);
         try
         {
-            await play.Load(AddPosts, "res://regions/seam_test.tscn");
+            await play.Load(mode == "wall" ? AddPostsAndWall : AddPosts, "res://regions/seam_test.tscn");
             play.LookAt(new(1.5f, 0, 3f), new(1.5f, 1.32f, 1.5f));
             // The views are set by hand below, and not by the player's state.
             region.Travel!.SetPhysicsProcess(false);
-            await (mode switch { "lens" => Lens(), "band" => Band(), "flip" => Flip(), _ => throw new InvalidOperationException($"No mode {mode}.") });
+            await (mode switch { "lens" => Lens(), "band" => Band(), "flip" => Flip(), "near" => Near(), "wall" => Wall(), _ => throw new InvalidOperationException($"No mode {mode}.") });
             GD.Print($"Seam visual check passed: {mode}.");
             GetTree().Quit();
         }
@@ -51,6 +52,13 @@ public partial class SeamVisualChecks : Node
         Post(region, "red", new(1.95f, .7f, 1.5f), new(.1f, 1.4f, .1f), new(.9f, .1f, .1f), wMin: -1, wMax: .2);
         Post(region, "blue", new(1.95f, .7f, 1.5f), new(.1f, 1.4f, .1f), new(.1f, .1f, .9f), wMin: .2, wMax: 1);
         Post(region, "near", new(1.6f, .7f, 1.5f), new(.1f, 1.4f, .1f), new(.9f, .1f, .1f), wMin: .2, wMax: 1);
+    }
+
+    // A wall in the second section, between the lens and the seam.
+    private static void AddPostsAndWall(Region3D region)
+    {
+        AddPosts(region);
+        Post(region, "screen", new(1.5f, 1.5f, 2.2f), new(3, 3, .1f), new(.6f, .6f, .6f), wMin: .2, wMax: 1);
     }
 
     private static void Post(Region3D region, string id, Vector3 position, Vector3 size, Color color, double wMin, double wMax)
@@ -88,6 +96,7 @@ public partial class SeamVisualChecks : Node
 
     private static bool Red(Color c) => c.R > .4f && c.R > c.G * 2.5f && c.R > c.B * 2.5f;
     private static bool Blue(Color c) => c.B > .4f && c.B > c.R * 2.5f && c.B > c.G * 2.5f;
+    private static bool BandColor(Color c) => c.R is > .66f and < .8f && c.G is > .8f and < .92f && c.B > .94f;
     private static bool SeamLight(Color c) => c.R > .85f && c.G > .8f && c.B is > .4f and < .75f;
     private static readonly Rect2I Strip = new(Width / 2 - 20, 250, 40, 220);
     // Inside the lens circle, which is 230 px in radius: 170 px each side of the middle and 140 px above and below it.
@@ -118,6 +127,41 @@ public partial class SeamVisualChecks : Node
         prism.MirrorBands = null;
         var plain = Centroid(await Capture(), InLens, Red);
         Check(plain.Count > 100 && plain.Column > Width / 2 + 10, $"without the band the same post is to the right of the seam; column {plain.Column}");
+    }
+
+    // 0.2 m from the seam, looking up 12 degrees, the foot of the seam is behind the camera. The band is drawn all the same.
+    private async Task Near()
+    {
+        play.LookAt(new(1.5f, 0, 1.7f), new(1.5f, 1.3f + .2f * Mathf.Tan(Mathf.DegToRad(12)), 1.5f));
+        Button(MouseButton.Right, true);
+        var banded = Centroid(await Capture(), InLens, Red);
+        Check(banded.Count > 100 && banded.Column < Width / 2 - 10, $"close to the seam, looking up, the post beside it still shows to its left; column {banded.Column}, {banded.Count} pixels");
+        region.GetNode<PrismView>("Generated/Prism").MirrorBands = null;
+        var plain = Centroid(await Capture(), InLens, Red);
+        Check(plain.Count > 100 && plain.Column > Width / 2 + 10, $"without the band it is to the right; column {plain.Column}");
+    }
+
+    // Behind a wall the seam leaves no trace in the lens: no band sides are drawn. The same seam in the open shows them.
+    private async Task Wall()
+    {
+        Button(MouseButton.Right, true);
+        var hidden = await BandSides();
+        await play.Load(AddPosts, "res://regions/seam_test.tscn");
+        region.Travel!.SetPhysicsProcess(false);
+        play.LookAt(new(1.5f, 0, 3f), new(1.5f, 1.32f, 1.5f));
+        Button(MouseButton.Right, true);
+        var shown = await BandSides();
+        Check(hidden == 0 && shown > 50, $"the band must not show through a wall; {hidden} band pixels behind it and {shown} without it");
+    }
+
+    private async Task<int> BandSides()
+    {
+        var image = await Capture();
+        var count = 0;
+        for (var y = InLens.Position.Y; y < InLens.End.Y; y++)
+            for (var x = InLens.Position.X; x < InLens.End.X; x++)
+                if (BandColor(image.GetPixel(x, y))) count++;
+        return count;
     }
 
     // Both the view and the lens are turned over left to right, and what the interface draws is not.

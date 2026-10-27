@@ -56,11 +56,13 @@ internal sealed class SeamDisplay
     internal bool IsUsable(SeamMark mark) => StateOf(mark) is { Open: true, Severed: false };
 
     /// <summary>
-    /// The mirror bands to draw in the lens when it shows the target section: those of usable mirror seams that pass through
-    /// both the player's section and the target.
+    /// The mirror bands to draw in the lens when it shows the target section: those of mirror seams that pass through both the
+    /// player's section and the target and are not severed. A shut seam keeps its band, so that it still reads as a mirror seam.
     /// </summary>
-    internal IReadOnlyList<MirrorBand> BandsIn(string target) =>
-        Between(current, target).Where(mark => mark.Mirrored && IsUsable(mark)).Select(mark => new MirrorBand(mark.Foot, mark.Height)).ToArray();
+    internal IReadOnlyList<MirrorBand> BandsIn(string target) => Between(current, target)
+        .Where(mark => mark.Mirrored && !StateOf(mark).Severed)
+        .Select(mark => new MirrorBand(mark.Foot, mark.Height, StateOf(mark).Open))
+        .ToArray();
 
     /// <summary>
     /// Brings the lights and hums up to date with the player's section and place and with the seams' states. A mirror seam

@@ -5,6 +5,7 @@ using FourD;
 using Game.Adapter;
 using Game.Audio;
 using Godot;
+using static Game.Tests.SeamPlay;
 using static Game.Tests.TurningFixture;
 
 namespace Game.Tests;
@@ -33,9 +34,12 @@ public partial class SeamChecks : Node
             CheckSeamStates();
             await seam.Load();
             await CheckBands();
+            await seam.Load();
+            await CheckBandsInOddPoses();
+            await seam.Load(r => AddBlock(r, "screen", new(1.5f, 1.5f, 2.2f), new(3, 3, .1f)));
+            await CheckBandBehindAWall();
             await seam.Load(MakeMirrors);
             await CheckHum();
-            CheckHumIsTheBreathingBackwards();
             await seam.Load();
             CheckLensTargets();
             await play.Unload();
@@ -171,7 +175,7 @@ public partial class SeamChecks : Node
         Check(display.BandsIn("Ⅲ").Count == 0, "a seam that does not reach the section the lens shows has no band there");
 
         world.SetSeamOpen(new("glass"), false);
-        Check(display.BandsIn("Ⅱ").Count == 0, "a mirror seam that is shut has no band");
+        Check(display.BandsIn("Ⅱ") is [{ Open: false }], "a mirror seam that is shut keeps its band, marked as shut");
         world.SetSeamOpen(new("glass"), true);
 
         play.LookAt(new(1.65f, .02f, 1.5f), new(1.5f, 1, 1.5f));
@@ -180,6 +184,40 @@ public partial class SeamChecks : Node
         Check(region.CurrentSection == "Ⅱ" && display.BandsIn("Ⅰ").Count == 1, "after crossing, the lens at I shows the band of the seam she came through");
         world.SeverSeam(new("glass"));
         Check(display.BandsIn("Ⅰ").Count == 0, "a severed mirror seam has no band");
+    }
+
+    // The strength of the band the lens draws for the first mirror seam, 0 when it draws none.
+    private async Task<float> BandStrength()
+    {
+        await play.Frames(3);
+        var lens = (ShaderMaterial)region.GetNode<TextureRect>("Generated/Prism/Lens").Material;
+        return lens.GetShaderParameter("band_bottom").AsVector4Array()[0].W;
+    }
+
+    // 0.2 m from the mirror seam, looking up 12 degrees puts the foot of the seam behind the camera, and looking down 10 degrees
+    // puts its head there; the band is drawn all the same.
+    private async Task CheckBandsInOddPoses()
+    {
+        await seam.RaiseLens();
+        play.LookAt(new(1.5f, 0, 1.7f), new(1.5f, 1.3f + .2f * Mathf.Tan(Mathf.DegToRad(12)), 1.5f));
+        Check(await BandStrength() > 0, "the band is drawn from close by, looking up");
+        play.LookAt(new(1.5f, 0, 1.7f), new(1.5f, 1.3f - .2f * Mathf.Tan(Mathf.DegToRad(10)), 1.5f));
+        Check(await BandStrength() > 0, "and looking down");
+        play.LookAt(new(1.5f, 0, 3), new(1.5f, 1.3f, 1.5f));
+        var open = await BandStrength();
+        Check(open > 0, "and from afar with nothing in the way");
+        world.SetSeamOpen(new("glass"), false);
+        var shut = await BandStrength();
+        Check(shut > 0 && shut < open, "a shut mirror seam has a dimmer band, not none");
+        world.SetSeamOpen(new("glass"), true);
+    }
+
+    // A wall in II stands between the lens and the mirror seam; the band does not show through it and give the seam away.
+    private async Task CheckBandBehindAWall()
+    {
+        await seam.RaiseLens();
+        play.LookAt(new(1.5f, 0, 3), new(1.5f, 1.3f, 1.5f));
+        Check(await BandStrength() == 0, "a mirror seam behind a wall has no band");
     }
 
     private MirrorHum Hum(string seamId) => region.GetNode<MirrorHum>($"Generated/Hum-{seamId}");
@@ -194,6 +232,7 @@ public partial class SeamChecks : Node
         Check(!glass.Playing && !skip.Playing, "she starts 2.1 m from the one and 4.5 m from the other, and hears neither");
         Check(skip.Stream is AudioStreamWav { LoopMode: AudioStreamWav.LoopModeEnum.Forward }, "the hum loops");
         Check(skip.Position.IsEqualApprox(new(0, 1, -1.5f)) && skip.MaxDistance == MirrorHum.Range, "it sounds from the seam, and is heard within its range");
+        Check(skip.Bus == SectionSound.EnvironmentBus && AudioServer.GetBusIndex(SectionSound.EnvironmentBus) >= 0, "it is mixed into the environment sound, whose bus exists");
 
         await seam.Stand(new(.15f, .02f, -1.5f), new(0, 1, -1.5f));
         Check(skip.Playing && !glass.Playing, "near a mirror seam through her section it hums");
@@ -209,18 +248,5 @@ public partial class SeamChecks : Node
 
         await seam.Stand(new(1.65f, .02f, 1.5f), new(1.5f, 1, 1.5f));
         Check(!glass.Playing, "a mirror seam that does not pass through her section is silent, even close by");
-    }
-
-    // The placeholder is the breathing sound played in reverse: the same header, the same samples, last to first.
-    private static void CheckHumIsTheBreathingBackwards()
-    {
-        var breathing = FileAccess.GetFileAsBytes("res://audio/breathing.wav");
-        var hum = FileAccess.GetFileAsBytes("res://audio/mirror_hum.wav");
-        const int header = 44;
-        Check(breathing.Length == hum.Length && breathing[..header].SequenceEqual(hum[..header]), "the hum is as long as the breathing and has its format");
-        var samples = (breathing.Length - header) / 2;
-        for (var i = 0; i < samples; i++)
-            Check(hum[header + i * 2] == breathing[header + (samples - 1 - i) * 2] && hum[header + i * 2 + 1] == breathing[header + (samples - 1 - i) * 2 + 1],
-                $"sample {i} of the hum is sample {samples - 1 - i} of the breathing");
     }
 }

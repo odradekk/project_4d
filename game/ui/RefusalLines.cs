@@ -26,7 +26,6 @@ public static class RefusalLines
         FailureCode.WrongSection => "再靠近缝一点。",
         FailureCode.SeamClosed => "这道缝合上了，过不去。",
         FailureCode.SeamSevered => "缝被咬断了，过不去。",
-        FailureCode.RequiresPrism => "得举着棱镜才能穿缝。",
         FailureCode.CapacityExceeded => "背包装不下了，先放下一样东西。",
         FailureCode.NotPackable => "这个带不过缝，先放下它。",
         FailureCode.PassageOccupied when refusal.Section == currentSection => "缝口这边有东西挡着。",

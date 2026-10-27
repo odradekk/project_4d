@@ -25,7 +25,7 @@ internal sealed class SeamPlay(Node host, TurningFixture play)
     internal BackpackBar Bar => Player.Hud.GetNode<BackpackBar>("Backpack");
     internal FourD.World World => play.Region.World!;
     internal string Said => Player.Hud.SubtitleText;
-    internal string[] InBackpack => play.Region.Travel!.Backpack.Items.Select(item => item.Value).ToArray();
+    internal string[] InBackpack => play.Region.Travel!.Backpack.Contents.OfType<EntityId>().Select(item => item.Value).ToArray();
     internal static EntityId Xiaoman => new("xiaoman");
 
     internal Task Load(Action<Region3D>? change = null) => play.Load(change, Scene);
@@ -52,11 +52,11 @@ internal sealed class SeamPlay(Node host, TurningFixture play)
     }
 
     internal void Pack(string id) =>
-        Check(World.PackEntity(Xiaoman, new(id), Backpack.Slots) is CarryResult.Changed, $"{id} must go into the backpack");
+        Check(World.PackEntity(Xiaoman, new(id), play.Region.Travel!.Backpack.FreeSlots) is CarryResult.Changed, $"{id} must go into the backpack");
 
     internal async Task Hold(string id)
     {
-        Check(World.HoldEntity(Xiaoman, new(id)) is CarryResult.Changed, $"{id} must come into the hand");
+        Check(play.Actions.Hold(new(id)) is null, $"{id} must come into the hand");
         await play.Frames(3);
     }
 
@@ -67,13 +67,13 @@ internal sealed class SeamPlay(Node host, TurningFixture play)
         return hit.Count == 0 ? null : hit["collider"].AsGodotObject() is Node node ? node.GetParent().Name.ToString() : null;
     }
 
-    /// <summary>A block that exists in the second section only, among the building's elements.</summary>
-    internal static void AddBlock(Region3D region, string id, Vector3 position, Vector3 size)
+    /// <summary>A block among the building's elements, from W = <paramref name="wMin"/> on: in the second section only unless told otherwise.</summary>
+    internal static void AddBlock(Region3D region, string id, Vector3 position, Vector3 size, double wMin = .2)
     {
         var block = (BuildingElement3D)region.GetNode<BuildingElement3D>("Buildings/Home/Floor").Duplicate();
         block.Name = id;
         block.EntityId = id;
-        block.WMin = .2;
+        block.WMin = wMin;
         block.Position = position;
         block.GetNode<BoxPart3D>("Part").Mesh = new BoxMesh { Size = size };
         region.GetNode("Buildings/Home").AddChild(block);

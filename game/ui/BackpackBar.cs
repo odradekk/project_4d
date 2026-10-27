@@ -33,13 +33,13 @@ public partial class BackpackBar : VBoxContainer
             slot.AddThemeConstantOverride("shadow_offset_y", 2);
             AddChild(slot);
         }
-        SetItems([]);
+        SetItems([null, null, null, null]);
     }
 
-    /// <summary>Shows the names of what is in the backpack, one to a slot, in order.</summary>
-    internal void SetItems(IReadOnlyList<string> items)
+    /// <summary>Shows the name of what is in each slot, and a dash for an empty one.</summary>
+    internal void SetItems(IReadOnlyList<string?> items)
     {
         for (var i = 0; i < slots.Length; i++)
-            slots[i].Text = $"{i + 1}  {(i < items.Count ? items[i] : "—")}";
+            slots[i].Text = $"{i + 1}  {items[i] ?? "—"}";
     }
 }

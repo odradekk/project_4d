@@ -28,13 +28,16 @@ public sealed partial class SeamTravel : Node
     private Action<string, string> enterSection = null!;
     private MirrorView mirror = null!;
     private BackpackBar bar = null!;
-    private string[] shownItems = [];
+    private string?[] shownItems = [];
 
     internal Backpack Backpack { get; private set; } = null!;
     internal SeamDisplay Display { get; private set; } = null!;
 
-    /// <summary>Whether a click now would cross a seam the player is close enough to and that is open.</summary>
-    public bool CanCross => prism.Raised && Nearest() is { } seam && Display.IsUsable(seam) && Distance(seam) <= PassageRadius();
+    /// <summary>
+    /// Whether a click now would try a seam that is open, within the reach of a click. Whether she is close enough to it to
+    /// cross is the engine's to say.
+    /// </summary>
+    public bool CanCross => prism.Raised && Nearest() is { } seam && Display.IsUsable(seam);
 
     /// <param name="enterSection">Called with the section she left and the section she is in now, once she has crossed.</param>
     internal void Configure(World world, string actor, FirstPersonPlayer player, PrismView prism, PlayerActions actions,
@@ -61,7 +64,7 @@ public sealed partial class SeamTravel : Node
     {
         Display.Refresh(actions.CurrentSection, player.Position);
         mirror.Flipped = prism.Flipped = actions.Mirrored;
-        var items = Backpack.Items.Select(item => item.Value).ToArray();
+        var items = Backpack.Contents.Select(item => item?.Value).ToArray();
         if (items.SequenceEqual(shownItems)) return;
         shownItems = items;
         bar.SetItems(items);
@@ -71,8 +74,9 @@ public sealed partial class SeamTravel : Node
     internal Refusal? Cross()
     {
         if (!prism.Raised || prism.TargetSection is not { } target || Nearest() is not { } seam) return null;
-        var result = world.CrossSeam(new(actor, new(seam.Id), new(target), prism.Raised, Backpack.FreeSlots));
-        if (result is CrossSeamResult.Rejected rejected) return actions.Refuse(rejected.Failure);
+        // She holds the prism up to cross: the lens is raised.
+        var result = world.CrossSeam(new(actor, new(seam.Id), new(target), true, Backpack.FreeSlots));
+        if (result is CrossSeamResult.Rejected rejected) return actions.RefuseCrossing(rejected.Failure);
         var crossed = (CrossSeamResult.Crossed)result;
         // A mirror seam puts her on the other side of its plane, where the engine says she is.
         var position = State().Pose.Position;
@@ -83,7 +87,7 @@ public sealed partial class SeamTravel : Node
     }
 
     /// <summary>Takes the thing in a numbered slot out of the backpack into the hand. Null when the slot is empty or it worked.</summary>
-    internal Refusal? TakeOut(int slot) => slot < Backpack.Items.Count ? actions.Hold(Backpack.Items[slot]) : null;
+    internal Refusal? TakeOut(int slot) => Backpack.Contents[slot] is { } item ? actions.Hold(item) : null;
 
     // The seam from the player's section to the lens's, nearest on the floor plan, if one is within reach of a click.
     private SeamMark? Nearest()
@@ -96,8 +100,6 @@ public sealed partial class SeamTravel : Node
     }
 
     private float Distance(SeamMark seam) => new Vector2(player.Position.X - seam.Foot.X, player.Position.Z - seam.Foot.Z).Length();
-
-    private double PassageRadius() => ((Creature3Definition)State().Definition).PassageRadius;
 
     private EntityState State() => ((EntityReadResult.Found)world.ReadEntity(actor)).Entity;
 }

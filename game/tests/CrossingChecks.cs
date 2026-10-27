@@ -35,6 +35,8 @@ public partial class CrossingChecks : Node
             await CheckLongPole();
             await seam.Load(PrepareRefusals);
             await CheckRefusals();
+            await seam.Load(r => AddBlock(r, "jamb", new(1.12f, .5f, 1.5f), new(.24f, 1, 1), wMin: -1));
+            await CheckBlockedLanding();
             await seam.Load(r => r.GetNode<Node3D>("Seams/Glass").Position = new(-.5f, 0, 1.5f));
             await CheckNearestSeam();
             await seam.Load(r => AddBlock(r, "post", new(-1.1f, .5f, 1.5f), new(.2f, 1, 1)));
@@ -138,15 +140,16 @@ public partial class CrossingChecks : Node
         await seam.RaiseLens();
         await seam.Click();
         seam.CheckArrived("Ⅱ", "Ⅰ");
+        // The pole stands at the seam: its place on the floor plan is the seam's, the moment she has crossed.
         var pole = play.State("pole");
+        Near(new(play.Position("pole").X, 0, play.Position("pole").Z), new(-1.5f, 0, 1.5f), "the pole stands up at the seam");
         Check(pole.UprightOrigin?.Value == "Ⅰ" && pole.Holder == SeamPlay.Xiaoman && !pole.InBackpack,
             "a pole long enough for II stands up in the seam, hinged in I, and stays in her hand");
         Check(play.Actions.Held == "pole" && play.Actions.HeldIsUpright, "she holds its slice");
         await play.Frames(5);
         Check(play.HasSlice("Ⅱ", "pole") && play.HasSlice("Ⅰ", "pole"), "its slice shows in the section she arrived in, and in the one it is hinged in");
-        var standing = play.Position("pole");
         await play.Frames(30);
-        Near(play.Position("pole"), standing, "the slice she holds must stay in the seam, not follow her hand");
+        Near(new(play.Position("pole").X, 0, play.Position("pole").Z), new(-1.5f, 0, 1.5f), "the slice she holds must stay in the seam, not follow her hand");
 
         Press(Key.F);
         await play.Frames(2);
@@ -166,8 +169,10 @@ public partial class CrossingChecks : Node
     private async Task CheckRefusals()
     {
         await seam.RaiseLens();
+        await seam.Stand(new(-4f, .02f, 1.5f), new(-1.5f, 1, 1.5f));
+        Check(!player.Hud.HintText.Contains("穿缝"), "a seam further than a click reaches is not offered");
         await seam.Stand(new(-.5f, .02f, 1.5f), new(-1.5f, 1, 1.5f));
-        Check(!player.Hud.HintText.Contains("穿缝"), "a seam beyond her reach is not offered");
+        Check(player.Hud.HintText.Contains("穿缝"), "within a click's reach the prompt follows the seam's state, and the engine says whether she is close enough");
         await seam.Click();
         Check(play.Region.CurrentSection == "Ⅰ" && seam.Said.Contains("再靠近"), $"a seam beyond her reach is not crossed; she said \"{seam.Said}\"");
 
@@ -204,6 +209,16 @@ public partial class CrossingChecks : Node
         await play.Frames(3);
         await seam.Click();
         seam.CheckArrived("Ⅲ", "Ⅰ");
+    }
+
+    // A jamb in both sections, 0.24 m wide, stands in the way of the landing from the mirror seam and not of where she stands.
+    // The engine says the contact is in II; the jamb has a slice in I as well, and she says the way is blocked there.
+    private async Task CheckBlockedLanding()
+    {
+        await seam.Stand(new(1.65f, .02f, 1.5f), new(1.5f, 1, 1.5f));
+        await seam.RaiseLens();
+        await seam.Click();
+        Check(play.Region.CurrentSection == "Ⅰ" && seam.Said.Contains("那一页的缝口有东西挡着"), $"the way is blocked where she would land, in the other section; she said \"{seam.Said}\"");
     }
 
     // The mirror seam stands 1 m from the plain one, and a click crosses the one she stands at, whichever is listed first.

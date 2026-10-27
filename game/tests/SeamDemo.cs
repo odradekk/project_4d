@@ -19,9 +19,9 @@ public partial class SeamDemo : Node
         var world = region.World!;
         var actor = new EntityId("xiaoman");
         foreach (var item in new[] { "rubber", "ruler" })
-            if (world.PackEntity(actor, new(item), Backpack.Slots) is CarryResult.Rejected packing)
+            if (world.PackEntity(actor, new(item), region.Travel!.Backpack.FreeSlots) is CarryResult.Rejected packing)
                 throw new InvalidOperationException($"Cannot pack {item}: {packing.Failure.Detail}");
-        if (world.HoldEntity(actor, new("pole")) is CarryResult.Rejected holding)
-            throw new InvalidOperationException($"Cannot hold the pole: {holding.Failure.Detail}");
+        if (region.Actions!.Hold(new("pole")) is { } holding)
+            throw new InvalidOperationException($"Cannot hold the pole: {holding.Code}");
     }
 }
