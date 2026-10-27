@@ -20,11 +20,37 @@ public sealed partial class World
         var inBackpack = held.Holder == actor && held.Packed;
         if ((held.Holder is not null && !inBackpack) || HoldsInHand(actor))
             return Reject(FailureCode.EntityInUse, "The item is already held or the actor already holds an item.", item);
+        var (taken, refusal) = inBackpack ? TakeOut(holder, held) : (held, null);
+        if (taken is null) return new CarryResult.Rejected(refusal!);
         var section = sections.Single(candidate => candidate.Id == holder.Section);
-        var taken = held with { Packed = false };
         if (Slice(taken, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", item);
 
         dynamicEntities[item] = taken with { Holder = actor };
+        revision++;
+        return new CarryResult.Changed(State(dynamicEntities[item]));
+    }
+
+    /// <summary>
+    /// Puts a lying, packable item of the actor's section into the actor's backpack, from the world or from the
+    /// hand. The host counts the free slots and passes them in: with none the item stays where it is.
+    /// </summary>
+    public CarryResult PackEntity(EntityId actor, EntityId item, int freeSlots)
+    {
+        CarryResult Reject(FailureCode code, string detail, EntityId id) => new CarryResult.Rejected(Fail(code, detail, id));
+        if (freeSlots < 0) return Reject(FailureCode.InvalidInput, "Free slots cannot be negative.", item);
+        if (!actors.TryGetValue(actor, out var owner))
+            return Reject(KindOrUnknown(actor), "Actor is unknown or not a three-dimensional creature.", actor);
+        if (!dynamicEntities.TryGetValue(item, out var packed))
+            return Reject(KindOrUnknown(item), "Entity is unknown or cannot be packed.", item);
+        if (rotations.ContainsKey(item)) return Reject(FailureCode.Busy, "Entity is rotating.", item);
+        if (packed.Holder is not null && packed.Holder != actor) return Reject(FailureCode.EntityInUse, "Another creature holds the item.", item);
+        if (packed.Packed) return Reject(FailureCode.InvalidInput, "The item is already in the backpack.", item);
+        if (packed.Origin is not null || DynamicShapes.IsBall(packed.Definition) || !DynamicShapes.Interaction(packed.Definition).Packable)
+            return Reject(FailureCode.NotPackable, "Only a lying packable item goes into the backpack.", item);
+        if (packed.Section != owner.Section) return Reject(FailureCode.WrongSection, "The item lies in another section.", item);
+        if (freeSlots == 0) return Reject(FailureCode.CapacityExceeded, "The backpack is full.", item);
+
+        dynamicEntities[item] = packed with { Holder = actor, Packed = true };
         revision++;
         return new CarryResult.Changed(State(dynamicEntities[item]));
     }
@@ -36,10 +62,32 @@ public sealed partial class World
         if (!dynamicEntities.TryGetValue(item, out var held)) return Reject(KindOrUnknown(item), "Entity is unknown or cannot be held.");
         if (held.Holder is null) return Reject(FailureCode.InvalidInput, "Entity is not held.");
 
-        dynamicEntities[item] = held with { Holder = null, Packed = false };
+        var (freed, refusal) = held.Packed ? TakeOut(actors[held.Holder.Value], held) : (held, null);
+        if (freed is null) return new CarryResult.Rejected(refusal!);
+        dynamicEntities[item] = freed with { Holder = null };
         revision++;
         return new CarryResult.Changed(State(dynamicEntities[item]));
     }
+
+    // The item as it is once out of its owner's backpack, in the owner's section, or why it cannot come out. Now it
+    // belongs to the building that holds the section, and it has to be fit to lie there: the checks PlaceEntity makes of
+    // a pose, because it was last checked against the section it came from.
+    private (Dynamic?, Failure?) TakeOut(Actor owner, Dynamic packed)
+    {
+        var id = packed.Definition.Id;
+        var w = sections.Single(candidate => candidate.Id == owner.Section).W;
+        var building = buildings.FirstOrDefault(candidate => candidate.WRange.Min <= w && w <= candidate.WRange.Max);
+        if (building is null) return (null, Fail(FailureCode.OutOfRange, "The section is in no building.", id));
+        var taken = packed with { Packed = false, Definition = InBuilding(packed.Definition, building.Id) };
+        return PoseFailure(id, taken) is { } failure ? (null, failure) : (taken, null);
+    }
+
+    private static EntityDefinition InBuilding(EntityDefinition definition, BuildingId building) => definition switch
+    {
+        TurnableDefinition turnable => turnable with { Building = building },
+        ItemDefinition item => item with { Building = building },
+        _ => definition
+    };
 
     /// <summary>
     /// Moves a held item by the request's delta, a component at a time in the order X, Z, Y. An item that reaches

@@ -248,6 +248,22 @@ public class CrossingTests
         world.Refuse(Request(hasPrism: false), FailureCode.SeamClosed, ActorId);
     }
 
+    [Fact]
+    public void TheChecksRunInTheOrderOfTheContract()
+    {
+        var farAndSevered = SeamScene(Seam(severed: true), Actor(x: .5));
+        var withoutPrism = SeamScene(Seam(), Chair(), WallFrom(.3, "II"), Actor(x: .15));
+        var occupied = SeamScene(Seam(), Chair(), WallFrom(.3, "II"), Actor(x: .15));
+        var notJoined = ThreeSections(Seam(sections: ["II", "III"]), Actor(x: .1));
+        withoutPrism.HoldEntity(ActorId, new("chair"));
+        occupied.HoldEntity(ActorId, new("chair"));
+
+        farAndSevered.Refuse(Request(), FailureCode.WrongSection, ActorId);
+        withoutPrism.Refuse(Request(hasPrism: false), FailureCode.RequiresPrism, ActorId);
+        occupied.Refuse(Request(), FailureCode.NotPackable, ActorId);
+        notJoined.Refuse(Request(target: "I"), FailureCode.NotConnected, ActorId);
+    }
+
     // The rod lies to the side, out of the way of the creature at the seam.
     private static TurnableDefinition RodAside() => Rod() with { Pose = At(0, 0, 1.5) };
 

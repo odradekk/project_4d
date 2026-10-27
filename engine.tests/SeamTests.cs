@@ -49,15 +49,61 @@ public class SeamTests
     }
 
     [Fact]
-    public void SeveringASeamCountsAsAChangeOfTheWorld()
+    public void EverySeamWriteCountsAsAChangeOfTheWorldEvenWhenNothingChanges()
     {
         var world = SeamScene(Seam(), Rod(), Actor(x: .1));
-        var plan = world.AllowedPlan(new StandUp(ActorId, RodId, II));
+        Action<World>[] writes =
+        [
+            world => world.SetSeamOpen(new("seam"), true),
+            world => world.SeverSeam(new("seam")),
+            world => world.SeverSeam(new("seam")),
+        ];
 
-        world.SeverSeam(new("seam"));
+        foreach (var write in writes)
+        {
+            var plan = world.AllowedPlan(new StandUp(ActorId, RodId, II));
 
-        var stale = Assert.IsType<StartRotationResult.Rejected>(world.StartRotation(plan));
-        Assert.Equal(FailureCode.StalePlan, stale.Failure.Code);
+            write(world);
+
+            var stale = Assert.IsType<StartRotationResult.Rejected>(world.StartRotation(plan));
+            Assert.Equal(FailureCode.StalePlan, stale.Failure.Code);
+        }
+    }
+
+    [Fact]
+    public void ASeamCanBeClosedAndOpenedAgain()
+    {
+        var world = SeamScene(Seam(), Actor(x: .1));
+
+        Assert.IsType<UpdateResult.Updated>(world.SetSeamOpen(new("seam"), false));
+        Assert.False(Read(world, "seam").Open);
+        world.Refuse(Request(), FailureCode.SeamClosed, ActorId);
+        Assert.IsType<UpdateResult.Updated>(world.SetSeamOpen(new("seam"), true));
+
+        world.Cross(Request());
+    }
+
+    [Fact]
+    public void ASeveredSeamCanStillBeClosedButNotOpened()
+    {
+        var world = SeamScene(Seam(open: false, severed: true));
+
+        var rejected = Assert.IsType<UpdateResult.Rejected>(world.SetSeamOpen(new("seam"), true));
+
+        Assert.Equal(FailureCode.SeamSevered, rejected.Failure.Code);
+        Assert.Equal(new SeamId("seam"), rejected.Failure.Seam);
+        Assert.False(Read(world, "seam").Open);
+        Assert.IsType<UpdateResult.Updated>(world.SetSeamOpen(new("seam"), false));
+    }
+
+    [Fact]
+    public void AnUnknownSeamCannotBeOpened()
+    {
+        var world = SeamScene(Seam());
+
+        var rejected = Assert.IsType<UpdateResult.Rejected>(world.SetSeamOpen(new("none"), true));
+
+        Assert.Equal(FailureCode.UnknownId, rejected.Failure.Code);
     }
 
     [Fact]
@@ -137,6 +183,24 @@ public class SeamTests
         if (loads) Load(description);
         else Assert.Contains(LoadErrors(description), error =>
             error.Code == LoadErrorCode.SeamTooClose && error.Source.Property == "definition.Position");
+    }
+
+    [Fact]
+    public void TwoSeamsThatAreTooCloseAreReportedEvenWhenOneOfThemHasAnotherError()
+    {
+        var errors = LoadErrors(WithSeams(Seam(), Seam(position: new(.3, 0, 0))));
+
+        Assert.Contains(errors, error => error.Code == LoadErrorCode.DuplicateId);
+        Assert.Contains(errors, error => error.Code == LoadErrorCode.SeamTooClose);
+    }
+
+    [Fact]
+    public void SeamsThatShareOnlyASectionThatDoesNotExistAreNotTooClose()
+    {
+        var errors = LoadErrors(WithSeams(Seam(id: "a", sections: ["I", "none"]), Seam(id: "b", sections: ["II", "none"])));
+
+        Assert.DoesNotContain(errors, error => error.Code == LoadErrorCode.SeamTooClose);
+        Assert.Contains(errors, error => error.Code == LoadErrorCode.MissingReference);
     }
 
     [Fact]

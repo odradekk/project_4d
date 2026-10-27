@@ -19,6 +19,14 @@ public sealed partial class World
             return Reject(KindOrUnknown(request.Actor), "Actor is unknown or not a three-dimensional creature.", request.Actor);
         if (!dynamicEntities.TryGetValue(request.Entity, out var item))
             return Reject(KindOrUnknown(request.Entity), "Entity is unknown or not turnable.", request.Entity);
+        return PlanRotation(request, actor, item);
+    }
+
+    // Plans the rotation of `item`, which may be placed otherwise than the world has it: a held item that a crossing moves first.
+    private RotationPlanResult PlanRotation(RotationRequest request, Actor actor, Dynamic item)
+    {
+        RotationPlanResult Reject(FailureCode code, string detail, EntityId? id = null) =>
+            new RotationPlanResult.Rejected(Fail(code, detail, id));
         if (rotations.ContainsKey(request.Entity)) return Reject(FailureCode.Busy, "Entity is rotating.", request.Entity);
         if (!DynamicShapes.Interaction(item.Definition).Holdable) return Reject(FailureCode.NotHoldable, "Entity is not holdable.", request.Entity);
         var section = sections.Single(candidate => candidate.Id == actor.Section);
@@ -69,7 +77,11 @@ public sealed partial class World
         if (!ball && item.Section != section.Id) return Refuse(FailureCode.WrongSection, "Entity belongs to another section.");
         var axis = LocalAxis(item.Pose.Rotation, DynamicShapes.Interaction(item.Definition).LongAxis);
         var angle = (target.W > section.W ? 1 : -1) * QuarterTurn;
-        return (new Motion(HingePosition(item), axis, angle, StandUpDuration, ball ? null : section.Id), null);
+        var hinge = HingePosition(item);
+        // The sections are checked against the item as it stands now, not as it was loaded, because it may have come from another section.
+        if (DynamicShapes.Boxes(item.Definition, RotatedPose(item.Pose, hinge, axis, angle)).Any(EndsNearSection))
+            return Refuse(FailureCode.InvalidInput, "A part end would stand too close to a section.");
+        return (new Motion(hinge, axis, angle, StandUpDuration, ball ? null : section.Id), null);
     }
 
     private (Motion?, Failure?) PlanLayDown(Dynamic item, SectionDefinition section)

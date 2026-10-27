@@ -53,7 +53,7 @@ public sealed partial class World
     // Held items that have not been stood up are carried along; a stood-up one is only grabbed.
     private EntityState State(Actor actor) => new(
         actor.Definition.Id, actor.Definition, actor.Pose, actor.Section, actor.Yaw,
-        UprightOrigin: null, Holder: null,
+        UprightOrigin: null, Holder: null, InBackpack: false,
         CarriedItems: Array.AsReadOnly(dynamicEntities.Values
             .Where(item => item.Holder == actor.Definition.Id && item.Origin is null)
             .Select(item => item.Definition.Id)
@@ -63,7 +63,7 @@ public sealed partial class World
 
     private EntityState State(Dynamic item) => new(
         item.Definition.Id, item.Definition, item.Pose, item.Section, ActorYaw: null,
-        item.Origin, item.Holder, CarriedItems: [], DevicePosition: null,
+        item.Origin, item.Holder, item.Packed, CarriedItems: [], DevicePosition: null,
         Rotating: rotations.ContainsKey(item.Definition.Id),
         Handedness: DynamicShapes.IsBall(item.Definition) ? Handedness.NotComparable : PoseHandedness(item.Pose));
 
@@ -175,7 +175,7 @@ public sealed partial class World
         if (!staticDefinitions.TryGetValue(entity, out var definition)) return new EntityReadResult.Missing(entity);
         var fixedObject = definition as FixedDefinition;
         return new EntityReadResult.Found(new(
-            entity, definition, definition.Pose, fixedObject?.Section, ActorYaw: null, UprightOrigin: null, Holder: null,
+            entity, definition, definition.Pose, fixedObject?.Section, ActorYaw: null, UprightOrigin: null, Holder: null, InBackpack: false,
             CarriedItems: [], DevicePosition: null, Rotating: false,
             Handedness: fixedObject is null ? Handedness.NotComparable : PoseHandedness(definition.Pose)));
     }

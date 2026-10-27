@@ -61,11 +61,12 @@ public sealed partial class World
         var to = sections.FirstOrDefault(candidate => candidate.Id == request.Target);
         if (to is null) return Refuse(FailureCode.UnknownId, "Unknown target section.");
         var from = sections.Single(candidate => candidate.Id == actor.Section);
-        if (from.Id == to.Id) return Refuse(FailureCode.InvalidInput, "Target must differ from the actor's section.");
         if (!seam.Sections.Contains(from.Id) || !seam.Sections.Contains(to.Id))
             return Refuse(FailureCode.NotConnected, "The seam does not join these two sections.");
-        if (Distance4(OnFloorPlan(actor.Pose.Position.X, actor.Pose.Position.Z), OnFloorPlan(seam.Position.X, seam.Position.Z))
-            > actor.Definition.PassageRadius + RoundingMargin)
+        if (from.Id == to.Id) return Refuse(FailureCode.InvalidInput, "Target must differ from the actor's section.");
+        var dx = actor.Pose.Position.X - seam.Position.X;
+        var dz = actor.Pose.Position.Z - seam.Position.Z;
+        if (Math.Sqrt(dx * dx + dz * dz) > actor.Definition.PassageRadius + RoundingMargin)
             return Refuse(FailureCode.WrongSection, "The creature is too far from the seam.", request.Actor);
         if (seam.Severed) return Refuse(FailureCode.SeamSevered, "The seam has been severed.");
         if (!seam.Open) return Refuse(FailureCode.SeamClosed, "The seam is closed.");
@@ -73,9 +74,6 @@ public sealed partial class World
             return Refuse(FailureCode.RequiresPrism, "Crossing needs the prism.", request.Actor);
         return (new Crossing(actor, seam, from, to), null);
     }
-
-    // A point at height 0 and W 0, to measure distances on the floor plan.
-    private static Vec4 OnFloorPlan(double x, double z) => new(x, 0, z, 0);
 
     // What the item in the hand does when its holder crosses: the plan of its stand-up when it is long enough to reach
     // the target section; no plan and no failure when it goes into the backpack; otherwise why it cannot go.
@@ -94,9 +92,34 @@ public sealed partial class World
             return freeSlots < 1 ? Refuse(FailureCode.CapacityExceeded, "The backpack is full.") : (null, null);
         }
 
-        var planned = PlanRotation(new StandUp(crossing.Actor.Definition.Id, id, crossing.To.Id));
-        if (planned is RotationPlanResult.Allowed allowed) return (allowed.Plan, null);
-        return (null, planned is RotationPlanResult.Blocked blocked ? blocked.Failure : ((RotationPlanResult.Rejected)planned).Failure);
+        var (moved, stopped) = MoveToSeam(crossing, hand);
+        if (moved is null) return (null, stopped);
+        return PlanRotation(new StandUp(crossing.Actor.Definition.Id, id, crossing.To.Id), crossing.Actor, moved) switch
+        {
+            RotationPlanResult.Allowed allowed => (allowed.Plan, null),
+            RotationPlanResult.Blocked blocked => (null, blocked.Failure),
+            RotationPlanResult.Rejected rejected => (null, rejected.Failure),
+            _ => throw new InvalidOperationException("Unknown rotation plan result.")
+        };
+    }
+
+    // The item lying in the hand, moved over the floor plan until its hinge is at the seam, X first and then Z, or what
+    // stops it on the way. The hinge stays in the section it started in, and a long item stands up from there.
+    private (Dynamic?, Failure?) MoveToSeam(Crossing crossing, Dynamic hand)
+    {
+        var id = hand.Definition.Id;
+        var hinge = HingePosition(hand);
+        double[] delta = [crossing.Seam.Position.X - hinge.X, 0, crossing.Seam.Position.Z - hinge.Z, 0];
+        var solids = DynamicShapes.Solids(hand.Definition, hand.Pose);
+        double[] applied = [0, 0, 0, 0];
+        foreach (var axis in new[] { 0, 2 })
+        {
+            var (distance, contacts) = Sweep(id, solids.Select(solid => solid.Moved(applied)).ToArray(), axis, delta[axis]);
+            if (contacts.Count > 0)
+                return (null, Fail(FailureCode.TranslationBlocked, "The item cannot be carried to the seam.", id, contacts));
+            applied[axis] = distance;
+        }
+        return (hand with { Pose = hand.Pose with { Position = Add(hand.Pose.Position, Box4.ToVec4(applied)) } }, null);
     }
 
     // The pose of something that crosses with the creature: the same place in the target section. A mirror seam also

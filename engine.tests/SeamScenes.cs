@@ -51,6 +51,17 @@ internal static class SeamScenes
     public static FixedDefinition WallUpTo(double edge, string section) =>
         WallFrom(edge - 2, section);
 
+    // A rod of the given reach, centered at the origin of section I, with its hinge 2 cm inside its left end.
+    public static TurnableDefinition Stick(double reach, bool packable)
+    {
+        var half = (reach + .02) / 2;
+        return Rod() with
+        {
+            Shape = Box(new(half, .03, .03)),
+            Interaction = new TurnableProperties(Holdable: true, Packable: packable, HorizontalRadius: half, LongAxis: Axis3.X, Hinge: new(.02 - half, 0, 0), Reach: reach)
+        };
+    }
+
     // A short item that cannot go in the backpack.
     public static TurnableDefinition Chair() => new(
         new("chair"), At(.1, .03, 0), TestSource, I, new("home"), Box(new(.05, .03, .03)),

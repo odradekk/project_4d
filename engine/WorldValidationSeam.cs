@@ -10,7 +10,7 @@ internal sealed partial class WorldValidation
             return;
         }
         var ids = new HashSet<SeamId>();
-        var usable = new List<SeamDefinition>();
+        var present = new List<SeamDefinition>();
         foreach (var seam in description.Seams)
         {
             if (seam is null)
@@ -18,14 +18,13 @@ internal sealed partial class WorldValidation
                 Error(LoadErrorCode.InvalidGeometry, root, "Seam is required.");
                 continue;
             }
-            var errorsBefore = errors.Count;
             Id(seam.Id.Value, Field(seam.Source, "Id"));
             if (!ids.Add(seam.Id)) Error(LoadErrorCode.DuplicateId, Field(seam.Source, "Id"), "Duplicate seam ID.");
             SeamPlacement(seam);
             SeamSections(seam);
-            if (errors.Count == errorsBefore) usable.Add(seam);
+            present.Add(seam);
         }
-        SeamSpacing(usable);
+        ReportSeamsTooClose(present);
     }
 
     private void SeamPlacement(SeamDefinition seam)
@@ -63,16 +62,20 @@ internal sealed partial class WorldValidation
         }
     }
 
-    // Two seams of one section are at least 0.8 m apart on the floor plan; a different W does not make up for it.
-    private void SeamSpacing(List<SeamDefinition> usable)
+    // Two seams of one section are at least 0.8 m apart on the floor plan; a different W does not make up for it. This
+    // depends only on where the seams are and which sections they share, so other errors of a seam do not hide it.
+    // A position that is not a number gives no distance below 0.8.
+    private void ReportSeamsTooClose(List<SeamDefinition> present)
     {
-        for (var i = 0; i < usable.Count; i++)
-            for (var j = i + 1; j < usable.Count; j++)
+        var placed = present.Where(seam => seam.Sections is not null).ToList();
+        for (var i = 0; i < placed.Count; i++)
+            for (var j = i + 1; j < placed.Count; j++)
             {
-                var (first, second) = (usable[i], usable[j]);
+                var (first, second) = (placed[i], placed[j]);
                 var dx = first.Position.X - second.Position.X;
                 var dz = first.Position.Z - second.Position.Z;
-                if (first.Sections.Intersect(second.Sections).Any() && Math.Sqrt(dx * dx + dz * dz) < World.SeamSpacing - World.RoundingMargin)
+                var sharesSection = first.Sections.Intersect(second.Sections).Any(sections.ContainsKey);
+                if (sharesSection && Math.Sqrt(dx * dx + dz * dz) < World.SeamSpacing - World.RoundingMargin)
                     Error(LoadErrorCode.SeamTooClose, Field(second.Source, "Position"),
                         $"Seam is closer than {World.SeamSpacing} m to seam {first.Id.Value} in a shared section.");
             }

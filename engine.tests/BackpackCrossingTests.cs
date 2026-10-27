@@ -31,6 +31,7 @@ public class BackpackCrossingTests
         Assert.Null(crossed.WedgedItem);
         var nut = world.State(NutId);
         Assert.Equal(ActorId, nut.Holder);
+        Assert.True(nut.InBackpack);
         Assert.Equal(II, nut.Section);
         Assert.Equal(new Vec4(.1, .03, 0, .42), nut.Pose.Position);
         Assert.Equal(Identity4, nut.Pose.Rotation);

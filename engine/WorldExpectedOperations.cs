@@ -48,9 +48,24 @@ public sealed partial class World
             Report(LoadErrorCode.InvalidGeometry, "Setup collections are required.");
             return problems;
         }
-        if (setup.Seams.Count > 0) Report(LoadErrorCode.UnsupportedDefinition, "Seam overrides are not implemented.", field: ".Setup.Seams");
         if (setup.SharedValues.Count > 0) Report(LoadErrorCode.UnsupportedDefinition, "Shared value overrides are not implemented.", field: ".Setup.SharedValues");
-        if (setup.Carry.Count > 0) Report(LoadErrorCode.UnsupportedDefinition, "Carry setup is not implemented.", field: ".Setup.Carry");
+
+        var overriddenSeams = new HashSet<SeamId>();
+        foreach (var replacement in setup.Seams)
+        {
+            if (replacement is null) Report(LoadErrorCode.InvalidGeometry, "Seam override is required.", field: ".Setup.Seams");
+            else if (!overriddenSeams.Add(replacement.Id)) Report(LoadErrorCode.DuplicateId, "Duplicate seam override.", field: ".Setup.Seams");
+            else if (description.Seams.All(seam => seam.Id != replacement.Id))
+                Report(LoadErrorCode.MissingReference, "Unknown seam override.", field: ".Setup.Seams");
+        }
+        var carriedItems = new HashSet<EntityId>();
+        foreach (var carry in setup.Carry)
+        {
+            if (carry is null) Report(LoadErrorCode.InvalidGeometry, "Carry setup is required.", field: ".Setup.Carry");
+            else if (!carriedItems.Add(carry.Item)) Report(LoadErrorCode.DuplicateId, "An item has one holder.", entity: carry.Item, field: ".Setup.Carry");
+            else if (description.Entities.All(entity => entity.Id != carry.Actor) || description.Entities.All(entity => entity.Id != carry.Item))
+                Report(LoadErrorCode.MissingReference, "Unknown actor or item in carry setup.", entity: carry.Item, field: ".Setup.Carry");
+        }
 
         var overridden = new HashSet<EntityId>();
         foreach (var replacement in setup.EntityOverrides)
@@ -72,7 +87,7 @@ public sealed partial class World
                 Report(LoadErrorCode.UnsupportedDefinition, "Override must match a supported dynamic entity kind.", entity: replacement.Id);
         }
         for (var i = 0; i < operation.Steps.Count; i++)
-            if (operation.Steps[i] is not ExpectedRotation and not ExpectedAdvance)
+            if (operation.Steps[i] is not ExpectedRotation and not ExpectedCrossing and not ExpectedAdvance)
                 Report(LoadErrorCode.UnsupportedDefinition, "This expected step is not implemented.", step: i);
         return problems;
     }
@@ -81,19 +96,34 @@ public sealed partial class World
     private static List<LoadError> RunOperation(ExpectedOperation operation, WorldDescription description)
     {
         var replacements = operation.Setup.EntityOverrides.ToDictionary(replacement => replacement.Id);
+        var seamOverrides = operation.Setup.Seams.ToDictionary(replacement => replacement.Id);
         var loaded = Load(description with
         {
             Entities = description.Entities.Select(entity => replacements.GetValueOrDefault(entity.Id, entity)).ToArray(),
+            Seams = description.Seams.Select(seam => OverriddenSeam(seam, seamOverrides)).ToArray(),
             ExpectedOperations = []
         });
         if (loaded is LoadResult.Invalid invalid)
             return invalid.Errors.Select(error => error with { Operation = operation.Id }).ToList();
 
         var world = ((LoadResult.Loaded)loaded).World;
+        foreach (var carry in operation.Setup.Carry)
+        {
+            var carried = carry.Location == CarryLocation.Hand
+                ? world.HoldEntity(carry.Actor, carry.Item)
+                : world.PackEntity(carry.Actor, carry.Item, int.MaxValue);
+            if (carried is CarryResult.Rejected rejected)
+                return [OperationError(operation, LoadErrorCode.InvalidCarry, $"The item cannot be carried: {rejected.Failure.Code}.", entity: carry.Item, field: ".Setup.Carry")];
+        }
         for (var i = 0; i < operation.Steps.Count; i++)
         {
             var step = operation.Steps[i];
-            var expected = (step as ExpectedRotation)?.ExpectedFailure;
+            var expected = step switch
+            {
+                ExpectedRotation rotation => rotation.ExpectedFailure,
+                ExpectedCrossing crossing => crossing.ExpectedFailure,
+                _ => null
+            };
             var failure = RunStep(world, step);
             if (failure?.Code != expected)
             {
@@ -104,9 +134,13 @@ public sealed partial class World
         return [];
     }
 
+    private static SeamDefinition OverriddenSeam(SeamDefinition seam, Dictionary<SeamId, SeamOverride> overrides) =>
+        overrides.TryGetValue(seam.Id, out var replacement) ? seam with { Open = replacement.Open, Severed = replacement.Severed } : seam;
+
     private static Failure? RunStep(World world, ExpectedStep step) => step switch
     {
         ExpectedRotation rotation => RunRotation(world, rotation),
+        ExpectedCrossing crossing => (world.CrossSeam(crossing.Request) as CrossSeamResult.Rejected)?.Failure,
         ExpectedAdvance advance => (world.Step(advance.Delta) as StepResult.Rejected)?.Failure,
         _ => null
     };

@@ -11,6 +11,18 @@ public sealed partial class World
         ? new SeamReadResult.Found(new(seam, found.Open, found.Severed))
         : new SeamReadResult.Missing(seam);
 
+    /// <summary>Opens or closes a seam. A severed seam cannot be opened: Rejected(SeamSevered).</summary>
+    public UpdateResult SetSeamOpen(SeamId seam, bool open)
+    {
+        if (!seams.TryGetValue(seam, out var found))
+            return new UpdateResult.Rejected(Fail(FailureCode.UnknownId, "Unknown seam.") with { Seam = seam });
+        if (found.Severed && open)
+            return new UpdateResult.Rejected(Fail(FailureCode.SeamSevered, "A severed seam cannot be opened.") with { Seam = seam });
+        seams[seam] = found with { Open = open };
+        revision++;
+        return new UpdateResult.Updated();
+    }
+
     /// <summary>
     /// Severs a seam for good. Severing an already severed seam succeeds without a second event.
     /// Rejected(UnknownId) for an unknown seam.

@@ -5,8 +5,7 @@ public sealed partial class World
     /// <summary>Atomically places an unheld turnable or item at a validated full four-dimensional pose.</summary>
     public UpdateResult PlaceEntity(EntityId entity, Pose4 pose)
     {
-        UpdateResult Reject(FailureCode code, string detail, IReadOnlyList<Contact>? contacts = null) =>
-            new UpdateResult.Rejected(Fail(code, detail, entity, contacts));
+        UpdateResult Reject(FailureCode code, string detail) => new UpdateResult.Rejected(Fail(code, detail, entity));
         if (!dynamicEntities.TryGetValue(entity, out var item))
             return Reject(KindOrUnknown(entity), "Unknown or unsupported entity.");
         if (rotations.ContainsKey(entity)) return Reject(FailureCode.Busy, "Entity is rotating.");
@@ -36,30 +35,40 @@ public sealed partial class World
                 return Reject(FailureCode.NoSlice, "Object must retain a slice in its origin section.");
         }
 
+        if (PoseFailure(entity, proposed) is { } failure) return new UpdateResult.Rejected(failure);
+
+        dynamicEntities[entity] = proposed;
+        revision++;
+        return new UpdateResult.Updated();
+    }
+
+    // Why an item cannot be in the world with the pose, section and origin of `proposed`, or null when it can. These
+    // are the checks of PlaceEntity, and also those of an item that comes out of a backpack.
+    private Failure? PoseFailure(EntityId entity, Dynamic proposed)
+    {
+        var definition = proposed.Definition;
+        var pose = proposed.Pose;
+        var ball = DynamicShapes.IsBall(definition);
         var rings = DynamicShapes.Rounds(definition, pose).Where(round => round.Major > 0);
         if (proposed.Origin is null && rings.Any(ring => sections.Any(section => ring.TooCloseToSection(section.W))))
-            return Reject(FailureCode.InvalidInput, "Hidden ring is too close to a section.");
+            return Fail(FailureCode.InvalidInput, "Hidden ring is too close to a section.", entity);
 
         var boxes = DynamicShapes.Boxes(definition, pose);
         if (boxes.Any(box => !box.Representable()))
-            return Reject(FailureCode.InvalidInput, "Pose cannot represent nondegenerate box geometry.");
+            return Fail(FailureCode.InvalidInput, "Pose cannot represent nondegenerate box geometry.", entity);
         var longAxis = LocalAxis(pose.Rotation, DynamicShapes.Interaction(definition).LongAxis);
         if (!ball && Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
-            return Reject(FailureCode.InvalidInput, "Upright part end is too close to a section.");
+            return Fail(FailureCode.InvalidInput, "Upright part end is too close to a section.", entity);
         var solids = DynamicShapes.Solids(definition, pose);
-        if (LeavesBuilding(definition, solids)) return Reject(FailureCode.OutOfRange, "Object extends outside its building.");
+        if (LeavesBuilding(definition, solids)) return Fail(FailureCode.OutOfRange, "Object extends outside its building.", entity);
         if (IntersectsReservation(solids, entity))
-            return Reject(FailureCode.TranslationBlocked, "Target intersects a reserved rotation sweep.");
+            return Fail(FailureCode.TranslationBlocked, "Target intersects a reserved rotation sweep.", entity);
 
         var obstacles = Solids().Where(solid => solid.Entity != entity).ToArray();
         var contacts = solids
             .SelectMany(moving => obstacles.Where(moving.BoundsMayOverlap).Select(obstacle => Collision.Touch(moving, obstacle)).OfType<Contact>())
             .ToList();
-        if (contacts.Count > 0) return Reject(FailureCode.TranslationBlocked, "Target pose is occupied.", contacts.AsReadOnly());
-
-        dynamicEntities[entity] = proposed;
-        revision++;
-        return new UpdateResult.Updated();
+        return contacts.Count > 0 ? Fail(FailureCode.TranslationBlocked, "Target pose is occupied.", entity, contacts.AsReadOnly()) : null;
     }
 
     // Whether any of the solids reaches out of the W range of the building the entity belongs to.
