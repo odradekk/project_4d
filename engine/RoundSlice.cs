@@ -21,13 +21,6 @@ internal static class RoundSlice
     // A plane normal with at least this much of its length along Y is taken for vertical when a plane is spanned.
     private const double NearlyVertical = .9;
 
-    // The six tetrahedra of a cube, each running along one of its diagonals from corner 0 to corner 7.
-    // Corner i has bit 0 for x, bit 1 for y and bit 2 for z.
-    private static readonly int[][] Tetrahedra =
-    [
-        [0, 1, 3, 7], [0, 1, 5, 7], [0, 2, 3, 7], [0, 2, 6, 7], [0, 4, 5, 7], [0, 4, 6, 7]
-    ];
-
     internal static void Append(Round4 round, double w, SliceBuffer buffer)
     {
         var radius = ThickestRadius(round, w);
@@ -132,34 +125,7 @@ internal static class RoundSlice
         ];
         var values = Enumerable.Range(0, counts[0] * counts[1] * counts[2]).Select(node => field(Position(node))).ToArray();
 
-        // Each edge is cut once, however many tetrahedra share it.
-        var cuts = new Dictionary<(int, int), double[]>();
-        double[] Cut(int inside, int outside)
-        {
-            if (!cuts.TryGetValue((inside, outside), out var point))
-                cuts[(inside, outside)] = point = OnSurface(Position(inside), Position(outside), field);
-            return point;
-        }
-
-        var cornerOffsets = Enumerable.Range(0, 8)
-            .Select(i => (i & 1) * counts[1] * counts[2] + (i >> 1 & 1) * counts[2] + (i >> 2 & 1))
-            .ToArray();
-        for (var x = 0; x < counts[0] - 1; x++)
-            for (var y = 0; y < counts[1] - 1; y++)
-                for (var z = 0; z < counts[2] - 1; z++)
-                {
-                    var corner = (x * counts[1] + y) * counts[2] + z;
-                    var inside = 0;
-                    foreach (var offset in cornerOffsets)
-                        if (values[corner + offset] > 0) inside++;
-                    if (inside == 0 || inside == cornerOffsets.Length) continue;
-                    foreach (var tetrahedron in Tetrahedra)
-                    {
-                        int[] nodes = [corner + cornerOffsets[tetrahedron[0]], corner + cornerOffsets[tetrahedron[1]],
-                            corner + cornerOffsets[tetrahedron[2]], corner + cornerOffsets[tetrahedron[3]]];
-                        MarchTetrahedron(ring.Part, nodes, values, Position, Cut, buffer);
-                    }
-                }
+        Marching.Surface(ring.Part, counts, values, Position, (inside, outside) => OnSurface(Position(inside), Position(outside), field), buffer);
     }
 
     // The point of the edge from a point inside to one outside where the field is zero, by halving the edge.
@@ -179,41 +145,6 @@ internal static class RoundSlice
             else high = middle;
         }
         return Along((low + high) / 2);
-    }
-
-    // Adds the triangles where the surface, on the edges between corners inside and outside, cuts the tetrahedron.
-    private static void MarchTetrahedron(
-        PartId part, int[] corners, double[] values, Func<int, double[]> position, Func<int, int, double[]> cut, SliceBuffer buffer)
-    {
-        int[] inside = new int[4], outside = new int[4];
-        int insideCount = 0, outsideCount = 0;
-        for (var i = 0; i < 4; i++)
-            if (values[corners[i]] > 0) inside[insideCount++] = i;
-            else outside[outsideCount++] = i;
-        if (insideCount is 0 or 4) return;
-
-        double[] Cut(int from, int to) => cut(corners[from], corners[to]);
-        // The surface faces away from the corners inside it.
-        void Triangle(double[] a, double[] b, double[] c)
-        {
-            buffer.AddFacingAwayFrom(part, a, b, c, position(corners[inside[0]]));
-        }
-
-        switch (insideCount)
-        {
-            case 1:
-                Triangle(Cut(inside[0], outside[0]), Cut(inside[0], outside[1]), Cut(inside[0], outside[2]));
-                break;
-            case 3:
-                Triangle(Cut(inside[0], outside[0]), Cut(inside[1], outside[0]), Cut(inside[2], outside[0]));
-                break;
-            default:
-                double[] p = Cut(inside[0], outside[0]), q = Cut(inside[0], outside[1]);
-                double[] r = Cut(inside[1], outside[1]), s = Cut(inside[1], outside[0]);
-                Triangle(p, q, r);
-                Triangle(p, r, s);
-                break;
-        }
     }
 
     // The segments where the surface of the slice crosses the plane of the ring's circle, through the circle's
