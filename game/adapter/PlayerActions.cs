@@ -45,7 +45,7 @@ public sealed partial class PlayerActions : Node
     private double previewDelay;
 
     /// <summary>The entity in the hand: a flat object carried, or the slice of an upright one gripped.</summary>
-    public string? Held => HeldId()?.Value;
+    internal string? Held => HeldId()?.Value;
     public bool Holding => HeldId() is not null;
     public bool HeldIsUpright => HeldId() is { } id && State(id).UprightOrigin is not null;
     public string CurrentSection => State(actor).Section?.Value ?? "";

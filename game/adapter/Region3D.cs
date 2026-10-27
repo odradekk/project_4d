@@ -16,17 +16,18 @@ namespace Game.Adapter;
 [Tool, GlobalClass]
 public partial class Region3D : Node3D
 {
-    private World? liveWorld;
     private Dictionary<string, double> sectionPositions = new();
-    public string CurrentSection { get; private set; } = "";
-    public PlayerActions? Actions { get; private set; }
-    internal World? World => liveWorld;
+    internal World? World { get; private set; }
+    internal PlayerActions? Actions { get; private set; }
+
+    /// <summary>The section the player is in, as the engine has it.</summary>
+    public string CurrentSection => Actions?.CurrentSection ?? "";
 
     /// <summary>Returns the engine's distance between the current section and a source section.</summary>
     public double SectionDistance(string sourceSection)
     {
-        if (liveWorld is null) throw new InvalidOperationException("Region is not loaded.");
-        return liveWorld.Distance4(new(0, 0, 0, sectionPositions[CurrentSection]),
+        if (World is null) throw new InvalidOperationException("Region is not loaded.");
+        return World.Distance4(new(0, 0, 0, sectionPositions[CurrentSection]),
             new(0, 0, 0, sectionPositions[sourceSection]));
     }
 
@@ -67,10 +68,9 @@ public partial class Region3D : Node3D
         previewPending = false;
         if (!IsInsideTree()) return;
         Loaded = false;
-        liveWorld = null;
+        World = null;
         Actions = null;
         sectionPositions.Clear();
-        CurrentSection = "";
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
         generated = null;
         var reader = new SceneReader(this);
@@ -86,7 +86,11 @@ public partial class Region3D : Node3D
             var preview = world.GetGeometryAtW(PreviewW);
             if (preview is SectionGeometryResult.Rejected rejected)
             { Fail([new(LoadErrorCode.InvalidNumber, new(".", "PreviewW"), null, null, null, rejected.Failure.Detail, [])]); return; }
-            generated.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)preview, reader.Materials, false, []));
+            var geometry = (SectionGeometryResult.Geometry)preview;
+            // The authored lettering shows where the object has a slice at this W, and nowhere else.
+            foreach (var (id, labels) in reader.Lettering)
+                foreach (var label in labels) label.Visible = geometry.Entities.Any(slice => slice.Entity == id);
+            generated.AddChild(SliceMesh.Build(geometry, reader.Materials, false, []));
             Loaded = true;
             return;
         }
@@ -102,7 +106,10 @@ public partial class Region3D : Node3D
         }
         // The authored lettering stays in the scene as a template; the adapter puts a copy on the flat object.
         foreach (var label in reader.Lettering.Values.SelectMany(labels => labels)) label.Visible = false;
-        var movable = reader.Lettering.Keys.ToHashSet();
+        var movable = description.Entities
+            .Where(entity => entity is not (BuildingElementDefinition or FixedDefinition or Creature3Definition))
+            .Select(entity => entity.Id)
+            .ToHashSet();
         var worlds = new Dictionary<string, World3D>();
         var scenes = new List<SectionScene>();
         foreach (var section in description.Sections)
@@ -136,9 +143,8 @@ public partial class Region3D : Node3D
             worlds.Add(section.Id.Value, viewport.World3D);
         }
         var home = SceneReader.Ancestor<Section3D>(spawn)!;
-        liveWorld = world;
+        World = world;
         sectionPositions = description.Sections.ToDictionary(s => s.Id.Value, s => s.W);
-        CurrentSection = home.SectionId;
         previousWorld = GetViewport().World3D;
         currentWorld = worlds[home.SectionId];
         GetViewport().World3D = currentWorld;
@@ -152,7 +158,7 @@ public partial class Region3D : Node3D
         Actions = new PlayerActions { Name = "Actions" };
         generated.AddChild(Actions);
         Actions.Configure(world, spawn.EntityId, player, prism, scenes,
-            new DynamicSlices(world, scenes, reader.Materials, reader.Lettering), new LensOverlay(scenes));
+            new DynamicSlices(world, scenes, reader.Materials, movable, reader.Lettering), new LensOverlay(scenes));
         player.Bind(prism, Actions);
         Diagnostics = "";
         Loaded = true;

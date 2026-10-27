@@ -10,9 +10,11 @@ namespace Game.Adapter;
 /// lettering on it while it lies flat. An entity's slices are rebuilt only when the entity has changed.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
-/// <param name="movable">The movable entities, each with the Label3D lettering authored on it.</param>
+/// <param name="movable">The entities that move, which the engine gives new slices each time they change.</param>
+/// <param name="lettering">The Label3D lettering authored on some of them.</param>
 internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> scenes,
-    IReadOnlyDictionary<(EntityId, PartId), Material> materials, IReadOnlyDictionary<EntityId, Label3D[]> movable)
+    IReadOnlyDictionary<(EntityId, PartId), Material> materials, IReadOnlyCollection<EntityId> movable,
+    IReadOnlyDictionary<EntityId, Label3D[]> lettering)
 {
     // Render layers: 1 is the main view and 2 the lens, as set on the slice meshes.
     private const uint MainAndLens = 3;
@@ -20,7 +22,7 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
     private readonly Dictionary<EntityId, (Pose4 Pose, SectionId? Section, EntityId? Holder, bool Rotating)> seen = [];
     private readonly Dictionary<(SectionId, EntityId), Node3D> nodes = [];
 
-    internal IEnumerable<EntityId> Entities => movable.Keys;
+    internal IReadOnlyCollection<EntityId> Entities => movable;
 
     /// <summary>The convex hull of an entity's slice in a section, where the slice is now; null when it has none there.</summary>
     internal Shape3D? HullOf(SectionId section, EntityId entity) =>
@@ -29,7 +31,7 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
     internal void Refresh()
     {
         var changed = new List<EntityState>();
-        foreach (var id in movable.Keys)
+        foreach (var id in movable)
         {
             var state = ((EntityReadResult.Found)world.ReadEntity(id)).Entity;
             var now = (state.Pose, state.Section, state.Holder, state.Rotating);
@@ -61,11 +63,12 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
     // The engine's pose gives the lettering its place; a flip turns the pose into a mirror image, and the text reads backwards.
     private void AddLettering(Node3D node, EntityState state)
     {
+        if (!lettering.TryGetValue(state.Id, out var labels)) return;
         var rotation = state.Pose.Rotation;
         var pose = new Transform3D(
             new Basis(Axis(rotation.X), Axis(rotation.Y), Axis(rotation.Z)),
             new Vector3((float)state.Pose.Position.X, (float)state.Pose.Position.Y, (float)state.Pose.Position.Z));
-        foreach (var label in movable[state.Id])
+        foreach (var label in labels)
         {
             var copy = (Label3D)label.Duplicate();
             copy.Visible = true;

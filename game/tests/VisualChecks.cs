@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Game.Adapter;
-using Game.Player;
 using Godot;
+using static Game.Tests.TurningFixture;
 
 namespace Game.Tests;
 
@@ -13,6 +13,11 @@ public partial class VisualChecks : Node
     public override async void _Ready()
     {
         var mode = OS.GetCmdlineUserArgs().FirstOrDefault() ?? "prism";
+        if (mode == "upright-outline")
+        {
+            await UprightOutline();
+            return;
+        }
         var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
         if (mode == "empty")
         {
@@ -61,11 +66,6 @@ public partial class VisualChecks : Node
         }
         AddChild(region);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        if (mode == "upright-outline")
-        {
-            await UprightOutline(region);
-            return;
-        }
         if (mode.StartsWith("outline"))
         {
             var prism = region.GetNode<Game.Rendering.PrismView>("Generated/Prism");
@@ -114,33 +114,31 @@ public partial class VisualChecks : Node
     }
 
     // Stands the pole up from the hand, then looks at its slice in the other section through the lens.
-    private async Task UprightOutline(Region3D region)
+    private async Task UprightOutline()
     {
-        var player = region.GetNode<FirstPersonPlayer>("Generated/Player");
-        player.Position = new(3f, 0, 1.5f);
-        var offset = new Vector3(1.9f, .03125f, 1.5f) - (player.Position + new Vector3(0, 1.3f, 0));
-        player.Rotation = new(0, Mathf.Atan2(-offset.X, -offset.Z), 0);
-        player.Camera.Rotation = new(Mathf.Atan2(offset.Y, new Vector2(offset.X, offset.Z).Length()), 0, 0);
-        await Frames(3);
+        var play = new TurningFixture(this);
+        await play.Load();
+        var player = play.Player;
+        play.LookAt(new(3f, 0, 1.5f), new(1.9f, .03125f, 1.5f));
+        await play.Frames(3);
         Press(Key.E);
-        await Frames(3);
+        await play.Frames(3);
         // The pole lies along the view when held, so its hinge, where the slice stands, ends 1.07 m ahead and near the middle of the lens.
         player.Camera.Rotation = new(-.5f, 0, 0);
-        await Frames(3);
+        await play.Frames(3);
         Press(Key.F);
-        await Frames(100);
+        await play.Frames(100);
         // Let go, so that the preview lines do not add to the outline, and look a little beside the slice where it falls.
         Press(Key.E);
-        await Frames(80);
-        var slice = ((FourD.EntityReadResult.Found)region.World!.ReadEntity(new("pole"))).Entity.Pose.Position;
-        var eye = player.Camera.GlobalPosition;
-        var toSlice = new Vector3((float)slice.X, (float)slice.Y, (float)slice.Z) - eye;
+        await play.Frames(80);
+        var slice = play.Position("pole");
+        var toSlice = slice - player.Camera.GlobalPosition;
         player.Camera.Rotation = new(Mathf.Atan2(toSlice.Y, new Vector2(toSlice.X, toSlice.Z).Length()) + .15f, 0, 0);
-        Input.ParseInputEvent(new InputEventMouseButton { ButtonIndex = MouseButton.Right, Pressed = true });
-        await Frames(10);
+        Button(MouseButton.Right, true);
+        await play.Frames(10);
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         var image = GetViewport().GetTexture().GetImage();
-        var screen = player.Camera.UnprojectPosition(new((float)slice.X, (float)slice.Y, (float)slice.Z));
+        var screen = player.Camera.UnprojectPosition(slice);
         var outline = CyanPixels(image, (int)screen.X - 30, (int)screen.Y - 30, (int)screen.X + 30, (int)screen.Y + 30);
         if (outline < 20)
         {
@@ -150,18 +148,6 @@ public partial class VisualChecks : Node
         }
         GD.Print($"Upright outline visual check passed: {outline} outline pixels around the slice.");
         GetTree().Quit();
-    }
-
-    private async Task Frames(int count)
-    {
-        for (var i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-    }
-
-    private static void Press(Key key)
-    {
-        Input.ParseInputEvent(new InputEventKey { Keycode = key, Pressed = true });
-        Input.ParseInputEvent(new InputEventKey { Keycode = key, Pressed = false });
     }
 
     private static int CyanPixels(Image image, int x0, int y0, int x1, int y1)

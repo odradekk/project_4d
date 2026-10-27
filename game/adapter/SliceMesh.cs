@@ -21,7 +21,7 @@ internal static class SliceMesh
 
     /// <summary>
     /// Builds one entity's slice, with the collision shape added to <paramref name="body"/> when it is given.
-    /// Through-objects get a color in the outline mask that stays the same for the entity in every section.
+    /// Through-objects get a color in the outline mask that stays the same when the entity's slice is rebuilt.
     /// </summary>
     internal static Node3D Entity(SliceGeometry slice, IReadOnlyDictionary<(EntityId, PartId), Material> materials,
         Dictionary<EntityId, int> maskIds, StaticBody3D? body)
