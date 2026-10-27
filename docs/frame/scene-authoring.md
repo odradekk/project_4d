@@ -25,7 +25,7 @@ Room (Node3D, Region3D)
   ExpectedPuzzleOperations (Node)
 ```
 
-分组节点名称固定，内容节点名称可读即可，稳定 ID 来自属性。所有 Node3D 的 Scale=(1,1,1)，禁止父级缩放/剪切。实体 XYZ 用相对区域根的 Transform，Section 节点保持单位变换，不用其 Z 或视觉偏移表达 W。适配层把 Transform 的 XYZ 与旋转转成引擎值；需要初始四维旋转的动态实体另读 Rotation4 属性，覆盖普通 Transform.Basis，不把两者重复相乘。
+分组节点名称固定，内容节点名称可读即可，稳定 ID 来自属性。所有 Node3D 的 Scale=(1,1,1)，禁止父级缩放/剪切。实体 XYZ 用相对区域根的 Transform，Section 节点保持单位变换，不用其 Z 或视觉偏移表达 W。适配层把 Transform 的 XYZ 与旋转转成引擎值；需要初始四维旋转的动态实体另读 Rotation4 属性，不把两者重复相乘：Rotation4 为空时取 Transform 的旋转，非空时节点不得再带旋转，否则载入报错。
 
 下表类型指 Godot 侧 C# 属性，每项均 `[Export]`。`A<T>` 在表中表示 `Godot.Collections.Array<T>`，不是待实现的新集合。Resource 自定义类均为 `partial class : Resource`、`[GlobalClass]`，只含表中数据。Godot 官方 [C# 导出属性](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_exports.html)要求 Variant-compatible 类型，支持 Resource 和类型化数组；不得直接导出引擎 record、IReadOnlyList 或嵌套普通 C# 集合。
 
@@ -65,7 +65,7 @@ Room (Node3D, Region3D)
 | MetaballShapeResource | `A<MetaballResource> Balls`、`double Threshold` |
 | MetaballResource | `string Id`、`double[] Center`、`double Radius/Weight` |
 
-double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z/W 四列，每列 XYZW；空数组只表示单位旋转，四维点不可用空数组。适配层只做布局转换与基础格式校验，旋转是否合法交给引擎。所有数组默认空集合，必需的 Resource 未赋值报告节点属性错误。未知脚本节点不静默当四维实体。
+double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z/W 四列，每列 XYZW；空数组只表示单位旋转（节点上的 Rotation4 为空时取节点 Transform 的旋转，见上），四维点不可用空数组。适配层只做布局转换与基础格式校验，旋转是否合法交给引擎。所有数组默认空集合，必需的 Resource 未赋值报告节点属性错误。未知脚本节点不静默当四维实体。
 
 测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。
 
