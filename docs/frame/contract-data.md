@@ -108,7 +108,7 @@ public sealed record SharedValueState(SharedValueId Id, double Value);
 
 接缝法线是 XYZ 内水平单位向量（Y=0）；它和世界 Y 定义竖直缝平面，位置在所有连接 Section 的 XYZ 相同。Sections 至少两个且无重复，列表顺序为 W 递增。普通缝只改变所在 Section；镜像缝还绕法线—W 平面转 π。接缝不作为阻挡实体，但通行空间要检查占据。
 
-`EntityState.Section` 只对三维生物、未竖起的普通物及隐藏本体有意义；跨多个 Section 的四维球、装置、元球为 null。`UprightOrigin` 在竖起成功后直到原页放倒完成期间保存来源，旋转途中也保留正确来源；受控PlaceEntity布置按其来源转换表设置或清除，不从新姿态猜来源。`Definition` 是载入/添加时的定义，当前姿态以 `Pose` 为准；唯一会变的是物件的 Building，离开背包时改属角色所在 Section 的楼房，见[抓取与布置](contract-carry.md)；DevicePosition 仅装置有值。`Holder` 对背包和手持小物是持有人，对隔页抓取物也是抓取者；`InBackpack` 为 true 表示物件在 Holder 的背包里（没有切片，不阻挡），手里的、抓着的和世界里的物件都是 false。CarriedItems 仅列真正随身物（手里和背包里的），不包含已竖起的世界物。ActorYaw 仅三维生物有值，独立于四维旋转；Handedness 为引擎派生结果，算法见[查询](contract-views.md)。
+`EntityState.Section` 只对三维生物、未竖起的普通物及隐藏本体有意义；跨多个 Section 的四维球、装置、元球为 null。`UprightOrigin` 在竖起成功后直到原页放倒完成期间保存来源，旋转途中也保留正确来源；受控PlaceEntity布置按其来源转换表设置或清除，不从新姿态猜来源。`Definition` 是载入/添加时的不可变定义，当前姿态以 `Pose` 为准；物件当前所在的楼房是运行时状态，离开背包时会变，见[抓取与布置](contract-carry.md)；DevicePosition 仅装置有值。`Holder` 对背包和手持小物是持有人，对隔页抓取物也是抓取者；`InBackpack` 为 true 表示物件在 Holder 的背包里（没有切片，不阻挡，Pose 的 XYZ 没有意义，W 和旋转随穿缝更新），手里的、抓着的和世界里的物件都是 false。CarriedItems 仅列真正随身物（手里和背包里的），不包含已竖起的世界物。ActorYaw 仅三维生物有值，独立于四维旋转；Handedness 为引擎派生结果，算法见[查询](contract-views.md)。
 
 ```csharp
 // Members of World.

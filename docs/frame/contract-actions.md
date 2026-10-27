@@ -73,7 +73,7 @@ DriveDevice 的 target 对旋转为弧度，对轨道为米，相对初始配置
 PlaceEntity 把未被抓持、未在旋转中的 Turnable/Item 原子地写到完整的四维位置和旋转，规则见[抓取与布置](contract-carry.md#受控布置)。
 
 
-SetSharedValue 越界拒绝；不会自行推导水量或剧情。SynchronizeActor 仅接受三维生物且 position/yaw 有限；更新 XYZ 与普通朝向，保留 Section、W 和四维旋转，无法绕过穿缝改变镜像。背包物随角色同步 XYZ，手持世界物由 MoveEntity 单独请求。SetGrazerFrame 只接受四维生物，提交完整姿态与形体参数；其不受建筑阻挡，下一次切片立即反映新输入。
+SetSharedValue 越界拒绝；不会自行推导水量或剧情。SynchronizeActor 仅接受三维生物且 position/yaw 有限；更新 XYZ 与普通朝向，保留 Section、W 和四维旋转，无法绕过穿缝改变镜像。手持世界物由 MoveEntity 单独请求；背包物的 XYZ 没有意义，不随角色同步，取出时放到角色当前位置（见[抓取与布置](contract-carry.md)）。SetGrazerFrame 只接受四维生物，提交完整姿态与形体参数；其不受建筑阻挡，下一次切片立即反映新输入。
 
 SetSeamOpen 改变未咬断缝的开启状态；咬断后请求开启返回 SeamSevered。SeverSeam 永久咬断一道缝，供脚本、测试和 ConsumeStructure 共用：未知缝返回 UnknownId，已断的缝再咬视为成功，不重复事件，仍增加修订号。ConsumeStructure 仅接受存在的 Grazer、楼房元素列表和接缝列表，全部引用有效才一次移除完整元素并按 SeverSeam 的规则永久咬断指定缝；重复消费已消失元素或已断缝视为成功但不重复事件。此操作是预先编排的白模啃食，不按元球接触临时猜咬哪一块。下一次 Step 重算支撑。没有通用任意实体姿态 setter，也没有实时四维布尔减法。
 
@@ -124,7 +124,7 @@ public CrossSeamResult CrossSeam(CrossSeamRequest request);
 
 长物先在 XZ 平面上平移，使铰链落在缝的 XZ 位置（先 X 后 Z，高度不变，沿路按平移碰撞检测），受阻返回 TranslationBlocked 和阻挡的接触；再按 PlanRotation 的 StandUp 竖起（目标为 Target，Target 更深转 +W，更浅转 −W）。PlanRotation 的拒绝（RotationBlocked 附接触、OutOfRange、WrongSection、NoSlice，以及终点端面距 Section 不足 0.02m 的 InvalidInput 等）都原样作为穿缝失败返回。Reach 恰等于目标距离的物件，末端落在目标Section上，载入和动态添加会拒绝它，但物件经背包换截面后可能遇到，StandUp 在运行时返回 InvalidInput。成功时直接取旋转终点，不排 RotationStarted/RotationEnded。它脱离真正随身集合，变成 UprightOrigin=出发 Section 的世界贯穿物；角色穿缝后 Holder 仍抓着它，目标 Slice 随即可读，不再对长物额外乘镜像矩阵。Crossed.Packed 只列这次从手里入背包的物件，Crossed.WedgedItem 是卡缝长物。背包里原有的物件不占空位，随角色按同一变换更新。非对称HiddenRingItem未竖起且Packable时可作为短小物入包并随身穿缝，镜像变换作用于其完整姿态。猫的免棱镜资格不免携带/碰撞规则。
 
-上述全部检查先完成，失败时角色、物品、背包、缝和事件全部不变；成功一次提交，只排一个 SeamCrossed。角色抓着卡缝长物再穿缝，长物算已竖起物，返回 NotPackable，要先 ReleaseEntity。长物竖在缝口，回去的落点会被它占据，返回 PassageOccupied，所以要先用 MoveEntity 把它挪开，松手，再穿回。穿回只换 Section，不自动放倒卡缝长物，回到来源截面后另请求 LayDown，放倒沿用那次竖起的逆变换，随当前铰链平移。
+上述全部检查先完成，失败时角色、物品、背包、缝和事件全部不变；成功一次提交，只排一个 SeamCrossed。角色抓着卡缝长物再穿缝，长物算已竖起物，返回 NotPackable，要先 ReleaseEntity。长物竖在缝口，回去的落点会被它占据，返回 PassageOccupied，所以要先用 MoveEntity 把它挪开，松手，再穿回。竖在缝口的板挡住所有生物穿这道缝，猫和别的角色也一样返回 PassageOccupied，直到它被挪开或放倒。穿回只换 Section，不自动放倒卡缝长物，回到来源截面后另请求 LayDown，放倒沿用那次竖起的逆变换，随当前铰链平移。
 
 手算镜像例：缝平面 YZ，半圈 `M=diag(−1,1,1,−1)`，det4=+1、XYZ 投影 det3=−1。长轴 +X 的长物先 XW 转 +π/2，+X→+W；再把角色 I→II 并左乘 M。长物仍为 +W，不能再乘 M 变成 −W。背包小物与角色一起镜像。这是本契约对原文泛称“携带”的明确解释，已随完整契约批准。
 
