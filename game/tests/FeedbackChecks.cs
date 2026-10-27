@@ -93,7 +93,7 @@ public partial class FeedbackChecks : Node
         // Bring the slice to x = -1.3, z = -1.0, clear of everything, then push it west into the box at x = -1.5.
         var start = play.SliceBounds("Ⅰ", "pole").GetCenter();
         var feet = player.Position + new Vector3(-1.3f - start.X, 0, -1.0f - start.Z);
-        player.Position = feet;
+        await play.Walk(feet);
         await play.Frames(3);
         Near(play.SliceBounds("Ⅰ", "pole").GetCenter(), new(-1.3f, start.Y, -1.0f), "the grabbed slice must follow the hand to a free place");
 
@@ -108,6 +108,11 @@ public partial class FeedbackChecks : Node
         Check(play.Region.GetNode("Generated/Ⅱ/Overlay/Contacts").GetChildCount() > 0, "the lens must mark where the slice is blocked");
         await play.Frames(45);
         Check(play.Region.GetNode("Generated/Ⅱ/Overlay/Contacts").GetChildCount() == 0, "a mark must fade away when the hand stops pushing");
+
+        // The hand walks away while the slice stays against the box; far enough, the slice is let go.
+        player.Position += new Vector3(4f, 0, 0);
+        await play.Frames(5);
+        Check(play.Actions.Held is null, "a slice left behind the hand must be let go");
     }
 
     private async Task CheckClearPreview()

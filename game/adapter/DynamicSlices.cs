@@ -22,6 +22,10 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
 
     internal IEnumerable<EntityId> Entities => movable.Keys;
 
+    /// <summary>The convex hull of an entity's slice in a section, where the slice is now; null when it has none there.</summary>
+    internal Shape3D? HullOf(SectionId section, EntityId entity) =>
+        nodes.TryGetValue((section, entity), out var node) ? node.GetNode<MeshInstance3D>("Surface").Mesh.CreateConvexShape() : null;
+
     internal void Refresh()
     {
         var changed = new List<EntityState>();

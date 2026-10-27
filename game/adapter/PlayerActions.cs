@@ -24,9 +24,10 @@ public sealed partial class PlayerActions : Node
     private const float HandSwing = .7f;
     private const float LowestHand = .12f;
     private const float HighestHand = 1.6f;
-    private const float WallMargin = .1f;
-    // A flat object in the hand is kept out of walls this way; an upright slice is stopped by the engine instead.
+    // The physics layer of the slices and colliders that the player and what the player carries run into.
     private const uint WorldLayer = 1;
+    // An object this far from the eyes is let go: past the 2 m the crosshair reaches, with room for a grip at its edge.
+    private const float LetGoDistance = 2.5f;
     private const double PreviewInterval = .15;
 
     private World world = null!;
@@ -188,8 +189,13 @@ public sealed partial class PlayerActions : Node
         // A turn swings the entity about its hinge, so it ends up away from the hand: keep it there.
         if (wasRotating) grip = position - hand;
         wasRotating = false;
-        var target = state.UprightOrigin is null ? StopAtWall(hand) + grip : hand + grip;
-        var delta = target - position;
+        if (position.DistanceTo(player.Camera.GlobalPosition) > LetGoDistance)
+        {
+            world.ReleaseEntity(id);
+            return;
+        }
+        var delta = hand + grip - position;
+        if (state.UprightOrigin is null) delta = CarryThroughWorld(id, delta);
         var moved = world.MoveEntity(new MoveRequest(id, new(delta.X, delta.Y, delta.Z)));
         var contacts = moved is MoveEntityResult.Moved applied ? applied.Contacts : ((MoveEntityResult.Rejected)moved).Failure.Contacts;
         if (contacts.Count == 0 || !handMoved) return;
@@ -197,15 +203,23 @@ public sealed partial class PlayerActions : Node
         if (!scratch.Playing) scratch.Play();
     }
 
-    // The engine does not check a flat object in the hand against walls, so the hand stops in front of them.
-    private Vector3 StopAtWall(Vector3 hand)
+    // The engine leaves a flat object in the hand to the host's physics. Its slice moves along x, z and y in turn, the
+    // order of the engine's own sweep, and stops where it would touch anything, so it slides along what blocks it.
+    private Vector3 CarryThroughWorld(EntityId id, Vector3 delta)
     {
-        var eyes = player.Camera.GlobalPosition;
-        var query = PhysicsRayQueryParameters3D.Create(eyes, hand);
-        query.CollisionMask = WorldLayer;
-        query.Exclude = [player.GetRid()];
-        var hit = player.GetWorld3D().DirectSpaceState.IntersectRay(query);
-        return hit.Count == 0 ? hand : hit["position"].AsVector3() - (hand - eyes).Normalized() * WallMargin;
+        if (State(actor).Section is not { } section || slices.HullOf(section, id) is not { } hull) return delta;
+        var space = player.GetWorld3D().DirectSpaceState;
+        var query = new PhysicsShapeQueryParameters3D { Shape = hull, CollisionMask = WorldLayer, Exclude = [player.GetRid()] };
+        var moved = Vector3.Zero;
+        foreach (var axis in new[] { 0, 2, 1 })
+        {
+            var step = Vector3.Zero;
+            step[axis] = delta[axis];
+            query.Transform = new Transform3D(Basis.Identity, moved);
+            query.Motion = step;
+            moved += step * space.CastMotion(query)[0];
+        }
+        return moved;
     }
 
     // Draws, in the section the lens shows, the sweep of what F and R would do to the held or aimed entity.

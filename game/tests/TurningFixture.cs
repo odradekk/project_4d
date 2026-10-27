@@ -43,6 +43,16 @@ internal sealed class TurningFixture(Node host)
         Player.Camera.Rotation = new(Mathf.Atan2(offset.Y, new Vector2(offset.X, offset.Z).Length()), 0, 0);
     }
 
+    /// <summary>Moves the player to <paramref name="feet"/> half a metre per frame, as a walk, not a jump.</summary>
+    internal async Task Walk(Vector3 feet)
+    {
+        while (Player.Position.DistanceTo(feet) > .001f)
+        {
+            Player.Position = Player.Position.MoveToward(feet, .5f);
+            await Frames(1);
+        }
+    }
+
     internal EntityState State(string id) => ((EntityReadResult.Found)Region.World!.ReadEntity(new EntityId(id))).Entity;
 
     internal Vector3 Position(string id)
