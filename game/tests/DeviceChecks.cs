@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Game.Adapter;
@@ -59,6 +60,7 @@ public partial class DeviceChecks : Node
             Check(play.Mask(section, "cabinet") != Colors.Black, $"the cabinet must glow in the lens of {section}");
             Check(play.Mask(section, "sash") != Colors.Black, $"the window must glow in the lens of {section}");
             Check(play.Region.HasNode($"Generated/{section}/Dynamic/cabinet/Collision"), $"the cabinet must have a collision body in {section}");
+            Check(play.Region.HasNode($"Generated/{section}/Dynamic/sash/Collision"), $"the window must have a collision body in {section}");
         }
     }
 
@@ -83,7 +85,7 @@ public partial class DeviceChecks : Node
         Check(Mathf.Abs(plank.Position.Y - .0278f) < .002f && Mathf.Abs(plank.End.X - -2.0072f) < .002f, $"the plank must lie as a slope to the floor; it is {plank}");
 
         // The knock is heard from the other section, filtered by the distance to it.
-        var knocks = player.GetParent().GetNode<PlayerActions>("Actions").GetChildren().OfType<SectionSound>().Where(sound => sound.Playing).ToArray();
+        var knocks = Knocks().ToArray();
         Check(knocks.Length == 1, $"one muffled knock must come from the other section; {knocks.Length} sounds play");
         var knock = knocks[0];
         var bus = AudioServer.GetBusIndex(knock.Bus);
@@ -103,14 +105,37 @@ public partial class DeviceChecks : Node
         await play.Frames(2);
         player.Hud.ClearText();
         Press(Key.E);
-        await play.Frames(90);
+        var knocked = await UntilStopped("cabinet");
         var stopped = play.State("cabinet").DevicePosition!.Value;
         Check(stopped < -.3 && stopped > -1.4, $"the cabinet must stop against the block in the other section; it is at {stopped}");
         Check(player.Hud.SubtitleText.Contains("动不了") && player.Hud.SubtitleText.Contains("那一页"), $"the player must say that the other section is in the way; saw '{player.Hud.SubtitleText}'");
+        Check(knocked, "a cabinet that is stopped knocks in the other section, as a window does");
+
+        // Pulled again, a stopped cabinet goes back to where it started, since the block would stop it again on the way out.
         Press(Key.E);
-        await play.Frames(3);
-        Check(play.State("cabinet").DevicePosition!.Value > stopped - .1, "pulling a stopped cabinet again must go back or stay, not through the block");
+        await play.Frames(90);
+        Check(Math.Abs(play.State("cabinet").DevicePosition!.Value) < 1e-9, "a stopped cabinet must go back to where it started");
     }
+
+    // Waits until a device that was pulled stands still, and says whether it knocked on the way. How many physics steps a
+    // frame holds depends on the machine, so the marks and the knock are looked at the moment it stops.
+    private async Task<bool> UntilStopped(string device)
+    {
+        var knocked = false;
+        var before = play.State(device).DevicePosition;
+        for (var i = 0; i < 300; i++)
+        {
+            await play.Frames(1);
+            knocked |= Knocks().Any();
+            var now = play.State(device).DevicePosition;
+            if (now == before && i > 0) return knocked;
+            before = now;
+        }
+        throw new InvalidOperationException($"{device} must stop");
+    }
+
+    // The sounds of devices that are playing now, which come from the sections that the player is not in.
+    private IEnumerable<SectionSound> Knocks() => play.Region.GetChildren().OfType<SectionSound>().Where(sound => sound.Playing);
 
     private async Task CheckWindowBlockedByStandingPencil()
     {
@@ -129,9 +154,9 @@ public partial class DeviceChecks : Node
         player.Hud.ClearText();
         await play.Frames(2);
         Press(Key.E);
-        await play.Frames(40);
+        var knocked = await UntilStopped("sash");
         Check(play.Region.GetNode("Generated/Ⅱ/Overlay/Contacts").GetChildCount() > 0, "the lens must mark where the window was stopped");
-        await play.Frames(50);
+        Check(knocked, "a window that is stopped knocks in the other section");
         var way = play.State("sash").DevicePosition!.Value;
         Check(Math.Abs(way - .374) < .01, $"the window must stop at the standing pencil, .374 m along; it is at {way}");
         Check(player.Hud.SubtitleText.Contains("动不了"), $"the player must say that the window is stopped; saw '{player.Hud.SubtitleText}'");
@@ -143,7 +168,13 @@ public partial class DeviceChecks : Node
         Press(Key.F);
         await play.Frames(TurnFrames);
         Check(play.State("pencil").UprightOrigin is null, "F must lay the pencil down");
+        // The window that was stopped goes back to where it started when it is pulled, and the next pull closes it.
         play.LookAt(new(.5f, .02f, -2.2f), new(.5f, 1.4f, -3.2f));
+        await play.Frames(2);
+        Press(Key.E);
+        await play.Frames(90);
+        Check(Math.Abs(play.State("sash").DevicePosition!.Value) < 1e-9, "a window that was stopped must go back to where it started");
+        play.LookAt(new(.2f, .02f, -2.2f), new(.2f, 1.4f, -3.2f));
         await play.Frames(2);
         Press(Key.E);
         await play.Frames(90);

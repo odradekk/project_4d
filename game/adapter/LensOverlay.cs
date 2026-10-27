@@ -31,28 +31,31 @@ internal sealed class LensOverlay
 
     /// <summary>
     /// Draws in one section the outlines a turn sweeps, pale until the first obstruction and red from it, the fold planes of a
-    /// flip, and the dashed outline of the ring that standing the object up would bring there, replacing what was drawn before.
+    /// flip, and the dashed outline of each ring that standing a nut up would bring there, red and with marks where the way is
+    /// blocked, replacing what was drawn before.
     /// </summary>
-    internal void ShowPreview(SectionId section, RotationPreview? sweep, IEnumerable<Polyline> foldPlanes, RotationPreview? hidden)
+    internal void ShowPreview(SectionId section, RotationPreview? sweep, IEnumerable<Polyline> foldPlanes, IReadOnlyList<RotationPreview> rings)
     {
         ClearPreview();
         List<Vector3> clear = [], blocked = [], fold = [];
         foreach (var sample in sweep?.Samples ?? [])
             foreach (var contour in sample.Contours) AddSegments(sample.Blocked ? blocked : clear, contour);
         foreach (var plane in foldPlanes) AddSegments(fold, plane);
-        foreach (var sample in hidden?.Samples ?? []) DashedOutline.AddDashes(sample.Blocked ? blocked : clear, sample.Contours);
+        foreach (var sample in rings.SelectMany(ring => ring.Samples)) DashedOutline.AddDashes(sample.Blocked ? blocked : clear, sample.Contours);
         var mesh = new ArrayMesh();
         AddSurface(mesh, clear, Clear);
         AddSurface(mesh, blocked, Blocked);
         AddSurface(mesh, fold, Fold);
         if (mesh.GetSurfaceCount() == 0) return;
-        scenes.Single(scene => scene.Id == section).Overlay.AddChild(new MeshInstance3D
+        var preview = new MeshInstance3D
         {
             Name = "Preview",
             Mesh = mesh,
             Layers = LensOnly,
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off
-        });
+        };
+        foreach (var contact in rings.SelectMany(ring => ring.Contacts)) preview.AddChild(Mark(contact));
+        scenes.Single(scene => scene.Id == section).Overlay.AddChild(preview);
     }
 
     internal void ClearPreview()
@@ -65,15 +68,17 @@ internal sealed class LensOverlay
     {
         ClearMarks();
         foreach (var scene in scenes)
-            foreach (var contact in contacts)
-                scene.Overlay.GetNode("Contacts").AddChild(new MeshInstance3D
-                {
-                    Mesh = markMesh,
-                    Layers = LensOnly,
-                    Position = new((float)contact.Point.X, (float)contact.Point.Y, (float)contact.Point.Z)
-                });
+            foreach (var contact in contacts) scene.Overlay.GetNode("Contacts").AddChild(Mark(contact));
         markRemaining = MarkSeconds;
     }
+
+    // The point of a contact, whether or not it lies in a section.
+    private MeshInstance3D Mark(Contact contact) => new()
+    {
+        Mesh = markMesh,
+        Layers = LensOnly,
+        Position = new((float)contact.Point.X, (float)contact.Point.Y, (float)contact.Point.Z)
+    };
 
     internal void Tick(double delta)
     {

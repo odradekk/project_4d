@@ -22,14 +22,14 @@ internal sealed class BallShadows
     private const float DotSize = .16f;
     private const double Interval = .1;
 
-    private static readonly Rotation4 Upright = new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1));
-
     private readonly World world;
     private readonly IReadOnlyList<SectionScene> scenes;
     private readonly DynamicSlices slices;
     private readonly IReadOnlyList<EntityId> balls;
     private readonly Dictionary<(SectionId, EntityId), MeshInstance3D> patches = [];
+    private readonly Dictionary<(SectionId, EntityId), bool> floors = [];
     private int shownVersion = -1;
+    private bool floorStale;
     private double wait;
 
     internal BallShadows(World world, IReadOnlyList<SectionScene> scenes, DynamicSlices slices)
@@ -54,35 +54,51 @@ internal sealed class BallShadows
     }
 
     /// <summary>
-    /// Redraws the patches when the world has changed since the last drawing, given its version from the dynamic slices, but not
-    /// more often than every Interval seconds, since asking the engine what lies under the ball in each section takes some milliseconds.
+    /// Moves the patches under their balls on every call after the world has changed, given its version from the dynamic slices.
+    /// Whether a section has something under a ball is asked of the engine at most every Interval seconds, since each question
+    /// takes some milliseconds.
     /// </summary>
     internal void Refresh(int version, double delta)
     {
         wait = Math.Max(0, wait - delta);
-        if (version == shownVersion || wait > 0) return;
+        var moved = version != shownVersion;
         shownVersion = version;
-        wait = Interval;
+        floorStale |= moved;
+        var look = floorStale && wait <= 0;
+        if (!moved && !look) return;
+        if (look)
+        {
+            floorStale = false;
+            wait = Interval;
+        }
         foreach (var ball in balls)
         {
             var rest = world.FindSupport(ball) as SupportResult.Supported;
-            foreach (var scene in scenes) Place(patches[(scene.Id, ball)], ball, scene, rest);
+            foreach (var scene in scenes) Place(patches[(scene.Id, ball)], ball, scene, rest, look);
         }
     }
 
     // The patch lies on the surface that holds the ball, as wide as the ball is in this section, when that section has
-    // something to lie on right there.
-    private void Place(MeshInstance3D patch, EntityId ball, SectionScene scene, SupportResult.Supported? rest)
+    // something to lie on right there, as the last look found.
+    private void Place(MeshInstance3D patch, EntityId ball, SectionScene scene, SupportResult.Supported? rest, bool look)
     {
-        patch.Visible = false;
-        if (rest is null || slices.BoundsOf(scene.Id, ball) is not { } box) return;
+        var key = (scene.Id, ball);
+        if (rest is null || slices.BoundsOf(scene.Id, ball) is not { } box)
+        {
+            patch.Visible = false;
+            floors[key] = false;
+            return;
+        }
         var surface = rest.Contacts.Max(contact => contact.Point.Y);
         var middle = box.GetCenter();
-        var below = new OccupancyBox(new(new(middle.X, surface - Probe, middle.Z, scene.W), Upright), new(Probe, Probe, Probe, Layer));
-        if (world.QueryOccupancy(below, [ball]) is not OccupancyResult.Occupancy { Hits.Count: > 0 }) return;
+        if (look)
+        {
+            var below = new OccupancyBox(new(new(middle.X, surface - Probe, middle.Z, scene.W), SceneReader.Identity), new(Probe, Probe, Probe, Layer));
+            floors[key] = world.QueryOccupancy(below, [ball]) is OccupancyResult.Occupancy { Hits.Count: > 0 };
+        }
         patch.Position = new(middle.X, (float)surface + Lift, middle.Z);
         patch.Scale = new(box.Size.X / 2, 1, box.Size.X / 2);
-        patch.Visible = true;
+        patch.Visible = floors.GetValueOrDefault(key);
     }
 
     // Dots on rings of radius 0, .5 and 1 around the center, as flat squares facing up.

@@ -153,8 +153,7 @@ internal sealed partial class SceneReader(Region3D region)
         Map(spawn, "EntityId", "PassageRadius", spawn, "PassageRadius");
         Map(spawn, "EntityId", "PassageHeight", spawn, "PassageHeight");
         var position = RelativeTransform(spawn, region).Origin;
-        var pose = new Pose4(new(Typed(position.X), Typed(position.Y), Typed(position.Z), section.W),
-            new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1)));
+        var pose = new Pose4(new(Typed(position.X), Typed(position.Y), Typed(position.Z), section.W), Identity);
         return new(new(spawn.EntityId), pose, At(spawn, "EntityId"), new(section.SectionId),
             spawn.PassageRadius, spawn.PassageHeight, spawn.CanUseSeamsWithoutPrism);
     }

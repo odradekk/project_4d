@@ -122,13 +122,17 @@ internal sealed partial class SceneReader
     private static FaceUv Uv(FaceUvResource face) =>
         new(face.Axis, face.Positive, new(face.Scale.X, face.Scale.Y), new(face.Offset.X, face.Offset.Y));
 
-    private static readonly Rotation4 Identity = new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1));
+    /// <summary>No rotation in four dimensions.</summary>
+    internal static readonly Rotation4 Identity = new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1));
 
-    // The pose of a node with the depth the entity lies at; a Rotation4 replaces the node's own rotation.
+    // The pose of a node with the depth the entity lies at. Without a Rotation4 the node's own rotation gives the pose's; with
+    // one, the node must not be rotated as well, since the two would not be told apart.
     private Pose4 Pose(Node3D node, double w, double[] rotation4)
     {
         var pose = Pose(node, w);
-        return rotation4.Length == 0 ? pose : pose with { Rotation = Matrix(rotation4, node, "Rotation4") };
+        if (rotation4.Length == 0) return pose;
+        if (!node.Transform.Basis.IsEqualApprox(Basis.Identity)) Error(node, "Rotation4", "Give a Rotation4 or rotate the node, not both.");
+        return pose with { Rotation = Matrix(rotation4, node, "Rotation4") };
     }
 
     private Rotation4 Matrix(double[] values, Node node, string property)

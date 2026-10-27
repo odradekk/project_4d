@@ -29,6 +29,8 @@ public sealed partial class PlayerActions : Node
     // An object this far from the eyes is let go: past the 2 m the crosshair reaches, with room for a grip at its edge.
     private const float LetGoDistance = 2.5f;
     private const double PreviewInterval = .15;
+    // How long the inputs of a preview stay the same before the slow part of it is made.
+    private const double SettleSeconds = .3;
 
     private World world = null!;
     private EntityId actor;
@@ -47,8 +49,12 @@ public sealed partial class PlayerActions : Node
     private DeviceDrive devices = null!;
     private BallShadows shadows = null!;
     // What the preview on show was made for. The engine's plan is read again only when this changes, and at most every
-    // PreviewInterval, since planning a turn of a nut takes tens of milliseconds.
-    private (string Subject, string Target, Vector3 Feet, int Version)? previewed;
+    // PreviewInterval. A nut's sweep takes tens of milliseconds to cut, so it is made once the inputs have been still for
+    // SettleSeconds, and dropped as soon as they change.
+    private (string? Subject, string Target, Vector3 Feet, int Version)? previewed;
+    private double previewStill;
+    private bool sweepShown;
+    private IReadOnlyList<RotationPreview> rings = [];
 
     /// <summary>The entity in the hand: a flat object carried, or the slice of an upright one gripped.</summary>
     internal string? Held => HeldId()?.Value;
@@ -60,7 +66,7 @@ public sealed partial class PlayerActions : Node
     public bool Mirrored => State(actor).Handedness == Handedness.Mirrored;
 
     /// <summary>Raised with the reason when a device that the player pulled is stopped by something in its way.</summary>
-    internal event Action<Refusal>? DeviceBlocked;
+    internal event Action<string>? DeviceBlocked;
 
     internal void Configure(World world, string actor, FirstPersonPlayer player, PrismView prism,
         IReadOnlyList<SectionScene> scenes, DynamicSlices slices, LensOverlay overlay, Region3D region)
@@ -72,7 +78,7 @@ public sealed partial class PlayerActions : Node
         this.scenes = scenes;
         this.slices = slices;
         this.overlay = overlay;
-        devices = new DeviceDrive(world, scenes, slices, overlay, this, region, refusal => DeviceBlocked?.Invoke(refusal));
+        devices = new DeviceDrive(world, scenes, slices, overlay, region, SectionOf, () => CurrentSection, line => DeviceBlocked?.Invoke(line));
         shadows = new BallShadows(world, scenes, slices);
         scratch = new AudioStreamPlayer { Name = "Scratch", Stream = GD.Load<AudioStream>("res://audio/scratch.wav") };
         AddChild(scratch);
@@ -200,13 +206,15 @@ public sealed partial class PlayerActions : Node
         _ => null
     };
 
+    /// <summary>Why the engine refused an action, and the section that shows what is in the way.</summary>
+    internal Refusal Refuse(Failure failure) => new(failure.Code, SectionOf(failure.Contacts));
+
     /// <summary>
-    /// Why the engine refused an action. The engine says in which section the blocking contact is; only a contact between
-    /// sections leaves that open, and then the section that shows the obstacle is the answer.
+    /// The section that shows what the first contact is against, null when none does. The engine says in which section the
+    /// contact is; only a contact between sections leaves that open, and then the section that shows the obstacle is the answer.
     /// </summary>
-    internal Refusal Refuse(Failure failure) => failure.Contacts.Count > 0 && failure.Contacts[0].Section is { } section
-        ? new(failure.Code, section.Value)
-        : new(failure.Code, failure.Contacts.Count > 0 ? SectionShowing(failure.Contacts[0].Obstacle) : null);
+    internal string? SectionOf(IReadOnlyList<Contact> contacts) => contacts.Count == 0 ? null
+        : contacts[0].Section?.Value ?? SectionShowing(contacts[0].Obstacle);
 
     // The player's section when the entity has a slice there, otherwise the first other section that has one.
     private string? SectionShowing(EntityId entity)
@@ -282,38 +290,70 @@ public sealed partial class PlayerActions : Node
         return carrier.Position;
     }
 
-    // Draws, in the section the lens shows, the sweep of what F would do to the held or aimed entity, so that red means F; the
-    // sweep of R when F has no path. The fold plane of R is drawn too, and the dashed ring that standing a nut up would bring.
+    // Draws, in the section the lens shows, the sweep of what F would do to the held or aimed entity, so that red means F, the
+    // fold plane of what R would do, and for every nut lying in the player's section the dashed ring that standing it up would
+    // bring. A ball turns without any change, so it has no preview. The sweep of a nut takes tens of milliseconds to cut: until
+    // its inputs have been still for SettleSeconds only the rings are drawn, and a change drops the sweep again.
     private void UpdatePreview(double delta)
     {
-        if (!prism.Raised || prism.TargetSection is not { } target || Subject() is not { } id)
+        if (!prism.Raised || prism.TargetSection is not { } target)
         {
             previewDelay = 0;
             previewed = null;
             overlay.ClearPreview();
             return;
         }
-        previewDelay = Math.Max(0, previewDelay - delta);
-        var inputs = (id.Value, target, player.Position, slices.Version);
-        if (inputs.Equals(previewed) || previewDelay > 0) return;
-        previewed = inputs;
-        previewDelay = PreviewInterval;
+        var subject = Subject() is { } entity && !IsBall(entity) ? entity : (EntityId?)null;
         var section = new SectionId(target);
-        var stand = StandOrLayRequest(id);
-        var (planned, sweep, ring) = stand is null ? (false, null, null) : PreviewOf(stand, section);
-        var (_, flip, _) = PreviewOf(new Flip(actor, id), section);
-        overlay.ShowPreview(section, planned ? sweep : flip, flip?.FoldPlane ?? [], ring);
+        previewDelay = Math.Max(0, previewDelay - delta);
+        var inputs = (subject?.Value, target, player.Position, slices.Version);
+        if (!inputs.Equals(previewed))
+        {
+            previewStill = 0;
+            if (previewDelay > 0 && !sweepShown) return;
+            previewed = inputs;
+            previewDelay = PreviewInterval;
+            sweepShown = false;
+            ShowLight(section, subject);
+        }
+        else if ((previewStill += delta) >= SettleSeconds && !sweepShown && subject is { } nut && IsRingItem(nut))
+        {
+            sweepShown = true;
+            var (sweep, flip) = SweepsOf(nut, section);
+            overlay.ShowPreview(section, sweep, flip?.FoldPlane ?? [], rings);
+        }
     }
 
-    // What the lens shows of the turn the request makes, in the section, whether or not the turn is blocked; whether the turn
-    // has a path at all; and for a nut that is stood up, the ring that it leaves there. A nut shows its ring and not the sweep,
-    // since cutting the tilted ring at every step takes tens of milliseconds.
-    private (bool Planned, RotationPreview? Sweep, RotationPreview? Ring) PreviewOf(RotationRequest request, SectionId section)
+    // The preview that is cheap to make: the rings, and the sweeps of an object that is not a nut.
+    private void ShowLight(SectionId section, EntityId? subject)
     {
-        if (PlanOf(world.PlanRotation(request)) is not { } plan) return (false, null, null);
-        if (request is StandUp && Shown(world.GetHiddenStructurePreview(plan, section)) is { } ring) return (true, null, ring);
-        return (true, Shown(world.GetRotationPreview(plan, section)), null);
+        rings = RingsIn(section);
+        var (sweep, flip) = subject is { } id && !IsRingItem(id) ? SweepsOf(id, section) : (null, null);
+        overlay.ShowPreview(section, sweep, flip?.FoldPlane ?? [], rings);
     }
+
+    // The sweep of F and the sweep of R of an entity in the section.
+    private (RotationPreview? F, RotationPreview? R) SweepsOf(EntityId id, SectionId section) =>
+        (StandOrLayRequest(id) is { } stand ? Sweep(stand, section) : null, Sweep(new Flip(actor, id), section));
+
+    // What the lens shows of the turn the request makes, in the section, whether or not the turn is blocked.
+    private RotationPreview? Sweep(RotationRequest request, SectionId section) =>
+        PlanOf(world.PlanRotation(request)) is { } plan ? Shown(world.GetRotationPreview(plan, section)) : null;
+
+    // Where the ring of each nut that lies in the player's section would stand in the section if the nut were stood up toward
+    // it, with the contacts that block the way there, if any.
+    private List<RotationPreview> RingsIn(SectionId section)
+    {
+        var result = new List<RotationPreview>();
+        foreach (var id in slices.Entities.Where(id => IsRingItem(id) && State(id) is { UprightOrigin: null, InBackpack: false }))
+            if (PlanOf(world.PlanRotation(new StandUp(actor, id, section))) is { } plan && Shown(world.GetHiddenStructurePreview(plan, section)) is { } ring)
+                result.Add(ring);
+        return result;
+    }
+
+    private bool IsBall(EntityId id) => State(id).Definition is ItemDefinition { Shape: Sphere4 };
+
+    private bool IsRingItem(EntityId id) => State(id).Definition is ItemDefinition { Shape: HiddenRingItem };
 
     private static RotationPreview? Shown(PreviewResult result) => (result as PreviewResult.Preview)?.Value;
 }

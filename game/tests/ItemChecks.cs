@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FourD;
@@ -12,8 +11,8 @@ namespace Game.Tests;
 
 /// <summary>
 /// The ball and the nut on the item test region: what each section shows of them, the glowing outline, carrying the ball
-/// through a block that only the second section has, the dots under it, the dashed ring a nut promises before it is stood up,
-/// the ring that follows a nut, and a nut carried into a block that no section shows. Expected values are worked out by hand
+/// through a block that only the second section has, the dots under it, a ball that cannot be taken through a seam, a nut
+/// carried into a block that no section shows, and the errors in authoring them. Expected values are worked out by hand
 /// from the radius of a section of a ball (the square root of R squared less d squared) and from the nut's ring.
 /// </summary>
 public partial class ItemChecks : Node
@@ -36,17 +35,11 @@ public partial class ItemChecks : Node
             await CheckBallStoppedInOtherSection();
             await play.Load(null, Scene);
             await CheckBallStaysOutOfBackpack();
-            await play.Load(null, Scene);
-            await CheckHiddenRingPreview();
-            await CheckRingFollowsNut();
-            await play.Load(r => r.GetNode<HiddenRingItem3D>("Items/Nut").Position = new(-1.5f, .03f, -3.85f), Scene);
-            await CheckBlockedRingPreview();
             await play.Load(r => AddBlock(r, "BlockBetween", new(1.1f, 1.9f, 2.4f), new(.1f, .6f, .6f), .1, .3), Scene);
             await CheckNutCarriedIntoBlock();
             await play.Unload();
-            CheckDashes();
             CheckDiagnostics();
-            GD.Print("Item checks passed: sections, outline, ball carried and dropped, dots, not packed, ring preview, ring follows, blocked ring, carried nut, dashes, diagnostics.");
+            GD.Print("Item checks passed: sections, outline, ball carried and dropped, dots, not packed, carried nut, diagnostics.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -86,6 +79,7 @@ public partial class ItemChecks : Node
             Check(play.Mask(section, "ball") != Colors.Black, $"the ball must glow in the lens of {section}");
         }
         Check(play.HasSlice("Ⅰ", "nut") && !play.HasSlice("Ⅱ", "nut"), "the nut shows its body in its section, and its ring in none");
+        Check(play.Region.HasNode("Generated/Ⅰ/Dynamic/nut/Collision"), "the nut must have a collision body");
         Check(play.Mask("Ⅰ", "nut") != Colors.Black, "the nut must glow in the lens, since its ring reaches out of the section");
     }
 
@@ -101,12 +95,27 @@ public partial class ItemChecks : Node
         // Over the hole of the second section, the first section has floor under the ball and the second has none.
         player.Camera.Rotation = Vector3.Zero;
         await play.Walk(new(1.5f, 0, .6f));
+        await play.Frames(1);
+        Check(Mathf.Abs(Dots("Ⅰ").Position.X - 1.5f) < .02f && Mathf.Abs(Dots("Ⅰ").Position.Z) < .02f, $"the dots must follow the ball at once; they are at {Dots("Ⅰ").Position}");
         await play.Frames(10);
         var hand = new Vector3(1.5f, 1f, 0f);
         Near(play.Position("ball"), hand, "a carried ball must be where the hand is");
         Check(actions.GetNode("Carrier").GetChildCount() == 0, "the host physics must not check a held ball, which the engine checks in every section");
         Check(Dots("Ⅰ").Visible && !Dots("Ⅱ").Visible, "dots must lie under the ball in the first section and not over the hole in the second");
         Near(Dots("Ⅰ").Position, new(1.5f, .004f, 0), "the dots must lie on the floor under the ball");
+
+        // Let go over the hole: the floor of the first section, which the ball's center reaches, holds it, and the second section's
+        // ball hangs over the hole with no dots under it.
+        Press(Key.E);
+        await play.Frames(90);
+        Check(play.State("ball").Section is null && Mathf.Abs(play.Position("ball").Y - .25f) < .005f, $"a ball let go over the hole must rest on the floor of the first section; y = {play.Position("ball").Y}");
+        Check(play.HasSlice("Ⅱ", "ball") && Dots("Ⅰ").Visible && !Dots("Ⅱ").Visible, "a ball at rest over the hole shows in the second section, with dots in the first only");
+        play.LookAt(new(1.5f, .02f, 1.2f), play.Position("ball"));
+        await play.Frames(2);
+        Press(Key.E);
+        await play.Frames(3);
+        Check(actions.Held == "ball", "the ball must be picked up again");
+        player.Camera.Rotation = Vector3.Zero;
 
         await play.Walk(new(-1.2f, 0, 2.8f));
         await play.Frames(10);
@@ -172,78 +181,6 @@ public partial class ItemChecks : Node
         Check(player.Hud.SubtitleText.Contains("带不过缝"), $"refusing to take the ball through a seam is explained; saw '{player.Hud.SubtitleText}'");
     }
 
-    // The path of the lines drawn in the lens of a section, of a color.
-    private IEnumerable<Vector3> PreviewLines(string section, Color color)
-    {
-        var preview = play.Region.GetNodeOrNull<MeshInstance3D>($"Generated/{section}/Overlay/Preview");
-        for (var i = 0; preview?.Mesh is not null && i < preview.Mesh.GetSurfaceCount(); i++)
-            if (((StandardMaterial3D)preview.Mesh.SurfaceGetMaterial(i)).AlbedoColor == color)
-                foreach (var vertex in preview.Mesh.SurfaceGetArrays(i)[(int)Mesh.ArrayType.Vertex].AsVector3Array()) yield return vertex;
-    }
-
-    private async Task CheckHiddenRingPreview()
-    {
-        // Turning a quarter about the hinge at x = .49 takes the ring's center, .42 ahead and .2 deep, to W = .42 and .2 behind the
-        // hinge, so it stands at x = .29, y = .03 + .87 = .9 and z = 2.2, 50 cm across: the lens shows where, before the nut is stood up.
-        play.LookAt(new(.5f, .02f, 3f), new(.5f, .03f, 2.2f));
-        await play.Frames(2);
-        Check(play.Mask("Ⅰ", "nut") != Colors.Black, "the nut glows in the lens");
-        Button(MouseButton.Right, true);
-        await play.Frames(20);
-        var lines = PreviewLines("Ⅱ", LensOverlay.Clear).ToArray();
-        Check(lines.Length > 0 && !PreviewLines("Ⅱ", LensOverlay.Blocked).Any(), "a clear stand-up draws pale lines and no red");
-        var ring = lines.Where(v => v.Y > .6f).ToArray();
-        var top = ring.Max(v => v.Y);
-        Check(ring.Length > 0 && Mathf.Abs(top - 1.15f) < .01f, $"the dashed ring must reach y = 1.15; its top is {top}");
-        Check(Mathf.Abs(ring.Average(v => v.Z) - 2.2f) < .03f, $"the dashed ring must be centered at z = 2.2; it is at {ring.Average(v => v.Z)}");
-
-        // Nothing changes while the nut and the player stay as they are, so the drawing is not made again.
-        var drawn = play.Region.GetNode<MeshInstance3D>("Generated/Ⅱ/Overlay/Preview").GetInstanceId();
-        await play.Frames(60);
-        Check(play.Region.GetNode<MeshInstance3D>("Generated/Ⅱ/Overlay/Preview").GetInstanceId() == drawn, "an unchanged preview must be kept");
-
-        Press(Key.F);
-        await play.Frames(TurnFrames);
-        Button(MouseButton.Right, false);
-        Check(play.State("nut").UprightOrigin?.Value == "Ⅰ", "F must stand the nut up");
-        var bounds = play.SliceBounds("Ⅱ", "nut");
-        Near(bounds.GetCenter(), new(.29f, .9f, 2.2f), "the ring must stand where the preview showed");
-        Check(Mathf.Abs(bounds.Size.Y - .5f) < .01f && Mathf.Abs(bounds.Size.Z - .5f) < .01f, $"the ring must be 50 cm across; its size is {bounds.Size}");
-    }
-
-    private async Task CheckRingFollowsNut()
-    {
-        // The standing nut is a slice in the first section; grip it and move it half a metre, and the ring moves with it.
-        var slice = play.SliceBounds("Ⅰ", "nut").GetCenter();
-        play.LookAt(new(slice.X, .02f, slice.Z + .8f), slice);
-        await play.Frames(2);
-        Press(Key.E);
-        await play.Frames(3);
-        Check(actions.Held == "nut" && actions.HeldIsUpright, "E must grip the standing nut");
-        var before = play.SliceBounds("Ⅱ", "nut").GetCenter();
-        await play.Walk(player.Position + new Vector3(.5f, 0, 0));
-        await play.Frames(3);
-        var after = play.SliceBounds("Ⅱ", "nut").GetCenter();
-        Near(after, before + new Vector3(.5f, 0, 0), "the ring must move as far as the nut");
-    }
-
-    private async Task CheckBlockedRingPreview()
-    {
-        // The nut stands at z = -3.85 against the wall, whose face is at z = -4. The ring, 25 cm out from its center, would stand
-        // inside it.
-        play.LookAt(new(-1.5f, .02f, -2.8f), new(-1.5f, .03f, -3.85f));
-        await play.Frames(2);
-        Button(MouseButton.Right, true);
-        await play.Frames(20);
-        Check(PreviewLines("Ⅱ", LensOverlay.Blocked).Any(), "the dashed ring of a blocked stand-up must be red");
-        Button(MouseButton.Right, false);
-        player.Hud.ClearText();
-        Press(Key.F);
-        await play.Frames(3);
-        Check(!play.State("nut").Rotating, "a blocked stand-up must not start");
-        Check(player.Hud.SubtitleText.Contains("转不"), $"a blocked stand-up is explained; saw '{player.Hud.SubtitleText}'");
-    }
-
     private async Task CheckNutCarriedIntoBlock()
     {
         // A block that exists from W = .1 to .3 is in no section. The ring of the nut rests at W = .2, so a nut lying in the hand
@@ -275,6 +212,9 @@ public partial class ItemChecks : Node
         var ring = (RingResource)nut.Ring!.Duplicate();
         ring.Center = [.41, .87, 0, .02];
         nut.Ring = ring;
+        // A nut that is turned and has a Rotation4 as well says two things about its rotation.
+        nut.Rotation4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        nut.Rotation = new(0, .3f, 0);
         region.GetNode<SphereItem3D>("Items/Ball").Rotation4 = [1, 2, 3];
         // A face of a part of the cabinet that lists two vertices.
         var cabinet = region.GetNode<LoftDevice3D>("Devices/Cabinet");
@@ -293,27 +233,9 @@ public partial class ItemChecks : Node
         var report = string.Join(", ", errors);
         Check(errors.Contains((LoadErrorCode.HiddenStructureTooClose, new Source("Items/Nut", "Ring"))), $"a ring too close to a section must name the nut's Ring; got {report}");
         Check(errors.Any(e => e.Source == new Source("Items/Ball", "Rotation4")), $"a rotation of the wrong length must name Rotation4; got {report}");
+        Check(errors.Any(e => e.Source == new Source("Items/Nut", "Rotation4")), $"a Rotation4 on a turned node must be refused; got {report}");
         Check(errors.Any(e => e.Code == LoadErrorCode.InvalidGeometry && e.Source == new Source("Devices/Cabinet", "Segments")), $"a bad face must name the Segments of the device; got {report}");
         Check(errors.Any(e => e.Source == new Source("Devices/Window", "Motion")), $"a pivot of the wrong length must name Motion; got {report}");
         region.Free();
-    }
-
-    // A circle cut into 64 pieces of two points each, in any order and direction, as the engine gives the outline of a ring.
-    private static void CheckDashes()
-    {
-        var pieces = new List<Polyline>();
-        for (var i = 0; i < 64; i++)
-        {
-            double[] Point(int k) => [0, .25 * Math.Cos(Math.Tau * k / 64), .25 * Math.Sin(Math.Tau * k / 64)];
-            var (a, b) = ((i * 37) % 64, (i * 37) % 64 + 1);
-            pieces.Add(new Polyline(i % 3 == 0 ? [.. Point(b), .. Point(a)] : [.. Point(a), .. Point(b)], false));
-        }
-        var vertices = new List<Vector3>();
-        DashedOutline.AddDashes(vertices, pieces);
-        var circumference = Mathf.Tau * .25f;
-        var dashed = Enumerable.Range(0, vertices.Count / 2).Sum(i => vertices[2 * i].DistanceTo(vertices[2 * i + 1]));
-        // The dash is .04 and the gap .03, so 4/7 of the circle is drawn when the pieces are chained; each piece alone is shorter
-        // than a dash, and drawn alone it would be solid.
-        Check(dashed > circumference * .5f && dashed < circumference * .65f, $"a chained outline is drawn in dashes; {dashed} of {circumference} m is drawn");
     }
 }

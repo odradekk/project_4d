@@ -39,11 +39,11 @@ public static class RefusalLines
         _ => "过不去。"
     };
 
-    /// <summary>Why a device she pulled stopped before the end of its way.</summary>
-    public static string ForDevice(Refusal refusal, string currentSection) => refusal.Section switch
+    /// <summary>Why a device she pulled stopped before the end of its way, given the section that shows what is in the way.</summary>
+    public static string ForDevice(string? section, string currentSection) => section switch
     {
         null => "动不了……好像卡在两页中间了。",
-        var section when section == currentSection => "动不了……这边有东西挡着。",
+        _ when section == currentSection => "动不了……这边有东西挡着。",
         _ => "动不了……那一页有东西挡着。"
     };
 

@@ -39,7 +39,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         prism = view;
         actions = hands;
         travel = seams;
-        hands.DeviceBlocked += refusal => Say(RefusalLines.ForDevice(refusal, hands.CurrentSection));
+        hands.DeviceBlocked += Say;
     }
 
     public override void _Ready()
