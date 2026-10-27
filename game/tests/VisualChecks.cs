@@ -105,11 +105,11 @@ public partial class VisualChecks : Node
     {
         var count = 0;
         for (var y = y0; y < y1; y++)
-        for (var x = x0; x < x1; x++)
-        {
-            var c = image.GetPixel(x, y);
-            if (c.B > .7f && c.G > .7f && c.R < .82f && c.B > c.R * 1.1f) count++;
-        }
+            for (var x = x0; x < x1; x++)
+            {
+                var c = image.GetPixel(x, y);
+                if (c.B > .7f && c.G > .7f && c.R < .82f && c.B > c.R * 1.1f) count++;
+            }
         return count;
     }
 }

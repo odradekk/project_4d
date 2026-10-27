@@ -28,9 +28,9 @@ internal static class SliceMesh
                 {
                     // Engine fronts are CCW; Godot fronts are clockwise.
                     var source = start + i / 3 * 3 + (i % 3 == 0 ? 0 : 3 - i % 3);
-                    vertices[i] = new((float)slice.Positions[source*3], (float)slice.Positions[source*3+1], (float)slice.Positions[source*3+2]);
-                    normals[i] = new((float)slice.Normals[source*3], (float)slice.Normals[source*3+1], (float)slice.Normals[source*3+2]);
-                    uvs[i] = new((float)slice.Uvs[source*2], (float)slice.Uvs[source*2+1]);
+                    vertices[i] = new((float)slice.Positions[source * 3], (float)slice.Positions[source * 3 + 1], (float)slice.Positions[source * 3 + 2]);
+                    normals[i] = new((float)slice.Normals[source * 3], (float)slice.Normals[source * 3 + 1], (float)slice.Normals[source * 3 + 2]);
+                    uvs[i] = new((float)slice.Uvs[source * 2], (float)slice.Uvs[source * 2 + 1]);
                 }
                 var arrays = new Godot.Collections.Array();
                 arrays.Resize((int)Mesh.ArrayType.Max);
@@ -38,7 +38,7 @@ internal static class SliceMesh
                 arrays[(int)Mesh.ArrayType.Normal] = normals;
                 arrays[(int)Mesh.ArrayType.TexUV] = uvs;
                 mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-                mesh.SurfaceSetMaterial(mesh.GetSurfaceCount()-1, materials[(slice.Entity, part)]);
+                mesh.SurfaceSetMaterial(mesh.GetSurfaceCount() - 1, materials[(slice.Entity, part)]);
                 start = end;
             }
             var entity = new Node3D { Name = slice.Entity.Value };
@@ -51,9 +51,17 @@ internal static class SliceMesh
             var color = slice.ThroughObject
                 ? new Color((id & 255) / 255f, ((id >> 8) & 255) / 255f, ((id >> 16) & 255) / 255f)
                 : Colors.Black;
-            entity.AddChild(new MeshInstance3D { Name = "PrismMask", Mesh = mesh, Layers = 4,
-                MaterialOverride = new StandardMaterial3D { ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-                    AlbedoColor = color } });
+            entity.AddChild(new MeshInstance3D
+            {
+                Name = "PrismMask",
+                Mesh = mesh,
+                Layers = 4,
+                MaterialOverride = new StandardMaterial3D
+                {
+                    ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                    AlbedoColor = color
+                }
+            });
             if (collision)
             {
                 var body = new StaticBody3D { Name = "Collision" };

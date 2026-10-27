@@ -7,13 +7,29 @@ namespace Game.Rendering;
 public partial class PrismView : CanvasLayer
 {
     private readonly SubViewport viewport = new() { Name = "PrismViewport", RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
-    private readonly SubViewport mask = new() { Name = "MaskViewport", UseDebanding = false, UseTaa = false,
-        Msaa3D = Viewport.Msaa.Disabled, ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled,
-        RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
-    private readonly Camera3D maskCamera = new() { Name = "MaskCamera", CullMask = 4, Current = true,
-        Environment = new Godot.Environment { BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = Colors.Black,
-            TonemapMode = Godot.Environment.ToneMapper.Linear, TonemapExposure = 1 },
-        Attributes = new CameraAttributesPractical { ExposureMultiplier = 1, AutoExposureEnabled = false } };
+    private readonly SubViewport mask = new()
+    {
+        Name = "MaskViewport",
+        UseDebanding = false,
+        UseTaa = false,
+        Msaa3D = Viewport.Msaa.Disabled,
+        ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled,
+        RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled
+    };
+    private readonly Camera3D maskCamera = new()
+    {
+        Name = "MaskCamera",
+        CullMask = 4,
+        Current = true,
+        Environment = new Godot.Environment
+        {
+            BackgroundMode = Godot.Environment.BGMode.Color,
+            BackgroundColor = Colors.Black,
+            TonemapMode = Godot.Environment.ToneMapper.Linear,
+            TonemapExposure = 1
+        },
+        Attributes = new CameraAttributesPractical { ExposureMultiplier = 1, AutoExposureEnabled = false }
+    };
     private readonly Camera3D camera = new() { Name = "PrismCamera", CullMask = 2, Current = true };
     private readonly TextureRect lens = new() { Name = "Lens", MouseFilter = Control.MouseFilterEnum.Ignore };
     private readonly Label label = new() { Name = "PrismTarget", HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = Control.MouseFilterEnum.Ignore };

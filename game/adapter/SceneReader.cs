@@ -131,11 +131,11 @@ internal sealed class SceneReader(Region3D region)
             return new(new(1, 0, 0), new(0, 1, 0), new(0, 0, 1));
         var q = basis.GetRotationQuaternion();
         double x = q.X, y = q.Y, z = q.Z, w = q.W;
-        var norm = Math.Sqrt(x*x + y*y + z*z + w*w);
+        var norm = Math.Sqrt(x * x + y * y + z * z + w * w);
         x /= norm; y /= norm; z /= norm; w /= norm;
-        return new(new(1-2*(y*y+z*z), 2*(x*y+z*w), 2*(x*z-y*w)),
-            new(2*(x*y-z*w), 1-2*(x*x+z*z), 2*(y*z+x*w)),
-            new(2*(x*z+y*w), 2*(y*z-x*w), 1-2*(x*x+y*y)));
+        return new(new(1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w)),
+            new(2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w)),
+            new(2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)));
     }
 
     internal static Transform3D RelativeTransform(Node3D node, Region3D region)

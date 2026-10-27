@@ -35,7 +35,8 @@ public partial class Region3D : Node3D
     private World3D? previousWorld;
     private World3D? currentWorld;
     private bool previewPending;
-    [Export] public double PreviewW
+    [Export]
+    public double PreviewW
     {
         get => previewW;
         set
@@ -48,7 +49,8 @@ public partial class Region3D : Node3D
             }
         }
     }
-    [Export] public bool PrismEnabled
+    [Export]
+    public bool PrismEnabled
     {
         get => prismEnabled;
         set { prismEnabled = value; prism?.SetEnabled(value); }
@@ -98,13 +100,26 @@ public partial class Region3D : Node3D
         var worlds = new Dictionary<string, World3D>();
         foreach (var section in description.Sections)
         {
-            var viewport = new SubViewport { Name = section.Id.Value, Size = new Vector2I(2, 2), World3D = new World3D(),
-                RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
+            var viewport = new SubViewport
+            {
+                Name = section.Id.Value,
+                Size = new Vector2I(2, 2),
+                World3D = new World3D(),
+                RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled
+            };
             generated.AddChild(viewport);
             viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true));
-            viewport.AddChild(new WorldEnvironment { Environment = new Godot.Environment {
-                BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = new Color(0.10f, 0.13f, 0.17f),
-                AmbientLightSource = Godot.Environment.AmbientSource.Color, AmbientLightColor = Colors.White, AmbientLightEnergy = 0.65f } });
+            viewport.AddChild(new WorldEnvironment
+            {
+                Environment = new Godot.Environment
+                {
+                    BackgroundMode = Godot.Environment.BGMode.Color,
+                    BackgroundColor = new Color(0.10f, 0.13f, 0.17f),
+                    AmbientLightSource = Godot.Environment.AmbientSource.Color,
+                    AmbientLightColor = Colors.White,
+                    AmbientLightEnergy = 0.65f
+                }
+            });
             viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -25, 0), LightEnergy = 0.8f });
             worlds.Add(section.Id.Value, viewport.World3D);
         }
