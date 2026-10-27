@@ -1,0 +1,166 @@
+# 区域场景标注与载入校验
+
+[契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
+
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定格式，不要求本轮实现这些脚本。
+
+## 节点与导出属性
+
+```text
+Room (Node3D, Region3D)
+  Sections (Node)
+    I (Node3D, Section3D)
+      Fixed (Node3D)
+      Turnables (Node3D)
+      Spawns (Node3D)
+    II (Node3D, Section3D)
+  Buildings (Node3D)
+    Home (Node3D, Building3D)
+      Floor (Node3D, BuildingElement3D)
+        Part (MeshInstance3D, BoxPart3D)
+  Items (Node3D)
+  Devices (Node3D)
+  Grazers (Node3D)
+  Seams (Node3D)
+  ExpectedPuzzleOperations (Node)
+```
+
+分组节点名称固定，内容节点名称可读即可，稳定 ID 来自属性。所有 Node3D 的 Scale=(1,1,1)，禁止父级缩放/剪切。实体 XYZ 用相对区域根的 Transform，Section 节点保持单位变换，不用其 Z 或视觉偏移表达 W。适配层把 Transform 的 XYZ 与旋转转成引擎值；需要初始四维旋转的动态实体另读 Rotation4 属性，覆盖普通 Transform.Basis，不把两者重复相乘。
+
+下表类型指 Godot 侧 C# 属性，每项均 `[Export]`。`A<T>` 在表中表示 `Godot.Collections.Array<T>`，不是待实现的新集合。Resource 自定义类均为 `partial class : Resource`、`[GlobalClass]`，只含表中数据。Godot 官方 [C# 导出属性](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_exports.html)要求 Variant-compatible 类型，支持 Resource 和类型化数组；不得直接导出引擎 record、IReadOnlyList 或嵌套普通 C# 集合。
+
+| 脚本（原生类型） | 导出属性与对应含义 |
+|---|---|
+| Region3D（Node3D，`[Tool]`） | `double PreviewW`；`bool PrismEnabled`；`A<SharedValueResource> SharedValues` |
+| Section3D（Node3D） | `string SectionId`、`double W` |
+| Building3D（Node3D） | `string BuildingId`、`double WMin`、`double WMax` |
+| BuildingElement3D（Node3D） | `string EntityId`、`string BuildingId`、`double WMin/WMax`、`A<IntervalResource> Gaps`；BoxPart3D 子节点给 Shape |
+| FixedObject3D（Node3D） | `string EntityId`；BoxPart3D 子节点给 Shape；Section 从祖先取得 |
+| TurnableObject3D（Node3D） | `string EntityId/BuildingId`、`double[] Rotation4`、`TurnableResource Interaction`；Section 从祖先取得；BoxPart3D 子节点给 Shape |
+| SphereItem3D（Node3D） | `string EntityId/BuildingId`、`string PartId`、`double W`、`double[] Rotation4`、`double Radius`、`TurnableResource Interaction` |
+| HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body |
+| LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
+| Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape` |
+| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`；Section 来自祖先 |
+| Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin |
+| BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
+| ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
+
+视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。出生点创建 Creature3Definition；普通角色场景可以是 CharacterBody3D + CollisionShape3D + Camera3D，NPC/猫不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
+
+| Resource | 全部导出字段 |
+|---|---|
+| IntervalResource | `double Min/Max` |
+| SharedValueResource | `string Id`、`double Min/Max/InitialValue` |
+| TurnableResource | `bool Holdable/Packable`、`double HorizontalRadius`、`Axis3 LongAxis`、`Vector3 Hinge`、`double Reach`；Hinge内缩≥0.02m，Reach按该铰链核算 |
+| FaceUvResource | `Axis3 Axis`、`bool Positive`、`Vector2 Scale/Offset` |
+| RingResource | `string PartId`、`double[] Center`、`double[] Rotation4`、`double MajorRadius/TubeRadius` |
+| LoftSegmentResource | `A<LoftKeyResource> Keys` |
+| LoftKeyResource | `double W`、`A<ConvexPartResource> Parts` |
+| ConvexPartResource | `string PartId`、`Vector3[] Vertices`、`A<ConvexFaceResource> Faces` |
+| ConvexFaceResource | `int[] Vertices`、`FaceUvResource Uv` |
+| DeviceRotationResource（DeviceMotionResource 变体） | `RotationPlane Plane`、`double[] Pivot`、`double Min/Max/Initial` |
+| DeviceTranslationResource（DeviceMotionResource 变体） | `Axis3 Axis`、`double Min/Max/Initial` |
+| MetaballShapeResource | `A<MetaballResource> Balls`、`double Threshold` |
+| MetaballResource | `string Id`、`double[] Center`、`double Radius/Weight` |
+
+double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z/W 四列，每列 XYZW；空数组只表示单位旋转，四维点不可用空数组。适配层只做布局转换与基础格式校验，旋转是否合法交给引擎。所有数组默认空集合，必需的 Resource 未赋值报告节点属性错误。未知脚本节点不静默当四维实体。
+
+`[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
+
+## 独立前置布置与预期操作
+
+```csharp
+public sealed record ExpectedOperation(
+    OperationId Id, Source Source, ExpectedSetup Setup,
+    IReadOnlyList<ExpectedStep> Steps);
+public sealed record ExpectedSetup(
+    IReadOnlyList<EntityDefinition> EntityOverrides,
+    IReadOnlyList<SeamOverride> Seams,
+    IReadOnlyList<SharedValueOverride> SharedValues,
+    IReadOnlyList<CarrySetup> Carry);
+public sealed record SeamOverride(SeamId Id, bool Open, bool Severed);
+public sealed record SharedValueOverride(SharedValueId Id, double Value);
+public enum CarryLocation { Hand, Backpack }
+public sealed record CarrySetup(EntityId Actor, EntityId Item, CarryLocation Location);
+public enum ExpectedRotationKind { StandUp, LayDown, Flip }
+public abstract record ExpectedStep;
+public sealed record ExpectedRotation(RotationRequest Request,
+    FailureCode? ExpectedFailure) : ExpectedStep;
+public sealed record ExpectedMove(MoveRequest Request, Vec3 ExpectedApplied,
+    FailureCode? ExpectedFailure) : ExpectedStep;
+public sealed record ExpectedDevice(EntityId Device, double Target,
+    double ExpectedPosition, FailureCode? ExpectedFailure) : ExpectedStep;
+public sealed record ExpectedCrossing(CrossSeamRequest Request,
+    FailureCode? ExpectedFailure) : ExpectedStep;
+public sealed record ExpectedAdvance(double Delta) : ExpectedStep;
+```
+
+每个 ExpectedOperation 从原始世界的独立副本开始，不沿用前一谜题的状态。EntityOverrides 以完整实体定义替换同 ID 动态实体初态，类别和身份不变；Seams/SharedValues 按 ID 替换指定初值，其余沿用载入数据；Carry 建立合法初始手持/背包关系。覆盖后仍执行形状和尺寸检查。可用 EntityOverrides 预置角色站位、物品位置、装置限位，步骤表示真实先后顺序。
+
+ExpectedFailure=null 表示必须成功；非 null 必须得到该失败且世界不变。旋转成功步骤立即 Start 后按配置时长推进到结束，再进入下一步；ExpectedAdvance 用于显式模拟额外时间。Move/Device 同时核对实际位移/位置，比较容差 `1e-9m`（旋转位置为 `1e-9rad`）。此容差只核对预期值，不取代碰撞容差。所有可推导错误均一次收集；步骤失败后停止该序列，继续其他独立操作。
+
+前置布置资源的字段如下。ID使用string，枚举原样，四维值按本页数组格式；资源读取后生成完整引擎定义。
+
+| Resource | 全部导出字段与含义 |
+|---|---|
+| ExpectedOperationResource | `string Id`、`ExpectedSetupResource Setup`、`A<ExpectedStepResource> Steps` |
+| ExpectedSetupResource | `A<EntityOverrideResource> EntityOverrides`、`A<SeamOverrideResource> Seams`、`A<SharedValueOverrideResource> SharedValues`、`A<CarrySetupResource> Carry` |
+| EntityOverrideResource | `NodePath Entity`引用现有动态实体模板；`Vector3 Position`、`double W`、`double[] Rotation4`、`double DeviceInitial`只覆盖适用字段，其余（含BuildingId）沿用完整模板定义 |
+| SeamOverrideResource | `string Id`、`bool Open/Severed` |
+| SharedValueOverrideResource | `string Id`、`double Value` |
+| CarrySetupResource | `string Actor/Item`、`CarryLocation Location` |
+
+ExpectedStepResource是封闭抽象Resource，各变体如下。
+
+| Resource | 全部导出字段 |
+|---|---|
+| ExpectedRotationResource | `ExpectedRotationKind Kind`（StandUp/LayDown/Flip）、`string Actor/Entity/Target`、`bool ShouldFail`、`FailureCode Failure` |
+| ExpectedMoveResource | `string Entity`、`Vector3 Delta/ExpectedApplied`、`bool ShouldFail`、`FailureCode Failure` |
+| ExpectedDeviceResource | `string Device`、`double Target/ExpectedPosition`、`bool ShouldFail`、`FailureCode Failure` |
+| ExpectedCrossingResource | `string Actor/Seam/Target`、`bool HasPrism`、`int FreeBackpackSlots`、`bool ShouldFail`、`FailureCode Failure` |
+| ExpectedAdvanceResource | `double Delta` |
+
+ShouldFail=false时忽略Failure；StandUp之外Target必须为空，防止无效设置掩盖错误。
+
+至少配置学校铅笔原页放倒后关窗，以及房间逗猫棒越栏、正反竖起、隐藏圆环在预期空地竖起等解法。墙根受阻可以作为 ExpectedFailure=RotationBlocked 的独立教学反例，不把它当设计错误。前置布置明确角色站位和朝向，不能只写“螺母能转”。
+
+## Load 诊断与 debug 展示
+
+```csharp
+public enum LoadErrorCode
+{
+    InvalidNumber, InvalidId, DuplicateId, MissingReference,
+    InvalidSectionOrder, InvalidInterval, InvalidPose, InvalidGeometry,
+    InvalidInteraction, InvalidMotion, InvalidCarry,
+    PartBoundaryTooClose, HiddenStructureTooClose,
+    BuildingCoverage, BuildingInterference, SeamTooClose,
+    ExpectedOperationFailed
+}
+public sealed record LoadError(
+    LoadErrorCode Code, Source Source, EntityId? Entity,
+    OperationId? Operation, int? StepIndex, string Detail,
+    IReadOnlyList<Contact> Contacts);
+```
+
+| 校验 | 错误与边界 |
+|---|---|
+| 非有限数、范围/长度/旋转、最薄实体厚度 | InvalidNumber/InvalidPose；ε 固定 0.006m，采样固定 0.01m 且仍小于最薄实体；本轮时长按 #6 的四个值 |
+| 空/重复 ID、失效引用、Section W 非递增 | InvalidId/DuplicateId/MissingReference/InvalidSectionOrder |
+| 空或逆向区间、缺口越界/重叠 | InvalidInterval；楼房按缺口分割后，仅保留正W厚度的剩余段并逐段闭合，切片/碰撞/支撑使用同一实体。缺口覆盖全范围时允许空实体，不生成孤立零厚端盖；不同形状的分段换形仍不允许恰在可玩Section上发生 |
+| 盒子退化、放样不凸/拓扑不对应、元球空形、圆环参数非法 | InvalidGeometry，精确定位零件或关键形状 |
+| 可转物交互参数/装置轨道非法、携带冲突 | InvalidInteraction/InvalidMotion/InvalidCarry |
+| 正反竖起完成后零件端面距任一可玩 Section（含原Section）小于 0.02m | PartBoundaryTooClose；等于 0.02m 通过，原Section不设ε豁免；总长不足以让铰链两侧都留0.02m时同样报错 |
+| 静止隐藏结构距任一 Section 不足“管半径+ε+0.02m” | HiddenStructureTooClose；圆环中心圆最近 W 距离与该下限比较，不把管半径重复扣两次 |
+| 所属楼房不能包住本区域内物品正反竖起及隐藏结构的完整活动范围 | BuildingCoverage；物品节点 BuildingId 必填，适配层直接填写TurnableDefinition/ItemDefinition.Building，不按XYZ范围猜测归属 |
+| 活动范围会触及另一栋楼 | BuildingInterference |
+| 共享某 Section 的两缝水平距离<0.8m | SeamTooClose，等于0.8m通过；仅 W 不同不能抵消此错误 |
+| 独立预期操作的返回值/实际位移/碰撞或终态不符合声明 | ExpectedOperationFailed，含 Operation 与从0开始的 StepIndex、实际 Failure/Contacts |
+
+安全距离按实际铰链和全部零件变换计算，包含隐藏结构；浮点计算只允许1e-10m的数值舍入余量，不能用0.005m碰撞容差放宽0.02m安全规则。
+
+数值校验在所有构建都返回 LoadError；debug 适配层加载失败时停止区域运行，逐条输出 `ERROR: <Code> <NodePath>.<Property> <Entity> <Operation>[<StepIndex>]: <Detail>`，并在调试文字面板显示同一列表，方便在编辑器定位。release 也不接收非法世界，显示关卡载入失败；诊断文本不作为游戏台词。
+
+基础格式失败时跳过依赖该数据的几何校验，避免把缺失字段当0产生连锁错误，其余独立项继续。错误按 NodePath、Property、Code、Entity、Operation、StepIndex 字典序返回。Contact 含碰撞实体/零件与四维点，错误 Source 指向动作节点或具体导出属性。
+
+验例：同一 Section 缝距 0.79m 返回 SeamTooClose，0.80m通过；球 R=0.25、中心 W=0.21、两 Section W=0/0.42 保持合法；原型的0.71m缝距和不足的负W楼房余量不能直接复制进正式场景。Load 验证使用世界副本，不消耗正式世界事件，不将谜题解法执行后的状态带入初始游戏。
