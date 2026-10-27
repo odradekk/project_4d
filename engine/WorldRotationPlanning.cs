@@ -35,10 +35,10 @@ public sealed partial class World
 
         var steps = SamplingSteps(item.Definition, item.Pose, motion.Hinge, motion.Axis, motion.Angle);
         var samples = Enumerable.Range(0, steps + 1).Select(i => (double)i / steps).ToArray();
-        var plan = TraceRotation(request, item, motion, motion.Angle, samples);
+        var plan = TraceRotation(request, item, motion, samples);
         if (request is Flip && plan.Blocked >= 0)
         {
-            var opposite = TraceRotation(request, item, motion, -motion.Angle, samples);
+            var opposite = TraceRotation(request, item, motion with { Angle = -motion.Angle }, samples);
             if (opposite.Blocked < 0) plan = opposite;
         }
         return plan.Blocked < 0
@@ -89,21 +89,21 @@ public sealed partial class World
     private (Motion?, Failure?) PlanFlip(Actor actor, Dynamic item, SectionDefinition section)
     {
         if (item.Origin is not null) return (null, Fail(FailureCode.InvalidInput, "Lay down before flipping.", item.Definition.Id));
-        var plane = FindFlipPlane(actor, item, section.W);
+        var plane = FindFoldPlane(actor, item, section.W);
         var hinge = plane.Pivot with { W = item.Pose.Position.W };
         var duration = plane.Obstacle ? FlipAroundObstacleDuration : FlipDuration;
         return (new Motion(hinge, plane.Axis, Math.PI, duration, item.Section), null);
     }
 
     // Turns the item through the sampled poses and stops at the first pose that touches an obstacle.
-    private RotationPlan TraceRotation(RotationRequest request, Dynamic item, Motion motion, double angle, double[] samples)
+    private RotationPlan TraceRotation(RotationRequest request, Dynamic item, Motion motion, double[] samples)
     {
         var obstacles = Boxes().Where(box => box.Entity != request.Entity).Concat(ReservedBoxes(request.Entity)).ToArray();
         var contacts = new List<Contact>();
         var blocked = -1;
         for (var i = 0; i < samples.Length && blocked < 0; i++)
         {
-            var pose = RotatedPose(item.Pose, motion.Hinge, motion.Axis, angle * samples[i]);
+            var pose = RotatedPose(item.Pose, motion.Hinge, motion.Axis, motion.Angle * samples[i]);
             foreach (var moving in Box4.From(item.Definition, pose))
                 foreach (var obstacle in obstacles)
                     if (moving.BoundsMayOverlap(obstacle) && Box4.Touch(moving, obstacle) is { } contact)
@@ -113,13 +113,13 @@ public sealed partial class World
                         });
             if (contacts.Count > 0) blocked = i;
         }
-        return new RotationPlan(this, revision, request.Entity, item.Pose, motion.Hinge, motion.Axis, angle, motion.Duration, motion.Origin,
+        return new RotationPlan(this, revision, request.Entity, item.Pose, motion.Hinge, motion.Axis, motion.Angle, motion.Duration, motion.Origin,
             samples, blocked, DistinctContacts(contacts), request is LayDown, request is Flip);
     }
 
-    // The vertical plane the item flips about, as a pivot and a horizontal axis. It is the nearest wall between
+    // The fold plane the item flips about, as a pivot and a horizontal axis. It is the nearest wall between
     // the actor and the item; with no wall, it faces the actor.
-    private (Vec4 Pivot, Vec4 Axis, bool Obstacle) FindFlipPlane(Actor actor, Dynamic item, double w)
+    private (Vec4 Pivot, Vec4 Axis, bool Obstacle) FindFoldPlane(Actor actor, Dynamic item, double w)
     {
         var boxes = Box4.From(item.Definition, item.Pose);
         var center = Enumerable.Range(0, 3)
