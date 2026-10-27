@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using FourD;
+using Game.Creatures;
 using Godot;
 
 namespace Game.Adapter;
@@ -14,6 +15,7 @@ internal sealed partial class SceneReader(Region3D region)
     internal readonly List<CreatureSpawn3D> Spawns = [];
     internal readonly Dictionary<EntityId, Label3D[]> Lettering = [];
     internal readonly List<SeamMark> Seams = [];
+    internal readonly Dictionary<EntityId, GrazerBody> Grazers = [];
 
     private readonly HashSet<Source> unavailableParts = [];
     private readonly Dictionary<Source, Source> sources = [];
@@ -92,6 +94,8 @@ internal sealed partial class SceneReader(Region3D region)
                 ReadRingItem(nut, entities);
             else if (node is LoftDevice3D device)
                 ReadDevice(device, entities);
+            else if (node is Grazer3D grazer)
+                entities.Add(ReadGrazer(grazer));
             else if (node is Seam3D seam)
                 seams.Add(ReadSeam(seam));
             else if (node is BoxPart3D part && part.GetParent() is not BuildingElement3D
@@ -156,6 +160,61 @@ internal sealed partial class SceneReader(Region3D region)
         var pose = new Pose4(new(Typed(position.X), Typed(position.Y), Typed(position.Z), section.W), Identity);
         return new(new(spawn.EntityId), pose, At(spawn, "EntityId"), new(section.SectionId),
             spawn.PassageRadius, spawn.PassageHeight, spawn.CanUseSeamsWithoutPrism);
+    }
+
+    // The node gives the body origin; the turn comes from Rotation4 alone, so the node's own rotation is not read.
+    private GrazerDefinition ReadGrazer(Grazer3D grazer)
+    {
+        var id = new EntityId(grazer.EntityId);
+        Map(grazer, "EntityId", "Pose", grazer, "Rotation4");
+        Map(grazer, "EntityId", "Shape", grazer, "Shape");
+        Map(grazer, "EntityId", "Shape.Threshold", grazer, "Shape");
+        Map(grazer, "EntityId", "Shape.Balls", grazer, "Shape");
+        for (var i = 0; i < (grazer.Shape?.Balls.Count ?? 0); i++)
+            foreach (var suffix in new[] { "", ".Id", ".Center", ".Radius", ".Weight" })
+                Map(grazer, "EntityId", $"Shape.Balls[{i}]{suffix}", grazer, "Shape");
+        var shut = Metaballs(grazer, grazer.Shape, "Shape");
+        var open = grazer.OpenShape is null ? null : Metaballs(grazer, grazer.OpenShape, "OpenShape");
+        if (open is not null && !GrazerBody.SameBalls(shut, open))
+            Error(grazer, "OpenShape", "The open shape needs the same balls as Shape, with the same IDs in the same order.");
+        Grazers[id] = new(shut, open);
+        Materials[(id, new("body"))] = new StandardMaterial3D
+        {
+            AlbedoColor = new(.82f, .76f, .84f),
+            EmissionEnabled = true,
+            Emission = new(.82f, .76f, .84f),
+            EmissionEnergyMultiplier = .3f
+        };
+        var position = RelativeTransform(grazer, region).Origin;
+        return new(id, new(new(Typed(position.X), Typed(position.Y), Typed(position.Z), grazer.W), Rotation4Of(grazer)),
+            At(grazer, "EntityId"), shut);
+    }
+
+    private MetaballShape Metaballs(Grazer3D grazer, MetaballShapeResource? shape, string property)
+    {
+        if (shape is null)
+        {
+            Error(grazer, property, "Assign a metaball shape.");
+            unavailableParts.Add(At(grazer, "EntityId.Shape.Balls"));
+            return new([], 1);
+        }
+        var balls = new List<Metaball>();
+        foreach (var ball in shape.Balls)
+        {
+            if (ball is null) Error(grazer, property, "A metaball resource is missing.");
+            else if (ball.Center.Length != 4) Error(grazer, property, $"The center of ball {ball.Id} needs four numbers: X, Y, Z and W.");
+            else balls.Add(new(new(ball.Id), new(ball.Center[0], ball.Center[1], ball.Center[2], ball.Center[3]), ball.Radius, ball.Weight));
+        }
+        return new(balls, shape.Threshold);
+    }
+
+    private Rotation4 Rotation4Of(Grazer3D grazer)
+    {
+        var n = grazer.Rotation4;
+        if (n.Length != 0 && n.Length != 16)
+            Error(grazer, "Rotation4", "Rotation4 is 16 numbers, a column of X, Y, Z and W at a time, or none for no rotation.");
+        if (n.Length != 16) return new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1));
+        return new(new(n[0], n[1], n[2], n[3]), new(n[4], n[5], n[6], n[7]), new(n[8], n[9], n[10], n[11]), new(n[12], n[13], n[14], n[15]));
     }
 
     // `path` is where the assembly sits in the engine's definition of the entity, with a trailing dot, such as "Shape.Body.".

@@ -27,6 +27,9 @@ public partial class Region3D : Node3D
     /// <summary>The character that stands at the spawn with this entity ID.</summary>
     public Character3D Character(string entity) => characters[entity];
 
+    /// <summary>The scripted grazers of the region, or null when it has none.</summary>
+    public GrazerChoreography? Grazers { get; private set; }
+
     /// <summary>The section the player is in, as the engine has it.</summary>
     public string CurrentSection => Actions?.CurrentSection ?? "";
 
@@ -79,6 +82,7 @@ public partial class Region3D : Node3D
         Actions = null;
         characters.Clear();
         Travel = null;
+        Grazers = null;
         sectionPositions.Clear();
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
         generated = null;
@@ -119,9 +123,11 @@ public partial class Region3D : Node3D
         // The authored lettering stays in the scene as a template; the adapter puts a copy on the flat object.
         foreach (var label in reader.Lettering.Values.SelectMany(labels => labels)) label.Visible = false;
         var movable = description.Entities
-            .Where(entity => entity is not (BuildingElementDefinition or FixedDefinition or Creature3Definition))
+            .Where(entity => entity is not (BuildingElementDefinition or FixedDefinition or Creature3Definition or GrazerDefinition))
             .Select(entity => entity.Id)
             .ToHashSet();
+        // A grazer is drawn by its choreography, every frame, and nothing stops at it.
+        var notStatic = movable.Concat(reader.Grazers.Keys).ToHashSet();
         worlds = new Dictionary<string, World3D>();
         var sectionNodes = new Dictionary<string, Node>();
         var scenes = new List<SectionScene>();
@@ -137,8 +143,9 @@ public partial class Region3D : Node3D
             generated.AddChild(viewport);
             var scene = new SectionScene(section.Id, section.W);
             scenes.Add(scene);
-            viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
-                scene.MaskIds, movable));
+            scene.Geometry = SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
+                scene.MaskIds, notStatic);
+            viewport.AddChild(scene.Geometry);
             viewport.AddChild(scene.Dynamic);
             viewport.AddChild(scene.Overlay);
             viewport.AddChild(new WorldEnvironment
@@ -184,6 +191,12 @@ public partial class Region3D : Node3D
             character.Bind(new CreatureLink(world, npcSpawn.EntityId, spawn.EntityId, id => sectionNodes[id]), player, this);
             sectionNodes[SceneReader.Ancestor<Section3D>(npcSpawn)!.SectionId].AddChild(character);
             characters.Add(npcSpawn.EntityId, character);
+        }
+        if (reader.Grazers.Count > 0)
+        {
+            Grazers = new GrazerChoreography { Name = "Grazers" };
+            generated.AddChild(Grazers);
+            Grazers.Configure(world, spawn.EntityId, prism, scenes, reader.Materials, reader.Grazers);
         }
         Diagnostics = "";
         Loaded = true;

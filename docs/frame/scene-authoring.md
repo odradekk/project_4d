@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝，以及玩家和角色的出生点、四维球、隐藏圆环物和放样装置，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝、啃食者，以及玩家和角色的出生点、四维球、隐藏圆环物和放样装置，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform；Grazer3D 的 `Rotation4` 已导出。
 
 ## 节点与导出属性
 
@@ -40,7 +40,7 @@ Room (Node3D, Region3D)
 | SphereItem3D（Node3D） | `string EntityId/BuildingId`、`string PartId`、`double W`、`double[] Rotation4`、`double Radius`、`TurnableResource Interaction`、`Material Material`；原点是球心 |
 | HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body；原点同可转物件，Ring 的 `Center` 和 `Rotation4` 取本体的局部坐标 |
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
-| Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape` |
+| Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape/OpenShape`；节点的 XYZ 是身体原点，旋转只取 `Rotation4`，不读节点自己的旋转；`Shape` 是闭嘴时的身体，`OpenShape` 是张到最大时的身体，球的 ID 和顺序必须与 `Shape` 相同，不填表示嘴不会张开；节点只给出第一帧，之后的移动、转身、张嘴和啃食由游戏层的时间轴（`GrazerTimeline`）按帧交给引擎 |
 | CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`、`string DisplayName`（台词前的名字，空则用角色场景自己的）；Section 来自祖先 |
 | Character3D（CharacterBody3D） | 角色场景的根节点，游戏层节点，格式见[角色搭法](character-authoring.md) |
 | Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin，原点放在地面；`Open` 默认 true，`VisualHeight` 默认 3 米，是镜片里细光的高度；Sections 按 W 从浅到深列出 |
@@ -67,7 +67,9 @@ Room (Node3D, Region3D)
 
 double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z/W 四列，每列 XYZW；空数组只表示单位旋转（节点上的 Rotation4 为空时取节点 Transform 的旋转，见上），四维点不可用空数组。适配层只做布局转换与基础格式校验，旋转是否合法交给引擎。所有数组默认空集合，必需的 Resource 未赋值报告节点属性错误。未知脚本节点不静默当四维实体。
 
-测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。
+测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。啃食者的切片在镜片里不画发光轮廓，轮廓只给贯穿物。
+
+啃食者的测试区域为 `game/regions/grazer_test.tscn`：三个截面，啃食者从 W=11 的深处出发。`game/tests/grazer_demo.tscn` 让它沿时间轴逼近，啃掉一扇门和一道缝。
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
