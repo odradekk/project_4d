@@ -1,11 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Game.Rendering;
 
+/// <summary>
+/// The foot of a mirror seam and the height of its light, in the player's section; the lens flips the picture in a band
+/// around it, dimmer while the seam is shut.
+/// </summary>
+internal readonly record struct MirrorBand(Vector3 Foot, float Height, bool Open);
+
 public partial class PrismView : CanvasLayer
 {
+    // A mirror seam's band is about as wide as a full-length mirror, and the shader has room for this many in view.
+    private const float BandWidth = .35f;
+    private const int MaxBands = 4;
+    // How strong the band of a shut seam is drawn, where an open seam's is 1.
+    private const float ShutBand = .4f;
+    // The band is drawn from this far in front of the camera on, and is hidden by anything that stands this far before the seam.
+    private const float BandClearance = .1f;
+
     private readonly SubViewport viewport = new() { Name = "PrismViewport", RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
     private readonly SubViewport mask = new()
     {
@@ -39,9 +54,24 @@ public partial class PrismView : CanvasLayer
     private int target;
     private bool enabled;
     private bool requested;
+    private bool flipped;
     public bool Raised => lens.Visible;
     public bool Enabled => enabled;
     public string? TargetSection => targets.Count == 0 ? null : targets[target].Id;
+
+    /// <summary>Whether the lens is shown left to right reversed, as the player's whole view is while she is a mirror image.</summary>
+    internal bool Flipped
+    {
+        get => flipped;
+        set
+        {
+            flipped = value;
+            ((ShaderMaterial)lens.Material).SetShaderParameter("flipped", value);
+        }
+    }
+
+    /// <summary>The mirror bands to draw, given the section the lens shows.</summary>
+    internal Func<string, IReadOnlyList<MirrorBand>>? MirrorBands { get; set; }
 
     internal void Configure(Camera3D playerCamera, IReadOnlyList<(string Id, World3D World)> orderedTargets, bool prismEnabled)
     {
@@ -76,6 +106,14 @@ public partial class PrismView : CanvasLayer
         Refresh();
     }
     internal void SetRaised(bool value) { requested = value && enabled; Refresh(); }
+
+    /// <summary>Replaces the sections the lens can show, nearest first, and shows the preferred one if it is among them.</summary>
+    internal void SetTargets(IReadOnlyList<(string Id, World3D World)> orderedTargets, string? preferred)
+    {
+        targets = orderedTargets;
+        target = Math.Max(0, targets.Select(candidate => candidate.Id).ToList().IndexOf(preferred ?? ""));
+        SelectTarget();
+    }
     internal void MoveTarget(int direction)
     {
         if (!Raised || targets.Count == 0) return;
@@ -106,7 +144,67 @@ public partial class PrismView : CanvasLayer
         label.OffsetBottom = label.OffsetTop + 34;
         CopyCamera(camera, source);
         CopyCamera(maskCamera, source);
+        UpdateBands();
     }
+
+    // Each band is given to the shader as the center, vertical extent and half width of the strip around a seam, as seen
+    // from the player's camera: at its foot and at its top, and how strongly to draw it. A band is not drawn for a seam that
+    // something stands in front of in the section the lens shows, which would give the seam away.
+    private void UpdateBands()
+    {
+        var bottoms = new Vector4[MaxBands];
+        var tops = new Vector4[MaxBands];
+        if (Raised && TargetSection is { } shown && MirrorBands is { } bandsOf)
+        {
+            var size = GetViewport().GetVisibleRect().Size;
+            var right = new Vector3(source!.GlobalBasis.X.X, 0, source.GlobalBasis.X.Z).Normalized() * (BandWidth / 2);
+            var slot = 0;
+            foreach (var band in bandsOf(shown).Take(MaxBands))
+            {
+                if (InFront(band) is not { } line || Hidden(band)) continue;
+                var strength = band.Open ? 1 : ShutBand;
+                bottoms[slot] = Strip(line.Foot, right, size, strength);
+                tops[slot++] = Strip(line.Head, right, size, strength);
+            }
+        }
+        var material = (ShaderMaterial)lens.Material;
+        material.SetShaderParameter("band_bottom", bottoms);
+        material.SetShaderParameter("band_top", tops);
+    }
+
+    // The foot and head of the seam's line, cut to the part that is in front of the camera; none when all of it is behind.
+    private (Vector3 Foot, Vector3 Head)? InFront(MirrorBand band)
+    {
+        var bottom = band.Foot;
+        var top = band.Foot + Vector3.Up * band.Height;
+        var forward = -source!.GlobalBasis.Z;
+        var minimum = source.Near + BandClearance / 2;
+        var bottomDepth = (bottom - source.GlobalPosition).Dot(forward);
+        var topDepth = (top - source.GlobalPosition).Dot(forward);
+        if (bottomDepth < minimum && topDepth < minimum) return null;
+        var foot = bottomDepth < minimum ? bottom.Lerp(top, (minimum - bottomDepth) / (topDepth - bottomDepth)) : bottom;
+        var head = topDepth < minimum ? top.Lerp(bottom, (minimum - topDepth) / (bottomDepth - topDepth)) : top;
+        return (foot, head);
+    }
+
+    // Whether something in the section the lens shows is between the camera and the seam, at the height of the camera.
+    private bool Hidden(MirrorBand band)
+    {
+        var eye = source!.GlobalPosition;
+        var aim = new Vector3(band.Foot.X, band.Foot.Y + Mathf.Clamp(eye.Y - band.Foot.Y, .1f, band.Height - .1f), band.Foot.Z);
+        if (eye.DistanceTo(aim) <= BandClearance) return false;
+        var end = aim - (aim - eye).Normalized() * BandClearance;
+        return targets[target].World.DirectSpaceState.IntersectRay(PhysicsRayQueryParameters3D.Create(eye, end)).Count > 0;
+    }
+
+    // x and y of the point on the screen, in 0..1, the strip's half width there, and how strongly it is drawn.
+    private Vector4 Strip(Vector3 center, Vector3 side, Vector2 size, float strength)
+    {
+        var middle = source!.UnprojectPosition(center) / size;
+        var edge = source.UnprojectPosition(center + side) / size;
+        return new(middle.X, middle.Y, Mathf.Abs(edge.X - middle.X), strength);
+    }
+
     private static void CopyCamera(Camera3D camera, Camera3D source)
     {
         camera.GlobalTransform = source.GlobalTransform;
