@@ -40,6 +40,7 @@ public partial class PrismView : CanvasLayer
     private bool enabled;
     private bool requested;
     public bool Raised => lens.Visible;
+    public bool Enabled => enabled;
     public string? TargetSection => targets.Count == 0 ? null : targets[target].Id;
 
     internal void Configure(Camera3D playerCamera, IReadOnlyList<(string Id, World3D World)> orderedTargets, bool prismEnabled)
@@ -70,7 +71,7 @@ public partial class PrismView : CanvasLayer
     {
         enabled = value;
         if (!value) requested = false;
-        help.Text = value ? "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标\n按住右键观察\n滚轮切换截面"
+        help.Text = value ? "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标\n按住右键观察\n滚轮切换截面\nE 拿放 · F 竖起放倒 · R 翻面"
             : "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标";
         Refresh();
     }

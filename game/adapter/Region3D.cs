@@ -16,15 +16,17 @@ namespace Game.Adapter;
 [Tool, GlobalClass]
 public partial class Region3D : Node3D
 {
-    private World? audioWorld;
+    private World? liveWorld;
     private Dictionary<string, double> sectionPositions = new();
     public string CurrentSection { get; private set; } = "";
+    public PlayerActions? Actions { get; private set; }
+    internal World? World => liveWorld;
 
     /// <summary>Returns the engine's distance between the current section and a source section.</summary>
     public double SectionDistance(string sourceSection)
     {
-        if (audioWorld is null) throw new InvalidOperationException("Region is not loaded.");
-        return audioWorld.Distance4(new(0, 0, 0, sectionPositions[CurrentSection]),
+        if (liveWorld is null) throw new InvalidOperationException("Region is not loaded.");
+        return liveWorld.Distance4(new(0, 0, 0, sectionPositions[CurrentSection]),
             new(0, 0, 0, sectionPositions[sourceSection]));
     }
 
@@ -65,7 +67,8 @@ public partial class Region3D : Node3D
         previewPending = false;
         if (!IsInsideTree()) return;
         Loaded = false;
-        audioWorld = null;
+        liveWorld = null;
+        Actions = null;
         sectionPositions.Clear();
         CurrentSection = "";
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
@@ -83,7 +86,7 @@ public partial class Region3D : Node3D
             var preview = world.GetGeometryAtW(PreviewW);
             if (preview is SectionGeometryResult.Rejected rejected)
             { Fail([new(LoadErrorCode.InvalidNumber, new(".", "PreviewW"), null, null, null, rejected.Failure.Detail, [])]); return; }
-            generated.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)preview, reader.Materials, false));
+            generated.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)preview, reader.Materials, false, []));
             Loaded = true;
             return;
         }
@@ -97,7 +100,11 @@ public partial class Region3D : Node3D
             Fail([new(LoadErrorCode.InvalidGeometry, new(GetPathTo(spawn), "CharacterScene"), null, null, null, "Assign a FirstPersonPlayer scene.", [])]);
             return;
         }
+        // The authored lettering stays in the scene as a template; the adapter puts a copy on the flat object.
+        foreach (var label in reader.Lettering.Values.SelectMany(labels => labels)) label.Visible = false;
+        var movable = reader.Lettering.Keys.ToHashSet();
         var worlds = new Dictionary<string, World3D>();
+        var scenes = new List<SectionScene>();
         foreach (var section in description.Sections)
         {
             var viewport = new SubViewport
@@ -108,7 +115,12 @@ public partial class Region3D : Node3D
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled
             };
             generated.AddChild(viewport);
-            viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true));
+            var scene = new SectionScene(section.Id, section.W);
+            scenes.Add(scene);
+            viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
+                scene.MaskIds, movable));
+            viewport.AddChild(scene.Dynamic);
+            viewport.AddChild(scene.Overlay);
             viewport.AddChild(new WorldEnvironment
             {
                 Environment = new Godot.Environment
@@ -124,7 +136,7 @@ public partial class Region3D : Node3D
             worlds.Add(section.Id.Value, viewport.World3D);
         }
         var home = SceneReader.Ancestor<Section3D>(spawn)!;
-        audioWorld = world;
+        liveWorld = world;
         sectionPositions = description.Sections.ToDictionary(s => s.Id.Value, s => s.W);
         CurrentSection = home.SectionId;
         previousWorld = GetViewport().World3D;
@@ -137,7 +149,11 @@ public partial class Region3D : Node3D
         prism.Configure(player.Camera, description.Sections.Where(s => s.Id.Value != home.SectionId)
             .OrderBy(s => world.Distance4(new(0, 0, 0, s.W), new(0, 0, 0, home.W))).ThenBy(s => s.W).ThenBy(s => s.Id.Value, StringComparer.Ordinal)
             .Select(s => (s.Id.Value, worlds[s.Id.Value])).ToArray(), PrismEnabled);
-        player.Bind(prism);
+        Actions = new PlayerActions { Name = "Actions" };
+        generated.AddChild(Actions);
+        Actions.Configure(world, spawn.EntityId, player, prism, scenes,
+            new DynamicSlices(world, scenes, reader.Materials, reader.Lettering), new LensOverlay(scenes));
+        player.Bind(prism, Actions);
         Diagnostics = "";
         Loaded = true;
     }
