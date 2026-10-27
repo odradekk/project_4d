@@ -5,8 +5,8 @@ public sealed partial class World
     // `Moving` rests on `Support` after falling `Gap` more than `Support` does.
     private sealed record SupportEdge(EntityId Support, EntityId Moving, double Gap);
 
-    // How far each turnable can fall. One resting on a static box falls until it touches it; one resting on
-    // another turnable falls with it, plus the gap between them.
+    // The Y at which each turnable comes to rest. One resting on a static box falls until it touches it; one
+    // resting on another turnable falls as far as that one does, plus the gap between them.
     private Dictionary<EntityId, double> SettledHeights(IReadOnlySet<EntityId> held)
     {
         var ids = dynamicEntities.Keys.ToArray();

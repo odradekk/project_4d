@@ -134,7 +134,8 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
         return SeparatingAxes(a, b).All(axis => Depth(a, b, axis, delta) > World.ContactTolerance);
     }
 
-    // Cheap rejection on the axis-aligned bounds: false when they are already apart by the contact tolerance.
+    // Cheap rejection on the axis-aligned bounds: false as soon as, on some coordinate axis, they overlap by no more
+    // than the contact tolerance. Surfaces that merely touch count as not overlapping.
     internal bool BoundsMayOverlap(Box4 other) =>
         Enumerable.Range(0, 4).All(i => Math.Abs(Center[i] - other.Center[i]) < Extent(i) + other.Extent(i) - World.ContactTolerance);
 

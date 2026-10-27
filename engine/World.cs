@@ -89,7 +89,7 @@ public sealed partial class World
     private static BoxPart[] CopyParts(BoxAssembly shape) =>
         shape.Parts.Select(part => part with { FaceUvs = Array.AsReadOnly(part.FaceUvs.ToArray()) }).ToArray();
 
-    internal static Failure Fail(FailureCode code, string detail, EntityId? entity = null, IReadOnlyList<Contact>? contacts = null) =>
+    private static Failure Fail(FailureCode code, string detail, EntityId? entity = null, IReadOnlyList<Contact>? contacts = null) =>
         new(code, detail, entity, null, contacts ?? Array.Empty<Contact>());
 
     private FailureCode KindOrUnknown(EntityId id) =>

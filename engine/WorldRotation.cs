@@ -10,8 +10,8 @@ public sealed partial class World
     private sealed record ActiveRotation(RotationPlan Plan, double Started);
     private readonly Dictionary<EntityId, ActiveRotation> rotations = [];
 
-    // Turns a vector in the plane spanned by `axis` (a unit horizontal vector) and W.
-    internal static Vec4 Rotate(Vec4 value, Vec4 axis, double angle)
+    // Turns a vector in the plane spanned by `axis` (a unit vector with no W component) and W.
+    private static Vec4 Rotate(Vec4 value, Vec4 axis, double angle)
     {
         var direction = Box4.ToArray(axis);
         var result = Box4.ToArray(value);
@@ -26,7 +26,7 @@ public sealed partial class World
     }
 
     internal static Vec4 Add(Vec4 a, Vec4 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
-    internal static Vec4 Sub(Vec4 a, Vec4 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
+    private static Vec4 Sub(Vec4 a, Vec4 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
 
     internal static Vec4 Transform(Rotation4 rotation, Vec3 point) => new(
         rotation.X.X * point.X + rotation.Y.X * point.Y + rotation.Z.X * point.Z,

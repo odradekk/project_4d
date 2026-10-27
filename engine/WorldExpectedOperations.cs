@@ -2,7 +2,7 @@ namespace FourD;
 
 public sealed partial class World
 {
-    internal static LoadError[] CheckExpectedOperations(WorldDescription description)
+    private static LoadError[] CheckExpectedOperations(WorldDescription description)
     {
         var errors = new List<LoadError>();
         var ids = new HashSet<OperationId>();
