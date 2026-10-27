@@ -79,7 +79,7 @@ DriveDevice 的 target 对旋转为弧度，对轨道为米，与 Limits、Initi
 PlaceEntity 把未被抓持、未在旋转中的 Turnable/Item 原子地写到完整的四维位置和旋转，规则见[抓取与布置](contract-carry.md#受控布置)。
 
 
-SetSharedValue 越界拒绝；不会自行推导水量或剧情。SynchronizeActor 仅接受三维生物且 position/yaw 有限；更新 XYZ 与普通朝向，保留 Section、W 和四维旋转，无法绕过穿缝改变镜像。手持世界物由 MoveEntity 单独请求；背包物的 XYZ 没有意义，不随角色同步，取出时放到角色当前位置（见[抓取与布置](contract-carry.md)）。SetGrazerFrame 只接受 Grazer，提交完整姿态与形体参数：未知 ID 返回 UnknownId，其他类别返回 WrongEntityKind，姿态或形体不合法（规则与载入相同，见[数据](contract-data.md)）返回 InvalidInput，拒绝时不改变任何状态。成功写调用照常增加修订号，因此每帧提交会让已有的旋转计划过期，点击时本来就要重新规划。啃食者不受建筑阻挡，下一次切片立即反映新输入。
+SetSharedValue 越界拒绝；不会自行推导水量或剧情。SynchronizeActor 仅接受三维生物且 position/yaw 有限；更新 XYZ 与普通朝向，保留 Section、W 和四维旋转，无法绕过穿缝改变镜像。手持世界物由 MoveEntity 单独请求；背包物的 XYZ 没有意义，不随角色同步，取出时放到角色当前位置（见[抓取与布置](contract-carry.md)）。SetGrazerFrame 只接受 Grazer，提交完整姿态与形体参数：未知 ID 返回 UnknownId，其他类别返回 WrongEntityKind，姿态或形体不合法（规则与载入相同，见[数据](contract-data.md)）返回 InvalidInput，拒绝时不改变任何状态。它不增加修订号（见[共同规则](contract.md#调用顺序状态所有权与失败)）：啃食者不阻挡、不参与支撑，它的帧改变不了任何计划或碰撞结果，所以玩家做好的旋转计划在啃食者移动之后仍能启动。啃食者不受建筑阻挡，下一次切片立即反映新输入。
 
 SetSeamOpen 改变未咬断缝的开启状态；咬断后请求开启返回 SeamSevered。SeverSeam 永久咬断一道缝，供脚本、测试和 ConsumeStructure 共用：未知缝返回 UnknownId，已断的缝再咬视为成功，不重复事件，仍增加修订号。ConsumeStructure 仅接受存在的 Grazer、楼房元素列表和接缝列表，全部引用有效才一次移除完整元素并按 SeverSeam 的规则永久咬断指定缝；重复消费已消失元素或已断缝视为成功但不重复事件，同一元素在一次列表里重复只算一次。拒绝时不改变任何状态：列表为 null 返回 InvalidInput；Grazer、元素或接缝不存在返回 UnknownId；ID 存在但不是 Grazer 或楼房元素（固定物、普通物件、生物、啃食者等）返回 WrongEntityKind。成功后元素立即不再有切片、碰撞和支撑，ReadEntity 返回 Missing，RemoveEntity 返回 UnknownId，ID 不能再被 AddEntity 使用；下一次 Step 重算支撑，原先站在元素上的物件在那时下落。事件在下一次 Step 交付，先按元素 ID 序给出本次新消失的 StructureConsumed，再按接缝 ID 序给出本次新咬断的 SeamSevered；SeamSevered 不带啃食者；宿主知道自己向哪个啃食者发出了请求。此操作是预先编排的白模啃食，不按元球接触临时猜咬哪一块，也不检查啃食者的位置。没有通用任意实体姿态 setter，也没有实时四维布尔减法。
 
