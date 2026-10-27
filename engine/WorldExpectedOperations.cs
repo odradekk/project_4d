@@ -6,97 +6,125 @@ public sealed partial class World
     {
         var errors = new List<LoadError>();
         var ids = new HashSet<OperationId>();
-        var root = new Source("", "World.ExpectedOperations");
         foreach (var operation in description.ExpectedOperations)
         {
             if (operation is null)
             {
+                var root = new Source("", "World.ExpectedOperations");
                 errors.Add(new(LoadErrorCode.InvalidGeometry, root, null, null, null, "Operation is required.", []));
                 continue;
             }
-            void Error(LoadErrorCode code, string detail, int? step = null, EntityId? entity = null, IReadOnlyList<Contact>? contacts = null, string? field = null) =>
-                errors.Add(new(code, operation.Source with { Property = operation.Source.Property + (field ?? (step is int index ? $".Steps[{index}]" : "")) }, entity, operation.Id, step, detail, contacts ?? []));
-            var start = errors.Count;
-            if (string.IsNullOrWhiteSpace(operation.Id.Value)) Error(LoadErrorCode.InvalidId, "Operation ID must be nonempty.", field: ".Id");
-            if (!ids.Add(operation.Id)) Error(LoadErrorCode.DuplicateId, "Duplicate operation ID.", field: ".Id");
-            if (operation.Setup is null || operation.Steps is null)
+            var problems = OperationProblems(operation, description, ids);
+            errors.AddRange(problems);
+            if (problems.Count == 0) errors.AddRange(RunOperation(operation, description));
+        }
+        return WorldValidation.Sorted(errors);
+    }
+
+    private static LoadError OperationError(
+        ExpectedOperation operation, LoadErrorCode code, string detail,
+        int? step = null, EntityId? entity = null, IReadOnlyList<Contact>? contacts = null, string? field = null) =>
+        new(code,
+            operation.Source with { Property = operation.Source.Property + (field ?? (step is int index ? $".Steps[{index}]" : "")) },
+            entity, operation.Id, step, detail, contacts ?? []);
+
+    // Finds what is wrong with an operation's ID, setup and steps without running anything.
+    private static List<LoadError> OperationProblems(ExpectedOperation operation, WorldDescription description, HashSet<OperationId> ids)
+    {
+        var problems = new List<LoadError>();
+        void Report(LoadErrorCode code, string detail, int? step = null, EntityId? entity = null, string? field = null) =>
+            problems.Add(OperationError(operation, code, detail, step, entity, field: field));
+
+        if (string.IsNullOrWhiteSpace(operation.Id.Value)) Report(LoadErrorCode.InvalidId, "Operation ID must be nonempty.", field: ".Id");
+        if (!ids.Add(operation.Id)) Report(LoadErrorCode.DuplicateId, "Duplicate operation ID.", field: ".Id");
+        if (operation.Setup is null || operation.Steps is null)
+        {
+            Report(LoadErrorCode.InvalidGeometry, "Setup and steps are required.");
+            return problems;
+        }
+        var setup = operation.Setup;
+        if (setup.EntityOverrides is null || setup.Seams is null || setup.SharedValues is null || setup.Carry is null)
+        {
+            Report(LoadErrorCode.InvalidGeometry, "Setup collections are required.");
+            return problems;
+        }
+        if (setup.Seams.Count > 0) Report(LoadErrorCode.UnsupportedDefinition, "Seam overrides are not implemented.", field: ".Setup.Seams");
+        if (setup.SharedValues.Count > 0) Report(LoadErrorCode.UnsupportedDefinition, "Shared value overrides are not implemented.", field: ".Setup.SharedValues");
+        if (setup.Carry.Count > 0) Report(LoadErrorCode.UnsupportedDefinition, "Carry setup is not implemented.", field: ".Setup.Carry");
+
+        var overridden = new HashSet<EntityId>();
+        foreach (var replacement in setup.EntityOverrides)
+        {
+            if (replacement is null)
             {
-                Error(LoadErrorCode.InvalidGeometry, "Setup and steps are required.");
+                Report(LoadErrorCode.InvalidGeometry, "Entity override is required.");
                 continue;
             }
-            var setup = operation.Setup;
-            if (setup.EntityOverrides is null || setup.Seams is null || setup.SharedValues is null || setup.Carry is null)
+            if (!overridden.Add(replacement.Id))
             {
-                Error(LoadErrorCode.InvalidGeometry, "Setup collections are required.");
+                Report(LoadErrorCode.DuplicateId, "Duplicate entity override.", entity: replacement.Id);
                 continue;
             }
-            if (setup.Seams.Count > 0) Error(LoadErrorCode.UnsupportedDefinition, "Seam overrides are not implemented.", field: ".Setup.Seams");
-            if (setup.SharedValues.Count > 0) Error(LoadErrorCode.UnsupportedDefinition, "Shared value overrides are not implemented.", field: ".Setup.SharedValues");
-            if (setup.Carry.Count > 0) Error(LoadErrorCode.UnsupportedDefinition, "Carry setup is not implemented.", field: ".Setup.Carry");
-            var replacements = new Dictionary<EntityId, EntityDefinition>();
-            foreach (var replacement in setup.EntityOverrides)
+            var original = description.Entities.FirstOrDefault(entity => entity.Id == replacement.Id);
+            if (original is null)
+                Report(LoadErrorCode.MissingReference, "Unknown entity override.", entity: replacement.Id);
+            else if (original is not TurnableDefinition and not Creature3Definition || original.GetType() != replacement.GetType())
+                Report(LoadErrorCode.UnsupportedDefinition, "Override must match a supported dynamic entity kind.", entity: replacement.Id);
+        }
+        for (var i = 0; i < operation.Steps.Count; i++)
+            if (operation.Steps[i] is not ExpectedRotation and not ExpectedAdvance)
+                Report(LoadErrorCode.UnsupportedDefinition, "This expected step is not implemented.", step: i);
+        return problems;
+    }
+
+    // Loads the region with the operation's overrides and runs its steps until one does not end as expected.
+    private static List<LoadError> RunOperation(ExpectedOperation operation, WorldDescription description)
+    {
+        var replacements = operation.Setup.EntityOverrides.ToDictionary(replacement => replacement.Id);
+        var loaded = Load(description with
+        {
+            Entities = description.Entities.Select(entity => replacements.GetValueOrDefault(entity.Id, entity)).ToArray(),
+            ExpectedOperations = []
+        });
+        if (loaded is LoadResult.Invalid invalid)
+            return invalid.Errors.Select(error => error with { Operation = operation.Id }).ToList();
+
+        var world = ((LoadResult.Loaded)loaded).World;
+        for (var i = 0; i < operation.Steps.Count; i++)
+        {
+            var step = operation.Steps[i];
+            var expected = (step as ExpectedRotation)?.ExpectedFailure;
+            var failure = RunStep(world, step);
+            if (failure?.Code != expected)
             {
-                if (replacement is null) { Error(LoadErrorCode.InvalidGeometry, "Entity override is required."); continue; }
-                if (!replacements.TryAdd(replacement.Id, replacement))
-                { Error(LoadErrorCode.DuplicateId, "Duplicate entity override.", entity: replacement.Id); continue; }
-                var original = description.Entities.FirstOrDefault(e => e.Id == replacement.Id);
-                if (original is null) Error(LoadErrorCode.MissingReference, "Unknown entity override.", entity: replacement.Id);
-                else if (original is not TurnableDefinition and not Creature3Definition || original.GetType() != replacement.GetType())
-                    Error(LoadErrorCode.UnsupportedDefinition, "Override must match a supported dynamic entity kind.", entity: replacement.Id);
-            }
-            for (var i = 0; i < operation.Steps.Count; i++)
-                if (operation.Steps[i] is not ExpectedRotation and not ExpectedAdvance)
-                    Error(LoadErrorCode.UnsupportedDefinition, "This expected step is not implemented.", i);
-            if (errors.Count != start) continue;
-            var copy = description with
-            {
-                Entities = description.Entities.Select(e => replacements.GetValueOrDefault(e.Id, e)).ToArray(),
-                ExpectedOperations = []
-            };
-            var result = Load(copy);
-            if (result is LoadResult.Invalid invalid)
-            {
-                errors.AddRange(invalid.Errors.Select(e => e with { Operation = operation.Id }));
-                continue;
-            }
-            var world = ((LoadResult.Loaded)result).World;
-            for (var i = 0; i < operation.Steps.Count; i++)
-            {
-                Failure? failure = null;
-                FailureCode? expected = null;
-                switch (operation.Steps[i])
-                {
-                    case ExpectedRotation rotation:
-                        expected = rotation.ExpectedFailure;
-                        switch (world.PlanRotation(rotation.Request))
-                        {
-                            case RotationPlanResult.Rejected rejected: failure = rejected.Failure; break;
-                            case RotationPlanResult.Blocked blocked: failure = blocked.Failure; break;
-                            case RotationPlanResult.Allowed allowed:
-                                switch (world.StartRotation(allowed.Plan))
-                                {
-                                    case StartRotationResult.Rejected startRejected: failure = startRejected.Failure; break;
-                                    case StartRotationResult.Started started when expected is null:
-                                        if (world.Step(started.Duration) is StepResult.Rejected stepRejected) failure = stepRejected.Failure;
-                                        break;
-                                }
-                                break;
-                        }
-                        break;
-                    case ExpectedAdvance advance:
-                        if (world.Step(advance.Delta) is StepResult.Rejected advanceRejected) failure = advanceRejected.Failure;
-                        break;
-                }
-                if (failure?.Code != expected)
-                {
-                    Error(LoadErrorCode.ExpectedOperationFailed, $"Expected {expected?.ToString() ?? "success"}; got {failure?.Code.ToString() ?? "success"}.", i, failure?.Entity, failure?.Contacts);
-                    break;
-                }
+                var detail = $"Expected {expected?.ToString() ?? "success"}; got {failure?.Code.ToString() ?? "success"}.";
+                return [OperationError(operation, LoadErrorCode.ExpectedOperationFailed, detail, i, failure?.Entity, failure?.Contacts)];
             }
         }
-        return errors.OrderBy(e => e.Source.NodePath, StringComparer.Ordinal)
-            .ThenBy(e => e.Source.Property, StringComparer.Ordinal).ThenBy(e => e.Code.ToString(), StringComparer.Ordinal)
-            .ThenBy(e => e.Entity?.Value, StringComparer.Ordinal).ThenBy(e => e.Operation?.Value, StringComparer.Ordinal)
-            .ThenBy(e => e.StepIndex).ToArray();
+        return [];
     }
+
+    // Runs one expected step and returns the failure it produced, if any.
+    private static Failure? RunStep(World world, ExpectedStep step) => step switch
+    {
+        ExpectedRotation rotation => RunRotation(world, rotation),
+        ExpectedAdvance advance => (world.Step(advance.Delta) as StepResult.Rejected)?.Failure,
+        _ => null
+    };
+
+    private static Failure? RunRotation(World world, ExpectedRotation rotation) => world.PlanRotation(rotation.Request) switch
+    {
+        RotationPlanResult.Rejected rejected => rejected.Failure,
+        RotationPlanResult.Blocked blocked => blocked.Failure,
+        RotationPlanResult.Allowed allowed => StartAndRun(world, allowed.Plan, finish: rotation.ExpectedFailure is null),
+        _ => null
+    };
+
+    // Starts a planned rotation and, when `finish` is set, advances time until it ends.
+    private static Failure? StartAndRun(World world, RotationPlan plan, bool finish) => world.StartRotation(plan) switch
+    {
+        StartRotationResult.Rejected rejected => rejected.Failure,
+        StartRotationResult.Started started when finish => (world.Step(started.Duration) as StepResult.Rejected)?.Failure,
+        _ => null
+    };
 }
