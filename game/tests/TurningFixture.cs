@@ -17,20 +17,32 @@ internal sealed class TurningFixture(Node host)
     internal FirstPersonPlayer Player { get; private set; } = null!;
     internal PlayerActions Actions => Region.Actions!;
 
-    /// <summary>Replaces the region with a fresh instance of the test region, after <paramref name="change"/> has edited it.</summary>
-    internal async Task Load(Action<Region3D>? change = null)
+    /// <summary>
+    /// Replaces the region with a fresh instance of the test region, or of another region scene, after <paramref name="change"/>
+    /// has edited it.
+    /// </summary>
+    internal async Task Load(Action<Region3D>? change = null, string scene = "res://regions/section_test.tscn")
     {
         if (Region is not null)
         {
             host.RemoveChild(Region);
             Region.Free();
         }
-        Region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+        Region = GD.Load<PackedScene>(scene).Instantiate<Region3D>();
         change?.Invoke(Region);
         host.AddChild(Region);
-        Check(Region.Loaded, "the test region with its turnable objects must load");
+        Check(Region.Loaded, $"the region {scene} must load: {Region.Diagnostics}");
         Player = Region.GetNode<FirstPersonPlayer>("Generated/Player");
         await Frames(3);
+    }
+
+    /// <summary>Removes the region and waits for the audio server to let go of the sounds that were playing in it.</summary>
+    internal async Task Unload()
+    {
+        host.RemoveChild(Region);
+        Region.Free();
+        // The audio thread fades a stopped sound out before it lets go of it, which takes time and not frames.
+        await host.ToSignal(host.GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
     }
 
     /// <summary>Puts the player's feet at <paramref name="feet"/> with the view on <paramref name="target"/>.</summary>

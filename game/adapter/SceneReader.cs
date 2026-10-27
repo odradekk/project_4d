@@ -13,6 +13,7 @@ internal sealed class SceneReader(Region3D region)
     internal readonly Dictionary<(EntityId, PartId), Material> Materials = [];
     internal readonly List<CreatureSpawn3D> Spawns = [];
     internal readonly Dictionary<EntityId, Label3D[]> Lettering = [];
+    internal readonly List<SeamMark> Seams = [];
 
     private readonly HashSet<Source> unavailableParts = [];
     private readonly Dictionary<Source, Source> sources = [];
@@ -48,6 +49,7 @@ internal sealed class SceneReader(Region3D region)
                 Error(section, "SectionId", "Place sections directly under Sections.");
         }
         var entities = new List<EntityDefinition>();
+        var seams = new List<SeamDefinition>();
         foreach (var node in nodes)
         {
             if (node is BuildingElement3D element)
@@ -84,6 +86,8 @@ internal sealed class SceneReader(Region3D region)
                 if (spawn.CharacterScene is null) Error(spawn, "CharacterScene", "Assign a character scene.");
                 Spawns.Add(spawn);
             }
+            else if (node is Seam3D seam)
+                seams.Add(ReadSeam(seam));
             else if (node is BoxPart3D part && part.GetParent() is not BuildingElement3D
                 && part.GetParent() is not FixedObject3D && part.GetParent() is not TurnableObject3D)
                 Error(part, "PartId", "A BoxPart3D must be a direct child of its entity.");
@@ -91,7 +95,19 @@ internal sealed class SceneReader(Region3D region)
         foreach (var building in nodes.OfType<Building3D>()) MapRange(building, "BuildingId");
         return new(sections.Select(s => new SectionDefinition(new(s.SectionId), s.W, At(s, "W"))).ToArray(),
             nodes.OfType<Building3D>().Select(b => new BuildingDefinition(new(b.BuildingId), new(b.WMin, b.WMax), At(b, "BuildingId"))).ToArray(),
-            entities, [], [], []);
+            entities, seams, [], []);
+    }
+
+    private SeamDefinition ReadSeam(Seam3D seam)
+    {
+        Map(seam, "SeamId", "Id", seam, "SeamId");
+        Map(seam, "SeamId", "Position", seam, "Transform");
+        Map(seam, "SeamId", "HorizontalNormal", seam, "HorizontalNormal");
+        Map(seam, "SeamId", "Sections", seam, "Sections");
+        var position = RelativeTransform(seam, region).Origin;
+        Seams.Add(new(seam.SeamId, position, seam.Sections, seam.Mirrored, (float)seam.VisualHeight));
+        return new(new(seam.SeamId), V(position), V(seam.HorizontalNormal),
+            seam.Sections.Select(id => new SectionId(id)).ToArray(), seam.Mirrored, seam.Open, seam.Severed, At(seam, "SeamId"));
     }
 
     private void ReadTurnable(TurnableObject3D turnable, List<EntityDefinition> entities)

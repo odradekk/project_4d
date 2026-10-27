@@ -1,11 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Game.Rendering;
 
+/// <summary>The foot of a mirror seam and the height of its light, in the player's section; the lens flips the picture in a band around it.</summary>
+internal readonly record struct MirrorBand(Vector3 Foot, float Height);
+
 public partial class PrismView : CanvasLayer
 {
+    // A mirror seam's band is about as wide as a full-length mirror, and the shader has room for this many in view.
+    private const float BandWidth = .35f;
+    private const int MaxBands = 4;
+
     private readonly SubViewport viewport = new() { Name = "PrismViewport", RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
     private readonly SubViewport mask = new()
     {
@@ -39,9 +47,24 @@ public partial class PrismView : CanvasLayer
     private int target;
     private bool enabled;
     private bool requested;
+    private bool flipped;
     public bool Raised => lens.Visible;
     public bool Enabled => enabled;
     public string? TargetSection => targets.Count == 0 ? null : targets[target].Id;
+
+    /// <summary>Whether the lens is shown left to right reversed, as the player's whole view is while she is a mirror image.</summary>
+    internal bool Flipped
+    {
+        get => flipped;
+        set
+        {
+            flipped = value;
+            ((ShaderMaterial)lens.Material).SetShaderParameter("flipped", value);
+        }
+    }
+
+    /// <summary>The mirror bands to draw, given the section the lens shows.</summary>
+    internal Func<string, IReadOnlyList<MirrorBand>>? MirrorBands { get; set; }
 
     internal void Configure(Camera3D playerCamera, IReadOnlyList<(string Id, World3D World)> orderedTargets, bool prismEnabled)
     {
@@ -76,6 +99,14 @@ public partial class PrismView : CanvasLayer
         Refresh();
     }
     internal void SetRaised(bool value) { requested = value && enabled; Refresh(); }
+
+    /// <summary>Replaces the sections the lens can show, nearest first, and shows the preferred one if it is among them.</summary>
+    internal void SetTargets(IReadOnlyList<(string Id, World3D World)> orderedTargets, string? preferred)
+    {
+        targets = orderedTargets;
+        target = Math.Max(0, targets.Select(candidate => candidate.Id).ToList().IndexOf(preferred ?? ""));
+        SelectTarget();
+    }
     internal void MoveTarget(int direction)
     {
         if (!Raised || targets.Count == 0) return;
@@ -106,6 +137,40 @@ public partial class PrismView : CanvasLayer
         label.OffsetBottom = label.OffsetTop + 34;
         CopyCamera(camera, source);
         CopyCamera(maskCamera, source);
+        UpdateBands();
+    }
+
+    // Each band is given to the shader as the center, vertical extent and half width of the strip around a seam, as seen
+    // from the player's camera: at its foot and at its top.
+    private void UpdateBands()
+    {
+        var bottoms = new Vector4[MaxBands];
+        var tops = new Vector4[MaxBands];
+        if (Raised && TargetSection is { } shown && MirrorBands is { } bandsOf)
+        {
+            var size = GetViewport().GetVisibleRect().Size;
+            var right = new Vector3(source!.GlobalBasis.X.X, 0, source.GlobalBasis.X.Z).Normalized() * (BandWidth / 2);
+            var slot = 0;
+            foreach (var band in bandsOf(shown).Take(MaxBands))
+            {
+                var foot = band.Foot;
+                var head = band.Foot + Vector3.Up * band.Height;
+                if (new[] { foot, head, foot + right, head + right }.Any(source.IsPositionBehind)) continue;
+                bottoms[slot] = Strip(foot, right, size);
+                tops[slot++] = Strip(head, right, size);
+            }
+        }
+        var material = (ShaderMaterial)lens.Material;
+        material.SetShaderParameter("band_bottom", bottoms);
+        material.SetShaderParameter("band_top", tops);
+    }
+
+    // x and y of the point on the screen, in 0..1, the strip's half width there, and 1 for a band in use.
+    private Vector4 Strip(Vector3 center, Vector3 side, Vector2 size)
+    {
+        var middle = source!.UnprojectPosition(center) / size;
+        var edge = source.UnprojectPosition(center + side) / size;
+        return new(middle.X, middle.Y, Mathf.Abs(edge.X - middle.X), 1);
     }
     private static void CopyCamera(Camera3D camera, Camera3D source)
     {
