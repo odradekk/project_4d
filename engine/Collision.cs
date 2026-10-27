@@ -66,30 +66,13 @@ internal static class Collision
         return new(moving.Entity, moving.Part, obstacle.Entity, obstacle.Part, Box4.ToVec4(point), Box4.ToVec4(direction), null);
     }
 
-    // The least distance along `direction` (a unit vector), no greater than `limit`, at which `moving` embeds at
-    // least `level` deep into `obstacle`; null when it never does. Depth changes by no more than the distance
-    // moved, so the search skips the gap that remains, and locates the level in the first stretch that passes it.
-    internal static double? FirstReach(Solid4 moving, Solid4 obstacle, double[] direction, double level, double limit)
-    {
-        double DepthAt(double distance) => Depth(moving.Moved(Box4.Scale(direction, distance)), obstacle);
-        var depth = DepthAt(0);
-        if (depth >= level) return 0;
-        var below = 0d;
-        while (below < limit)
-        {
-            var next = Math.Min(limit, below + Math.Max(World.SamplingDistance, level - depth));
-            var nextDepth = DepthAt(next);
-            if (nextDepth >= level) return Locate(DepthAt, level, (below, depth - level), (next, nextDepth - level));
-            (below, depth) = (next, nextDepth);
-        }
-        return null;
-    }
-
     // Moving along `direction` (a unit vector), up to `limit`, `moving` is blocked by `obstacle` where it first
     // embeds `blockLevel` deep. This returns the distance of the last place before that where the depth is no more
-    // than `allowed`, which is at least the depth at the start, or null when it is never blocked. The depth may fall
-    // and rise again on the way, as it does for a ring, so the search keeps the latest stretch in which the depth
-    // rose past `allowed`.
+    // than `allowed`, or null when it is never blocked. `allowed` is at least the depth at the start and at most
+    // `blockLevel`; when they are equal this is the first place where the depth reaches that level. The depth may
+    // fall and rise again on the way, as it does for a ring, so the search keeps the latest stretch in which the
+    // depth rose past `allowed`. Depth changes by no more than the distance moved, so the search skips the gap that
+    // remains to `allowed`, and a stretch is no shorter than the sampling distance.
     internal static double? StopBefore(Solid4 moving, Solid4 obstacle, double[] direction, double allowed, double blockLevel, double limit)
     {
         double DepthAt(double distance) => Depth(moving.Moved(Box4.Scale(direction, distance)), obstacle);
@@ -97,11 +80,10 @@ internal static class Collision
         ((double Distance, double Gap) Start, (double Distance, double Gap) End)? rise = null;
         while (distance < limit)
         {
-            // The depth cannot pass the level it is heading for before the gap to it is closed.
-            var level = depth <= allowed ? allowed : blockLevel;
-            var next = Math.Min(limit, distance + Math.Max(World.SamplingDistance, level - depth));
+            var next = Math.Min(limit, distance + Math.Max(World.SamplingDistance, allowed - depth));
             var nextDepth = DepthAt(next);
-            if (depth <= allowed && nextDepth > allowed) rise = ((distance, depth - allowed), (next, nextDepth - allowed));
+            if (depth <= allowed && (nextDepth > allowed || nextDepth >= blockLevel))
+                rise = ((distance, depth - allowed), (next, nextDepth - allowed));
             if (nextDepth >= blockLevel) return Locate(DepthAt, allowed, rise!.Value.Start, rise.Value.End);
             (distance, depth) = (next, nextDepth);
         }

@@ -35,15 +35,21 @@ public sealed partial class World
 
         var steps = SamplingSteps(DynamicShapes.Solids(item.Definition, item.Pose), motion.Hinge, motion.Axis, motion.Angle);
         var samples = Enumerable.Range(0, steps + 1).Select(i => (double)i / steps).ToArray();
-        var plan = TraceRotation(request, item, motion, samples);
-        if (request is Flip && plan.Blocked >= 0)
+        // The way must stay inside the building, whose W range is the only space the world has around the item. A flip
+        // can turn either way, so it takes the first way that is clear and inside the building, then the first inside it.
+        var candidates = new List<(RotationPlan Plan, bool InBuilding)>();
+        void Consider(Motion option)
         {
-            var opposite = TraceRotation(request, item, motion with { Angle = -motion.Angle }, samples);
-            if (opposite.Blocked < 0) plan = opposite;
+            var traced = TraceRotation(request, item, option, samples);
+            var swept = traced.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(traced, progress)));
+            candidates.Add((traced, !LeavesBuilding(item.Definition, swept)));
         }
-        // The way must stay inside the building: its W range is the only space the world has around the item.
-        if (LeavesBuilding(item.Definition, plan.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(plan, progress)))))
-            return Reject(FailureCode.OutOfRange, "Rotation leaves the building.", request.Entity);
+        Consider(motion);
+        if (request is Flip && !(candidates[0].InBuilding && candidates[0].Plan.Blocked < 0))
+            Consider(motion with { Angle = -motion.Angle });
+        var chosen = candidates.FirstOrDefault(candidate => candidate.InBuilding && candidate.Plan.Blocked < 0);
+        if (chosen.Plan is null) chosen = candidates.FirstOrDefault(candidate => candidate.InBuilding);
+        if (chosen.Plan is not { } plan) return Reject(FailureCode.OutOfRange, "Rotation leaves the building.", request.Entity);
         return plan.Blocked < 0
             ? new RotationPlanResult.Allowed(plan)
             : new RotationPlanResult.Blocked(plan, Fail(FailureCode.RotationBlocked, "Rotation is obstructed.", request.Entity, plan.Contacts));

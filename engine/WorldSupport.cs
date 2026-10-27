@@ -67,7 +67,7 @@ public sealed partial class World
         if (embedded < -RoundingMargin)
         {
             var reach = moving.Center[1] - moving.Extent(1) - (support.Center[1] - support.Extent(1));
-            if (Collision.FirstReach(moving, support, [0, -1, 0, 0], 0, reach) is not { } fall) return null;
+            if (Collision.StopBefore(moving, support, [0, -1, 0, 0], 0, 0, reach) is not { } fall) return null;
             drop = fall;
         }
         if (Collision.ContactOf(moving.Moved([0, -drop, 0, 0]), support) is not { } contact || contact.Normal.Y <= RoundingMargin) return null;

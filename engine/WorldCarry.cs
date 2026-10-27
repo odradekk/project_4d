@@ -73,6 +73,7 @@ public sealed partial class World
         }
         else
         {
+            // The host passes the step of a single frame, so the end pose is the one to check.
             var reserved = ReservedContacts(solids.Select(solid => solid.Moved(delta)), request.Entity);
             if (reserved.Count > 0) return Reject(FailureCode.TranslationBlocked, "Target intersects a reserved rotation sweep.", reserved);
             applied = delta;

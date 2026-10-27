@@ -128,6 +128,32 @@ public class CarryToleranceTests
         Assert.Equal(-(b + c - .04), moved.Applied.Z, 9);
     }
 
+    [Fact]
+    public void HeldNutPassesAGrazeOfItsRingAndStopsWhereTheTrailingSideMeetsThePillar()
+    {
+        // The ring's circle (radius .2) lies in a plane tilted 30 degrees about z, so its front, toward +x, is .1 above
+        // its center at y = .9 and its back .1 below. The pillar, 2 cm square at x = 1, has its top at y = .952. The
+        // tube (radius .05) around the front reaches down to y = .95: passing over the pillar it is 2 mm into it, which
+        // is within the tolerance. The back is at y = .8, below the top, and meets the pillar's face later. That is
+        // where the circle comes within .05 of the face, as the circle's point (x, z) = (cx - .1732 cos t, .2 sin t)
+        // nearest the face has (.99 - x)^2 + (.2 sin t - .01)^2 = .05^2 at its minimum over t: at cx = 1.1129284 (for
+        // the ring's start at .41, the nut has moved .7029284 m), found separately from the engine. The front's graze
+        // begins at .3925776 and ends at .4416, and the stop is not there.
+        var c = Math.Cos(Math.PI / 6);
+        var tilted = new Rotation4(new(c, .5, 0, 0), new(0, 0, 1, 0), new(.5, -c, 0, 0), new(0, 0, 0, 1));
+        var nut = Nut();
+        var hidden = (HiddenRingItem)nut.Shape;
+        var tiltedNut = nut with { Shape = hidden with { Ring = hidden.Ring with { Rotation = tilted } } };
+        var pillar = Block("pillar", new(1, .476, 0), new(.01, .476, .01), new(.1, .3));
+        var world = Load(Description([tiltedNut, Player, pillar], buildingMin: -1));
+        Assert.IsType<CarryResult.Changed>(world.HoldEntity(Player.Id, NutId));
+
+        var moved = Move(world, NutId, new(1, 0, 0));
+
+        Assert.Equal(.7029284, moved.Applied.X, 5);
+        Assert.Equal(RingPart, Assert.Single(moved.Contacts).MovingPart);
+    }
+
     // The nut in the hand, with a bar through the ring's hole whose -z face is at the given z.
     private static World NutWithBar(double zFace)
     {
