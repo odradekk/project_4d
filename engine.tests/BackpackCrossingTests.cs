@@ -157,17 +157,48 @@ public class BackpackCrossingTests
     }
 
     [Fact]
-    public void TheBackpackFollowsTheCreatureButTheHandItemWaitsForTheHost()
+    public void AnItemComesOutOfTheBackpackWhereTheCreatureStandsThen()
+    {
+        // The nut is a 6 cm cube whose lowest point is .03 m below its origin, and it was packed at a height of 1 m.
+        // The creature stands .5 m up, on a platform, at (.65, -.5): the nut lies on it, whatever its offset to the
+        // creature was when it was packed.
+        var world = SeamScene(Seam(), Nut(At(.1, 1, 0)), Actor(x: .15));
+        world.HoldEntity(ActorId, NutId);
+        world.Cross(Request());
+        world.SynchronizeActor(ActorId, new(.65, .5, -.5), 0);
+
+        world.HoldEntity(ActorId, NutId);
+
+        var nut = world.State(NutId);
+        Assert.Equal(new Vec4(.65, .53, -.5, .42), nut.Pose.Position);
+        Assert.Equal(Identity4, nut.Pose.Rotation);
+        Assert.False(nut.InBackpack);
+    }
+
+    [Fact]
+    public void LettingGoOfAnItemInTheBackpackPutsItWhereTheCreatureStandsToo()
+    {
+        var world = HoldingTheNut(Seam(mirrored: true));
+        world.Cross(Request());
+        world.SynchronizeActor(ActorId, new(-1, 0, 2), 0);
+
+        world.ReleaseEntity(NutId);
+
+        var nut = world.State(NutId);
+        Assert.Equal(new Vec4(-1, .03, 2, .42), nut.Pose.Position);
+        AssertNear(XwHalfTurn, nut.Pose.Rotation);
+    }
+
+    [Fact]
+    public void TheItemInTheHandStaysWhereTheHostLeftIt()
     {
         var chair = ChairInII();
-        var world = HoldingTheNut(Seam(), chair, Actor("other", section: "II", x: 2));
+        var world = HoldingTheNut(Seam(), chair);
         world.Cross(Request());
         world.HoldEntity(ActorId, chair.Id);
 
         world.SynchronizeActor(ActorId, new(.65, 0, -.5), 0);
-        world.SynchronizeActor(new("other"), new(3, 0, 0), 0);
 
-        Assert.Equal(new Vec4(.6, .03, -.5, .42), world.State(NutId).Pose.Position);
         Assert.Equal(new Vec4(1, .03, 0, .42), world.State(chair.Id).Pose.Position);
     }
 

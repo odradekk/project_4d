@@ -62,7 +62,7 @@ public sealed partial class World
         foreach (var carry in setup.Carry)
         {
             if (carry is null) Report(LoadErrorCode.InvalidGeometry, "Carry setup is required.", field: ".Setup.Carry");
-            else if (!carriedItems.Add(carry.Item)) Report(LoadErrorCode.DuplicateId, "An item has one holder.", entity: carry.Item, field: ".Setup.Carry");
+            else if (!carriedItems.Add(carry.Item)) Report(LoadErrorCode.InvalidCarry, "An item has one holder.", entity: carry.Item, field: ".Setup.Carry");
             else if (description.Entities.All(entity => entity.Id != carry.Actor) || description.Entities.All(entity => entity.Id != carry.Item))
                 Report(LoadErrorCode.MissingReference, "Unknown actor or item in carry setup.", entity: carry.Item, field: ".Setup.Carry");
         }

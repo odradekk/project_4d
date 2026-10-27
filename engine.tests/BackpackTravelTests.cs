@@ -95,27 +95,33 @@ public class BackpackTravelTests
         ],
         [], []));
 
-    private static BuildingId BuildingOf(World world, EntityId item) =>
-        Assert.IsType<TurnableDefinition>(world.State(item).Definition).Building;
-
-    private static readonly BuildingId Home = new("home");
-    private static readonly BuildingId Annex = new("annex");
-
     [Fact]
-    public void AnItemBelongsToTheBuildingOfTheSectionItComesOutOfTheBackpackIn()
+    public void AnItemIsInTheBuildingOfTheSectionItComesOutOfTheBackpackIn()
     {
+        // The annex is the only building around W = 1.6, and the home the only one around W = 0, so the stick can
+        // lie in each of them only if it is in that building.
         var world = TwoBuildings(Stick(.18, packable: true), Actor(x: .1));
         world.HoldEntity(ActorId, RodId);
         world.Cross(Request(seam: "to-annex", target: "III", slots: 1));
-        Assert.Equal(Home, BuildingOf(world, RodId));
 
         Assert.IsType<CarryResult.Changed>(world.ReleaseEntity(RodId));
 
-        Assert.Equal(Annex, BuildingOf(world, RodId));
         world.HoldEntity(ActorId, RodId);
         world.Cross(Request(seam: "to-annex", target: "I", slots: 1));
+        Assert.IsType<CarryResult.Changed>(world.ReleaseEntity(RodId));
+    }
+
+    [Fact]
+    public void ACreatureCanBeAddedAfterAnItemHasChangedBuilding()
+    {
+        var world = TwoBuildings(Stick(.18, packable: true), Actor(x: .1));
+        var cat = new Creature3Definition(new("cat"), At(0, 0, 0, 1.6), TestSource, new("III"), .2, 1.6, true);
+        Assert.IsType<AddEntityResult.Added>(world.AddEntity(cat with { Id = new("first-cat") }));
+        world.HoldEntity(ActorId, RodId);
+        world.Cross(Request(seam: "to-annex", target: "III", slots: 1));
         world.ReleaseEntity(RodId);
-        Assert.Equal(Home, BuildingOf(world, RodId));
+
+        Assert.IsType<AddEntityResult.Added>(world.AddEntity(cat));
     }
 
     [Fact]
@@ -131,6 +137,21 @@ public class BackpackTravelTests
         Assert.Equal(FailureCode.OutOfRange, taken.Failure.Code);
         Assert.Equal(FailureCode.OutOfRange, released.Failure.Code);
         Assert.True(world.State(RodId).InBackpack);
+    }
+
+    [Fact]
+    public void AnItemThatCameToABuildingMayStandUpInsideIt()
+    {
+        // The stick reaches .18 m, from III (1.6) to W = 1.42 toward V (1.45): inside the annex, outside the home.
+        var world = TwoBuildings(Stick(.18, packable: true), Actor(x: .1));
+        world.HoldEntity(ActorId, RodId);
+        world.Cross(Request(seam: "to-annex", target: "III", slots: 1));
+        world.HoldEntity(ActorId, RodId);
+        world.SynchronizeActor(ActorId, new(3, 0, 0), 0);
+
+        var crossed = world.Cross(Request(seam: "to-v", target: "V"));
+
+        Assert.Equal(RodId, crossed.WedgedItem);
     }
 
     [Fact]
@@ -150,18 +171,18 @@ public class BackpackTravelTests
     [Fact]
     public void AnItemWhoseSpotIsTakenCannotComeOutOfTheBackpack()
     {
-        // The stick lies at (.5, 0, .6). In II a block fills that spot at W .3 to .6, which the creature, at the seam, does not touch.
-        var stick = Stick(.18, packable: true) with { Pose = At(.5, 0, .6) };
-        var block = Block("block", new(.5, 0, .6), new(.3, .3, .3), new(.3, .6));
-        var world = SeamScene(Seam(), stick, block, Actor(x: .15));
+        // After the crossing the creature walks onto the chair in II, and the stick would have to lie on it.
+        var chair = Chair() with { Section = II, Pose = At(1, .03, 0, .42) };
+        var world = SeamScene(Seam(), Stick(.18, packable: true), chair, Actor(x: .15));
         world.HoldEntity(ActorId, RodId);
         world.Cross(Request(slots: 1));
+        world.SynchronizeActor(ActorId, new(1, 0, 0), 0);
 
         var taken = Assert.IsType<CarryResult.Rejected>(world.HoldEntity(ActorId, RodId));
         var released = Assert.IsType<CarryResult.Rejected>(world.ReleaseEntity(RodId));
 
         Assert.Equal(FailureCode.TranslationBlocked, taken.Failure.Code);
-        Assert.Equal(new EntityId("block"), Assert.Single(taken.Failure.Contacts).Obstacle);
+        Assert.Equal(new EntityId("chair"), Assert.Single(taken.Failure.Contacts).Obstacle);
         Assert.Equal(FailureCode.TranslationBlocked, released.Failure.Code);
         Assert.True(world.State(RodId).InBackpack);
     }

@@ -200,6 +200,17 @@ public class WedgeTests
     }
 
     [Fact]
+    public void ARodThatStandsInTheSeamBlocksEveryCreatureOnThatSeamNotOnlyTheOneThatHoldsIt()
+    {
+        var cat = Actor("cat", x: .15) with { CanUseSeamsWithoutPrism = true };
+        var world = HoldingTheRod(Seam(), cat);
+        world.Cross(Request());
+        world.StepEvents(.001);
+
+        world.Refuse(Request(actor: "cat", hasPrism: false), FailureCode.PassageOccupied, new EntityId("cat"));
+    }
+
+    [Fact]
     public void ARodThatWasMovedAsideLiesDownWhereItsHingeIsInTheSectionItCameFrom()
     {
         var world = HoldingTheRod(Seam());

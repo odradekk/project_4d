@@ -124,6 +124,6 @@ public class SeamOperationTests
 
         Assert.Contains(unknown, error => error.Code == LoadErrorCode.MissingReference);
         Assert.Contains(noActor, error => error.Code == LoadErrorCode.MissingReference);
-        Assert.Contains(twice, error => error.Code == LoadErrorCode.DuplicateId);
+        Assert.Contains(twice, error => error.Code == LoadErrorCode.InvalidCarry);
     }
 }

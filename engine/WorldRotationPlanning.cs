@@ -50,7 +50,7 @@ public sealed partial class World
         {
             var traced = TraceRotation(request, item, option, samples);
             var swept = traced.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(traced, progress)));
-            candidates.Add((traced, !LeavesBuilding(item.Definition, swept)));
+            candidates.Add((traced, !LeavesBuilding(item, swept)));
         }
         Consider(motion);
         if (request is Flip && !(candidates[0].InBuilding && candidates[0].Plan.Blocked < 0))

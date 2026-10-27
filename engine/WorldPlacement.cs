@@ -60,7 +60,7 @@ public sealed partial class World
         if (!ball && Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
             return Fail(FailureCode.InvalidInput, "Upright part end is too close to a section.", entity);
         var solids = DynamicShapes.Solids(definition, pose);
-        if (LeavesBuilding(definition, solids)) return Fail(FailureCode.OutOfRange, "Object extends outside its building.", entity);
+        if (LeavesBuilding(proposed, solids)) return Fail(FailureCode.OutOfRange, "Object extends outside its building.", entity);
         if (IntersectsReservation(solids, entity))
             return Fail(FailureCode.TranslationBlocked, "Target intersects a reserved rotation sweep.", entity);
 
@@ -71,10 +71,10 @@ public sealed partial class World
         return contacts.Count > 0 ? Fail(FailureCode.TranslationBlocked, "Target pose is occupied.", entity, contacts.AsReadOnly()) : null;
     }
 
-    // Whether any of the solids reaches out of the W range of the building the entity belongs to.
-    private bool LeavesBuilding(EntityDefinition definition, IEnumerable<Solid4> solids)
+    // Whether any of the solids reaches out of the W range of the building the entity is in.
+    private bool LeavesBuilding(Dynamic item, IEnumerable<Solid4> solids)
     {
-        var range = buildings.Single(building => building.Id == DynamicShapes.Building(definition)).WRange;
+        var range = buildings.Single(building => building.Id == item.Building).WRange;
         return solids.Any(solid => solid.WSpan.Min < range.Min - RoundingMargin || solid.WSpan.Max > range.Max + RoundingMargin);
     }
 
