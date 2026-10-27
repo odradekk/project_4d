@@ -43,7 +43,7 @@ internal sealed partial class WorldValidation
         ValidateBuildings(description, root);
         ValidateEntities(description, root);
         errors.AddRange(WorldInterference.Check(description, errors));
-        Unsupported(description.Seams, seam => seam.Source, root, "Seams");
+        ValidateSeams(description, root);
         Unsupported(description.SharedValues, value => value.Source, root, "SharedValues");
         if (description.ExpectedOperations is null)
             Error(LoadErrorCode.InvalidGeometry, root, "ExpectedOperations collection is required.");

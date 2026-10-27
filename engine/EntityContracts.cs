@@ -13,7 +13,7 @@ public sealed record TurnableProperties(
 public enum Handedness { Normal, Mirrored, NotComparable }
 public sealed record EntityState(
     EntityId Id, EntityDefinition Definition, Pose4 Pose, SectionId? Section, double? ActorYaw,
-    SectionId? UprightOrigin, EntityId? Holder, IReadOnlyList<EntityId> CarriedItems,
+    SectionId? UprightOrigin, EntityId? Holder, bool InBackpack, IReadOnlyList<EntityId> CarriedItems,
     double? DevicePosition, bool Rotating, Handedness Handedness);
 public abstract record AddEntityResult
 {

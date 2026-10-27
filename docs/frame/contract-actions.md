@@ -33,7 +33,7 @@ public RotationPlanResult PlanRotation(RotationRequest request);
 public StartRotationResult StartRotation(RotationPlan plan);
 ```
 
-PlanRotation 是只读。调用者提供角色和物体 ID，角色当前 Section/位置、物体姿态及障碍均从世界读取，不能在请求中伪造。目标必须在角色当前 Section 有切片并可操作；固定物、装置和生物返回 WrongEntityKind；不可拿物返回 NotHoldable；正在旋转返回 Busy。StandUp 的目标 Section 必须存在且不同于角色当前 Section；较深转 +W，较浅转 −W。已竖起的物体再次竖起无效；LayDown 仅在 UprightOrigin 执行，否则 WrongSection。Flip 对已竖起物返回 InvalidInput，先放倒后翻面。
+PlanRotation 是只读。调用者提供角色和物体 ID，角色当前 Section/位置、物体姿态及障碍均从世界读取，不能在请求中伪造。目标必须在角色当前 Section 有切片并可操作；固定物、装置和生物返回 WrongEntityKind；不可拿物返回 NotHoldable；正在旋转返回 Busy。StandUp 的目标 Section 必须存在且不同于角色当前 Section；较深转 +W，较浅转 −W。已竖起的物体再次竖起无效；StandUp 还要求竖起终点各零件的端面距任一 Section（含原 Section）至少 0.02m，否则 InvalidInput，因为物件经背包换截面后，载入时按初始截面做的检查不再覆盖；LayDown 仅在 UprightOrigin 执行，否则 WrongSection。Flip 对已竖起物返回 InvalidInput，先放倒后翻面。
 
 F 的铰链和长轴来自物体定义；R 的翻转面由引擎选：角色与目标间若有挡住其连线的竖直建筑/固定物面，选距离角色最近的一面；同距按实体 ID、零件 ID 排序。没有该面则使用通过物体中心、水平法线朝向角色的竖直面；角色水平位置与中心重合时用物体局部长轴的水平投影，仍退化则 +X。障碍绕行与原地翻面均转 π；先预检正角；正角受阻或超出楼房 W 范围时再检查负角，选既畅通又在范围内的一边，正角优先；没有这样的一边时，选在范围内的一边并返回它的轨迹和受阻原因，正角优先；两边都超出范围才返回 OutOfRange。四维球绕自身中心旋转，成功且外观不变，不令球绕侧面的障碍产生位移。
 
@@ -63,6 +63,7 @@ public UpdateResult SetSharedValue(SharedValueId id, double value);
 public UpdateResult SynchronizeActor(EntityId actor, Vec3 position, double yaw);
 public UpdateResult SetGrazerFrame(EntityId grazer, Pose4 pose, MetaballShape shape);
 public UpdateResult SetSeamOpen(SeamId seam, bool open);
+public UpdateResult SeverSeam(SeamId seam);
 public UpdateResult ConsumeStructure(EntityId grazer,
     IReadOnlyList<EntityId> elements, IReadOnlyList<SeamId> seams);
 ```
@@ -72,9 +73,9 @@ DriveDevice 的 target 对旋转为弧度，对轨道为米，相对初始配置
 PlaceEntity 把未被抓持、未在旋转中的 Turnable/Item 原子地写到完整的四维位置和旋转，规则见[抓取与布置](contract-carry.md#受控布置)。
 
 
-SetSharedValue 越界拒绝；不会自行推导水量或剧情。SynchronizeActor 仅接受三维生物且 position/yaw 有限；更新 XYZ 与普通朝向，保留 Section、W 和四维旋转，无法绕过穿缝改变镜像。背包物随角色同步 XYZ，手持世界物由 MoveEntity 单独请求。SetGrazerFrame 只接受四维生物，提交完整姿态与形体参数；其不受建筑阻挡，下一次切片立即反映新输入。
+SetSharedValue 越界拒绝；不会自行推导水量或剧情。SynchronizeActor 仅接受三维生物且 position/yaw 有限；更新 XYZ 与普通朝向，保留 Section、W 和四维旋转，无法绕过穿缝改变镜像。手持世界物由 MoveEntity 单独请求；背包物的 XYZ 没有意义，不随角色同步，取出时放到角色当前位置（见[抓取与布置](contract-carry.md)）。SetGrazerFrame 只接受四维生物，提交完整姿态与形体参数；其不受建筑阻挡，下一次切片立即反映新输入。
 
-SetSeamOpen 改变未咬断缝的开启状态；咬断后请求开启返回 SeamSevered。ConsumeStructure 仅接受存在的 Grazer、楼房元素列表和接缝列表，全部引用有效才一次移除完整元素并永久咬断指定缝；重复消费已消失元素或已断缝视为成功但不重复事件。此操作是预先编排的白模啃食，不按元球接触临时猜咬哪一块。下一次 Step 重算支撑。没有通用任意实体姿态 setter，也没有实时四维布尔减法。
+SetSeamOpen 改变未咬断缝的开启状态；咬断后请求开启返回 SeamSevered。SeverSeam 永久咬断一道缝，供脚本、测试和 ConsumeStructure 共用：未知缝返回 UnknownId，已断的缝再咬视为成功，不重复事件，仍增加修订号。ConsumeStructure 仅接受存在的 Grazer、楼房元素列表和接缝列表，全部引用有效才一次移除完整元素并按 SeverSeam 的规则永久咬断指定缝；重复消费已消失元素或已断缝视为成功但不重复事件。此操作是预先编排的白模啃食，不按元球接触临时猜咬哪一块。下一次 Step 重算支撑。没有通用任意实体姿态 setter，也没有实时四维布尔减法。
 
 #17 的真实调用如下。时间轴只对位置分量、平面角度、元球中心/半径等标量插值，四维旋转矩阵由引擎工厂计算，不对矩阵元素做 lerp。列表顺序是编排数据的一部分；身体朝向改变用角度标量表示，不添加宿主四维动画框架。
 
@@ -108,15 +109,22 @@ public abstract record CrossSeamResult
 public CrossSeamResult CrossSeam(CrossSeamRequest request);
 ```
 
-检查次序固定：ID/类别及数值；Actor 当前 Section 与 Target 均连接该缝且不同；Severed；Open；棱镜资格；携带限制/容量；长物整段旋转；出入口占据。角色到缝中心的水平距离须不超过 PassageRadius；否则 WrongSection。通行检测使用角色实际当前位置和按下述普通/镜像变换算出的实际落点，分别在两端检查半径PassageRadius、高度PassageHeight的竖直胶囊；各胶囊以该端实际位置Y为底、以实际XYZ为轴线，不把角色偏移吸附到缝中心后再测。任一端占据则PassageOccupied附接触。一般角色身高/动画碰撞仍属于 Godot，不将角色当四维阻挡物。
+检查次序固定：ID/类别及数值（FreeBackpackSlots 为负是 InvalidInput）；Actor 当前 Section 与 Target 均连接该缝（否则 NotConnected）且不同（否则 InvalidInput）；角色到缝中心的水平距离不超过 PassageRadius（否则 WrongSection）；Severed；Open；棱镜资格；携带限制/容量；长物整段旋转；出入口占据。通行检测使用角色实际当前位置和按下述普通/镜像变换算出的实际落点，分别在两端检查半径PassageRadius、高度PassageHeight的竖直胶囊；各胶囊以该端实际位置Y为底、以实际XYZ为轴线，不把角色偏移吸附到缝中心后再测。引擎用包住胶囊的盒子检测（XZ 半边长 PassageRadius，从脚起高 PassageHeight，W 方向 ±ε），在盒子的角上比胶囊更保守。接触的 Moving 是角色，MovingPart 是 `passage`。角色随身的物品（手里的、背包里的、刚卡缝的长物）不算阻挡，正在执行的旋转扫掠算阻挡。任一端占据则PassageOccupied附接触。一般角色身高/动画碰撞仍属于 Godot，不将角色当四维阻挡物。
 
 例：缝中心X=0、角色X=0.15、半径0.2，普通缝出口墙占X≥0.3时，实际胶囊到X=0.35，会嵌入0.05，必须拒绝；缝中心胶囊空闲不能证明该实际落点可用。
 
 普通缝保留角色的 XYZ 及四维旋转，只把 W 改为目标 Section.W。镜像缝绕缝的法线—W 平面转 π：XYZ 位置关于竖直缝平面反射，W 平移到目标值，四维旋转左乘该半圈矩阵，普通 yaw 由宿主保留。背包及实际随身小物跟随同一变换；返回派生 ActorHandedness，适配层据此翻转屏幕/输入。
 
-未竖起可转长物且 Reach≥两 Section 的 W 距离时先以出发截面接缝处为铰链竖起；Reach 恰等于目标距离时末端距目标Section为0，违反统一0.02m间距，载入应报PartBoundaryTooClose；运行时请求也须拒绝InvalidInput，不把端面当有效抓取Slice。它脱离真正随身集合，变成 UprightOrigin=出发 Section 的世界贯穿物；角色穿缝后 Holder 自动抓住目标 Slice，不再对长物额外乘镜像矩阵。短小且 Packable 的手持物自动入背包，空位不足拒绝；非小物、Sphere4四维对称物、已竖起物拒绝NotPackable；非对称HiddenRingItem未竖起且Packable时可作为短小物入包并随身穿缝，镜像变换作用于其完整姿态。猫的免棱镜资格不免携带/碰撞规则。
+手里的物件按下列次序判断：
 
-上述全部检查先完成，失败时角色、物品、背包、缝和事件全部不变；成功一次提交。穿回只换 Section，不自动放倒卡缝长物，回来源页后另请求 LayDown。
+1. 正在旋转：Busy。
+2. 已竖起，或是 Sphere4 四维对称物：NotPackable。
+3. 未竖起的可转物件且 Reach≥两 Section 的 W 距离：先搬到缝口，再竖起，不看 Packable。
+4. 其余物件：非 Packable 返回 NotPackable；Packable 而 FreeBackpackSlots<1 返回 CapacityExceeded；否则自动入背包。
+
+长物先在 XZ 平面上平移，使铰链落在缝的 XZ 位置（先 X 后 Z，高度不变，沿路按平移碰撞检测），受阻返回 TranslationBlocked 和阻挡的接触；再按 PlanRotation 的 StandUp 竖起（目标为 Target，Target 更深转 +W，更浅转 −W）。PlanRotation 的拒绝（RotationBlocked 附接触、OutOfRange、WrongSection、NoSlice，以及终点端面距 Section 不足 0.02m 的 InvalidInput 等）都原样作为穿缝失败返回。Reach 恰等于目标距离的物件，末端落在目标Section上，载入和动态添加会拒绝它，但物件经背包换截面后可能遇到，StandUp 在运行时返回 InvalidInput。成功时直接取旋转终点，不排 RotationStarted/RotationEnded。它脱离真正随身集合，变成 UprightOrigin=出发 Section 的世界贯穿物；角色穿缝后 Holder 仍抓着它，目标 Slice 随即可读，不再对长物额外乘镜像矩阵。Crossed.Packed 只列这次从手里入背包的物件，Crossed.WedgedItem 是卡缝长物。背包里原有的物件不占空位，随角色按同一变换更新。非对称HiddenRingItem未竖起且Packable时可作为短小物入包并随身穿缝，镜像变换作用于其完整姿态。猫的免棱镜资格不免携带/碰撞规则。
+
+上述全部检查先完成，失败时角色、物品、背包、缝和事件全部不变；成功一次提交，只排一个 SeamCrossed。角色抓着卡缝长物再穿缝，长物算已竖起物，返回 NotPackable，要先 ReleaseEntity。长物竖在缝口，回去的落点会被它占据，返回 PassageOccupied，所以要先用 MoveEntity 把它挪开，松手，再穿回。竖在缝口的板挡住所有生物穿这道缝，猫和别的角色也一样返回 PassageOccupied，直到它被挪开或放倒。穿回只换 Section，不自动放倒卡缝长物，回到来源截面后另请求 LayDown，放倒沿用那次竖起的逆变换，随当前铰链平移。
 
 手算镜像例：缝平面 YZ，半圈 `M=diag(−1,1,1,−1)`，det4=+1、XYZ 投影 det3=−1。长轴 +X 的长物先 XW 转 +π/2，+X→+W；再把角色 I→II 并左乘 M。长物仍为 +W，不能再乘 M 变成 −W。背包小物与角色一起镜像。这是本契约对原文泛称“携带”的明确解释，已随完整契约批准。
 
@@ -136,7 +144,7 @@ public sealed record EntityFell(EntityId Entity, double FromY, double ToY) : Spa
 public sealed record SeamCrossed(EntityId Actor, SeamId Seam,
     SectionId From, SectionId To) : SpaceEvent;
 public sealed record StructureConsumed(EntityId Grazer, EntityId Element) : SpaceEvent;
-public sealed record SeamSevered(EntityId Grazer, SeamId Seam) : SpaceEvent;
+public sealed record SeamSevered(SeamId Seam) : SpaceEvent;
 public sealed record EventOccurrence(double Time, long Sequence, SpaceEvent Event);
 public abstract record StepResult
 {

@@ -5,7 +5,8 @@ public sealed partial class World
 {
     /// <summary>
     /// Makes the actor hold the item in hand, or grab its slice when it is stood up. The item needs a slice in the
-    /// actor's section, each actor holds at most one item, and an item has at most one holder.
+    /// actor's section, each actor holds at most one item in hand, and an item has at most one holder. An item in
+    /// the actor's own backpack comes out into the hand.
     /// </summary>
     public CarryResult HoldEntity(EntityId actor, EntityId item)
     {
@@ -16,26 +17,73 @@ public sealed partial class World
             return Reject(KindOrUnknown(item), "Entity is unknown or cannot be held.", item);
         if (rotations.ContainsKey(item)) return Reject(FailureCode.Busy, "Entity is rotating.", item);
         if (!DynamicShapes.Interaction(held.Definition).Holdable) return Reject(FailureCode.NotHoldable, "Entity is not holdable.", item);
-        if (held.Holder is not null || HoldsItem(actor))
+        var inBackpack = held.Holder == actor && held.Packed;
+        if ((held.Holder is not null && !inBackpack) || HoldsInHand(actor))
             return Reject(FailureCode.EntityInUse, "The item is already held or the actor already holds an item.", item);
-        var section = sections.Single(candidate => candidate.Id == holder.Definition.Section);
-        if (Slice(held, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", item);
+        var (taken, refusal) = inBackpack ? TakeOut(holder, held) : (held, null);
+        if (taken is null) return new CarryResult.Rejected(refusal!);
+        var section = sections.Single(candidate => candidate.Id == holder.Section);
+        if (Slice(taken, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", item);
 
-        dynamicEntities[item] = held with { Holder = actor };
+        dynamicEntities[item] = taken with { Holder = actor };
         revision++;
         return new CarryResult.Changed(State(dynamicEntities[item]));
     }
 
-    /// <summary>Lets go of a held item where it is.</summary>
+    /// <summary>
+    /// Puts a lying, packable item of the actor's section into the actor's backpack, from the world or from the
+    /// hand. The host counts the free slots and passes them in: with none the item stays where it is.
+    /// </summary>
+    public CarryResult PackEntity(EntityId actor, EntityId item, int freeSlots)
+    {
+        CarryResult Reject(FailureCode code, string detail, EntityId id) => new CarryResult.Rejected(Fail(code, detail, id));
+        if (freeSlots < 0) return Reject(FailureCode.InvalidInput, "Free slots cannot be negative.", item);
+        if (!actors.TryGetValue(actor, out var owner))
+            return Reject(KindOrUnknown(actor), "Actor is unknown or not a three-dimensional creature.", actor);
+        if (!dynamicEntities.TryGetValue(item, out var candidate))
+            return Reject(KindOrUnknown(item), "Entity is unknown or cannot be packed.", item);
+        if (rotations.ContainsKey(item)) return Reject(FailureCode.Busy, "Entity is rotating.", item);
+        if (candidate.Holder is not null && candidate.Holder != actor) return Reject(FailureCode.EntityInUse, "Another creature holds the item.", item);
+        if (candidate.Packed) return Reject(FailureCode.InvalidInput, "The item is already in the backpack.", item);
+        if (candidate.Origin is not null || DynamicShapes.IsBall(candidate.Definition) || !DynamicShapes.Interaction(candidate.Definition).Packable)
+            return Reject(FailureCode.NotPackable, "Only a lying packable item goes into the backpack.", item);
+        if (candidate.Section != owner.Section) return Reject(FailureCode.WrongSection, "The item lies in another section.", item);
+        if (freeSlots == 0) return Reject(FailureCode.CapacityExceeded, "The backpack is full.", item);
+
+        dynamicEntities[item] = candidate with { Holder = actor, Packed = true };
+        revision++;
+        return new CarryResult.Changed(State(dynamicEntities[item]));
+    }
+
+    /// <summary>Lets go of a held item where it is. An item in the backpack is put down where its owner stands.</summary>
     public CarryResult ReleaseEntity(EntityId item)
     {
         CarryResult Reject(FailureCode code, string detail) => new CarryResult.Rejected(Fail(code, detail, item));
         if (!dynamicEntities.TryGetValue(item, out var held)) return Reject(KindOrUnknown(item), "Entity is unknown or cannot be held.");
         if (held.Holder is null) return Reject(FailureCode.InvalidInput, "Entity is not held.");
 
-        dynamicEntities[item] = held with { Holder = null };
+        var (freed, refusal) = held.Packed ? TakeOut(actors[held.Holder.Value], held) : (held, null);
+        if (freed is null) return new CarryResult.Rejected(refusal!);
+        dynamicEntities[item] = freed with { Holder = null };
         revision++;
         return new CarryResult.Changed(State(dynamicEntities[item]));
+    }
+
+    // The item as it is once out of its owner's backpack, or why it cannot come out. It lies where its owner stands,
+    // with its lowest point at the owner's feet and the rotation it had. It is in the building that holds the owner's
+    // section, and it has to be fit to lie there: the checks PlaceEntity makes of a pose, because it was last checked
+    // against the section it came from.
+    private (Dynamic?, Failure?) TakeOut(Actor owner, Dynamic packed)
+    {
+        var id = packed.Definition.Id;
+        var w = sections.Single(candidate => candidate.Id == owner.Section).W;
+        var building = buildings.FirstOrDefault(candidate => candidate.WRange.Min <= w && w <= candidate.WRange.Max);
+        if (building is null) return (null, Fail(FailureCode.OutOfRange, "The section is in no building.", id));
+        var feet = owner.Pose.Position;
+        var lowest = DynamicShapes.Solids(packed.Definition, packed.Pose).Min(solid => solid.Center[1] - solid.Extent(1));
+        var position = packed.Pose.Position with { X = feet.X, Y = packed.Pose.Position.Y + feet.Y - lowest, Z = feet.Z };
+        var taken = packed with { Packed = false, Building = building.Id, Pose = packed.Pose with { Position = position } };
+        return PoseFailure(id, taken) is { } failure ? (null, failure) : (taken, null);
     }
 
     /// <summary>
@@ -54,7 +102,7 @@ public sealed partial class World
         if (!dynamicEntities.TryGetValue(request.Entity, out var item))
             return Reject(KindOrUnknown(request.Entity), "Entity is unknown or cannot be moved.");
         if (rotations.ContainsKey(request.Entity)) return Reject(FailureCode.Busy, "Entity is rotating.");
-        if (item.Holder is null) return Reject(FailureCode.InvalidInput, "Entity is not held.");
+        if (item.Holder is null || item.Packed) return Reject(FailureCode.InvalidInput, "Entity is not held.");
 
         var solids = DynamicShapes.Solids(item.Definition, item.Pose);
         double[] delta = [request.Delta.X, request.Delta.Y, request.Delta.Z, 0];
