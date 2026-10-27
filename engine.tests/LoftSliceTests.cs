@@ -206,6 +206,35 @@ public class LoftSliceTests
         AssertRange(cap.Range(Axis3.Z), 0, .2);
     }
 
+    // A slab with a key in its middle, which lies on section I. Its surface is 2 (.3 × .2 + .3 × .2 + .2 × .2).
+    private static readonly ConvexPart Slab = LoftBox("slab", (0, .3), (0, .2), (0, .2));
+
+    private static DeviceDefinition SlabWithMiddleKey(Pose4 pose, DeviceMotion motion) =>
+        new(new("slab"), pose, TestSource, Loft(Key(-.1, Slab), Key(0, Slab), Key(.1, Slab)), motion);
+
+    [Fact]
+    public void AMiddleKeyOnASectionIsCutOnceWhenTheDeviceHasTurnedOver()
+    {
+        var world = Scene(SlabWithMiddleKey(At(0, 1, 0), new DeviceRotation(RotationPlane.XW, default, new(-Math.PI, 0), 0)));
+
+        world.Driven(new("slab"), -Math.PI);
+
+        var cut = Slice(world, new("slab"), 0);
+        Assert.Equal(36, cut.Parts.Count);
+        Assert.Equal(.32, cut.Area(), 9);
+    }
+
+    [Fact]
+    public void AMiddleKeyOnASectionIsCutOnceWhenThePoseTurnsWIntoMinusW()
+    {
+        var world = Scene(SlabWithMiddleKey(At(0, 1, 0, rotation: XwHalfTurn), new DeviceTranslation(Axis3.Y, new(0, 1), 0)));
+
+        var cut = Slice(world, new("slab"), 0);
+
+        Assert.Equal(36, cut.Parts.Count);
+        Assert.Equal(.32, cut.Area(), 9);
+    }
+
     [Fact]
     public void ASectionThatOnlyTouchesADeviceCutsNothing()
     {

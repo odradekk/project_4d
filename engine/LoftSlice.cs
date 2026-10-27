@@ -8,8 +8,11 @@ internal static class LoftSlice
     {
         var corners = piece.Corners();
         var (low, high) = (corners.Min(corner => corner[3]), corners.Max(corner => corner[3]));
-        // At its upper end the cap belongs to the next piece when there is one, which then cuts the shared shape.
-        if (w < low || w > high || (w == high && piece.Piece.CoveredAtEnd)) return;
+        if (w < low || w > high) return;
+        // When the cap at the upper key lies in the section and the next piece starts with the same shape, that piece
+        // cuts it. Which key is on which side in W depends on how the device is turned, so the cap itself is asked.
+        var endCap = piece.Piece.Facets.Single(facet => facet.Cap == FacetCap.End);
+        if (piece.Piece.CoveredAtEnd && endCap.Vertices.All(vertex => corners[vertex][3] == w)) return;
 
         // Each point of the slice is made once: a vertex that lies in the hyperplane, or where an edge crosses it.
         var points = new Dictionary<(int, int), BoxSlice.Point>();
