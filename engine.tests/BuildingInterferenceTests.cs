@@ -19,7 +19,7 @@ public class BuildingInterferenceTests
         Assert.Equal(new EntityId("item"),error.Entity); Assert.EndsWith(".Building",error.Source.Property);
         var contact=Assert.Single(error.Contacts);
         Assert.Equal(new EntityId("wall"),contact.Obstacle);
-        Assert.InRange(contact.Point.X,-.486,-.474); Assert.InRange(contact.Point.W,min,max);
+        Assert.InRange(contact.Point.X,-.58,-.38); Assert.InRange(contact.Point.W,min,max);
     }
     [Fact]
     public void OverlappingBuildingRangesWithDistantGeometryAreAllowed()
@@ -48,7 +48,7 @@ public class BuildingInterferenceTests
         var invalid=Assert.IsType<LoadResult.Invalid>(World.Load(Description(item,obstacle)));
         var error=Assert.Single(invalid.Errors,e=>e.Code==LoadErrorCode.BuildingInterference);
         var contact=Assert.Single(error.Contacts);
-        Assert.InRange(contact.Point.Y,-.486,-.474); Assert.InRange(contact.Point.W,.5,.98);
+        Assert.InRange(contact.Point.Y,-.58,-.38); Assert.InRange(contact.Point.W,.5,.98);
     }
     [Fact]
     public void LongAxisYUsesItsOwnHingeCoordinate()
@@ -58,11 +58,12 @@ public class BuildingInterferenceTests
         Assert.Contains(Assert.IsType<LoadResult.Invalid>(World.Load(Description(item,obstacle))).Errors,e=>e.Code==LoadErrorCode.BuildingInterference);
     }
     [Theory]
-    [InlineData(-.378, false)]
-    [InlineData(-.380, true)]
-    public void InterferenceHonorsFiveMillimeterContactTolerance(double wallX,bool blocked)
+    [InlineData(.195, false)]
+    [InlineData(.194, true)]
+    public void InterferenceHonorsFiveMillimeterContactTolerance(double wallZ,bool blocked)
     {
-        var result=World.Load(Description(Item(),Other(wallX,new(.5,1.5))));
+        var wall=Other(-.48,new(.5,1.5)) with {Pose=new(new(-.48,0,wallZ,0),R4)};
+        var result=World.Load(Description(Item(),wall));
         Assert.Equal(blocked,result is LoadResult.Invalid invalid && invalid.Errors.Any(e=>e.Code==LoadErrorCode.BuildingInterference));
     }
     [Fact]
@@ -70,5 +71,20 @@ public class BuildingInterferenceTests
     {
         var sameBuilding=Other(-.48,new(.5,1.5)) with {Building=new("owner")};
         Assert.IsType<LoadResult.Loaded>(World.Load(Description(Item(),sameBuilding)));
+    }
+    [Fact]
+    public void OtherBuildingIsRejectedWhenOnlyTheMiddleOfTheSweepIntersects()
+    {
+        var wall=Other(0,new(.34,.36)) with {Shape=Box(new(.02,.02,.02)),Pose=new(new(.2,0,0,0),R4)};
+        var result=Assert.IsType<LoadResult.Invalid>(World.Load(Description(Item(),wall)));
+        Assert.Contains(result.Errors,e=>e.Code==LoadErrorCode.BuildingInterference && e.Contacts.Any(c=>c.Obstacle==wall.Id));
+        var far=wall with {Pose=new(new(.2,0,1,0),R4)};
+        Assert.IsType<LoadResult.Loaded>(World.Load(Description(Item(),far)));
+    }
+    [Fact]
+    public void BuildingMustCoverWExtremumBetweenEndpoints()
+    {
+        var d=Description(Item()) with {Buildings=[new(new("owner"),new(-.98,.98),S),new(new("other"),new(-2,2),S)]};
+        Assert.Contains(Assert.IsType<LoadResult.Invalid>(World.Load(d)).Errors,e=>e.Code==LoadErrorCode.BuildingCoverage);
     }
 }

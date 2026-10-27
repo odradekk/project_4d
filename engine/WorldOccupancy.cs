@@ -7,7 +7,7 @@ public sealed partial class World
     {
         OccupancyResult Rejected(FailureCode code, string detail) => new OccupancyResult.Rejected(new(code,detail,null,null,Array.Empty<Contact>()));
         if (excluded is null || excluded.Distinct().Count()!=excluded.Count) return Rejected(FailureCode.InvalidInput,"Excluded IDs must be unique.");
-        if (excluded.Any(id=>entities.All(e=>e.Id!=id) && !dynamicEntities.ContainsKey(id))) return Rejected(FailureCode.UnknownId,"Unknown excluded ID.");
+        if (excluded.Any(id=>ReadEntity(id) is EntityReadResult.Missing)) return Rejected(FailureCode.UnknownId,"Unknown excluded ID.");
         Box4? query=null;
         if(shape is OccupancyBox b)
         {

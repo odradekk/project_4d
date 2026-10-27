@@ -57,15 +57,48 @@ public sealed partial class World
         if(!double.IsFinite(delta) || delta<=0 || !double.IsFinite(time+delta))
             return new StepResult.Rejected(new(FailureCode.InvalidInput,"Delta must advance finite time.",null,null,Array.Empty<Contact>()));
         var target=time+delta;
-        var resting=SettledHeights();
+        foreach(var active in rotations.Values.OrderBy(a=>a.Started+a.Plan.Duration).ThenBy(a=>a.Plan.Entity.Value,StringComparer.Ordinal).ToArray())
+        {
+            var plan=active.Plan; var end=active.Started+plan.Duration; var done=target>=end;
+            var elapsed=done ? plan.Duration : Math.Clamp(target-active.Started,0,plan.Duration);
+            var slow=plan.Duration*.25; var first=(Math.PI/36)/Math.Abs(plan.Angle);
+            var progress=done ? 1 : first>1 ? elapsed/plan.Duration : elapsed<=slow ? first*elapsed/slow : first+(1-first)*(elapsed-slow)/(plan.Duration-slow);
+            progress=Math.Clamp(progress,0,1);
+            var item=dynamicEntities[plan.Entity];
+            dynamicEntities[plan.Entity]=item with {Pose=At(plan,progress)};
+            if(done)
+            {
+                var finished=dynamicEntities[plan.Entity];
+                if(plan.Laying && item.Upright is RotationPlan upright)
+                    finished=finished with {Pose=upright.Start with {Position=Add(upright.Start.Position,Sub(plan.Pivot,upright.Pivot))}};
+                else if(plan.Laying)
+                    finished=finished with {Pose=finished.Pose with {Position=finished.Pose.Position with {W=sections.Single(s=>s.Id==plan.Origin).W}}};
+                dynamicEntities[plan.Entity]=finished with {Section=plan.Laying ? plan.Origin : plan.Flip ? item.Section : null, Origin=plan.Laying || plan.Flip ? null : plan.Origin, Upright=plan.Laying || plan.Flip ? null : plan};
+                rotations.Remove(plan.Entity); Enqueue(new RotationEnded(plan.Entity),end);
+            }
+        }
+        var held=new HashSet<EntityId>(); Dictionary<EntityId,double> resting;
+        while(true)
+        {
+            resting=SettledHeights(held); var added=false;
+            foreach(var id in dynamicEntities.Keys.Where(id=>!held.Contains(id) && !rotations.ContainsKey(id)))
+            {
+                var item=dynamicEntities[id]; var old=item.Pose.Position; var distance=old.Y-resting[id];
+                if(distance<=1e-10) continue;
+                var steps=Math.Max(1,(int)Math.Ceiling(distance/SamplingDistance));
+                if(Enumerable.Range(1,steps).Any(i=>IntersectsReservation(item.Definition.Shape.Parts.Select(p=>Box4.From(item.Definition,item.Pose with {Position=old with {Y=old.Y-distance*i/steps}},p)),id))) {held.Add(id);added=true;}
+            }
+            if(!added) break;
+        }
         foreach(var id in dynamicEntities.Keys.OrderBy(x=>x.Value,StringComparer.Ordinal).ToArray())
         {
+            if(rotations.ContainsKey(id)) continue;
             var item=dynamicEntities[id]; var finalY=resting[id];
             if(finalY>=item.Pose.Position.Y-1e-10) continue;
             var old=item.Pose.Position; var updated=item.Pose with {Position=old with {Y=finalY}};
             dynamicEntities[id]=item with {Pose=updated}; Enqueue(new EntityFell(id,old.Y,finalY),target);
         }
-        time=target; var result=events.ToArray(); events.Clear();
+        time=target; revision++; var result=events.OrderBy(e=>e.Time).ThenBy(e=>e.Sequence).ToArray(); events.Clear();
         return new StepResult.Advanced(time,Array.AsReadOnly(result));
     }
 }
