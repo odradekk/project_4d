@@ -1,0 +1,220 @@
+[gd_scene load_steps=28 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="4"]
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="5"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="7"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="8"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="9"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("8")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("8")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("8")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("8")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("8")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("8")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="Mat0"]
+albedo_color = Color(0.42, 0.45, 0.49, 1)
+[sub_resource type="BoxMesh" id="Box0"]
+material = SubResource("Mat0")
+size = Vector3(10, 0.2, 10)
+
+[sub_resource type="StandardMaterial3D" id="Mat1"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+[sub_resource type="BoxMesh" id="Box1"]
+material = SubResource("Mat1")
+size = Vector3(10, 3, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="Mat2"]
+albedo_color = Color(0.75, 0.4, 0.25, 1)
+[sub_resource type="BoxMesh" id="Box2"]
+material = SubResource("Mat2")
+size = Vector3(1, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat3"]
+albedo_color = Color(0.4, 0.62, 0.55, 1)
+[sub_resource type="BoxMesh" id="Box3"]
+material = SubResource("Mat3")
+size = Vector3(2, 0.6, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat4"]
+albedo_color = Color(0.4, 0.62, 0.55, 1)
+[sub_resource type="BoxMesh" id="Box4"]
+material = SubResource("Mat4")
+size = Vector3(2, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat5"]
+albedo_color = Color(0.6, 0.52, 0.35, 1)
+[sub_resource type="BoxMesh" id="Box5"]
+material = SubResource("Mat5")
+size = Vector3(1, 1.2, 1)
+
+[node name="SectionTest" type="Node3D"]
+script = ExtResource("1")
+PrismEnabled = true
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Ⅱ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅱ"
+W = 0.42
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(0, 0.02, 3)
+script = ExtResource("7")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("9")
+
+[node name="Cabinet" type="Node3D" parent="Sections/Ⅰ/Fixed"]
+position = Vector3(3, 0.6, 0)
+script = ExtResource("5")
+EntityId = "cabinet"
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Cabinet"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box5")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Home" type="Node3D" parent="Buildings"]
+script = ExtResource("3")
+BuildingId = "home"
+WMin = -1.0
+WMax = 1.0
+
+[node name="Floor" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, -0.1, 0)
+script = ExtResource("4")
+EntityId = "Floor"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Floor"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box0")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="SharedWall" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 1.5, -4)
+script = ExtResource("4")
+EntityId = "SharedWall"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/SharedWall"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box1")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="OnlyII" type="Node3D" parent="Buildings/Home"]
+position = Vector3(-2, 0.5, -1)
+script = ExtResource("4")
+EntityId = "OnlyII"
+BuildingId = "home"
+WMin = 0.2
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/OnlyII"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box2")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="PlatformI" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 0.3, 0)
+script = ExtResource("4")
+EntityId = "PlatformI"
+BuildingId = "home"
+WMin = -1
+WMax = 0.2
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/PlatformI"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box3")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="PlatformIILower" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 0.15, 0)
+script = ExtResource("4")
+EntityId = "PlatformIILower"
+BuildingId = "home"
+WMin = 0.2
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/PlatformIILower"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="PlatformIIUpper" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 0.45, -0.3)
+script = ExtResource("4")
+EntityId = "PlatformIIUpper"
+BuildingId = "home"
+WMin = 0.2
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/PlatformIIUpper"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Items" type="Node" parent="."]
+
+[node name="Devices" type="Node" parent="."]
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Seams" type="Node" parent="."]
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]

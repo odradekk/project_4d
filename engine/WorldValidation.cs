@@ -13,6 +13,7 @@ internal sealed class WorldValidation
             .ThenBy(e => e.Entity?.Value, StringComparer.Ordinal).ThenBy(e => e.Operation?.Value, StringComparer.Ordinal)
             .ThenBy(e => e.StepIndex).ToArray();
     }
+    private static Source Field(Source source, string field) => source with { Property = $"{source.Property}.{field}" };
     private void Error(LoadErrorCode code, Source source, string detail, EntityId? entity = null) =>
         errors.Add(new(code, source, entity, null, null, detail, Array.Empty<Contact>()));
     private void Validate(WorldDescription? d)
@@ -25,8 +26,8 @@ internal sealed class WorldValidation
         foreach (var section in d.Sections ?? [])
         {
             if (section is null) { Error(LoadErrorCode.InvalidSectionOrder, root, "Section is required."); continue; }
-            Id(section.Id.Value, section.Source);
-            if (!sections.TryAdd(section.Id, section)) Error(LoadErrorCode.DuplicateId, section.Source, "Duplicate section ID.");
+            Id(section.Id.Value, Field(section.Source, "Id"));
+            if (!sections.TryAdd(section.Id, section)) Error(LoadErrorCode.DuplicateId, Field(section.Source, "Id"), "Duplicate section ID.");
             if (!double.IsFinite(section.W)) Error(LoadErrorCode.InvalidNumber, section.Source, "Section W must be finite.");
             else if (previous is double last && section.W <= last) Error(LoadErrorCode.InvalidSectionOrder, section.Source, "Sections must have increasing W.");
             previous = section.W;
@@ -38,7 +39,7 @@ internal sealed class WorldValidation
             if (building is null) { Error(LoadErrorCode.InvalidGeometry, root, "Building is required."); continue; }
             Id(building.Id.Value, building.Source);
             if (!buildings.TryAdd(building.Id, building)) Error(LoadErrorCode.DuplicateId, building.Source, "Duplicate building ID.");
-            Range(building.WRange, building.Source);
+            Range(building.WRange, Field(building.Source, "WRange"));
         }
         var ids = new HashSet<EntityId>();
         if (d.Entities is null) Error(LoadErrorCode.InvalidGeometry, root, "Entities collection is required.");
@@ -48,16 +49,17 @@ internal sealed class WorldValidation
             Id(e.Id.Value, e.Source, e.Id);
             if (!ids.Add(e.Id)) Error(LoadErrorCode.DuplicateId, e.Source, "Duplicate entity ID.", e.Id);
             var beforePose = errors.Count;
-            Pose(e.Pose, e.Source, e.Id);
+            Pose(e.Pose, Field(e.Source, "Pose"), e.Id);
             Pose4? validPose = errors.Count == beforePose ? e.Pose : null;
             switch (e)
             {
                 case BuildingElementDefinition b:
-                    var rangeValid = Range(b.WRange, b.Source, b.Id);
-                    if (!buildings.TryGetValue(b.Building, out var building)) Error(LoadErrorCode.MissingReference, b.Source, "Unknown building.", b.Id);
+                    var rangeValid = Range(b.WRange, Field(b.Source, "WRange"), b.Id);
+                    if (!buildings.TryGetValue(b.Building, out var building)) Error(LoadErrorCode.MissingReference, Field(b.Source, "Building"), "Unknown building.", b.Id);
                     else if (rangeValid && ValidRange(building.WRange) && (b.WRange.Min < building.WRange.Min || b.WRange.Max > building.WRange.Max))
-                        Error(LoadErrorCode.BuildingCoverage, b.Source, "Element extends outside its building range.", b.Id);
-                    if (b.Pose.Position.W != 0 || b.Pose.Rotation.W.W != 1) Error(LoadErrorCode.InvalidPose, b.Source, "Building pose must be an XYZ transform with W=0.", b.Id);
+                        Error(LoadErrorCode.BuildingCoverage, Field(b.Source, b.WRange.Min < building.WRange.Min ? "WRange.Min" : "WRange.Max"),
+                            "Element extends outside its building range.", b.Id);
+                    if (b.Pose.Position.W != 0 || b.Pose.Rotation.W.W != 1) Error(LoadErrorCode.InvalidPose, Field(b.Source, "Pose"), "Building pose must be an XYZ transform with W=0.", b.Id);
                     Gaps(b, rangeValid);
                     Shape(b.Shape, b.Source, b.Id, validPose);
                     break;
@@ -88,20 +90,22 @@ internal sealed class WorldValidation
     private static bool ValidRange(Interval r) => double.IsFinite(r.Min) && double.IsFinite(r.Max) && r.Min < r.Max;
     private bool Range(Interval r, Source source, EntityId? entity = null)
     {
-        if (!double.IsFinite(r.Min) || !double.IsFinite(r.Max)) Error(LoadErrorCode.InvalidNumber, source, "Interval ends must be finite.", entity);
-        else if (r.Min >= r.Max) Error(LoadErrorCode.InvalidInterval, source, "Interval must have positive length.", entity);
+        if (!double.IsFinite(r.Min)) Error(LoadErrorCode.InvalidNumber, Field(source, "Min"), "Interval ends must be finite.", entity);
+        if (!double.IsFinite(r.Max)) Error(LoadErrorCode.InvalidNumber, Field(source, "Max"), "Interval ends must be finite.", entity);
+        if (double.IsFinite(r.Min) && double.IsFinite(r.Max) && r.Min >= r.Max) Error(LoadErrorCode.InvalidInterval, source, "Interval must have positive length.", entity);
         return ValidRange(r);
     }
     private void Gaps(BuildingElementDefinition b, bool rangeValid)
     {
-        if (b.Gaps is null) { Error(LoadErrorCode.InvalidInterval, b.Source, "Gaps collection is required.", b.Id); return; }
+        var source = Field(b.Source, "Gaps");
+        if (b.Gaps is null) { Error(LoadErrorCode.InvalidInterval, source, "Gaps collection is required.", b.Id); return; }
         var valid = rangeValid;
         double? previous = null;
         foreach (var gap in b.Gaps)
         {
-            var gapValid = Range(gap, b.Source, b.Id);
+            var gapValid = Range(gap, source, b.Id);
             if (gapValid && rangeValid && (gap.Min < b.WRange.Min || gap.Max > b.WRange.Max || previous is double last && gap.Min < last))
-            { Error(LoadErrorCode.InvalidInterval, b.Source, "Gaps must be ordered, nonoverlapping, and inside the element range.", b.Id); valid = false; }
+            { Error(LoadErrorCode.InvalidInterval, source, "Gaps must be ordered, nonoverlapping, and inside the element range.", b.Id); valid = false; }
             valid &= gapValid;
             previous = gap.Max;
         }
@@ -110,10 +114,10 @@ internal sealed class WorldValidation
             var start = b.WRange.Min;
             foreach (var gap in b.Gaps)
             {
-                Thickness(gap.Min - start, b.Source, b.Id);
+                Thickness(gap.Min - start, source, b.Id);
                 start = gap.Max;
             }
-            Thickness(b.WRange.Max - start, b.Source, b.Id);
+            Thickness(b.WRange.Max - start, b.Gaps.Count == 0 ? Field(b.Source, "WRange") : source, b.Id);
         }
     }
     private void Thickness(double value, Source source, EntityId entity)
@@ -139,21 +143,22 @@ internal sealed class WorldValidation
             var location = source with { Property = $"{source.Property}.Parts[{i}]" };
             if (part is null) { Error(LoadErrorCode.InvalidGeometry, location, "Box part is required.", entity); continue; }
             var beforePart = errors.Count;
-            Id(part.Id.Value, location, entity);
-            if (!ids.Add(part.Id)) Error(LoadErrorCode.DuplicateId, location, "Duplicate part ID.", entity);
-            if (ToArray(part.Center).Concat(ToArray(part.HalfSize)).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, location, "Box coordinates and lengths must be finite.", entity);
-            else if (part.HalfSize.X <= 0 || part.HalfSize.Y <= 0 || part.HalfSize.Z <= 0) Error(LoadErrorCode.InvalidGeometry, location, "Box half sizes must be positive.", entity);
+            Id(part.Id.Value, Field(location, "Id"), entity);
+            if (!ids.Add(part.Id)) Error(LoadErrorCode.DuplicateId, Field(location, "Id"), "Duplicate part ID.", entity);
+            if (ToArray(part.Center).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, Field(location, "Center"), "Box coordinates must be finite.", entity);
+            if (ToArray(part.HalfSize).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, Field(location, "HalfSize"), "Box lengths must be finite.", entity);
+            else if (part.HalfSize.X <= 0 || part.HalfSize.Y <= 0 || part.HalfSize.Z <= 0) Error(LoadErrorCode.InvalidGeometry, Field(location, "HalfSize"), "Box half sizes must be positive.", entity);
             else if (2 * Math.Min(part.HalfSize.X, Math.Min(part.HalfSize.Y, part.HalfSize.Z)) <= World.SamplingDistance)
-                Error(LoadErrorCode.InvalidGeometry, location, "Box thickness must exceed the sweep sampling distance.", entity);
+                Error(LoadErrorCode.InvalidGeometry, Field(location, "HalfSize"), "Box thickness must exceed the sweep sampling distance.", entity);
             double[][] axes = [ToArray(part.Rotation.X), ToArray(part.Rotation.Y), ToArray(part.Rotation.Z)];
-            if (axes.SelectMany(a => a).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, location, "Part rotation must be finite.", entity);
-            else if (!Rotation(axes)) Error(LoadErrorCode.InvalidPose, location, "Part rotation must be right-handed orthonormal.", entity);
+            if (axes.SelectMany(a => a).Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, Field(location, "Rotation"), "Part rotation must be finite.", entity);
+            else if (!Rotation(axes)) Error(LoadErrorCode.InvalidPose, Field(location, "Rotation"), "Part rotation must be right-handed orthonormal.", entity);
             if (part.FaceUvs is null || part.FaceUvs.Count != 6 || part.FaceUvs.Any(f => f is null) || part.FaceUvs.Select(f => (f.Axis, f.Positive)).Distinct().Count() != 6)
-            { Error(LoadErrorCode.InvalidGeometry, location, "Each of the six box faces requires exactly one UV definition.", entity); continue; }
+            { Error(LoadErrorCode.InvalidGeometry, Field(location, "FaceUvs"), "Each of the six box faces requires exactly one UV definition.", entity); continue; }
             foreach (var uv in part.FaceUvs)
             {
-                if (!Enum.IsDefined(uv.Axis) || uv.Scale.X == 0 || uv.Scale.Y == 0) Error(LoadErrorCode.InvalidGeometry, location, "UV axes must be valid and scale must be nonzero.", entity);
-                if (new[] { uv.Scale.X, uv.Scale.Y, uv.Offset.X, uv.Offset.Y }.Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, location, "UV coordinates must be finite.", entity);
+                if (!Enum.IsDefined(uv.Axis) || uv.Scale.X == 0 || uv.Scale.Y == 0) Error(LoadErrorCode.InvalidGeometry, Field(location, "FaceUvs"), "UV axes must be valid and scale must be nonzero.", entity);
+                if (new[] { uv.Scale.X, uv.Scale.Y, uv.Offset.X, uv.Offset.Y }.Any(v => !double.IsFinite(v))) Error(LoadErrorCode.InvalidNumber, Field(location, "FaceUvs"), "UV coordinates must be finite.", entity);
             }
             if (errors.Count == beforePart && validPose is Pose4 pose) DerivedGeometry(part, pose, location, entity);
         }

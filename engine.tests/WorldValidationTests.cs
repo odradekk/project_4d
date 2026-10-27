@@ -96,6 +96,24 @@ public class WorldValidationTests
         Assert.Contains(errors, e => e.Code == LoadErrorCode.InvalidId && e.Source.NodePath == "/z");
         Assert.Equal(errors.OrderBy(e => e.Source.NodePath, StringComparer.Ordinal).ThenBy(e => e.Source.Property, StringComparer.Ordinal).ThenBy(e => e.Code.ToString(), StringComparer.Ordinal), errors);
     }
+    public static IEnumerable<object[]> InvalidFieldSources()
+    {
+        yield return [Description(Wall() with { WRange = new(1, 1) }), LoadErrorCode.InvalidInterval, "value.WRange"];
+        yield return [Description(Wall() with { WRange = new(-1, double.PositiveInfinity) }), LoadErrorCode.InvalidNumber, "value.WRange.Max"];
+        yield return [Description(Wall() with { Gaps = [new(-2, 0)] }), LoadErrorCode.InvalidInterval, "value.Gaps"];
+        yield return [Description(Wall() with { Building = new("missing") }), LoadErrorCode.MissingReference, "value.Building"];
+        yield return [Description(Wall() with { WRange = new(-1, 3) }), LoadErrorCode.BuildingCoverage, "value.WRange.Max"];
+        yield return [Description(Wall() with { Shape = new([Part() with { FaceUvs = [] }]) }), LoadErrorCode.InvalidGeometry, "value.Parts[0].FaceUvs"];
+        yield return [Description(Wall() with { Shape = new([Part() with { HalfSize = new(.001, 1, 1) }]) }), LoadErrorCode.InvalidGeometry, "value.Parts[0].HalfSize"];
+        yield return [Description(Wall() with { Shape = new([Part() with { Id = new("") }]) }), LoadErrorCode.InvalidId, "value.Parts[0].Id"];
+        yield return [Description(Wall() with { Shape = new([Part() with { Center = new(double.NaN, 0, 0) }]) }), LoadErrorCode.InvalidNumber, "value.Parts[0].Center"];
+    }
+    [Theory, MemberData(nameof(InvalidFieldSources))]
+    public void LoadReportsTheFieldResponsibleForInvalidInput(WorldDescription description, LoadErrorCode code, string property)
+    {
+        var errors = Assert.IsType<LoadResult.Invalid>(World.Load(description)).Errors;
+        Assert.Contains(errors, e => e.Code == code && e.Source == Source with { Property = property });
+    }
     [Fact]
     public void RightHandedWParallelHalfTurnAndThicknessJustAboveSamplingAreValid()
     {

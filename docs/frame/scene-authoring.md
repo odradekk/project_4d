@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定格式，不要求本轮实现这些脚本。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；当前静态阶段已实现 Region、Section、楼房元素、固定物件、盒子零件和宿主玩家出生点，其余节点随对应能力实现。
 
 ## 节点与导出属性
 
@@ -46,7 +46,7 @@ Room (Node3D, Region3D)
 | BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
 | ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
 
-视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。出生点创建 Creature3Definition；普通角色场景可以是 CharacterBody3D + CollisionShape3D + Camera3D，NPC/猫不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
+视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。完整生物接口接入后，出生点创建 Creature3Definition；当前静态阶段只读取 EntityId、CharacterScene 和祖先 Section，用出生点的 XYZ 变换创建唯一的 FirstPersonPlayer，不向引擎载入尚未支持的生物定义，也不另存 W 或手性。普通角色场景可以是 CharacterBody3D + CollisionShape3D + Camera3D，NPC/猫不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
 
 | Resource | 全部导出字段 |
 |---|---|
@@ -65,6 +65,8 @@ Room (Node3D, Region3D)
 | MetaballResource | `string Id`、`double[] Center`、`double Radius/Weight` |
 
 double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z/W 四列，每列 XYZW；空数组只表示单位旋转，四维点不可用空数组。适配层只做布局转换与基础格式校验，旋转是否合法交给引擎。所有数组默认空集合，必需的 Resource 未赋值报告节点属性错误。未知脚本节点不静默当四维实体。
+
+测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；其他着色材质留到表现层工作。
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 

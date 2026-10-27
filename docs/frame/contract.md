@@ -66,7 +66,7 @@ public enum Axis3 { X, Y, Z }
 public enum RotationPlane { XY, XZ, XW, YZ, YW, ZW }
 ```
 
-ID 为非空、区分大小写的稳定字符串；实体 ID 在整个区域唯一，零件 ID 在所属实体内唯一，移除后不复用实体 ID。场景存档与脚本按 ID 引用，不按节点遍历顺序编号。`Source` 是诊断位置的纯文本，不是 Godot 节点引用。
+ID 为非空、区分大小写的稳定字符串；实体 ID 在整个区域唯一，零件 ID 在所属实体内唯一，移除后不复用实体 ID。场景存档与脚本按 ID 引用，不按节点遍历顺序编号。`Source` 是诊断位置的纯文本，不是 Godot 节点引用。载入校验可在来源属性后追加出错字段（例如 `.WRange.Max`、`.Gaps`、`.Parts[0].FaceUvs`），宿主可据此映射到实际编辑位置。
 
 所有输入数值有限。长度以米、角度以弧度、时间以秒；x、y、z 与 Godot 一致，Y 向上；W 增大表示更深。`Rotation4` 的四列是局部轴在世界坐标中的方向，正交、单位长、det4=+1，允许正交误差 `1e-10`。`Pose4` 把局部点变成 `Position + Rotation × point`。正角从平面的第一个轴转向第二个轴，例如 XW 的 +π/2 把 +X 转为 +W。`Interval` 为闭区间且 Min<Max；允许单点范围的装置当前位置另用标量表达。
 
