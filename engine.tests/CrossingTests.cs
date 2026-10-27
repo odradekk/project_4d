@@ -231,8 +231,8 @@ public class CrossingTests
     {
         var severed = SeamScene(Seam(severed: true, open: false), Actor(x: .1));
         var closed = SeamScene(Seam(open: false), Actor(x: .1));
-        var opened = SeamScene(Seam(), Actor(x: .1));
-        opened.SeverSeam(new("seam"));
+        var opened = SeamScene(Seam(), Actor(x: .1), Biter());
+        opened.Sever("seam");
         opened.StepEvents(.001);
 
         severed.Refuse(Request(), FailureCode.SeamSevered, ActorId);

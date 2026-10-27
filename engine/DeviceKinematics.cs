@@ -30,7 +30,7 @@ internal static class DeviceKinematics
             return pose with { Position = World.Add(pose.Position, Box4.ToVec4(offset)) };
         }
         var rotation = (DeviceRotation)device.Motion;
-        var (first, second) = Axes(rotation.Plane);
+        var (first, second) = Rotation4.Axes(rotation.Plane);
         // A half turn uses the exact cosine and sine, as in a turn of a turnable object.
         var halfTurn = position == Math.PI || position == -Math.PI;
         var (cos, sin) = halfTurn ? (-1d, 0d) : (Math.Cos(position), Math.Sin(position));
@@ -57,23 +57,11 @@ internal static class DeviceKinematics
     // How far the farthest vertex of the pieces lies from the pivot in the plane of the rotation.
     internal static double Reach(IEnumerable<LoftPiece> pieces, DeviceRotation rotation)
     {
-        var (first, second) = Axes(rotation.Plane);
+        var (first, second) = Rotation4.Axes(rotation.Plane);
         var pivot = Box4.ToArray(rotation.Pivot);
         return pieces.SelectMany(piece => piece.Vertices)
             .Max(vertex => Math.Sqrt(Math.Pow(vertex[first] - pivot[first], 2) + Math.Pow(vertex[second] - pivot[second], 2)));
     }
-
-    // The coordinate axes of a plane, in the order that a positive angle turns from the first to the second.
-    internal static (int First, int Second) Axes(RotationPlane plane) => plane switch
-    {
-        RotationPlane.XY => (0, 1),
-        RotationPlane.XZ => (0, 2),
-        RotationPlane.XW => (0, 3),
-        RotationPlane.YZ => (1, 2),
-        RotationPlane.YW => (1, 3),
-        RotationPlane.ZW => (2, 3),
-        _ => throw new ArgumentException("Unknown rotation plane.", nameof(plane))
-    };
 
     // The world axis (0 for X, 1 for Y, 2 for Z) that a translation runs along, and whether it runs toward its
     // negative end. Validation has seen to it that the track lies on a world axis.

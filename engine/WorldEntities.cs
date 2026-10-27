@@ -90,8 +90,7 @@ public sealed partial class World
         var slice = new SliceBuffer();
         foreach (var (_, buffer) in pieces.OrderBy(piece => piece.Part.Value, StringComparer.Ordinal)) slice.AddRange(buffer);
         if (slice.Parts.Count == 0) return null;
-        return new(definition.Id, slice.Positions.AsReadOnly(), slice.Normals.AsReadOnly(), slice.Uvs.AsReadOnly(), slice.Parts.AsReadOnly(),
-            ExtendsInW(DynamicShapes.Solids(definition, item.Pose)));
+        return slice.ToSlice(definition.Id, ExtendsInW(DynamicShapes.Solids(definition, item.Pose)));
     }
 
     private IEnumerable<SliceGeometry> DynamicSlices(double w) =>
@@ -108,13 +107,14 @@ public sealed partial class World
             Creature3Definition actor => AddActor(actor),
             TurnableDefinition or ItemDefinition => AddDynamic(definition),
             DeviceDefinition device => AddDeviceEntity(device),
-            _ => Reject(FailureCode.WrongEntityKind, "Only creatures, turnables, items and devices can currently be added.")
+            GrazerDefinition grazer => AddGrazer(grazer),
+            _ => Reject(FailureCode.WrongEntityKind, "Only creatures, grazers, turnables, items and devices can currently be added.")
         };
     }
 
     private bool IsUsed(EntityId id) =>
         entities.Any(entity => entity.Id == id) || dynamicEntities.ContainsKey(id) || actors.ContainsKey(id) || devices.ContainsKey(id)
-        || retired.Contains(id);
+        || grazers.ContainsKey(id) || consumed.Contains(id) || retired.Contains(id);
 
     private AddEntityResult AddActor(Creature3Definition actor)
     {
@@ -138,9 +138,11 @@ public sealed partial class World
     }
 
     // The first validation error of the region with these entities as an InvalidInput failure, or null when it is valid.
-    private Failure? ValidationFailure(IEnumerable<EntityDefinition> definitions, EntityId added)
+    private Failure? ValidationFailure(IEnumerable<EntityDefinition> definitions, EntityId added) =>
+        FirstFailure(WorldValidation.Check(new(sections, buildings, definitions.ToArray(), [], [], [])), added);
+
+    private static Failure? FirstFailure(LoadError[] errors, EntityId added)
     {
-        var errors = WorldValidation.Check(new(sections, buildings, definitions.ToArray(), [], [], []));
         if (errors.Length == 0) return null;
         var first = errors[0];
         return Fail(FailureCode.InvalidInput, $"{first.Source.NodePath}:{first.Source.Property}: {first.Detail}", added, first.Contacts);
@@ -150,7 +152,7 @@ public sealed partial class World
     {
         if (rotations.ContainsKey(entity) || IsHeld(entity) || HoldsItem(entity))
             return new RemoveEntityResult.Rejected(Fail(FailureCode.EntityInUse, "Entity is rotating, held, or holding an item.", entity));
-        if (actors.Remove(entity) || dynamicEntities.Remove(entity) || devices.Remove(entity))
+        if (actors.Remove(entity) || dynamicEntities.Remove(entity) || devices.Remove(entity) || grazers.Remove(entity))
         {
             retired.Add(entity);
             revision++;
@@ -172,6 +174,7 @@ public sealed partial class World
         if (actors.TryGetValue(entity, out var actor)) return new EntityReadResult.Found(State(actor));
         if (dynamicEntities.TryGetValue(entity, out var item)) return new EntityReadResult.Found(State(item));
         if (devices.TryGetValue(entity, out var device)) return new EntityReadResult.Found(State(device));
+        if (grazers.TryGetValue(entity, out var grazer)) return new EntityReadResult.Found(State(grazer));
         if (!staticDefinitions.TryGetValue(entity, out var definition)) return new EntityReadResult.Missing(entity);
         var fixedObject = definition as FixedDefinition;
         return new EntityReadResult.Found(new(

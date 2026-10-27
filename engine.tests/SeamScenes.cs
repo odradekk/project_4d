@@ -20,6 +20,13 @@ internal static class SeamScenes
     public static World SeamScene(SeamDefinition seam, params EntityDefinition[] entities) =>
         Load(Description(entities) with { Seams = [seam] });
 
+    // A grazer far above everything, which bites the seams a test names.
+    public static GrazerDefinition Biter() => GrazerScenes.Grazer(At(0, 30, 0, w: .18), GrazerScenes.Lump(default));
+
+    // Severs the seams in a scripted bite of the grazer from Biter.
+    public static UpdateResult Sever(this World world, params string[] seams) =>
+        world.ConsumeStructure(GrazerScenes.GrazerId, [], seams.Select(seam => new SeamId(seam)).ToArray());
+
     public static CrossSeamRequest Request(
         string actor = "actor", string seam = "seam", string target = "II", bool hasPrism = true, int slots = 4) =>
         new(new(actor), new(seam), new(target), hasPrism, slots);
@@ -67,11 +74,11 @@ internal static class SeamScenes
         new("chair"), At(.1, .03, 0), TestSource, I, new("home"), Box(new(.05, .03, .03)),
         new TurnableProperties(Holdable: true, Packable: false, HorizontalRadius: .05, LongAxis: Axis3.X, Hinge: new(-.03, 0, 0), Reach: .08));
 
-    public static void AssertNear(Rotation4 expected, Rotation4 actual)
+    public static void AssertNear(Rotation4 expected, Rotation4 actual, int digits = 9)
     {
-        ItemScenes.AssertNear(expected.X, actual.X);
-        ItemScenes.AssertNear(expected.Y, actual.Y);
-        ItemScenes.AssertNear(expected.Z, actual.Z);
-        ItemScenes.AssertNear(expected.W, actual.W);
+        ItemScenes.AssertNear(expected.X, actual.X, digits);
+        ItemScenes.AssertNear(expected.Y, actual.Y, digits);
+        ItemScenes.AssertNear(expected.Z, actual.Z, digits);
+        ItemScenes.AssertNear(expected.W, actual.W, digits);
     }
 }
