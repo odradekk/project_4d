@@ -130,6 +130,18 @@ public class ConsumeStructureTests
     }
 
     [Fact]
+    public void AnElementOrSeamNamedTwiceInOneBiteIsReportedOnce()
+    {
+        var world = Region(Pillar("a", -2));
+
+        Assert.IsType<UpdateResult.Updated>(Consume(world, ["a", "a"], ["s1", "s1"]));
+
+        Assert.Equal(
+            [new StructureConsumed(GrazerId, new("a")), new SeamSevered(new("s1"))],
+            world.StepEvents(.1).Select(occurrence => occurrence.Event));
+    }
+
+    [Fact]
     public void ABiteWithAnyBadReferenceChangesNothing()
     {
         var world = Region(Pillar("a", -2), Ball(x: 2), WallFrom(5, "I"), Rod(), Actor(x: .1));

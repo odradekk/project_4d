@@ -78,17 +78,23 @@ public class GrazerWorldTests
     [Fact]
     public void AGrazerCanBeAddedAndRemovedWhileTheWorldRuns()
     {
-        var world = Scene();
+        var world = Scene(Rod(), Actor(x: .1));
+        var stand = new StandUp(new("actor"), RodId, new("II"));
+        var planned = world.AllowedPlan(stand);
 
         var added = Assert.IsType<AddEntityResult.Added>(world.AddEntity(Grazer(At(0, 1, 0, w: .18), Lump(default))));
         Assert.Null(added.Entity.Section);
         Assert.NotNull(world.SliceOf(GrazerId, I));
+        // Unlike a frame, adding a grazer is a change of the world.
+        Assert.Equal(FailureCode.StalePlan, Assert.IsType<StartRotationResult.Rejected>(world.StartRotation(planned)).Failure.Code);
         Assert.Equal(new EntityAdded(GrazerId), Assert.Single(world.StepEvents(.1)).Event);
 
         var duplicate = Assert.IsType<AddEntityResult.Rejected>(world.AddEntity(Grazer(At(0, 1, 0), Lump(default))));
         Assert.Equal(FailureCode.DuplicateId, duplicate.Failure.Code);
 
+        planned = world.AllowedPlan(stand);
         Assert.IsType<RemoveEntityResult.Removed>(world.RemoveEntity(GrazerId));
+        Assert.Equal(FailureCode.StalePlan, Assert.IsType<StartRotationResult.Rejected>(world.StartRotation(planned)).Failure.Code);
         Assert.Null(world.SliceOf(GrazerId, I));
         Assert.IsType<EntityReadResult.Missing>(world.ReadEntity(GrazerId));
         Assert.Equal(new EntityRemoved(GrazerId), Assert.Single(world.StepEvents(.1)).Event);
