@@ -15,7 +15,6 @@ public sealed partial class World
         var edges = new List<SupportEdge>();
         var queue = new PriorityQueue<EntityId, double>();
 
-        // Caps the fall of an entity unless a shorter fall is already known.
         void LimitDrop(EntityId id, double drop)
         {
             if (drop >= drops[id]) return;
@@ -23,7 +22,6 @@ public sealed partial class World
             queue.Enqueue(id, drop);
         }
 
-        // Passes each known fall on to the entities resting on it, shortest falls first.
         void Propagate()
         {
             while (queue.TryDequeue(out var support, out var drop))

@@ -104,7 +104,6 @@ public sealed partial class World
         return [];
     }
 
-    // Runs one expected step and returns the failure it produced, if any.
     private static Failure? RunStep(World world, ExpectedStep step) => step switch
     {
         ExpectedRotation rotation => RunRotation(world, rotation),

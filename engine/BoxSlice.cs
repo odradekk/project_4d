@@ -70,7 +70,6 @@ internal static class BoxSlice
         return points;
     }
 
-    // Where the edge along `edge` from `start` to `end` crosses the section.
     private static Point Crossing(Point start, Point end, int edge, double w)
     {
         var t = (w - start.World[3]) / (end.World[3] - start.World[3]);
@@ -80,7 +79,6 @@ internal static class BoxSlice
         return new(local, world);
     }
 
-    // Whether two faces produced the same polygon.
     private static bool SameCorners(List<Point> first, List<Point> second) =>
         first.Count == second.Count && second.All(point => first.Any(other => other.Local.SequenceEqual(point.Local)));
 
@@ -112,7 +110,6 @@ internal static class BoxSlice
         }
     }
 
-    // Texture coordinates from a point's position in the box, through the face's UV definition.
     private static double[] Uv(double[] local, int axis, bool positive, FaceUv? face)
     {
         var (x, y) = axis switch

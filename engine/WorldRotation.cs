@@ -34,7 +34,6 @@ public sealed partial class World
         rotation.X.Z * point.X + rotation.Y.Z * point.Y + rotation.Z.Z * point.Z,
         rotation.X.W * point.X + rotation.Y.W * point.Y + rotation.Z.W * point.Z);
 
-    // The world direction of a local axis.
     internal static Vec4 LocalAxis(Rotation4 rotation, Axis3 axis) => axis switch
     {
         Axis3.X => rotation.X,

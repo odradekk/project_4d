@@ -58,13 +58,11 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     internal static double[] Cross3(double[] a, double[] b) =>
         [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 
-    // Half the width of the box projected onto a unit axis.
     internal double Radius(double[] axis) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Dot(Axes[i], axis)));
 
-    // Half the width of the box along one coordinate axis.
+    // Radius along a coordinate axis, without building the axis vector.
     internal double Extent(int coordinate) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Axes[i][coordinate]));
 
-    // The W range the box covers.
     internal Interval WSpan
     {
         get
@@ -216,7 +214,6 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
         return true;
     }
 
-    // The point of the box nearest to `point`.
     internal double[] Closest(double[] point)
     {
         var delta = Sub(point, Center);

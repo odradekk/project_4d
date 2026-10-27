@@ -61,7 +61,6 @@ public sealed partial class World
             : new LoadResult.Loaded(new World(description));
     }
 
-    // Records a building element or fixed object, with its parts copied, and returns its geometry.
     private StaticEntity AddStatic(EntityDefinition definition)
     {
         switch (definition)
@@ -92,7 +91,6 @@ public sealed partial class World
     internal static Failure Fail(FailureCode code, string detail, EntityId? entity = null, IReadOnlyList<Contact>? contacts = null) =>
         new(code, detail, entity, null, contacts ?? Array.Empty<Contact>());
 
-    // The failure code for an ID that exists but has the wrong kind, or does not exist.
     private FailureCode KindOrUnknown(EntityId id) =>
         ReadEntity(id) is EntityReadResult.Found ? FailureCode.WrongEntityKind : FailureCode.UnknownId;
 
@@ -110,13 +108,13 @@ public sealed partial class World
     public SectionGeometryResult GetSectionGeometry(SectionId section)
     {
         var found = sections.FirstOrDefault(candidate => candidate.Id == section);
-        return found is null ? Reject(FailureCode.UnknownId, "Unknown section.") : GetGeometryAtW(found.W);
+        return found is null ? RejectedGeometry(FailureCode.UnknownId, "Unknown section.") : GetGeometryAtW(found.W);
     }
 
     /// <summary>Returns an independent snapshot at any finite world W, or Rejected(InvalidInput) for nonfinite W.</summary>
     public SectionGeometryResult GetGeometryAtW(double w)
     {
-        if (!double.IsFinite(w)) return Reject(FailureCode.InvalidInput, "W must be finite.");
+        if (!double.IsFinite(w)) return RejectedGeometry(FailureCode.InvalidInput, "W must be finite.");
         var slices = entities
             .Where(entity => entity.Segments.Any(segment => w >= segment.Min && w <= segment.Max))
             .Select(entity => entity.Slice())
@@ -126,7 +124,7 @@ public sealed partial class World
         return new SectionGeometryResult.Geometry(w, Array.AsReadOnly(slices));
     }
 
-    private static SectionGeometryResult Reject(FailureCode code, string detail) =>
+    private static SectionGeometryResult RejectedGeometry(FailureCode code, string detail) =>
         new SectionGeometryResult.Rejected(Fail(code, detail));
 
     /// <summary>Returns Euclidean distance in four dimensions; nonfinite inputs throw ArgumentOutOfRangeException.</summary>
@@ -141,7 +139,6 @@ public sealed partial class World
         return largest * Math.Sqrt(differences.Sum(value => (value / largest) * (value / largest)));
     }
 
-    // The parts of a W range left after removing its gaps.
     internal static Interval[] RemainingSegments(Interval range, IReadOnlyList<Interval> gaps)
     {
         var segments = new List<Interval>();

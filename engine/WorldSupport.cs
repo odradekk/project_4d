@@ -106,7 +106,7 @@ public sealed partial class World
         foreach (var active in rotating) AdvanceRotation(active, target);
 
         var resting = RestingHeights();
-        foreach (var id in dynamicEntities.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToArray())
+        foreach (var id in dynamicEntities.Keys.OrderBy(key => key.Value, StringComparer.Ordinal).ToArray())
         {
             if (rotations.ContainsKey(id)) continue;
             var item = dynamicEntities[id];
@@ -138,7 +138,6 @@ public sealed partial class World
         }
     }
 
-    // Whether the fall from the entity's pose down to finalY, sampled at the sampling distance, enters a reserved sweep.
     private bool FallCrossesReservation(EntityId id, double finalY)
     {
         var item = dynamicEntities[id];

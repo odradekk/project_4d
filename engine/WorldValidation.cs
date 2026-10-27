@@ -275,7 +275,6 @@ internal sealed partial class WorldValidation
         && Math.Abs(rotation.W.Y) <= World.RoundingMargin
         && Math.Abs(rotation.W.Z) <= World.RoundingMargin;
 
-    // Whether a pose has finite components and a right-handed orthonormal rotation.
     internal static bool IsValidPose(Pose4 pose) => IsFinite(pose) && Rotation(Box4.AxesOf(pose.Rotation));
 
     // Whether the axes are orthonormal and form a right-handed basis.
