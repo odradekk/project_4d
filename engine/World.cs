@@ -22,6 +22,9 @@ public sealed partial class World
     // Smallest distance from a part end to a section: 0.02 m, less the rounding margin.
     internal const double SectionClearance = .02 - RoundingMargin;
 
+    // The angle that stands a lying object up or lays it down.
+    internal const double QuarterTurn = Math.PI / 2;
+
     private readonly SectionDefinition[] sections;
     private readonly BuildingDefinition[] buildings;
     private readonly StaticEntity[] entities;
