@@ -12,6 +12,8 @@ public static class DebugScenes
             "seam-demo" => "res://tests/seam_demo.tscn",
             "item-test" => "res://regions/item_test.tscn",
             "grazer-demo" => "res://tests/grazer_demo.tscn",
+            "home-morning" => "res://flow/home_morning.tscn",
+            "home-evening" => "res://flow/home_evening_debug.tscn",
             _ => null
         };
 #else
