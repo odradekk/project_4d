@@ -182,9 +182,10 @@ internal sealed class SceneReader(Region3D region)
         return new(result);
     }
 
-    private Pose4 Pose(Node3D node, double w)
+    private Pose4 Pose(Node3D node, double w) => PoseOf(RelativeTransform(node, region), w);
+
+    internal static Pose4 PoseOf(Transform3D transform, double w)
     {
-        var transform = RelativeTransform(node, region);
         var r = Rotation(transform.Basis);
         return new(new(Typed(transform.Origin.X), Typed(transform.Origin.Y), Typed(transform.Origin.Z), w),
             new(new(r.X.X, r.X.Y, r.X.Z, 0), new(r.Y.X, r.Y.Y, r.Y.Z, 0), new(r.Z.X, r.Z.Y, r.Z.Z, 0), new(0, 0, 0, 1)));

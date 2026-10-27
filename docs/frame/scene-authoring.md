@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝和玩家出生点，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝，以及玩家和角色的出生点，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。
 
 ## 节点与导出属性
 
@@ -41,12 +41,13 @@ Room (Node3D, Region3D)
 | HiddenRingItem3D（Node3D） | `string EntityId/BuildingId`、`double W`、`double[] Rotation4`、`TurnableResource Interaction`、`RingResource Ring`；BoxPart3D 子节点给 Body |
 | LoftDevice3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`A<LoftSegmentResource> Segments`、`DeviceMotionResource Motion` |
 | Grazer3D（Node3D） | `string EntityId`、`double W`、`double[] Rotation4`、`MetaballShapeResource Shape` |
-| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`；Section 来自祖先 |
+| CreatureSpawn3D（Node3D） | `string EntityId`、`double[] Rotation4`（尚未导出）、`double PassageRadius`、`double PassageHeight`、`bool CanUseSeamsWithoutPrism`、`PackedScene CharacterScene`、`string DisplayName`（台词前的名字，空则用角色场景自己的）；Section 来自祖先 |
+| Character3D（CharacterBody3D） | 角色场景的根节点，游戏层节点，格式见[角色搭法](character-authoring.md) |
 | Seam3D（Node3D） | `string SeamId`、`Vector3 HorizontalNormal`、`string[] Sections`、`bool Mirrored/Open/Severed`、`double VisualHeight`；Position 来自 Transform.Origin，原点放在地面；`Open` 默认 true，`VisualHeight` 默认 3 米，是镜片里细光的高度；Sections 按 W 从浅到深列出 |
 | BoxPart3D（MeshInstance3D） | `string PartId`、`A<FaceUvResource> FaceUvs`；Mesh 必须为 BoxMesh，Size 与本地 Transform 给 HalfSize/Center/Rotation |
 | ExpectedOperationNode（Node） | `ExpectedOperationResource Operation` |
 
-视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。出生点创建 Creature3Definition：位置取出生点的 XYZ，W 取所属 Section，四维旋转为单位旋转；同时用出生点的 XYZ 变换创建唯一的 FirstPersonPlayer。适配层每个物理帧用 SynchronizeActor 把角色的位置和朝向交给引擎，不另存 W 或手性。普通角色场景可以是 CharacterBody3D + CollisionShape3D + Camera3D，NPC/猫不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
+视觉高度、角色 PackedScene、棱镜开关属于宿主，不进入四维引擎。每个出生点创建一个 Creature3Definition：位置取出生点的 XYZ，W 取所属 Section，四维旋转为单位旋转。出生点的 CharacterScene 决定它是谁：根节点是 FirstPersonPlayer 的是玩家，一个区域恰有一个；根节点是 Character3D 的是猫、老师、同桌等角色，数量不限。每个角色放在所属 Section 的物理世界里，位置和朝向取自出生点的 XYZ 变换，穿缝后由适配层移到目标 Section 的物理世界。适配层每个物理帧用 SynchronizeActor 把角色的位置和朝向交给引擎，不另存 W 或手性。玩家场景是 CharacterBody3D + CollisionShape3D + Camera3D，猫和其他角色不需要 Camera3D。角色普通 yaw 由出生点 XYZ 朝向取得，四维旋转另存。
 
 | Resource | 全部导出字段 |
 |---|---|
@@ -70,7 +71,7 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
-放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)。
+放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)。
 
 ## 独立前置布置与预期操作
 

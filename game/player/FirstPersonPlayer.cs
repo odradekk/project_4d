@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Game.Adapter;
@@ -13,6 +14,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private const float RunSpeed = 3.8f;
     private const float LookSensitivity = 0.0025f;
     private const float PitchLimit = 1.5f;
+    private const string ArmsFull = "手里抱着猫呢。";
     private float pitch;
     private bool pointerCaptured;
     private PrismView? prism;
@@ -22,6 +24,13 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private Interactable3D? target;
     private string? aimedEntity;
     internal bool PointerCaptured => pointerCaptured;
+    internal bool PrismRaised => prism?.Raised ?? false;
+
+    /// <summary>What E does while both arms hold something, such as a cat; null when they are free.</summary>
+    internal Action? PutDown { get; set; }
+
+    /// <summary>Whether the hand holds an object.</summary>
+    internal bool HoldsItem => actions is { Holding: true };
     public GameHud Hud { get; private set; } = null!;
     public Camera3D Camera => GetNode<Camera3D>("Eyes");
 
@@ -68,7 +77,21 @@ public partial class FirstPersonPlayer : CharacterBody3D
                 GetViewport().SetInputAsHandled();
                 return;
             }
-            if (key.Keycode == Key.E && pointerCaptured && actions is not null && (actions.Holding || aimedEntity is not null))
+            // E uses what the crosshair is on, else lets go of what is in the hand, else puts down what is in the arms,
+            // else takes what the crosshair is on; the keys shown follow the same order.
+            if (key.Keycode == Key.E && pointerCaptured && actions is { Holding: true })
+            {
+                SayRefusal(actions.Use());
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && PutDown is { } putDown)
+            {
+                putDown();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && actions is not null && aimedEntity is not null)
             {
                 SayRefusal(actions.Use());
                 GetViewport().SetInputAsHandled();
@@ -77,7 +100,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
             var slot = key.Keycode - Key.Key1;
             if (slot is >= 0 and < Backpack.Slots && pointerCaptured && travel is not null)
             {
-                SayTakingOut(travel.TakeOut((int)slot));
+                if (PutDown is not null) Say(ArmsFull);
+                else SayTakingOut(travel.TakeOut((int)slot));
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -120,7 +144,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         if (pointerCaptured && !Hud.NotebookOpen)
         {
             var from = Camera.GlobalPosition;
-            var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f);
+            var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f, ~PhysicsLayers.Characters);
             query.Exclude = [GetRid()];
             var hit = GetWorld3D().DirectSpaceState.IntersectRay(query);
             if (hit.Count > 0)
@@ -158,10 +182,12 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private List<string> HandKeys()
     {
         var keys = new List<string>();
-        if (actions is null || (!actions.Holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return keys;
-        var upright = actions.Holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
-        if (actions.Holding) keys.Add(upright ? "E  松手" : "E  放下");
-        else keys.Add(upright ? "E  抓住" : "E  拿起");
+        var holding = actions is { Holding: true };
+        if (PutDown is not null && !holding) keys.Add("E  放下");
+        if (actions is null || (!holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return keys;
+        var upright = holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
+        if (holding) keys.Add(upright ? "E  松手" : "E  放下");
+        else if (PutDown is null) keys.Add(upright ? "E  抓住" : "E  拿起");
         if (prism is { Enabled: true })
         {
             keys.Add(upright ? "F  放倒" : "F  竖起");
