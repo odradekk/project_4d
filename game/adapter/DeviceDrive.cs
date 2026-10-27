@@ -17,7 +17,7 @@ namespace Game.Adapter;
 /// <param name="sectionOf">The section that shows what a contact is against, null when none does.</param>
 /// <param name="currentSection">The section the player is in.</param>
 /// <param name="say">Called with what the player says when a device is stopped by something in its way.</param>
-internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scenes, DynamicSlices slices, LensOverlay overlay,
+internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scenes, LensOverlay overlay,
     Region3D region, Func<IReadOnlyList<Contact>, string?> sectionOf, Func<string> currentSection, Action<string> say)
 {
     // A device takes this long to travel the whole way between its limits.
@@ -94,7 +94,7 @@ internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scene
     {
         foreach (var scene in scenes)
         {
-            if (scene.Id.Value == currentSection() || slices.BoundsOf(scene.Id, device) is not { } box) continue;
+            if (scene.Id.Value == currentSection() || world.GetSliceBounds(device, scene.Id) is not SliceBoundsResult.Bounds box) continue;
             if (!thuds.TryGetValue((device, scene.Id.Value), out var thud))
             {
                 thud = new SectionSound { Stream = GD.Load<AudioStream>("res://audio/thud.wav") };
@@ -102,7 +102,7 @@ internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scene
                 thud.Configure(region, scene.Id.Value);
                 thuds.Add((device, scene.Id.Value), thud);
             }
-            thud.GlobalPosition = box.GetCenter();
+            thud.GlobalPosition = new((float)(box.Min.X + box.Max.X) / 2, (float)(box.Min.Y + box.Max.Y) / 2, (float)(box.Min.Z + box.Max.Z) / 2);
             thud.Play();
         }
     }

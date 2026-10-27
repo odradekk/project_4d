@@ -27,10 +27,6 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
     /// <summary>Counts the refreshes that found a movable entity changed, so that a reader can tell when the world has moved.</summary>
     internal int Version { get; private set; }
 
-    /// <summary>The box around an entity's slice in a section as it is built now; null when the entity has no slice there.</summary>
-    internal Aabb? BoundsOf(SectionId section, EntityId entity) =>
-        nodes.TryGetValue((section, entity), out var node) ? node.GetNode<MeshInstance3D>("Surface").Mesh.GetAabb() : null;
-
     /// <summary>
     /// One convex shape for each part of an entity's slice in a section, where the slice is now; none when it has no slice
     /// there. A shape per part keeps the gap in a bent object, which one hull of the whole would fill.

@@ -69,6 +69,24 @@ public partial class DeviceChecks : Node
         play.LookAt(new(-1.9f, .02f, -3f), new(-3f, 2.2f, -3f));
         await play.Frames(2);
         Check(player.Hud.HintText.Contains("拉动"), $"aiming at a device must offer pulling it; the hint is '{player.Hud.HintText}'");
+
+        // E lets go of what is in the hand first, and puts down what is in the arms before that; the hint says the same.
+        Check(play.Region.World!.PlaceEntity(new("ball"), new(new(-1.5, .25, -2.5, .21), SceneReader.Identity)) is FourD.UpdateResult.Updated, "the ball must be put near her");
+        Check(play.Actions.Hold(new("ball")) is null, "the ball must come into the hand");
+        await play.Frames(3);
+        Check(player.Hud.HintText.Contains("放下") && !player.Hud.HintText.Contains("拉动"), $"with the hand full the hint must not offer pulling; it is '{player.Hud.HintText}'");
+        Press(Key.E);
+        await play.Frames(5);
+        Check(play.Actions.Held is null && play.State("cabinet").DevicePosition == 0, "E with the hand full must let go and not pull");
+        var puttingDown = false;
+        player.PutDown = () => puttingDown = true;
+        await play.Frames(2);
+        Check(player.Hud.HintText.Contains("放下") && !player.Hud.HintText.Contains("拉动"), $"with the arms full the hint must not offer pulling; it is '{player.Hud.HintText}'");
+        Press(Key.E);
+        await play.Frames(5);
+        Check(puttingDown && play.State("cabinet").DevicePosition == 0, "E with the arms full must put down and not pull");
+        player.PutDown = null;
+        await play.Frames(2);
         Press(Key.E);
         await play.Frames(30);
         var halfway = (double)play.State("cabinet").DevicePosition!;

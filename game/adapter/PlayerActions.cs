@@ -78,8 +78,8 @@ public sealed partial class PlayerActions : Node
         this.scenes = scenes;
         this.slices = slices;
         this.overlay = overlay;
-        devices = new DeviceDrive(world, scenes, slices, overlay, region, SectionOf, () => CurrentSection, line => DeviceBlocked?.Invoke(line));
-        shadows = new BallShadows(world, scenes, slices);
+        devices = new DeviceDrive(world, scenes, overlay, region, SectionOf, () => CurrentSection, line => DeviceBlocked?.Invoke(line));
+        shadows = new BallShadows(world, scenes, slices.Entities);
         scratch = new AudioStreamPlayer { Name = "Scratch", Stream = GD.Load<AudioStream>("res://audio/scratch.wav") };
         AddChild(scratch);
         // A body that is never seen: the shape of the carried object is put on it, and it is moved to test the way.

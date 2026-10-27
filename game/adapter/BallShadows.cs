@@ -22,22 +22,24 @@ internal sealed class BallShadows
     private const float DotSize = .16f;
     private const double Interval = .1;
 
+    // What the last look found of a ball in a section: where its slice was and how wide, where the ball was, and whether the
+    // section has something under it.
+    private sealed record Look(float X, float Z, float Width, Vec4 Ball, bool Floor);
+
     private readonly World world;
     private readonly IReadOnlyList<SectionScene> scenes;
-    private readonly DynamicSlices slices;
     private readonly IReadOnlyList<EntityId> balls;
     private readonly Dictionary<(SectionId, EntityId), MeshInstance3D> patches = [];
-    private readonly Dictionary<(SectionId, EntityId), bool> floors = [];
+    private readonly Dictionary<(SectionId, EntityId), Look> looks = [];
     private int shownVersion = -1;
-    private bool floorStale;
+    private bool lookStale;
     private double wait;
 
-    internal BallShadows(World world, IReadOnlyList<SectionScene> scenes, DynamicSlices slices)
+    internal BallShadows(World world, IReadOnlyList<SectionScene> scenes, IEnumerable<EntityId> movable)
     {
         this.world = world;
         this.scenes = scenes;
-        this.slices = slices;
-        balls = slices.Entities.Where(id => ((EntityReadResult.Found)world.ReadEntity(id)).Entity.Definition is ItemDefinition { Shape: Sphere4 }).ToArray();
+        balls = movable.Where(id => State(id).Definition is ItemDefinition { Shape: Sphere4 }).ToArray();
         var mesh = DotPatch();
         foreach (var scene in scenes)
         {
@@ -55,20 +57,20 @@ internal sealed class BallShadows
 
     /// <summary>
     /// Moves the patches under their balls on every call after the world has changed, given its version from the dynamic slices.
-    /// Whether a section has something under a ball is asked of the engine at most every Interval seconds, since each question
-    /// takes some milliseconds.
+    /// Where a ball's slice is and whether a section has something under it are asked of the engine at most every Interval
+    /// seconds, since each question takes some milliseconds; in between, a patch moves as far as its ball has.
     /// </summary>
     internal void Refresh(int version, double delta)
     {
         wait = Math.Max(0, wait - delta);
         var moved = version != shownVersion;
         shownVersion = version;
-        floorStale |= moved;
-        var look = floorStale && wait <= 0;
+        lookStale |= moved;
+        var look = lookStale && wait <= 0;
         if (!moved && !look) return;
         if (look)
         {
-            floorStale = false;
+            lookStale = false;
             wait = Interval;
         }
         foreach (var ball in balls)
@@ -83,23 +85,33 @@ internal sealed class BallShadows
     private void Place(MeshInstance3D patch, EntityId ball, SectionScene scene, SupportResult.Supported? rest, bool look)
     {
         var key = (scene.Id, ball);
-        if (rest is null || slices.BoundsOf(scene.Id, ball) is not { } box)
+        var position = State(ball).Pose.Position;
+        if (look && rest is not null) looks[key] = LookAt(ball, scene, rest, position);
+        else if (look) looks.Remove(key);
+        if (rest is null || !looks.TryGetValue(key, out var seen) || !seen.Floor)
         {
             patch.Visible = false;
-            floors[key] = false;
             return;
         }
         var surface = rest.Contacts.Max(contact => contact.Point.Y);
-        var middle = box.GetCenter();
-        if (look)
-        {
-            var below = new OccupancyBox(new(new(middle.X, surface - Probe, middle.Z, scene.W), SceneReader.Identity), new(Probe, Probe, Probe, Layer));
-            floors[key] = world.QueryOccupancy(below, [ball]) is OccupancyResult.Occupancy { Hits.Count: > 0 };
-        }
-        patch.Position = new(middle.X, (float)surface + Lift, middle.Z);
-        patch.Scale = new(box.Size.X / 2, 1, box.Size.X / 2);
-        patch.Visible = floors.GetValueOrDefault(key);
+        patch.Position = new(seen.X + (float)(position.X - seen.Ball.X), (float)surface + Lift, seen.Z + (float)(position.Z - seen.Ball.Z));
+        patch.Scale = new(seen.Width / 2, 1, seen.Width / 2);
+        patch.Visible = true;
     }
+
+    private Look LookAt(EntityId ball, SectionScene scene, SupportResult.Supported rest, Vec4 position)
+    {
+        if (world.GetSliceBounds(ball, scene.Id) is not SliceBoundsResult.Bounds box) return new(0, 0, 0, position, false);
+        var x = (float)(box.Min.X + box.Max.X) / 2;
+        var z = (float)(box.Min.Z + box.Max.Z) / 2;
+        var surface = rest.Contacts.Max(contact => contact.Point.Y);
+        var below = new OccupancyBox(new(new(x, surface - Probe, z, scene.W), SceneReader.Identity), new(Probe, Probe, Probe, Layer));
+        var floor = world.QueryOccupancy(below, [ball]) is OccupancyResult.Occupancy { Hits.Count: > 0 };
+        return new(x, z, (float)(box.Max.X - box.Min.X), position, floor);
+    }
+
+    private EntityState State(EntityId id) => ((EntityReadResult.Found)world.ReadEntity(id)).Entity;
+
 
     // Dots on rings of radius 0, .5 and 1 around the center, as flat squares facing up.
     private static ArrayMesh DotPatch()
