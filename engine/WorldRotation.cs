@@ -34,6 +34,12 @@ public sealed partial class World
         rotation.X.Z * point.X + rotation.Y.Z * point.Y + rotation.Z.Z * point.Z,
         rotation.X.W * point.X + rotation.Y.W * point.Y + rotation.Z.W * point.Z);
 
+    internal static Vec4 Transform(Rotation4 rotation, Vec4 point) => new(
+        rotation.X.X * point.X + rotation.Y.X * point.Y + rotation.Z.X * point.Z + rotation.W.X * point.W,
+        rotation.X.Y * point.X + rotation.Y.Y * point.Y + rotation.Z.Y * point.Z + rotation.W.Y * point.W,
+        rotation.X.Z * point.X + rotation.Y.Z * point.Y + rotation.Z.Z * point.Z + rotation.W.Z * point.W,
+        rotation.X.W * point.X + rotation.Y.W * point.Y + rotation.Z.W * point.Z + rotation.W.W * point.W);
+
     internal static Vec4 LocalAxis(Rotation4 rotation, Axis3 axis) => axis switch
     {
         Axis3.X => rotation.X,
@@ -53,32 +59,25 @@ public sealed partial class World
     private static Pose4 At(RotationPlan plan, double progress) => RotatedPose(plan.Start, plan.Pivot, plan.Axis, plan.Angle * progress);
 
     // Samples so that no point of the item moves more than the sampling distance between poses.
-    internal static int SamplingSteps(TurnableDefinition item, Pose4 pose, Vec4 pivot, Vec4 axis, double angle)
+    internal static int SamplingSteps(IEnumerable<Solid4> solids, Vec4 pivot, Vec4 axis, double angle)
     {
-        var radius = 0d;
-        foreach (var box in Box4.From(item, pose))
-            for (var mask = 0; mask < 16; mask++)
-            {
-                var offset = Box4.Sub(box.Corner(mask), Box4.ToArray(pivot));
-                var along = Box4.Dot(offset, Box4.ToArray(axis));
-                radius = Math.Max(radius, Math.Sqrt(along * along + offset[3] * offset[3]));
-            }
+        var radius = solids.Max(solid => solid.Reach(Box4.ToArray(pivot), Box4.ToArray(axis)));
         return Math.Max(1, (int)Math.Ceiling(radius * Math.Abs(angle) / SamplingDistance));
     }
 
     // The boxes swept by every other rotation in progress, at each of its sampled poses.
-    private IEnumerable<Box4> ReservedBoxes(EntityId except) =>
+    private IEnumerable<Solid4> ReservedSolids(EntityId except) =>
         rotations.Values.Where(active => active.Plan.Entity != except).SelectMany(active =>
         {
             var plan = active.Plan;
             var definition = dynamicEntities[plan.Entity].Definition;
-            return plan.Samples.SelectMany(progress => Box4.From(definition, At(plan, progress)));
+            return plan.Samples.SelectMany(progress => DynamicShapes.Solids(definition, At(plan, progress)));
         });
 
-    private bool IntersectsReservation(IEnumerable<Box4> boxes, EntityId except)
+    private bool IntersectsReservation(IEnumerable<Solid4> solids, EntityId except)
     {
-        var reserved = ReservedBoxes(except).ToArray();
-        return boxes.Any(box => reserved.Any(other => box.BoundsMayOverlap(other) && Box4.Overlaps(box, other)));
+        var reserved = ReservedSolids(except).ToArray();
+        return solids.Any(solid => reserved.Any(other => solid.BoundsMayOverlap(other) && Collision.Overlaps(solid, other)));
     }
 
     // Why a plan cannot be used: it is missing, from another world, or out of date. Null when it can.

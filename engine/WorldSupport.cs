@@ -11,15 +11,15 @@ public sealed partial class World
 
     private void Enqueue(SpaceEvent value, double at) => events.Add(new(at, ++sequence, value));
 
-    private IEnumerable<Box4> Boxes()
+    private IEnumerable<Solid4> Solids()
     {
         foreach (var entity in entities)
             foreach (var part in entity.Parts)
                 foreach (var segment in entity.Segments)
                     yield return Box4.From(entity, part, segment);
         foreach (var item in dynamicEntities.Values)
-            foreach (var box in Box4.From(item.Definition, item.Pose))
-                yield return box;
+            foreach (var solid in DynamicShapes.Solids(item.Definition, item.Pose))
+                yield return solid;
     }
 
     /// <summary>Finds the highest actual contact while translating the entity downward.</summary>
@@ -44,15 +44,38 @@ public sealed partial class World
 
     private IEnumerable<SupportCandidate> SupportCandidates(EntityId entity)
     {
-        var boxes = Boxes().ToArray();
-        foreach (var moving in boxes.Where(box => box.Entity == entity))
-            foreach (var support in boxes.Where(box => box.Entity != entity))
+        var solids = Solids().ToArray();
+        foreach (var moving in solids.Where(solid => solid.Entity == entity))
+            foreach (var support in solids.Where(solid => solid.Entity != entity))
                 if (Landing(moving, support) is { } candidate)
                     yield return candidate;
     }
 
+    private static SupportCandidate? Landing(Solid4 moving, Solid4 support) =>
+        moving is Box4 box && support is Box4 other ? BoxLanding(box, other) : RoundLanding(moving, support);
+
+    // Where `moving`, translated straight down, comes to rest on `support` when one of them is round; null when it
+    // never lands. It lands where the solids first touch, or stays where it is when it already touches.
+    private static SupportCandidate? RoundLanding(Solid4 moving, Solid4 support)
+    {
+        // Falling straight down never meets a solid that lies to the side in X, Z or W.
+        if (new[] { 0, 2, 3 }.Any(i => Math.Abs(moving.Center[i] - support.Center[i]) > moving.Extent(i) + support.Extent(i)))
+            return null;
+        var drop = 0d;
+        var embedded = Collision.Depth(moving, support);
+        if (embedded > ContactTolerance + RoundingMargin) return null;
+        if (embedded < -RoundingMargin)
+        {
+            var reach = moving.Center[1] - moving.Extent(1) - (support.Center[1] - support.Extent(1));
+            if (Collision.StopBefore(moving, support, [0, -1, 0, 0], 0, 0, reach) is not { } fall) return null;
+            drop = fall;
+        }
+        if (Collision.ContactOf(moving.Moved([0, -drop, 0, 0]), support) is not { } contact || contact.Normal.Y <= RoundingMargin) return null;
+        return new(drop, new(contact.Obstacle, contact.ObstaclePart, contact.Point, contact.Normal));
+    }
+
     // Where `moving`, translated straight down, comes to rest on `support`; null when it never lands.
-    private static SupportCandidate? Landing(Box4 moving, Box4 support)
+    private static SupportCandidate? BoxLanding(Box4 moving, Box4 support)
     {
         var delta = Box4.Sub(moving.Center, support.Center);
         var entry = double.NegativeInfinity; // fall distance at which the boxes start to overlap
@@ -148,7 +171,7 @@ public sealed partial class World
         return Enumerable.Range(1, steps).Any(step =>
         {
             var falling = item.Pose with { Position = start with { Y = start.Y - distance * step / steps } };
-            return IntersectsReservation(Box4.From(item.Definition, falling), id);
+            return IntersectsReservation(DynamicShapes.Solids(item.Definition, falling), id);
         });
     }
 }

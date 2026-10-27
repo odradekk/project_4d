@@ -68,7 +68,7 @@ public sealed partial class World
             var original = description.Entities.FirstOrDefault(entity => entity.Id == replacement.Id);
             if (original is null)
                 Report(LoadErrorCode.MissingReference, "Unknown entity override.", entity: replacement.Id);
-            else if (original is not TurnableDefinition and not Creature3Definition || original.GetType() != replacement.GetType())
+            else if (original is not TurnableDefinition and not ItemDefinition and not Creature3Definition || original.GetType() != replacement.GetType())
                 Report(LoadErrorCode.UnsupportedDefinition, "Override must match a supported dynamic entity kind.", entity: replacement.Id);
         }
         for (var i = 0; i < operation.Steps.Count; i++)

@@ -33,7 +33,7 @@ public sealed partial class World
 
         foreach (var id in ids)
         {
-            if (held.Contains(id) || rotations.ContainsKey(id))
+            if (held.Contains(id) || rotations.ContainsKey(id) || dynamicEntities[id].Holder is not null)
             {
                 LimitDrop(id, 0);
                 continue;

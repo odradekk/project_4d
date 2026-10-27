@@ -20,7 +20,7 @@ public sealed partial class World
         if (!dynamicEntities.TryGetValue(request.Entity, out var item))
             return Reject(KindOrUnknown(request.Entity), "Entity is unknown or not turnable.", request.Entity);
         if (rotations.ContainsKey(request.Entity)) return Reject(FailureCode.Busy, "Entity is rotating.", request.Entity);
-        if (!item.Definition.Interaction.Holdable) return Reject(FailureCode.NotHoldable, "Entity is not holdable.", request.Entity);
+        if (!DynamicShapes.Interaction(item.Definition).Holdable) return Reject(FailureCode.NotHoldable, "Entity is not holdable.", request.Entity);
         var section = sections.Single(candidate => candidate.Id == actor.Definition.Section);
         if (Slice(item, section.W) is null) return Reject(FailureCode.NoSlice, "Entity has no slice in actor section.", request.Entity);
 
@@ -33,21 +33,29 @@ public sealed partial class World
         };
         if (motion is null) return new RotationPlanResult.Rejected(failure!);
 
-        var steps = SamplingSteps(item.Definition, item.Pose, motion.Hinge, motion.Axis, motion.Angle);
+        var steps = SamplingSteps(DynamicShapes.Solids(item.Definition, item.Pose), motion.Hinge, motion.Axis, motion.Angle);
         var samples = Enumerable.Range(0, steps + 1).Select(i => (double)i / steps).ToArray();
-        var plan = TraceRotation(request, item, motion, samples);
-        if (request is Flip && plan.Blocked >= 0)
+        // The way must stay inside the building, whose W range is the only space the world has around the item. A flip
+        // can turn either way, so it takes the first way that is clear and inside the building, then the first inside it.
+        var candidates = new List<(RotationPlan Plan, bool InBuilding)>();
+        void Consider(Motion option)
         {
-            var opposite = TraceRotation(request, item, motion with { Angle = -motion.Angle }, samples);
-            if (opposite.Blocked < 0) plan = opposite;
+            var traced = TraceRotation(request, item, option, samples);
+            var swept = traced.Samples.SelectMany(progress => DynamicShapes.Solids(item.Definition, At(traced, progress)));
+            candidates.Add((traced, !LeavesBuilding(item.Definition, swept)));
         }
+        Consider(motion);
+        if (request is Flip && !(candidates[0].InBuilding && candidates[0].Plan.Blocked < 0))
+            Consider(motion with { Angle = -motion.Angle });
+        var chosen = candidates.FirstOrDefault(candidate => candidate.InBuilding && candidate.Plan.Blocked < 0);
+        if (chosen.Plan is null) chosen = candidates.FirstOrDefault(candidate => candidate.InBuilding);
+        if (chosen.Plan is not { } plan) return Reject(FailureCode.OutOfRange, "Rotation leaves the building.", request.Entity);
         return plan.Blocked < 0
             ? new RotationPlanResult.Allowed(plan)
             : new RotationPlanResult.Blocked(plan, Fail(FailureCode.RotationBlocked, "Rotation is obstructed.", request.Entity, plan.Contacts));
     }
 
-    private static Vec4 HingePosition(Dynamic item) =>
-        Add(item.Pose.Position, Transform(item.Pose.Rotation, item.Definition.Interaction.Hinge));
+    private static Vec4 HingePosition(Dynamic item) => DynamicShapes.Hinge(item.Definition, item.Pose);
 
     private (Motion?, Failure?) PlanStandUp(StandUp request, Dynamic item, SectionDefinition section)
     {
@@ -56,10 +64,12 @@ public sealed partial class World
         var target = sections.FirstOrDefault(candidate => candidate.Id == request.Target);
         if (target is null) return Refuse(FailureCode.UnknownId, "Unknown target section.");
         if (target.Id == section.Id) return Refuse(FailureCode.InvalidInput, "Target must differ from actor section.");
-        if (item.Section != section.Id) return Refuse(FailureCode.WrongSection, "Entity belongs to another section.");
-        var axis = LocalAxis(item.Pose.Rotation, item.Definition.Interaction.LongAxis);
+        // A ball is the same in every orientation: it turns about its center and never leaves its place.
+        var ball = DynamicShapes.IsBall(item.Definition);
+        if (!ball && item.Section != section.Id) return Refuse(FailureCode.WrongSection, "Entity belongs to another section.");
+        var axis = LocalAxis(item.Pose.Rotation, DynamicShapes.Interaction(item.Definition).LongAxis);
         var angle = (target.W > section.W ? 1 : -1) * QuarterTurn;
-        return (new Motion(HingePosition(item), axis, angle, StandUpDuration, section.Id), null);
+        return (new Motion(HingePosition(item), axis, angle, StandUpDuration, ball ? null : section.Id), null);
     }
 
     private (Motion?, Failure?) PlanLayDown(Dynamic item, SectionDefinition section)
@@ -90,7 +100,7 @@ public sealed partial class World
     {
         if (item.Origin is not null) return (null, Fail(FailureCode.InvalidInput, "Lay down before flipping.", item.Definition.Id));
         var plane = FindFoldPlane(actor, item, section.W);
-        var hinge = plane.Pivot with { W = item.Pose.Position.W };
+        var hinge = DynamicShapes.IsBall(item.Definition) ? item.Pose.Position : plane.Pivot with { W = item.Pose.Position.W };
         var duration = plane.Obstacle ? FlipAroundObstacleDuration : FlipDuration;
         return (new Motion(hinge, plane.Axis, Math.PI, duration, item.Section), null);
     }
@@ -98,19 +108,16 @@ public sealed partial class World
     // Turns the item through the sampled poses and stops at the first pose that touches an obstacle.
     private RotationPlan TraceRotation(RotationRequest request, Dynamic item, Motion motion, double[] samples)
     {
-        var obstacles = Boxes().Where(box => box.Entity != request.Entity).Concat(ReservedBoxes(request.Entity)).ToArray();
+        var obstacles = Solids().Where(solid => solid.Entity != request.Entity).Concat(ReservedSolids(request.Entity)).ToArray();
         var contacts = new List<Contact>();
         var blocked = -1;
         for (var i = 0; i < samples.Length && blocked < 0; i++)
         {
             var pose = RotatedPose(item.Pose, motion.Hinge, motion.Axis, motion.Angle * samples[i]);
-            foreach (var moving in Box4.From(item.Definition, pose))
+            foreach (var moving in DynamicShapes.Solids(item.Definition, pose))
                 foreach (var obstacle in obstacles)
-                    if (moving.BoundsMayOverlap(obstacle) && Box4.Touch(moving, obstacle) is { } contact)
-                        contacts.Add(contact with
-                        {
-                            Section = sections.FirstOrDefault(section => Math.Abs(section.W - contact.Point.W) <= RoundingMargin)?.Id
-                        });
+                    if (moving.BoundsMayOverlap(obstacle) && Collision.Touch(moving, obstacle) is { } contact)
+                        contacts.Add(WithSection(contact));
             if (contacts.Count > 0) blocked = i;
         }
         return new RotationPlan(this, revision, request.Entity, item.Pose, motion.Hinge, motion.Axis, motion.Angle, motion.Duration, motion.Origin,
@@ -121,9 +128,9 @@ public sealed partial class World
     // the actor and the item; with no wall, it faces the actor.
     private (Vec4 Pivot, Vec4 Axis, bool Obstacle) FindFoldPlane(Actor actor, Dynamic item, double w)
     {
-        var boxes = Box4.From(item.Definition, item.Pose);
+        var solids = DynamicShapes.Solids(item.Definition, item.Pose);
         var center = Enumerable.Range(0, 3)
-            .Select(i => (boxes.Min(box => box.Center[i] - box.Extent(i)) + boxes.Max(box => box.Center[i] + box.Extent(i))) / 2)
+            .Select(i => (solids.Min(solid => solid.Center[i] - solid.Extent(i)) + solids.Max(solid => solid.Center[i] + solid.Extent(i))) / 2)
             .ToArray();
         var start = Box4.ToArray(actor.Pose.Position);
         double[] end = [center[0], center[1], center[2], w];
@@ -138,7 +145,7 @@ public sealed partial class World
         var length = Math.Sqrt(dx * dx + dz * dz);
         if (length <= RoundingMargin)
         {
-            var longAxis = LocalAxis(item.Pose.Rotation, item.Definition.Interaction.LongAxis);
+            var longAxis = LocalAxis(item.Pose.Rotation, DynamicShapes.Interaction(item.Definition).LongAxis);
             dx = longAxis.X;
             dz = longAxis.Z;
             length = Math.Sqrt(dx * dx + dz * dz);
@@ -156,7 +163,7 @@ public sealed partial class World
     private (double T, double[] Normal)? NearestWall(double[] start, double[] ray, double w)
     {
         var hits = new List<(double T, Box4 Box, double[] Normal)>();
-        foreach (var box in Boxes().Where(box => staticDefinitions.ContainsKey(box.Entity)))
+        foreach (var box in Solids().OfType<Box4>().Where(box => staticDefinitions.ContainsKey(box.Entity)))
             foreach (var axis in box.Axes.Where(axis => Math.Abs(axis[1]) <= RoundingMargin && Math.Abs(axis[3]) <= RoundingMargin))
                 foreach (var sign in new[] { -1d, 1d })
                 {
