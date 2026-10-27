@@ -68,6 +68,13 @@ internal static class ItemScenes
         Assert.Equal(expected.W, actual.W, digits);
     }
 
+    public static void AssertNear(Vec3 expected, Vec3 actual, int digits = 9)
+    {
+        Assert.Equal(expected.X, actual.X, digits);
+        Assert.Equal(expected.Y, actual.Y, digits);
+        Assert.Equal(expected.Z, actual.Z, digits);
+    }
+
     // The shortest and the longest distance from a point to the vertices of a slice.
     public static (double Min, double Max) DistancesFrom(SliceGeometry slice, Vec3 center)
     {
