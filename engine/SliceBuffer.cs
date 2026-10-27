@@ -16,6 +16,9 @@ internal sealed class SliceBuffer
         Parts.AddRange(other.Parts);
     }
 
+    internal SliceGeometry ToSlice(EntityId entity, bool through) =>
+        new(entity, Positions.AsReadOnly(), Normals.AsReadOnly(), Uvs.AsReadOnly(), Parts.AsReadOnly(), through);
+
     // Adds a triangle that faces away from the point `from`: wound counterclockwise seen from its far side, with the
     // normal of its plane. The vertices are exchanged when they come in the other order. A triangle without area
     // is left out.

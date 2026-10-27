@@ -53,6 +53,9 @@ public sealed partial class World
                 case DeviceDefinition device:
                     devices.Add(device.Id, NewDevice(device));
                     break;
+                case GrazerDefinition grazer:
+                    grazers.Add(grazer.Id, NewGrazer(grazer));
+                    break;
                 default:
                     solids.Add(AddStatic(definition));
                     break;
@@ -129,6 +132,7 @@ public sealed partial class World
             .Select(entity => entity.Slice())
             .Concat(DynamicSlices(w))
             .Concat(DeviceSlices(w))
+            .Concat(GrazerSlices(w))
             .OrderBy(slice => slice.Entity.Value, StringComparer.Ordinal)
             .ToArray();
         return new SectionGeometryResult.Geometry(w, Array.AsReadOnly(slices));
