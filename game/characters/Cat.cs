@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using FourD;
 using Game.Interaction;
 using Godot;
@@ -32,11 +33,10 @@ public partial class Cat : Node
     // How far before the ring the cat starts its leap and how far past it the leap ends, longest first.
     private static readonly float[] Reaches = [1.2f, 1f, .8f, .6f];
     // The length of a box that tests the body along the arc.
-    private const float LegLength = .2f;
+    private const float LegLength = .1f;
     // How far either side of the ring's plane the body is tested against the ring itself, which is thinner than that.
     private const float RingDepth = .1f;
     private const float PathMargin = .02f;
-    private const string HandsFull = "手里还拿着东西呢。";
     // Where the cat is held: in front of the chest.
     private static readonly Vector3 HeldAt = new(0, 1, -.45f);
 
@@ -60,7 +60,13 @@ public partial class Cat : Node
         pickupLayer = pickup.CollisionLayer;
         pickup.Interacted += PickUp;
         body.ActionReplaced += Release;
+        SetPhysicsProcess(body.Player is not null);
     }
+
+    // The pick-up sphere is there for the crosshair only while the arms are free. With a cat or an object in them it is not
+    // found, so that E does what the prompt says.
+    public override void _PhysicsProcess(double delta) =>
+        pickup.CollisionLayer = body.Player.HoldsItem || body.Player.PutDown is not null ? 0 : pickupLayer;
 
     /// <summary>Walks to random places within the radius of a point, and rests between them.</summary>
     public void Wander(Vector3 center, float radius)
@@ -164,11 +170,13 @@ public partial class Cat : Node
     /// Runs up to a ring and leaps through its hole, landing as far on the other side as it started on this one, or nearer
     /// if there is a wall behind the ring. Does nothing and says false when the ring has no slice in the cat's section, is
     /// not seen head on, or when the cat's body would meet something on the way along the arc. The entities in
-    /// <paramref name="ignored"/>, such as the toy that leads the cat, do not count as in the way.
+    /// <paramref name="ignored"/>, such as the toy that leads the cat, do not count as in the way; the ring itself always
+    /// does, and an ID that names no entity makes the leap impossible, since the engine refuses such a query.
     /// </summary>
     public bool JumpThroughRing(string entity, string part, params string[] ignored)
     {
         var link = body.Link;
+        ignored = [.. ignored.Where(other => other != entity)];
         if (link.SliceBounds(entity, part) is not { } ring || link.SlicePlaneNormal(entity, part, Axis3.X, Axis3.Y) is not { } axis) return false;
         var hole = ring.GetCenter();
         // The ring is head on when the line from the cat to the hole runs along its axis, from either side.
@@ -191,9 +199,11 @@ public partial class Cat : Node
                 if (jump is null)
                 {
                     if (!body.WalkTo(start, body.RunSpeed)) return false;
-                    // The run-up ends a few centimetres from the start: the leap goes from there, through the middle of the hole,
-                    // to the place as far beyond it.
-                    jump = Jump(new Vector3(2 * level.X - body.Position.X, ground, 2 * level.Z - body.Position.Z), rise);
+                    // The run-up stops within a few centimetres of the start; the cat steps onto it, so that the leap is the one
+                    // that was tested, and leaps from the next frame.
+                    body.Warp(start);
+                    jump = Jump(level + along * reach, rise);
+                    return false;
                 }
                 return jump(delta);
             });
@@ -218,15 +228,13 @@ public partial class Cat : Node
         foreach (var side in new[] { -1, 1 })
             for (var near = RingDepth; near < reach; near += LegLength)
             {
-                // The body is up to its radius beyond its middle, which is in the leg, and the run-up ends within the
-                // arrival radius of its mark, so the leg is wider away from the ring.
+                // The body is up to its radius beyond its middle, which is in the leg.
                 var far = Mathf.Min(near + LegLength, reach);
                 var inner = Mathf.Max(near - beyond, RingDepth);
                 var outer = far + beyond;
                 var low = Mathf.Max(Feet(far), level.Y) + PathMargin;
                 var high = Feet(near) + body.Height + PathMargin;
-                var halfWidth = beyond + Character3D.ArrivalRadius * far / reach;
-                if (!Clear(Mathf.Min(side * inner, side * outer), Mathf.Max(side * inner, side * outer), low, high, halfWidth)) return false;
+                if (!Clear(Mathf.Min(side * inner, side * outer), Mathf.Max(side * inner, side * outer), low, high, beyond)) return false;
             }
         return true;
     }
@@ -258,12 +266,6 @@ public partial class Cat : Node
     private void PickUp()
     {
         var player = body.Player;
-        // The arms are for one thing at a time: the cat, or the object in the hand.
-        if (player.HoldsItem)
-        {
-            player.Hud.Say("小满", HandsFull, 2.5);
-            return;
-        }
         body.Posture = Posture.Standing;
         body.Do(_ =>
         {
@@ -273,7 +275,6 @@ public partial class Cat : Node
             return false;
         });
         Held = true;
-        pickup.CollisionLayer = 0;
         player.PutDown = LetGo;
         EmitSignal(SignalName.PickedUp);
     }
@@ -290,7 +291,6 @@ public partial class Cat : Node
     {
         if (!Held) return;
         Held = false;
-        pickup.CollisionLayer = pickupLayer;
         body.Player.PutDown = null;
         EmitSignal(SignalName.PutDown);
     }

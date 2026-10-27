@@ -130,6 +130,9 @@ public partial class CatSeamChecks : Node
     private async Task<float> BandStrength()
     {
         await play.Frames(3);
+        // The lens reads the physics of the section it shows in its own process, which comes after the signal of the frame.
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         var lens = (ShaderMaterial)region.GetNode<TextureRect>("Generated/Prism/Lens").Material;
         return lens.GetShaderParameter("band_bottom").AsVector4Array()[0].W;
     }
@@ -144,7 +147,9 @@ public partial class CatSeamChecks : Node
         await seam.RaiseLens();
         play.LookAt(new(1.5f, 0, 3), new(1.5f, 1.3f, 1.5f));
         Check(await BandStrength() > 0, "the band is drawn with nothing in the way");
+        // The cat is held where it is put, so that however many physics steps a frame takes it does not fall out of the way.
         catBody.PlaceAt(new(1.5f, 1.1f, 2.2f), 0);
+        catBody.SetPhysicsProcess(false);
         Check(await BandStrength() == 0, "a cat in the way hides the band");
         catBody.PlaceAt(new(1.7f, 1.1f, 2.2f), 0);
         Check(await BandStrength() > 0, "a cat beside the way, with only the sphere it is picked up by in it, does not");
@@ -152,18 +157,15 @@ public partial class CatSeamChecks : Node
 
     private async Task CheckCatOrObject()
     {
-        // An object in the hand: the cat is not picked up, and says so.
+        // An object in the hand: the crosshair does not find the cat, so the prompt is the object's and E lets go of it.
         await seam.Stand(new(CatAt.X, .02f, CatAt.Z + 1.2f), catBody.Position + new Vector3(0, .2f, 0));
         await seam.Hold("pole");
-        Press(Key.E);
-        await play.Frames(3);
-        Check(!cat.Held && play.Actions.Held == "pole" && seam.Said == "小满：手里还拿着东西呢。",
-            $"with an object in the hand she cannot pick up the cat; she said \"{seam.Said}\"");
-        play.LookAt(new(CatAt.X, .02f, CatAt.Z + 1.2f), new(5, 1.3f, CatAt.Z + 1.2f));
         await play.Frames(2);
+        Check(!player.Hud.HintText.Contains("抱起") && player.Hud.HintText.Contains("E  放下"),
+            $"with an object in the hand she is not offered the cat; saw '{player.Hud.HintText}'");
         Press(Key.E);
         await play.Frames(60);
-        Check(play.Actions.Held is null, "E lets go of the object");
+        Check(!cat.Held && play.Actions.Held is null, "E lets go of the object, and does not pick up the cat");
 
         // The cat in the arms: the backpack is not opened, and E puts the cat down before it takes anything.
         seam.Pack("rubber");
@@ -173,7 +175,7 @@ public partial class CatSeamChecks : Node
         Check(seam.InBackpack.SequenceEqual(["rubber"]) && play.Actions.Held is null && seam.Said == "小满：手里抱着猫呢。",
             $"with the cat in the arms nothing comes out of the backpack; she said \"{seam.Said}\"");
         var pole = play.Position("pole");
-        play.LookAt(new(pole.X, .02f, pole.Z + .8f), pole);
+        play.LookAt(new(pole.X, .02f, pole.Z - .8f), pole);
         await play.Frames(3);
         Check(player.Hud.HintText.Contains("E  放下") && !player.Hud.HintText.Contains("拿起"), $"aiming at an object she is offered to put down the cat; saw '{player.Hud.HintText}'");
         Press(Key.E);

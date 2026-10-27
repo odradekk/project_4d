@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Game.Characters;
 using Godot;
 
 namespace Game.Rendering;
@@ -195,7 +194,7 @@ public partial class PrismView : CanvasLayer
         var aim = new Vector3(band.Foot.X, band.Foot.Y + Mathf.Clamp(eye.Y - band.Foot.Y, .1f, band.Height - .1f), band.Foot.Z);
         if (eye.DistanceTo(aim) <= BandClearance) return false;
         var end = aim - (aim - eye).Normalized() * BandClearance;
-        return targets[target].World.DirectSpaceState.IntersectRay(PhysicsRayQueryParameters3D.Create(eye, end, ~Character3D.PickupLayer)).Count > 0;
+        return targets[target].World.DirectSpaceState.IntersectRay(PhysicsRayQueryParameters3D.Create(eye, end, ~PhysicsLayers.Pickups)).Count > 0;
     }
 
     // x and y of the point on the screen, in 0..1, the strip's half width there, and how strongly it is drawn.

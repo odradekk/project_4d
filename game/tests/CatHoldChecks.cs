@@ -38,9 +38,11 @@ public partial class CatHoldChecks : Node
             await CheckAimingWhileHeld();
             await Fresh(poleOnPlatform: true, schoolmate: true);
             await CheckAimingPastACharacter();
+            await Fresh(secondCat: true);
+            await CheckAnotherCatWhileCarrying();
             await Fresh();
             await CheckInteractingWhileHeld();
-            GD.Print("Cat hold checks passed: pick up, put down, other commands, aim, aim past a character, interact.");
+            GD.Print("Cat hold checks passed: pick up, put down, other commands, aim, aim past a character, another cat, interact.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -54,7 +56,7 @@ public partial class CatHoldChecks : Node
         }
     }
 
-    private Task Fresh(bool poleOnPlatform = false, bool schoolmate = false)
+    private Task Fresh(bool poleOnPlatform = false, bool schoolmate = false, bool secondCat = false)
     {
         pulled = 0;
         return play.Load(region =>
@@ -62,6 +64,7 @@ public partial class CatHoldChecks : Node
             AddCat(region, "cat", CatAt);
             AddHatch(region);
             if (schoolmate) AddSchoolmate(region, "mate", new(.5f, .02f, .85f));
+            if (secondCat) AddCat(region, "other", new(1.2f, .02f, 3));
             // The platform spans x -1 to 1, z -0.5 to 0.5 and y 0 to 0.6, so a pole on it is in the line of the crosshair 30 degrees down.
             if (poleOnPlatform) region.GetNode<TurnableObject3D>("Sections/Ⅰ/Turnables/Pole").Position = new(.5f, .63125f, 0);
         });
@@ -154,6 +157,21 @@ public partial class CatHoldChecks : Node
         Press(Key.F);
         await play.Frames(5);
         Check(play.State("pole").Rotating, "a character in front of an object does not stop the crosshair from finding the object");
+    }
+
+    private async Task CheckAnotherCatWhileCarrying()
+    {
+        // With a cat in the arms the crosshair does not find another, so the prompt and E are about the cat that is carried.
+        await PickUp();
+        var other = play.Region.Character("other");
+        play.LookAt(new(1.2f, .02f, 4.2f), other.Position + new Vector3(0, .2f, 0));
+        await play.Frames(3);
+        Check(player.Hud.HintText == "E  放下", $"with a cat in the arms she is not offered another; saw '{player.Hud.HintText}'");
+        Press(Key.E);
+        await play.Frames(3);
+        Check(!cat.Held && !other.GetNode<Cat>("Cat").Held && player.PutDown is null, "E puts down the cat in the arms and does not pick up the other");
+        await play.Frames(3);
+        Check(other.GetNode<Interactable3D>("Pickup").CollisionLayer != 0, "with the arms free the other cat can be picked up again");
     }
 
     private async Task CheckInteractingWhileHeld()

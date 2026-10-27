@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Game.Adapter;
-using Game.Characters;
 using Game.Rendering;
 using Game.Interaction;
 using Game.UI;
@@ -145,7 +144,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         if (pointerCaptured && !Hud.NotebookOpen)
         {
             var from = Camera.GlobalPosition;
-            var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f, ~Character3D.BodyLayer);
+            var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f, ~PhysicsLayers.Characters);
             query.Exclude = [GetRid()];
             var hit = GetWorld3D().DirectSpaceState.IntersectRay(query);
             if (hit.Count > 0)

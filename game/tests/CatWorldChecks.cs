@@ -49,13 +49,17 @@ public partial class CatWorldChecks : Node
         var landing = new Vector3(-1.41f, 0, -1);
         var crossing = float.NaN;
         var last = kit.Position;
+        var mark = new Vector3(.99f, 0, -1);
+        var nearest = float.MaxValue;
         Check(Brain(kit).JumpThroughRing("nut", Ring), "a cat runs at a ring that faces it");
         while (kit.Busy)
         {
             await Frames(1);
+            nearest = Mathf.Min(nearest, Apart(kit.Position, mark));
             if (float.IsNaN(crossing) && last.X > -.21f && kit.Position.X <= -.21f) crossing = kit.Position.Y + kit.Height / 2;
             last = kit.Position;
         }
+        Check(nearest < .005f, $"a cat steps onto the mark it ran up to before it leaps; it came no nearer than {nearest}");
         Check(Apart(kit.Position, landing) < .15f, $"a cat lands on the other side of the ring; it is at {kit.Position}");
         Check(Mathf.Abs(crossing - .9f) < .15f, $"a cat goes through the middle of the hole; its middle was {crossing} m up at the ring");
 
@@ -100,6 +104,21 @@ public partial class CatWorldChecks : Node
         world.AddCrate("near", new(-.81f, .6f, -1), new(.1f, .6f, .3f));
         Check(!Brain(kit).JumpThroughRing("nut", Ring) && !kit.Busy, "a cat does not leap where the wall is too close behind the ring");
         world.World.RemoveEntity(new("near"));
+        kit.PlaceAt(new(1.5f, 0, -1), 0);
+        world.AddCrate("touching", new(-1.01f, .6f, -1), new(.1f, .6f, .3f));
+        Check(!Brain(kit).JumpThroughRing("nut", Ring) && !kit.Busy, "a cat does not leap where the wall is a hair closer than its body would reach");
+        world.World.RemoveEntity(new("touching"));
+
+        // A wall just far enough: the shortest leap fits, and the cat lands with its body clear of the wall, whatever the run-up.
+        var starts = new[] { new Vector3(1.5f, 0, -1), new(1.4f, 0, -.85f), new(1.45f, 0, -1.12f) };
+        for (var run = 0; run < starts.Length; run++)
+        {
+            kit.PlaceAt(starts[run], 0);
+            world.AddCrate($"close{run}", new(-1.04f, .6f, -1), new(.1f, .6f, .3f));
+            await Leap(kit, new(-.81f, 0, -1), "a cat leaps the shortest way where the wall behind the ring is just far enough");
+            Check(kit.Position.X - kit.Radius >= -.94f - .005f, $"and lands with its body clear of the wall; its edge is at {kit.Position.X - kit.Radius}");
+            world.World.RemoveEntity(new($"close{run}"));
+        }
 
         // A crate in the hole is in the way too.
         world.AddCrate("crate", new(-.21f, .9f, -1), new(.05f, .05f, .05f));
@@ -107,6 +126,17 @@ public partial class CatWorldChecks : Node
         Check(!Brain(kit).JumpThroughRing("nut", Ring, "floor") && !kit.Busy, "something else that is ignored does not let the cat leap");
         // The toy that leads the cat through is in the hole, and does not count.
         Check(Brain(kit).JumpThroughRing("nut", Ring, "crate"), "a cat leaps at a ring with only an ignored thing in the way");
+
+        // The ring itself is never ignored: a cat too big for the hole is refused, whether or not the ring is listed.
+        kit.Stop();
+        kit.PlaceAt(new(1.5f, 0, -1), 0);
+        world.World.RemoveEntity(new("crate"));
+        var shape = (CapsuleShape3D)kit.GetNode<CollisionShape3D>("Shape").Shape;
+        (shape.Radius, shape.Height) = (.3f, .7f);
+        Check(!Brain(kit).JumpThroughRing("nut", Ring) && !Brain(kit).JumpThroughRing("nut", Ring, "nut", "floor") && !kit.Busy,
+            "a cat too big for the hole does not leap, though the ring is among the things to ignore");
+        (shape.Radius, shape.Height) = (.1f, .35f);
+        Check(Brain(kit).JumpThroughRing("nut", Ring), "and the same cat, of its own size again, does");
     }
 
     // The cat leaps through the ring from where it stands and lands near the place.
