@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using FourD;
 using Godot;
@@ -11,6 +12,7 @@ internal sealed class SceneReader(Region3D region)
     internal readonly List<LoadError> Errors = [];
     internal readonly Dictionary<(EntityId, PartId), Material> Materials = [];
     internal readonly List<CreatureSpawn3D> Spawns = [];
+    internal readonly Dictionary<EntityId, Label3D[]> Lettering = [];
 
     private readonly HashSet<Source> unavailableParts = [];
     private readonly Dictionary<Source, Source> sources = [];
@@ -72,19 +74,67 @@ internal sealed class SceneReader(Region3D region)
                 else entities.Add(new FixedDefinition(new(fixedObject.EntityId), Pose(fixedObject, section.W),
                     At(fixedObject, "EntityId"), new(section.SectionId), Shape(fixedObject, new(fixedObject.EntityId))));
             }
+            else if (node is TurnableObject3D turnable)
+                ReadTurnable(turnable, entities);
             else if (node is CreatureSpawn3D spawn)
             {
-                if (Ancestor<Section3D>(spawn) is null) Error(spawn, "EntityId", "A spawn must belong to a Section3D.");
+                var section = Ancestor<Section3D>(spawn);
+                if (section is null) Error(spawn, "EntityId", "A spawn must belong to a Section3D.");
+                else entities.Add(Creature(spawn, section));
                 if (spawn.CharacterScene is null) Error(spawn, "CharacterScene", "Assign a character scene.");
                 Spawns.Add(spawn);
             }
-            else if (node is BoxPart3D part && part.GetParent() is not BuildingElement3D && part.GetParent() is not FixedObject3D)
+            else if (node is BoxPart3D part && part.GetParent() is not BuildingElement3D
+                && part.GetParent() is not FixedObject3D && part.GetParent() is not TurnableObject3D)
                 Error(part, "PartId", "A BoxPart3D must be a direct child of its entity.");
         }
         foreach (var building in nodes.OfType<Building3D>()) MapRange(building, "BuildingId");
         return new(sections.Select(s => new SectionDefinition(new(s.SectionId), s.W, At(s, "W"))).ToArray(),
             nodes.OfType<Building3D>().Select(b => new BuildingDefinition(new(b.BuildingId), new(b.WMin, b.WMax), At(b, "BuildingId"))).ToArray(),
             entities, [], [], []);
+    }
+
+    private void ReadTurnable(TurnableObject3D turnable, List<EntityDefinition> entities)
+    {
+        var section = Ancestor<Section3D>(turnable);
+        if (section is null)
+        {
+            Error(turnable, "EntityId", "A turnable object must belong to a Section3D.");
+            return;
+        }
+        var interaction = turnable.Interaction;
+        if (interaction is null)
+        {
+            Error(turnable, "Interaction", "Assign an interaction resource.");
+            return;
+        }
+        var id = new EntityId(turnable.EntityId);
+        Map(turnable, "EntityId", "Section", section, "SectionId");
+        Map(turnable, "EntityId", "Building", turnable, "BuildingId");
+        Map(turnable, "EntityId", "Pose", turnable, "Transform");
+        Map(turnable, "EntityId", "Pose.Position.W", section, "W");
+        Map(turnable, "EntityId", "Interaction", turnable, "Interaction");
+        var properties = new TurnableProperties(interaction.Holdable, interaction.Packable, interaction.HorizontalRadius,
+            interaction.LongAxis, V(interaction.Hinge), interaction.Reach);
+        Lettering[id] = turnable.GetChildren().OfType<Label3D>().ToArray();
+        entities.Add(new TurnableDefinition(id, Pose(turnable, section.W), At(turnable, "EntityId"), new(section.SectionId),
+            new(turnable.BuildingId), Shape(turnable, id), properties));
+    }
+
+    // The spawn's direction is the creature's ordinary yaw, which the host passes on every frame;
+    // its four-dimensional rotation starts as none.
+    private Creature3Definition Creature(CreatureSpawn3D spawn, Section3D section)
+    {
+        Map(spawn, "EntityId", "Pose", spawn, "Transform");
+        Map(spawn, "EntityId", "Section", section, "SectionId");
+        Map(spawn, "EntityId", "Pose.Position.W", section, "W");
+        Map(spawn, "EntityId", "PassageRadius", spawn, "PassageRadius");
+        Map(spawn, "EntityId", "PassageHeight", spawn, "PassageHeight");
+        var position = RelativeTransform(spawn, region).Origin;
+        var pose = new Pose4(new(Typed(position.X), Typed(position.Y), Typed(position.Z), section.W),
+            new(new(1, 0, 0, 0), new(0, 1, 0, 0), new(0, 0, 1, 0), new(0, 0, 0, 1)));
+        return new(new(spawn.EntityId), pose, At(spawn, "EntityId"), new(section.SectionId),
+            spawn.PassageRadius, spawn.PassageHeight, spawn.CanUseSeamsWithoutPrism);
     }
 
     private BoxAssembly Shape(Node3D entity, EntityId id)
@@ -120,7 +170,7 @@ internal sealed class SceneReader(Region3D region)
     {
         var transform = RelativeTransform(node, region);
         var r = Rotation(transform.Basis);
-        return new(new(transform.Origin.X, transform.Origin.Y, transform.Origin.Z, w),
+        return new(new(Typed(transform.Origin.X), Typed(transform.Origin.Y), Typed(transform.Origin.Z), w),
             new(new(r.X.X, r.X.Y, r.X.Z, 0), new(r.Y.X, r.Y.Y, r.Y.Z, 0), new(r.Z.X, r.Z.Y, r.Z.Z, 0), new(0, 0, 0, 1)));
     }
 
@@ -131,11 +181,11 @@ internal sealed class SceneReader(Region3D region)
             return new(new(1, 0, 0), new(0, 1, 0), new(0, 0, 1));
         var q = basis.GetRotationQuaternion();
         double x = q.X, y = q.Y, z = q.Z, w = q.W;
-        var norm = Math.Sqrt(x*x + y*y + z*z + w*w);
+        var norm = Math.Sqrt(x * x + y * y + z * z + w * w);
         x /= norm; y /= norm; z /= norm; w /= norm;
-        return new(new(1-2*(y*y+z*z), 2*(x*y+z*w), 2*(x*z-y*w)),
-            new(2*(x*y-z*w), 1-2*(x*x+z*z), 2*(y*z+x*w)),
-            new(2*(x*z+y*w), 2*(y*z-x*w), 1-2*(x*x+y*y)));
+        return new(new(1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w)),
+            new(2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w)),
+            new(2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)));
     }
 
     internal static Transform3D RelativeTransform(Node3D node, Region3D region)
@@ -161,7 +211,12 @@ internal sealed class SceneReader(Region3D region)
             foreach (var descendant in Descendants(child)) yield return descendant;
         }
     }
-    private static Vec3 V(Vector3 v) => new(v.X, v.Y, v.Z);
+    private static Vec3 V(Vector3 v) => new(Typed(v.X), Typed(v.Y), Typed(v.Z));
+
+    // Godot stores the decimal an author types as the nearest float, such as 0.46f = 0.4600000083446503. The engine checks
+    // sizes and reach to 1e-10 m, so positions, sizes and the hinge go to it as the decimal: the shortest text that reads
+    // as the same float.
+    private static double Typed(float value) => double.Parse(value.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
     private void MapRange(Node node, string root)
     {
         Map(node, root, "WRange", node, "WMin");

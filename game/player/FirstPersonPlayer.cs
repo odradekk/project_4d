@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Godot;
+using Game.Adapter;
 using Game.Rendering;
 using Game.Interaction;
 using Game.UI;
@@ -14,13 +16,19 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private float pitch;
     private bool pointerCaptured;
     private PrismView? prism;
+    private PlayerActions? actions;
     private bool captureBeforeNotebook;
     private Interactable3D? target;
+    private string? aimedEntity;
     internal bool PointerCaptured => pointerCaptured;
     public GameHud Hud { get; private set; } = null!;
     public Camera3D Camera => GetNode<Camera3D>("Eyes");
 
-    internal void Bind(PrismView view) => prism = view;
+    internal void Bind(PrismView view, PlayerActions hands)
+    {
+        prism = view;
+        actions = hands;
+    }
 
     public override void _Ready()
     {
@@ -58,6 +66,18 @@ public partial class FirstPersonPlayer : CharacterBody3D
                 GetViewport().SetInputAsHandled();
                 return;
             }
+            if (key.Keycode == Key.E && pointerCaptured && actions is not null && (actions.Holding || aimedEntity is not null))
+            {
+                SayRefusal(actions.Use());
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode is Key.F or Key.R && pointerCaptured && actions is not null && prism is { Enabled: true })
+            {
+                SayRefusal(key.Keycode == Key.F ? actions.StandOrLay() : actions.Flip());
+                GetViewport().SetInputAsHandled();
+                return;
+            }
         }
         if (input is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
         {
@@ -85,15 +105,22 @@ public partial class FirstPersonPlayer : CharacterBody3D
     public override void _PhysicsProcess(double delta)
     {
         target = null;
+        aimedEntity = null;
         if (pointerCaptured && !Hud.NotebookOpen)
         {
             var from = Camera.GlobalPosition;
             var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f);
             query.Exclude = [GetRid()];
             var hit = GetWorld3D().DirectSpaceState.IntersectRay(query);
-            if (hit.Count > 0) target = hit["collider"].AsGodotObject() as Interactable3D;
+            if (hit.Count > 0)
+            {
+                var collider = hit["collider"].AsGodotObject();
+                target = collider as Interactable3D;
+                aimedEntity = (collider as EntityBody3D)?.Entity;
+            }
         }
-        Hud.SetHint(target is null ? "" : $"E  {target.Prompt}");
+        actions?.Aim(aimedEntity);
+        Hud.SetHint(HintText());
         if (prism is not null) prism.GetNode<Label>("Controls").Visible = !prism.Raised && Hud.HintText == "" &&
             (!Hud.SubtitleVisible || Hud.SubtitleText == "");
         var input = pointerCaptured && !Hud.NotebookOpen
@@ -104,6 +131,28 @@ public partial class FirstPersonPlayer : CharacterBody3D
         velocity.Y = IsOnFloor() ? 0 : Velocity.Y - 9.8f * (float)delta;
         Velocity = velocity;
         MoveAndSlide();
+    }
+
+    // The prompt of what the crosshair is on if it can be used, else the keys that act on what is held or aimed at.
+    private string HintText()
+    {
+        if (target is not null) return $"E  {target.Prompt}";
+        if (actions is null || (!actions.Holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return "";
+        var upright = actions.Holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
+        var keys = new List<string>();
+        if (actions.Holding) keys.Add(upright ? "E  松手" : "E  放下");
+        else keys.Add(upright ? "E  抓住" : "E  拿起");
+        if (prism is { Enabled: true })
+        {
+            keys.Add(upright ? "F  放倒" : "F  竖起");
+            if (!upright) keys.Add("R  翻面");
+        }
+        return string.Join("    ", keys);
+    }
+
+    private void SayRefusal(Refusal? refusal)
+    {
+        if (refusal is not null && RefusalLines.For(refusal, actions!.CurrentSection) is { } line) Hud.Say("小满", line, 2.5);
     }
 
     public override void _Notification(int what)

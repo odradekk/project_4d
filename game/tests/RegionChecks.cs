@@ -61,7 +61,7 @@ public partial class RegionChecks : Node
         var vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
         var normals = arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();
         for (var i = 0; i < vertices.Length; i += 3)
-            Check((vertices[i+1]-vertices[i]).Cross(vertices[i+2]-vertices[i]).Dot(normals[i]) < 0,
+            Check((vertices[i + 1] - vertices[i]).Cross(vertices[i + 2] - vertices[i]).Dot(normals[i]) < 0,
                 "Godot triangles must face clockwise with outward normals");
         var uv = arrays[(int)Mesh.ArrayType.TexUV].AsVector2Array();
         var frontCorners = 0;
@@ -236,9 +236,8 @@ public partial class RegionChecks : Node
         RemoveChild(region); region.Free();
         region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
         region.GetNode<Section3D>("Sections/Ⅱ").W = .8;
-        region.GetNode("Sections").AddChild(new Section3D { Name = "III", SectionId = "Ⅲ", W = -.3 });
-        // Section order is part of the load contract, not the target distance order.
-        region.GetNode("Sections").MoveChild(region.GetNode("Sections/III"), 0);
+        // Section order is part of the load contract, not the target distance order: III is first and nearest here.
+        region.GetNode<Section3D>("Sections/Ⅲ").W = -.3;
         AddChild(region);
         Check(region.Loaded, "the near/far fixture must load");
         await Frames(2);
@@ -258,6 +257,7 @@ public partial class RegionChecks : Node
         RemoveChild(region); region.Free();
         region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
         region.GetNode("Sections/Ⅱ").Free();
+        region.GetNode("Sections/Ⅲ").Free();
         AddChild(region); await Frames(2);
         prism = region.GetNode<PrismView>("Generated/Prism");
         Button(MouseButton.Right, true); await Frames(1);

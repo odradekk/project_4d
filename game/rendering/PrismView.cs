@@ -7,13 +7,29 @@ namespace Game.Rendering;
 public partial class PrismView : CanvasLayer
 {
     private readonly SubViewport viewport = new() { Name = "PrismViewport", RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
-    private readonly SubViewport mask = new() { Name = "MaskViewport", UseDebanding = false, UseTaa = false,
-        Msaa3D = Viewport.Msaa.Disabled, ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled,
-        RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled };
-    private readonly Camera3D maskCamera = new() { Name = "MaskCamera", CullMask = 4, Current = true,
-        Environment = new Godot.Environment { BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = Colors.Black,
-            TonemapMode = Godot.Environment.ToneMapper.Linear, TonemapExposure = 1 },
-        Attributes = new CameraAttributesPractical { ExposureMultiplier = 1, AutoExposureEnabled = false } };
+    private readonly SubViewport mask = new()
+    {
+        Name = "MaskViewport",
+        UseDebanding = false,
+        UseTaa = false,
+        Msaa3D = Viewport.Msaa.Disabled,
+        ScreenSpaceAA = Viewport.ScreenSpaceAAEnum.Disabled,
+        RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled
+    };
+    private readonly Camera3D maskCamera = new()
+    {
+        Name = "MaskCamera",
+        CullMask = 4,
+        Current = true,
+        Environment = new Godot.Environment
+        {
+            BackgroundMode = Godot.Environment.BGMode.Color,
+            BackgroundColor = Colors.Black,
+            TonemapMode = Godot.Environment.ToneMapper.Linear,
+            TonemapExposure = 1
+        },
+        Attributes = new CameraAttributesPractical { ExposureMultiplier = 1, AutoExposureEnabled = false }
+    };
     private readonly Camera3D camera = new() { Name = "PrismCamera", CullMask = 2, Current = true };
     private readonly TextureRect lens = new() { Name = "Lens", MouseFilter = Control.MouseFilterEnum.Ignore };
     private readonly Label label = new() { Name = "PrismTarget", HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -24,6 +40,7 @@ public partial class PrismView : CanvasLayer
     private bool enabled;
     private bool requested;
     public bool Raised => lens.Visible;
+    public bool Enabled => enabled;
     public string? TargetSection => targets.Count == 0 ? null : targets[target].Id;
 
     internal void Configure(Camera3D playerCamera, IReadOnlyList<(string Id, World3D World)> orderedTargets, bool prismEnabled)
@@ -54,7 +71,7 @@ public partial class PrismView : CanvasLayer
     {
         enabled = value;
         if (!value) requested = false;
-        help.Text = value ? "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标\n按住右键观察\n滚轮切换截面"
+        help.Text = value ? "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标\n按住右键观察\n滚轮切换截面\nE 拿放 · F 竖起放倒 · R 翻面"
             : "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标";
         Refresh();
     }
