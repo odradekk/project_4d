@@ -37,7 +37,7 @@ PlanRotation 是只读。调用者提供角色和物体 ID，角色当前 Sectio
 
 F 的铰链和长轴来自物体定义；R 的翻转面由引擎选：角色与目标间若有挡住其连线的竖直建筑/固定物面，选距离角色最近的一面；同距按实体 ID、零件 ID 排序。没有该面则使用通过物体中心、水平法线朝向角色的竖直面；角色水平位置与中心重合时用物体局部长轴的水平投影，仍退化则 +X。障碍绕行与原地翻面均转 π；先预检正角；正角受阻时再检查负角，若负角畅通则选择负角；两边都受阻时返回正角轨迹及其原因，均畅通时选择正角。四维球绕自身中心旋转，成功且外观不变，不令球绕侧面的障碍产生位移。
 
-规划检查整段轨迹，包括夹层、隐藏零件与终点。采样按每一步最远表面点移动不超过 0.01m 自适应划分，不把角度当作米。Blocked 仍含同一条轨迹，供绘制红色预览；Rejected 表示请求本身无有效轨迹。Start 对 Blocked 计划返回 RotationBlocked，不推进一点再停。可用计划在启动时必须仍属于同一 World 与修订，分别以 ForeignPlan/StalePlan 拒绝；不能悄悄重算另一条路径。
+规划检查整段轨迹，包括夹层、隐藏零件与终点。采样按每一步最远表面点移动不超过 0.01m 自适应划分，不把角度当作米。Blocked 仍含同一条轨迹，供绘制红色预览；Rejected 表示请求本身无有效轨迹，包括轨迹经过的形体超出物件所属楼房的 W 范围（OutOfRange）。Start 对 Blocked 计划返回 RotationBlocked，不推进一点再停。可用计划在启动时必须仍属于同一 World 与修订，分别以 ForeignPlan/StalePlan 拒绝；不能悄悄重算另一条路径。
 
 预览可在输入未变时缓存。点击时先重新 PlanRotation，再立即 StartRotation；中间不调用写操作。开始后引擎持有轨迹，后续 Step 推进；宿主不能直接改该实体。曲线前5°消耗总时长的25%，两段各匀速、角度连续；总角度不足5°时，全程在约定时长内匀速完成；后段到达精确终点，跨过结束点的余下 delta 用于后续支撑求解。新进入轨迹的动态障碍不改变已接受路径：动作进行中，其他移动/装置写调用也必须把正在执行的扫掠视为保留空间并拒绝相交请求。
 
@@ -66,7 +66,7 @@ public MoveEntityResult MoveEntity(MoveRequest request);
 
 HoldEntity 只抓角色当前 Section 中可拿物的现存切片，每个角色最多手持一件，物品只能一个 Holder；竖起物可在任意有切片的 Section 抓取。ID 不存在或类别不对返回 UnknownId/WrongEntityKind，物品正在旋转返回 Busy，不可拿返回 NotHoldable，物品已被持有或角色已持一件返回 EntityInUse，角色当前 Section 无切片返回 NoSlice。PackEntity 要求未竖起、Packable、与角色同 Section，且 freeSlots>0；Sphere4始终拒绝NotPackable，非对称HiddenRingItem按其Packable及本体姿态判定，不因ItemDefinition类别一律拒绝。收入背包后整件形体（包括隐藏结构）不参与世界切片/碰撞。freeSlots=0 返回 CapacityExceeded，负值返回 InvalidInput。引擎记录随身关系，不保存背包容量；#15 的四格是游戏常量，宿主传真实空位。ReleaseEntity 从手/背包释放到角色当前 Section 的当前物品姿态，未被持有返回 InvalidInput；竖起物保持贯穿物姿态及来源。背包取出先 HoldEntity，可在同一角色已有背包关系上转换；释放不能让小物凭空换 W。宿主负责交互距离与背包 UI，引擎负责几何切片及归属不变量。
 
-MoveEntity 只接受被手持的动态可拿物，不能用它挪角色、装置或生物。Delta 为世界 XYZ 位移；普通平放物随角色的常规三维携带位置同步，仍保持所属 W；有 W 跨度的物体进行四维平移扫掠。按 X、Z、Y 顺序逐分量尝试，受阻分量停在与障碍表面刚接触的位置，其他分量继续，因此可以滑动；返回 Applied 和实际接触。扫掠不让任何一对形体嵌得比起点更深：起点已相贴或嵌在容差内的障碍，不挡住沿表面滑动或离开。全部零位移且有阻挡返回 TranslationBlocked，状态不变；无阻挡的零请求为成功。未被手持或 Delta 非有限数返回 InvalidInput，正在旋转返回 Busy。有接触的成功移动在下一次 Step 交付 MovementBlocked。
+MoveEntity 只接受被手持的动态可拿物，不能用它挪角色、装置或生物。Delta 为世界 XYZ 位移；普通平放物随角色的常规三维携带位置同步，仍保持所属 W，只检查目标姿态是否与正在执行的旋转扫掠相交，相交返回 TranslationBlocked；有 W 跨度的物体进行四维平移扫掠。按 X、Z、Y 顺序逐分量尝试。一对形体的嵌入深度将超过起点深度和 ContactTolerance 中较大者时，该分量被挡住，停在嵌入深度不超过起点深度和 0 中较大者的最后位置，其他分量继续，因此可以滑动；新碰上的障碍停在刚接触处，而起点已相贴或嵌在容差内的障碍、齐平拼接的楼板和容差内的高差不挡路。返回 Applied 和实际接触。全部零位移且有阻挡返回 TranslationBlocked，状态不变；无阻挡的零请求为成功。未被手持或 Delta 非有限数返回 InvalidInput，正在旋转返回 Busy。有接触的成功移动在下一次 Step 交付 MovementBlocked。
 
 例如 Delta=(0.1,0,0.2)，X 方向整段受墙阻挡而 Z 畅通，Applied=(0,0,0.2)，结果 Moved 附 X 接触，供宿主刮擦音和镜片标点。多个 Section 的切片与夹层几何共同参与检测。
 
@@ -96,7 +96,7 @@ public UpdateResult ConsumeStructure(EntityId grazer,
 
 DriveDevice 的 target 对旋转为弧度，对轨道为米，相对初始配置。越限拒绝 OutOfRange，不静默 clamp。旋转完整预检后同步到达 target，受阻整次拒绝；动画由宿主每帧请求插值目标，不能跨过中间碰撞。轨道按从当前位置到 target 的连续线段检测，到最早接触处停止并返回 Driven；全无可行位移返回 TranslationBlocked。每次成功都同步所有切片，按顺序排入 DeviceMotionStarted、如有接触则 MovementBlocked、DeviceMotionEnded 事件；宿主得到实际 Position，以此显示窗是否关闭。
 
-PlaceEntity接受未被抓持、未在旋转中的Turnable/Item的完整四维位置和4×4旋转矩阵。它是宿主布置、测试与调试的原子终态写入：校验目标姿态、目标碰撞、所属楼房范围和尺寸边界，成功立即更新，失败全不变。它不表示玩家动作，不承诺两矩阵间一条未定义的SO(4)动画或扫掠路径；当前玩家适配服务只公开MoveEntity、PlanRotation/StartRotation、CrossSeam等具名操作，不把PlaceEntity暴露为玩家输入的执行方式。
+PlaceEntity接受未被抓持、未在旋转中的Turnable/Item的完整四维位置和4×4旋转矩阵。它是宿主布置、测试与调试的原子终态写入：校验目标姿态、目标碰撞、所属楼房范围和尺寸边界，成功立即更新，失败全不变；被抓持返回 EntityInUse，平放的隐藏圆环物的圆环离每个 Section 仍须满足载入时的距离，否则 InvalidInput。它不表示玩家动作，不承诺两矩阵间一条未定义的SO(4)动画或扫掠路径；当前玩家适配服务只公开MoveEntity、PlanRotation/StartRotation、CrossSeam等具名操作，不把PlaceEntity暴露为玩家输入的执行方式。
 
 普通物件和隐藏圆环本体按以下规则同时更新Section与UprightOrigin。平放指局部W轴平行世界W轴，误差使用公共姿态精度；倾入W指其余合法旋转。
 
