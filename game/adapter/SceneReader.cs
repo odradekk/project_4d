@@ -7,7 +7,7 @@ using Godot;
 
 namespace Game.Adapter;
 
-internal sealed class SceneReader(Region3D region)
+internal sealed partial class SceneReader(Region3D region)
 {
     internal readonly List<LoadError> Errors = [];
     internal readonly Dictionary<(EntityId, PartId), Material> Materials = [];
@@ -25,7 +25,7 @@ internal sealed class SceneReader(Region3D region)
         if (result is LoadResult.Invalid invalid)
             Errors.AddRange(invalid.Errors
                 .Where(e => !(e.Code == LoadErrorCode.InvalidGeometry && unavailableParts.Contains(e.Source)))
-                .Select(e => sources.TryGetValue(e.Source, out var source) ? e with { Source = source } : e));
+                .Select(e => e with { Source = Locate(e.Source) }));
         return Errors.Count > 0 ? new LoadResult.Invalid(Errors) : result;
     }
 
@@ -86,10 +86,17 @@ internal sealed class SceneReader(Region3D region)
                 if (spawn.CharacterScene is null) Error(spawn, "CharacterScene", "Assign a character scene.");
                 Spawns.Add(spawn);
             }
+            else if (node is SphereItem3D ball)
+                ReadBall(ball, entities);
+            else if (node is HiddenRingItem3D nut)
+                ReadRingItem(nut, entities);
+            else if (node is LoftDevice3D device)
+                ReadDevice(device, entities);
             else if (node is Seam3D seam)
                 seams.Add(ReadSeam(seam));
             else if (node is BoxPart3D part && part.GetParent() is not BuildingElement3D
-                && part.GetParent() is not FixedObject3D && part.GetParent() is not TurnableObject3D)
+                && part.GetParent() is not FixedObject3D && part.GetParent() is not TurnableObject3D
+                && part.GetParent() is not HiddenRingItem3D)
                 Error(part, "PartId", "A BoxPart3D must be a direct child of its entity.");
         }
         foreach (var building in nodes.OfType<Building3D>()) MapRange(building, "BuildingId");
@@ -130,8 +137,7 @@ internal sealed class SceneReader(Region3D region)
         Map(turnable, "EntityId", "Pose", turnable, "Transform");
         Map(turnable, "EntityId", "Pose.Position.W", section, "W");
         Map(turnable, "EntityId", "Interaction", turnable, "Interaction");
-        var properties = new TurnableProperties(interaction.Holdable, interaction.Packable, interaction.HorizontalRadius,
-            interaction.LongAxis, V(interaction.Hinge), interaction.Reach);
+        var properties = Properties(interaction);
         Lettering[id] = turnable.GetChildren().OfType<Label3D>().ToArray();
         entities.Add(new TurnableDefinition(id, Pose(turnable, section.W), At(turnable, "EntityId"), new(section.SectionId),
             new(turnable.BuildingId), Shape(turnable, id), properties));
@@ -153,12 +159,13 @@ internal sealed class SceneReader(Region3D region)
             spawn.PassageRadius, spawn.PassageHeight, spawn.CanUseSeamsWithoutPrism);
     }
 
-    private BoxAssembly Shape(Node3D entity, EntityId id)
+    // `path` is where the assembly sits in the engine's definition of the entity, with a trailing dot, such as "Shape.Body.".
+    private BoxAssembly Shape(Node3D entity, EntityId id, string path = "")
     {
         var result = new List<BoxPart>();
         foreach (var part in entity.GetChildren().OfType<BoxPart3D>())
         {
-            var prefix = $"Parts[{result.Count}]";
+            var prefix = $"{path}Parts[{result.Count}]";
             Map(entity, "EntityId", prefix, part, "Mesh");
             Map(entity, "EntityId", prefix + ".Id", part, "PartId");
             Map(entity, "EntityId", prefix + ".Center", part, "Transform");
@@ -168,14 +175,14 @@ internal sealed class SceneReader(Region3D region)
             if (part.Mesh is not BoxMesh box)
             {
                 Error(part, "Mesh", "Assign a BoxMesh.");
-                unavailableParts.Add(At(entity, $"EntityId.Parts[{result.Count}]"));
+                unavailableParts.Add(At(entity, $"EntityId.{path}Parts[{result.Count}]"));
                 result.Add(null!);
                 continue;
             }
             var uv = new List<FaceUv>();
             foreach (var face in part.FaceUvs)
                 if (face is null) Error(part, "FaceUvs", "A face UV resource is missing.");
-                else uv.Add(new(face.Axis, face.Positive, new(face.Scale.X, face.Scale.Y), new(face.Offset.X, face.Offset.Y)));
+                else uv.Add(Uv(face));
             result.Add(new(new(part.PartId), V(part.Position), V(box.Size / 2), Rotation(part.Basis), uv));
             Materials[(id, new(part.PartId))] = part.MaterialOverride ?? box.Material ?? new StandardMaterial3D();
         }
