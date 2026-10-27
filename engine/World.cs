@@ -24,7 +24,9 @@ public sealed partial class World
     {
         var errors = WorldValidation.Check(description);
         if (errors.Length > 0) return new LoadResult.Invalid(Array.AsReadOnly(errors));
-        var entities = description.Entities.Where(e => e is not TurnableDefinition).Select(e =>
+        var expectedErrors = CheckExpectedOperations(description);
+        if (expectedErrors.Length > 0) return new LoadResult.Invalid(Array.AsReadOnly(expectedErrors));
+        var entities = description.Entities.Where(e => e is not TurnableDefinition and not Creature3Definition).Select(e =>
         {
             var shape = e switch { BuildingElementDefinition b => b.Shape, FixedDefinition f => f.Shape, _ => throw new ArgumentException("Unsupported entity.") };
             var parts = shape.Parts.Select(p => p with { FaceUvs = Array.AsReadOnly(p.FaceUvs.ToArray()) }).ToArray();
@@ -41,6 +43,7 @@ public sealed partial class World
         foreach (var definition in description.Entities)
         {
             if (definition is TurnableDefinition turnable) world.AddInitial(turnable);
+            else if (definition is Creature3Definition actor) world.actors.Add(actor.Id, new(actor, actor.Pose, 0));
             else
             {
                 var geometry=entities.Single(e=>e.Id==definition.Id);

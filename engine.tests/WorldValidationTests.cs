@@ -49,7 +49,7 @@ public class WorldValidationTests
         yield return [d with { Entities = [new UnknownDefinition(new("unknown"), new(default, R4), Source)] }, LoadErrorCode.UnsupportedDefinition];
         yield return [d with { SharedValues = [new(new("water"), new(0, 1), 0, Source)] }, LoadErrorCode.UnsupportedDefinition];
         yield return [d with { Seams = [new(new("seam"), default, new(1, 0, 0), [new("I")], false, true, false, Source)] }, LoadErrorCode.UnsupportedDefinition];
-        yield return [d with { ExpectedOperations = [new(new("operation"), Source, new([], [], [], []), [])] }, LoadErrorCode.UnsupportedDefinition];
+        yield return [d with { ExpectedOperations = [new(new("operation"), Source, new([], [], [], []), [new ExpectedMove(new(new("item"),default),default,null)])] }, LoadErrorCode.UnsupportedDefinition];
         yield return [Description(wall with { Pose = new(default, new(new(1.00000001, 0, 0, 0), R4.Y, R4.Z, R4.W)) }), LoadErrorCode.InvalidPose];
         yield return [Description(wall with { Shape = new([Part() with { Rotation = new(new(1, 0, 0), new(1e-8, 1, 0), R3.Z) }]) }), LoadErrorCode.InvalidPose];
         yield return [Description(wall with { Shape = new([Part() with { FaceUvs = Uvs().Select(f => f with { Offset = new(double.PositiveInfinity, 0) }).ToArray() }]) }), LoadErrorCode.InvalidNumber];

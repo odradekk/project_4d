@@ -5,7 +5,7 @@ public sealed partial class World
     private sealed record SupportEdge(EntityId Support, EntityId Moving, double Gap);
 
     // Each initial contact limits how far an object can fall relative to its support.
-    private Dictionary<EntityId,double> SettledHeights()
+    private Dictionary<EntityId,double> SettledHeights(IReadOnlySet<EntityId> held)
     {
         var ids=dynamicEntities.Keys.ToArray();
         var initial=ids.ToDictionary(id=>id,id=>dynamicEntities[id].Pose.Position.Y);
@@ -19,6 +19,7 @@ public sealed partial class World
         }
         foreach(var id in ids)
         {
+            if(held.Contains(id) || rotations.ContainsKey(id)) { Anchor(id,0); continue; }
             var candidates=SupportCandidates(id).ToArray();
             if(candidates.Length==0) Anchor(id,0);
             foreach(var candidate in candidates)

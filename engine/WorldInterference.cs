@@ -10,7 +10,7 @@ internal static class WorldInterference
             var contacts=new List<Contact>();
             foreach(var sign in new[] {-1d,1d})
             {
-                var pose=Upright(item,sign);
+                foreach(var pose in Sweep(item,sign))
                 foreach(var part in item.Shape.Parts)
                 {
                     var moving=Box4.From(item,pose,part);
@@ -21,6 +21,7 @@ internal static class WorldInterference
                         foreach(var other in element.Shape.Parts) foreach(var segment in segments)
                         {
                             var obstacle=Box4.From(solid,other,segment);
+                            if(Enumerable.Range(0,4).Any(i=>Math.Abs(moving.Center[i]-obstacle.Center[i])>=moving.Radius(Unit(i))+obstacle.Radius(Unit(i))-.005)) continue;
                             if(!Box4.Overlaps(moving,obstacle,.005)) continue;
                             var point=Box4.IntersectionPoint(moving,obstacle);
                             if(point is null) continue;
@@ -35,22 +36,20 @@ internal static class WorldInterference
             }
             if(contacts.Count>0)
                 yield return new(LoadErrorCode.BuildingInterference,item.Source with {Property=$"{item.Source.Property}.Building"},item.Id,null,null,
-                    "Turned object intersects another building.",Array.AsReadOnly(contacts.OrderBy(c=>c.Obstacle.Value,StringComparer.Ordinal).ThenBy(c=>c.ObstaclePart.Value,StringComparer.Ordinal).ThenBy(c=>c.MovingPart.Value,StringComparer.Ordinal).ToArray()));
+                    "Turned object intersects another building.",Array.AsReadOnly(contacts.GroupBy(c=>(c.Obstacle,c.ObstaclePart,c.MovingPart)).Select(g=>g.First()).OrderBy(c=>c.Obstacle.Value,StringComparer.Ordinal).ThenBy(c=>c.ObstaclePart.Value,StringComparer.Ordinal).ThenBy(c=>c.MovingPart.Value,StringComparer.Ordinal).ToArray()));
         }
     }
-    private static Pose4 Upright(TurnableDefinition item,double sign)
+    private static double[] Unit(int i) { var a=new double[4];a[i]=1;return a; }
+    private static IEnumerable<Pose4> Sweep(TurnableDefinition item,double sign)
     {
-        var rotation=item.Pose.Rotation;
-        var axes=new[] {rotation.X,rotation.Y,rotation.Z};
-        var index=(int)item.Interaction.LongAxis;
-        var old=axes[index]; var w=rotation.W;
-        axes[index]=new(sign*w.X,sign*w.Y,sign*w.Z,sign*w.W);
-        var newW=new Vec4(-sign*old.X,-sign*old.Y,-sign*old.Z,-sign*old.W);
-        var hinge=item.Interaction.Hinge;
-        var distance=index==0?hinge.X:index==1?hinge.Y:hinge.Z;
-        var p=item.Pose.Position;
-        var position=new Vec4(p.X+distance*(old.X-axes[index].X),p.Y+distance*(old.Y-axes[index].Y),
-            p.Z+distance*(old.Z-axes[index].Z),p.W+distance*(old.W-axes[index].W));
-        return new(position,new(axes[0],axes[1],axes[2],newW));
+        var r=item.Pose.Rotation; var axis=new[]{r.X,r.Y,r.Z}[(int)item.Interaction.LongAxis];
+        var pivot=World.Add(item.Pose.Position,World.Transform(r,item.Interaction.Hinge));
+        var count=World.SamplingSteps(item,item.Pose,pivot,axis,Math.PI/2);
+        for(var i=0;i<=count;i++)
+        {
+            var angle=sign*Math.PI/2*i/count;
+            Vec4 Turn(Vec4 value) => World.Rotate(value,axis,angle);
+            yield return new(World.Add(pivot,Turn(World.Sub(item.Pose.Position,pivot))),new(Turn(r.X),Turn(r.Y),Turn(r.Z),Turn(r.W)));
+        }
     }
 }

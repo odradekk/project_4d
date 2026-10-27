@@ -77,6 +77,16 @@ internal sealed partial class WorldValidation
                     Shape(t.Shape, t.Source, t.Id, validPose);
                     Interaction(t, owner, sections.Values);
                     break;
+                case Creature3Definition c:
+                    if (!sections.TryGetValue(c.Section, out var actorSection)) Error(LoadErrorCode.MissingReference, Field(c.Source, "Section"), "Unknown section.", c.Id);
+                    else if (double.IsFinite(actorSection.W) && c.Pose.Position.W != actorSection.W) Error(LoadErrorCode.InvalidPose, Field(c.Source, "Pose.Position.W"), "Actor W must equal its section W.", c.Id);
+                    if (!double.IsFinite(c.PassageRadius)) Error(LoadErrorCode.InvalidNumber, Field(c.Source, "PassageRadius"), "Passage radius must be finite.", c.Id);
+                    else if (c.PassageRadius <= 0) Error(LoadErrorCode.InvalidGeometry, Field(c.Source, "PassageRadius"), "Passage radius must be positive.", c.Id);
+                    if (!double.IsFinite(c.PassageHeight)) Error(LoadErrorCode.InvalidNumber, Field(c.Source, "PassageHeight"), "Passage height must be finite.", c.Id);
+                    else if (c.PassageHeight <= 0) Error(LoadErrorCode.InvalidGeometry, Field(c.Source, "PassageHeight"), "Passage height must be positive.", c.Id);
+                    else if (double.IsFinite(c.PassageRadius) && c.PassageRadius > 0 && c.PassageHeight / 2 < c.PassageRadius)
+                        Error(LoadErrorCode.InvalidGeometry, Field(c.Source, "PassageHeight"), "Passage height must be at least twice the radius.", c.Id);
+                    break;
                 default:
                     Error(LoadErrorCode.UnsupportedDefinition, e.Source, "This entity category is not implemented.", e.Id);
                     break;
@@ -85,7 +95,7 @@ internal sealed partial class WorldValidation
         errors.AddRange(WorldInterference.Check(d, errors));
         Unsupported(d.Seams, s => s.Source, root, "Seams");
         Unsupported(d.SharedValues, s => s.Source, root, "SharedValues");
-        Unsupported(d.ExpectedOperations, s => s.Source, root, "ExpectedOperations");
+        if (d.ExpectedOperations is null) Error(LoadErrorCode.InvalidGeometry, root, "ExpectedOperations collection is required.");
     }
     private void Unsupported<T>(IReadOnlyList<T>? values, Func<T, Source> source, Source root, string name)
     {

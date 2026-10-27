@@ -19,6 +19,11 @@ internal sealed partial class WorldValidation
         var hinge=Component(interaction.Hinge);
         if (hinge-bounds.Min(x=>x.Min) < .02-1e-10 || Math.Abs(bounds.Max(x=>x.Max)-hinge-interaction.Reach)>1e-10)
             Error(LoadErrorCode.InvalidInteraction, source, "Hinge and reach must match shape.", t.Id);
+        // W extrema during either quarter-turn include the W thickness of each vertex.
+        var farthest=bounds.SelectMany(b=>new[]{Math.Abs(b.Min-hinge),Math.Abs(b.Max-hinge)}).Max();
+        var sweptW=Math.Sqrt(farthest*farthest+World.Epsilon*World.Epsilon);
+        if(building is not null && (t.Pose.Position.W-sweptW<building.WRange.Min-1e-10 || t.Pose.Position.W+sweptW>building.WRange.Max+1e-10))
+            Error(LoadErrorCode.BuildingCoverage, Field(t.Source,"Building"), "Object's full turning range exceeds its building.",t.Id);
         foreach(var direction in new[] {-1d,1d}) foreach(var b in bounds)
         {
             var ends=new[] {t.Pose.Position.W + direction*(b.Min-hinge),t.Pose.Position.W + direction*(b.Max-hinge)};
