@@ -70,6 +70,8 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。当前阶段一个区域只放一个玩家出生点。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。
 
+适配层不读取、只供场景脚本按名字取用的节点放在区域根下的三个分组里：`Props` 放 Interactable3D，`Marks` 放 Marker3D，`Signs` 放 Label3D。Props 的碰撞层选第 3 层（`collision_layer = 4`），碰撞掩码为空，准星找得到，人和角色穿得过；提示文字由脚本写。Marks 是脚本要用的站位、朝向、要盯的点和路径点。三组都属于主视口而不是某个截面，只用在单截面的区域。例：`game/regions/street.tscn`。
+
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
 放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)。
