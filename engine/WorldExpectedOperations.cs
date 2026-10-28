@@ -140,6 +140,7 @@ public sealed partial class World
             if (step is ExpectedDevice moved && failure is null)
             {
                 var position = world.devices[moved.Device].Position;
+                // Negated so that a NaN position or expectation counts as a mismatch.
                 if (!(Math.Abs(position - moved.ExpectedPosition) <= ExpectedTolerance))
                     return [OperationError(operation, LoadErrorCode.ExpectedOperationFailed, $"Expected position {moved.ExpectedPosition}; got {position}.", i, moved.Device)];
             }
@@ -160,25 +161,17 @@ public sealed partial class World
     };
 
     // Plans and starts a rotation. Unless it is expected to fail, also advances time until it ends.
-    private static Failure? RunRotation(World world, ExpectedRotation rotation)
+    private static Failure? RunRotation(World world, ExpectedRotation rotation) => world.PlanRotation(rotation.Request) switch
     {
-        switch (world.PlanRotation(rotation.Request))
+        RotationPlanResult.Rejected rejected => rejected.Failure,
+        RotationPlanResult.Blocked blocked => blocked.Failure,
+        RotationPlanResult.Allowed allowed => world.StartRotation(allowed.Plan) switch
         {
-            case RotationPlanResult.Rejected rejected:
-                return rejected.Failure;
-            case RotationPlanResult.Blocked blocked:
-                return blocked.Failure;
-            case RotationPlanResult.Allowed allowed:
-                switch (world.StartRotation(allowed.Plan))
-                {
-                    case StartRotationResult.Rejected startRejected:
-                        return startRejected.Failure;
-                    case StartRotationResult.Started started when rotation.ExpectedFailure is null:
-                        return (world.Step(started.Duration) as StepResult.Rejected)?.Failure;
-                }
-                return null;
-            default:
-                return null;
-        }
-    }
+            StartRotationResult.Rejected startRejected => startRejected.Failure,
+            StartRotationResult.Started started when rotation.ExpectedFailure is null =>
+                (world.Step(started.Duration) as StepResult.Rejected)?.Failure,
+            _ => null
+        },
+        _ => null
+    };
 }
