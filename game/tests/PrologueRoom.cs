@@ -108,6 +108,7 @@ public partial class PrologueChecks
         var deep = (DeepRoom)prologue.Scene!;
         // Scene 8 hosts the room, and scene 9 takes it over: the same region, with her and the cat as scene 8 leaves them.
         Check(Region == roomRegion && deep.Region == roomRegion && roomRegion.GetParent() is CatRoom, "scene 9 plays in the room that scene 8 loaded");
+        CheckKeptScenesIdle(9);
         Check(Region.CurrentSection == "Ⅰ" && deep.Now == DeepRoom.Stage.Following && Player.Hud.NotebookAvailable, "she is where scene 8 had her, with the notebook");
         Check(deep.CatBody.Section == "Ⅲ" && deep.CatBody.Mirrored, "the cat is in section III, a mirror image, as scene 8 leaves it");
         speed = 1;
@@ -138,6 +139,11 @@ public partial class PrologueChecks
         speed = 1;
         await Until(() => deep.Cut!.TitleVisible, 10, "the title must come up");
         Check(deep.Cut!.TitleText != "", "the title is on the black screen");
+        // The prologue is over: Backspace does not start the scene again.
+        var starts = startCount;
+        Press(Key.Backspace);
+        await play.Frames(90);
+        Check(startCount == starts && GodotObject.IsInstanceValid(deep), "Backspace does nothing once the screen is black");
     }
 
     // She stands at a seam, raises the lens, scrolls to the section she means to go to and clicks.

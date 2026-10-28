@@ -12,10 +12,11 @@ namespace Game.Flow;
 /// The prologue from scene 1 to scene 9, one scene after the other. A scene is added to this node and plays until it emits
 /// Finished and the line it is saying is said. Between two scenes the screen fades to black and the scene before is freed with
 /// its region. A scene can play in the region of the scene before, as scenes 4 and 5 do in the school of scene 3 and scene 9 in
-/// the room of scene 8; the scene that loaded the region stays, since the region is its child, until the last of them is over.
+/// the room of scene 8; the scene that loaded the region stays, since the region is its child, and does nothing more, until the last of them is over.
 /// What the scenes pass on is kept here: the notebook, and the money, which a scene is given as a copy. Backspace starts the
 /// scene again from what the scene before passed on, in a region loaded anew; every scene has a checkpoint at its start that
-/// does the same, unless it set its own. The last scene, which ends on the title, stays on the screen when it is over.
+/// does the same, unless it set its own. The last scene, which ends on the title, stays on the screen when it is over, and
+/// Backspace does nothing from its black screen on.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 public partial class Prologue : Node
@@ -56,12 +57,12 @@ public partial class Prologue : Node
         hint.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomLeft, Control.LayoutPresetMode.Minsize, 12);
 
         await Play(_ => new HomeMorning());
-        var road = await Play(_ => new SchoolRoad());
+        var mao = (await Play(_ => new SchoolRoad())).Wallet.Mao;
         await Play(region => new MathClass { Region = region });
         await Play(region => new Recess { Region = region }, true);
         await Play(region => new Duty { Region = region }, true);
         // The money is a copy, so that starting the scene again gives it the money it started with.
-        await Play(_ => new HomeRoad { Wallet = new Wallet(road.Wallet.Mao) });
+        await Play(_ => new HomeRoad { Wallet = new Wallet(mao) });
         // Scene 6 ends with the cat in her arms.
         await Play(_ => new HomeEvening { CarryingCat = true });
         await Play(_ => new CatRoom());
@@ -73,11 +74,13 @@ public partial class Prologue : Node
 
     public override void _UnhandledInput(InputEvent input)
     {
+        // The black screen of scene 9 ends the prologue.
+        if (Scene is DeepRoom { Cut: not null }) return;
         if (input is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Backspace }) Restart();
     }
 
-    /// <summary>Starts the scene again, from what the scene before passed on.</summary>
-    public void Restart() => running?.TrySetResult(false);
+    // Starts the scene again, from what the scene before passed on.
+    private void Restart() => running?.TrySetResult(false);
 
     /// <summary>
     /// Plays the scene until it finishes. <paramref name="create"/> makes the scene, given the region of the scene before if
@@ -141,6 +144,14 @@ public partial class Prologue : Node
     {
         if (Scene is null) return;
         await ToSignal(Fade(1), Tween.SignalName.Finished);
+        // The node that holds the region does nothing more. Its own callbacks stop, not the whole node, which would freeze the region.
+        if (keep is not null)
+        {
+            keep.SetProcess(false);
+            keep.SetPhysicsProcess(false);
+            keep.SetProcessInput(false);
+            keep.SetProcessUnhandledInput(false);
+        }
         foreach (var node in GetChildren().Where(node => node != layer && node != keep).ToArray())
         {
             RemoveChild(node);

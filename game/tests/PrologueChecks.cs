@@ -15,8 +15,9 @@ namespace Game.Tests;
 /// The prologue from scene 1 to scene 9 played through in one run, started as the main scene starts it and without a debug
 /// entry. Each scene is finished by the quickest moves that its own checks use. What is checked is the way between the scenes:
 /// every scene starts with a checkpoint and with what the scenes before gave it, the scenes of the school share one region,
-/// a region is gone before the next one is loaded, and a scene that is started again starts as it did the first time. Waits for
-/// the scripts of the scenes run at a faster pace.
+/// a region is gone before the next one is loaded, the scene that holds a shared region does nothing more, and a scene that is
+/// started again starts with what it was given the first time (scene 9 further on, with her already in section II, as it starts
+/// by itself). Waits for the scripts of the scenes run at a faster pace.
 /// </summary>
 public partial class PrologueChecks : Node
 {
@@ -97,6 +98,15 @@ public partial class PrologueChecks : Node
         await Until(() => startCount > before, 20, $"scene {number} must start again");
         await play.Frames(3);
         CheckStart(number, pages);
+    }
+
+    // The scenes before this one that are kept, because they hold the region, do not run any more: not their frames, not their keys.
+    private void CheckKeptScenesIdle(int number)
+    {
+        var kept = prologue.GetChildren().Where(node => node != prologue.Scene && node is not CanvasLayer).ToArray();
+        Check(kept.Length > 0, $"a scene is kept to hold the region of scene {number}");
+        Check(kept.All(node => !node.IsProcessing() && !node.IsPhysicsProcessing() && !node.IsProcessingInput() && !node.IsProcessingUnhandledInput()),
+            $"{string.Join(", ", kept.Select(node => node.GetType().Name))} does nothing while scene {number} plays");
     }
 
     // The scene has a checkpoint, only its own region is loaded, she holds nothing and carries nothing in the backpack, and the

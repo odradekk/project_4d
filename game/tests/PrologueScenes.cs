@@ -72,6 +72,7 @@ public partial class PrologueChecks
     {
         await Arrive(4, 1);
         Check(Region == schoolRegion, "scene 4 plays in the region of scene 3");
+        CheckKeptScenesIdle(4);
         await Until(() => school.Room.Classmates.All(person => !person.Visible), 40, "the class must leave");
         await school.DoTheTricks();
         await Until(() => Player.Hud.UnlockedPages.Contains(3), 10, "the pages of the tricks must be drawn");
@@ -89,6 +90,8 @@ public partial class PrologueChecks
     private async Task<Region3D> PlayDuty(Region3D schoolRegion)
     {
         await Arrive(5, 1, 2, 3);
+        // Scene 4 was started again, so the node that holds the region is the new one: it must not keep the pencil on the sill.
+        CheckKeptScenesIdle(5);
         var room = school.Room;
         Check(Region == schoolRegion && room.IsUpright(SchoolRoom.WindowPencil), "scene 5 plays in the same region, and the pencil that scene 4 stood in the rail still stands");
         await Until(() => room.Broom.CollisionLayer != 0, 40, "the chores must start");
