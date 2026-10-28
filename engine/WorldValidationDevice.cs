@@ -12,8 +12,6 @@ internal sealed partial class WorldValidation
         Motion(device, validPose);
     }
 
-    private static Source At(Source source, string path) => source with { Property = $"{source.Property}{path}" };
-
     private void Loft(LoftShape? shape, Source source, EntityId entity)
     {
         if (shape?.Segments is null || shape.Segments.Count == 0)
@@ -25,7 +23,7 @@ internal sealed partial class WorldValidation
         double? previousEnd = null;
         for (var i = 0; i < shape.Segments.Count; i++)
         {
-            var location = At(source, $".Segments[{i}]");
+            var location = Field(source, $"Segments[{i}]");
             var keys = shape.Segments[i]?.Keys;
             if (keys is null || keys.Count < 2)
             {
@@ -42,30 +40,30 @@ internal sealed partial class WorldValidation
         var errorsBefore = errors.Count;
         for (var j = 0; j < keys.Count; j++)
         {
-            var key = At(location, $".Keys[{j}]");
+            var key = Field(location, $"Keys[{j}]");
             if (keys[j]?.Parts is null || keys[j].Parts.Count == 0)
             {
                 Error(LoadErrorCode.InvalidGeometry, key, "A key needs at least one part.", entity);
                 continue;
             }
-            if (!double.IsFinite(keys[j].W)) Error(LoadErrorCode.InvalidNumber, At(key, ".W"), "Key W must be finite.", entity);
+            if (!double.IsFinite(keys[j].W)) Error(LoadErrorCode.InvalidNumber, Field(key, "W"), "Key W must be finite.", entity);
             else if (j > 0 && keys[j - 1] is not null && keys[j].W <= keys[j - 1].W)
-                Error(LoadErrorCode.InvalidInterval, At(key, ".W"), "Keys must have increasing W.", entity);
+                Error(LoadErrorCode.InvalidInterval, Field(key, "W"), "Keys must have increasing W.", entity);
             else if (j == 0 && keys[j].W < previousEnd)
-                Error(LoadErrorCode.InvalidInterval, At(key, ".W"), "A segment must start where the one before it ends or later.", entity);
+                Error(LoadErrorCode.InvalidInterval, Field(key, "W"), "A segment must start where the one before it ends or later.", entity);
             if (j == 0 && keys[j].Parts.Any(part => part is not null && !ids.Add(part.Id)))
                 Error(LoadErrorCode.DuplicateId, key, "Part IDs are unique within a device.", entity);
             var sameParts = j > 0 && keys[0]?.Parts is not null && keys[0].Parts.Count == keys[j].Parts.Count;
             if (j > 0 && !sameParts) Error(LoadErrorCode.InvalidGeometry, key, "Every key of a segment needs the same parts.", entity);
             for (var k = 0; k < keys[j].Parts.Count; k++)
-                if (sameParts) Corresponding(keys[0].Parts[k], keys[j].Parts[k], At(key, $".Parts[{k}]"), entity);
-                else ConvexSolid(keys[j].Parts[k], At(key, $".Parts[{k}]"), entity);
+                if (sameParts) Corresponding(keys[0].Parts[k], keys[j].Parts[k], Field(key, $"Parts[{k}]"), entity);
+                else ConvexSolid(keys[j].Parts[k], Field(key, $"Parts[{k}]"), entity);
         }
         if (errors.Count > errorsBefore) return;
 
         for (var j = 0; j + 1 < keys.Count; j++)
             for (var k = 0; k < keys[j].Parts.Count; k++)
-                Piece(new(keys[j], keys[j + 1], k, false, false), At(location, $".Keys[{j}].Parts[{k}]"), entity);
+                Piece(new(keys[j], keys[j + 1], k, false, false), Field(location, $"Keys[{j}].Parts[{k}]"), entity);
     }
 
     // Reports what is wrong with a part, and whether it is a closed convex solid with faces that wind outward.
@@ -77,7 +75,7 @@ internal sealed partial class WorldValidation
             Error(LoadErrorCode.InvalidGeometry, location, "Part is required.", entity);
             return;
         }
-        Id(part.Id.Value, At(location, ".Id"), entity);
+        Id(part.Id.Value, Field(location, "Id"), entity);
         if (part.Vertices is null || part.Faces is null || part.Faces.Count < 4)
         {
             Error(LoadErrorCode.InvalidGeometry, location, "A part needs vertices and at least four faces.", entity);
@@ -85,15 +83,15 @@ internal sealed partial class WorldValidation
         }
         if (part.Vertices.Any(vertex => !Box4.ToArray(vertex).All(double.IsFinite)))
         {
-            Error(LoadErrorCode.InvalidNumber, At(location, ".Vertices"), "Vertices must be finite.", entity);
+            Error(LoadErrorCode.InvalidNumber, Field(location, "Vertices"), "Vertices must be finite.", entity);
             return;
         }
         foreach (var face in part.Faces)
         {
             if (face?.Vertices is null || face.Vertices.Count < 3 || face.Vertices.Any(vertex => vertex < 0 || vertex >= part.Vertices.Count))
-                Error(LoadErrorCode.InvalidGeometry, At(location, ".Faces"), "A face lists at least three vertices of the part.", entity);
+                Error(LoadErrorCode.InvalidGeometry, Field(location, "Faces"), "A face lists at least three vertices of the part.", entity);
             else if (!ValidUv(face.Uv))
-                Error(LoadErrorCode.InvalidGeometry, At(location, ".Faces"), "UV axes must be valid, scale nonzero and offsets finite.", entity);
+                Error(LoadErrorCode.InvalidGeometry, Field(location, "Faces"), "UV axes must be valid, scale nonzero and offsets finite.", entity);
         }
         if (errors.Count == errorsBefore) CheckConvex(part, location, entity);
     }
@@ -108,7 +106,7 @@ internal sealed partial class WorldValidation
     // comparisons are written so that the NaN of a face without area fails them.
     private void CheckConvex(ConvexPart part, Source location, EntityId entity)
     {
-        void Fail(string detail) => Error(LoadErrorCode.InvalidGeometry, At(location, ".Faces"), detail, entity);
+        void Fail(string detail) => Error(LoadErrorCode.InvalidGeometry, Field(location, "Faces"), detail, entity);
         var vertices = part.Vertices.Select(vertex => new[] { vertex.X, vertex.Y, vertex.Z }).ToArray();
         var edges = part.Faces
             .SelectMany(face => face.Vertices.Select((vertex, i) => (vertex, face.Vertices[(i + 1) % face.Vertices.Count])))
@@ -185,14 +183,14 @@ internal sealed partial class WorldValidation
         switch (device.Motion)
         {
             case DeviceRotation rotation:
-                if (!Enum.IsDefined(rotation.Plane)) Error(LoadErrorCode.InvalidMotion, At(source, ".Plane"), "Unknown rotation plane.", device.Id);
-                if (!Box4.ToArray(rotation.Pivot).All(double.IsFinite)) Error(LoadErrorCode.InvalidNumber, At(source, ".Pivot"), "Pivot must be finite.", device.Id);
+                if (!Enum.IsDefined(rotation.Plane)) Error(LoadErrorCode.InvalidMotion, Field(source, "Plane"), "Unknown rotation plane.", device.Id);
+                if (!Box4.ToArray(rotation.Pivot).All(double.IsFinite)) Error(LoadErrorCode.InvalidNumber, Field(source, "Pivot"), "Pivot must be finite.", device.Id);
                 MotionRange(rotation.Limits, rotation.Initial, source, device.Id);
                 break;
             case DeviceTranslation translation:
-                if (!Enum.IsDefined(translation.Axis)) Error(LoadErrorCode.InvalidMotion, At(source, ".Axis"), "Unknown track axis.", device.Id);
+                if (!Enum.IsDefined(translation.Axis)) Error(LoadErrorCode.InvalidMotion, Field(source, "Axis"), "Unknown track axis.", device.Id);
                 else if (validPose is Pose4 pose && !OnWorldAxis(World.LocalAxis(pose.Rotation, translation.Axis)))
-                    Error(LoadErrorCode.InvalidMotion, At(source, ".Axis"), "The track must run along the world X, Y or Z axis, with no part in W.", device.Id);
+                    Error(LoadErrorCode.InvalidMotion, Field(source, "Axis"), "The track must run along the world X, Y or Z axis, with no part in W.", device.Id);
                 MotionRange(translation.Limits, translation.Initial, source, device.Id);
                 break;
             default:
@@ -212,11 +210,11 @@ internal sealed partial class WorldValidation
     private void MotionRange(Interval limits, double initial, Source source, EntityId entity)
     {
         if (!double.IsFinite(limits.Min) || !double.IsFinite(limits.Max))
-            Error(LoadErrorCode.InvalidNumber, At(source, ".Limits"), "Limits must be finite.", entity);
+            Error(LoadErrorCode.InvalidNumber, Field(source, "Limits"), "Limits must be finite.", entity);
         else if (limits.Min >= limits.Max)
-            Error(LoadErrorCode.InvalidMotion, At(source, ".Limits"), "Limits must have positive length.", entity);
+            Error(LoadErrorCode.InvalidMotion, Field(source, "Limits"), "Limits must have positive length.", entity);
         else if (double.IsFinite(initial) && (initial < limits.Min || initial > limits.Max))
-            Error(LoadErrorCode.InvalidMotion, At(source, ".Initial"), "The initial position must lie within the limits.", entity);
-        if (!double.IsFinite(initial)) Error(LoadErrorCode.InvalidNumber, At(source, ".Initial"), "The initial position must be finite.", entity);
+            Error(LoadErrorCode.InvalidMotion, Field(source, "Initial"), "The initial position must lie within the limits.", entity);
+        if (!double.IsFinite(initial)) Error(LoadErrorCode.InvalidNumber, Field(source, "Initial"), "The initial position must be finite.", entity);
     }
 }

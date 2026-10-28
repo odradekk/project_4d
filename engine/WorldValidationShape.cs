@@ -13,7 +13,7 @@ internal sealed partial class WorldValidation
         for (var i = 0; i < shape.Parts.Count; i++)
         {
             var part = shape.Parts[i];
-            var location = source with { Property = $"{source.Property}.Parts[{i}]" };
+            var location = Field(source, $"Parts[{i}]");
             if (part is null)
             {
                 Error(LoadErrorCode.InvalidGeometry, location, "Box part is required.", entity);
