@@ -36,15 +36,13 @@ public sealed partial class World
     }
 
     // The slices of the grazers in the section at w; those the section does not cut have none.
-    private IEnumerable<SliceGeometry> GrazerSlices(double w)
+    private IEnumerable<SliceGeometry> GrazerSlices(double w) => grazers.Values.Select(grazer => Slice(grazer, w)).OfType<SliceGeometry>();
+
+    private static SliceGeometry? Slice(Grazer grazer, double w)
     {
-        foreach (var grazer in grazers.Values)
-        {
-            var buffer = new SliceBuffer();
-            MetaballSlice.Append(grazer.Shape, grazer.Pose, w, buffer);
-            if (buffer.Parts.Count == 0) continue;
-            yield return buffer.ToSlice(grazer.Definition.Id, MetaballSlice.ReachesBeyondALayer(grazer.Shape, grazer.Pose));
-        }
+        var buffer = new SliceBuffer();
+        MetaballSlice.Append(grazer.Shape, grazer.Pose, w, buffer);
+        return buffer.Parts.Count == 0 ? null : buffer.ToSlice(grazer.Definition.Id, MetaballSlice.ReachesBeyondALayer(grazer.Shape, grazer.Pose));
     }
 
     /// <summary>

@@ -13,9 +13,7 @@ public sealed partial class World
         if (target is null || ReadEntity(entity) is not EntityReadResult.Found found) return Reject("Unknown entity or section.");
         if (part is { } id && !PartIds(found.Entity.Definition).Contains(id)) return Reject("Unknown part.");
 
-        var geometry = (SectionGeometryResult.Geometry)GetGeometryAtW(target.W);
-        var slice = geometry.Entities.FirstOrDefault(candidate => candidate.Entity == entity);
-        if (slice is null) return new SliceBoundsResult.Empty();
+        if (SliceOf(entity, target.W) is not { } slice) return new SliceBoundsResult.Empty();
         var vertices = Enumerable.Range(0, slice.Parts.Count).Where(i => part is null || slice.Parts[i] == part).ToArray();
         if (vertices.Length == 0) return new SliceBoundsResult.Empty();
 
