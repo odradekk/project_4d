@@ -92,6 +92,7 @@ public partial class Region3D : Node3D
         foreach (var part in SceneReader.Descendants(this).OfType<BoxPart3D>()) part.Visible = false;
         if (result is LoadResult.Invalid invalid) { Fail(invalid.Errors); return; }
         var world = ((LoadResult.Loaded)result).World;
+        var authored = SceneReader.Descendants(this).OfType<Section3D>().ToArray();
         generated = Engine.IsEditorHint() ? new Node3D { Name = "Generated" } : new Node { Name = "Generated" };
         AddChild(generated);
         if (Engine.IsEditorHint())
@@ -104,6 +105,10 @@ public partial class Region3D : Node3D
             foreach (var (id, labels) in reader.Lettering)
                 foreach (var label in labels) label.Visible = geometry.Entities.Any(slice => slice.Entity == id);
             generated.AddChild(SliceMesh.Build(geometry, reader.Materials, false, []));
+            // Only the Props of the section nearest to PreviewW show, so that the lights of one section do not light another.
+            var nearest = authored.OrderBy(section => Math.Abs(section.W - PreviewW)).FirstOrDefault();
+            foreach (var section in authored)
+                if (section.GetNodeOrNull<Node3D>("Props") is { } props) props.Visible = section == nearest;
             Loaded = true;
             return;
         }
@@ -159,6 +164,12 @@ public partial class Region3D : Node3D
                 }
             });
             viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -25, 0), LightEnergy = 0.8f });
+            // What a section holds under Props, such as its lights and the things to use in it, belongs to its world.
+            if (authored.Single(node => node.SectionId == section.Id.Value).GetNodeOrNull("Props") is { } props)
+            {
+                props.GetParent().RemoveChild(props);
+                viewport.AddChild(props);
+            }
             worlds.Add(section.Id.Value, viewport.World3D);
             sectionNodes.Add(section.Id.Value, viewport);
         }
