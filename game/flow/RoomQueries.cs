@@ -8,17 +8,20 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>What the room scene asks the engine. It reads the world through the engine's generic queries and nothing else.</summary>
-internal sealed class RoomQueries(World world)
+internal sealed class RoomQueries(Region3D region)
 {
-    internal const string PageI = "Ⅰ";
-    internal const string PageII = "Ⅱ";
-    internal const string PageIII = "Ⅲ";
-    // Page II's depth in this region, and half the thickness of an ordinary object (docs/frame/principles.md).
-    private const double PageIIDepth = .42;
-    private const double Epsilon = .006;
+    internal const string SectionI = "Ⅰ";
+    internal const string SectionII = "Ⅱ";
+    internal const string SectionIII = "Ⅲ";
     // An entity at rest sits at the height the engine finds for it, within this much.
     private const double RestMargin = .01;
+    // The floor of the room is a slab under the floor plane, and a box this high in it shows whether the floor is there.
+    private const float FloorProbeY = -.05f;
+    private const float FloorProbeHeight = .04f;
+    // The middle of a slice, as a share of its half width: a slice that hangs over the edge of a hole is not over the hole.
+    private const float MiddleShare = .7f;
 
+    private readonly World world = region.World!;
     private readonly Dictionary<(string, string, string?), ((Pose4, SectionId?, double?, bool) State, Aabb? Bounds)> known = [];
 
     internal EntityState State(string entity) => ((EntityReadResult.Found)world.ReadEntity(new EntityId(entity))).Entity;
@@ -50,11 +53,19 @@ internal sealed class RoomQueries(World world)
             && Math.Abs(support.RestingOriginY - state.Pose.Position.Y) < RestMargin;
     }
 
-    /// <summary>The entities that fill any of a box in page II, the box being given by its middle and half sizes.</summary>
-    internal IReadOnlyList<string> InPageII(Vector3 center, Vector3 half)
+    /// <summary>Whether there is no floor under the middle of a slice in section II: it hangs over a hole.</summary>
+    internal bool OverEmptySpace(Aabb slice)
     {
-        var pose = SceneReader.PoseOf(new Transform3D(Basis.Identity, center), PageIIDepth);
-        var box = new OccupancyBox(pose, new(half.X, half.Y, half.Z, Epsilon));
+        var middle = slice.GetCenter();
+        var reach = slice.Size.X / 2 * MiddleShare;
+        return InSectionII(new(middle.X, FloorProbeY, middle.Z), new(reach, FloorProbeHeight, reach)).Count == 0;
+    }
+
+    /// <summary>The entities that fill any of a box in section II, the box being given by its middle and half sizes.</summary>
+    internal IReadOnlyList<string> InSectionII(Vector3 center, Vector3 half)
+    {
+        var pose = SceneReader.PoseOf(new Transform3D(Basis.Identity, center), region.DepthOf(SectionII));
+        var box = new OccupancyBox(pose, new(half.X, half.Y, half.Z, CreatureLink.Epsilon));
         return world.QueryOccupancy(box, []) is OccupancyResult.Occupancy occupancy
             ? occupancy.Hits.Select(hit => hit.Entity.Value).Distinct().ToArray() : [];
     }

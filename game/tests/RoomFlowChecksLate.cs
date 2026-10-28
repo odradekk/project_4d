@@ -15,7 +15,7 @@ public partial class RoomFlowChecks
 {
     private async Task CheckBall()
     {
-        // The stool stood up over the pit is a sheet in page II that the cat does not step on.
+        // The stool stood up over the pit is a sheet in section II that the cat does not step on.
         Look(new(4.2f, Floor, 5.4f), new(4.2f, .45f, 4.8f));
         await Frames(3);
         Check(actions.Aimed == "stool" && actions.Use() is null, $"she picks the stool up; the crosshair is on {actions.Aimed}");
@@ -25,12 +25,13 @@ public partial class RoomFlowChecks
         room.Home.Hud.ClearText();
         Check(actions.StandOrLay() is null, "the stool can be stood up over the pit");
         await Until(() => room.Home.Hud.SubtitleText.Contains("薄得像张纸"), 6, "she must say that the sheet is too thin to step on");
+        Check(room.Home.Hud.SubtitleText.StartsWith("小满："), $"it is Xiaoman who says it: {room.Home.Hud.SubtitleText}");
         Check(room.Now == CatRoom.Stage.AtPit, "the cat does not cross on the stool");
         await Until(() => !ask.State("stool").Rotating, 3, "the stand-up must end");
         Check(actions.StandOrLay() is null, "she lays the stool down again");
         await Until(() => !ask.State("stool").Rotating, 3, "the laying down must end");
         Check(actions.Use() is null && actions.Held is null, "she puts the stool down");
-        // The ball is carried to the floor of page I over the pit, where page II's slice of it hangs in the hole.
+        // The ball is carried to the floor of section I over the pit, where section II's slice of it hangs in the hole.
         Look(new(4.3f, Floor, 4.1f), new(4.3f, .25f, 3.5f));
         await Frames(3);
         Check(actions.Aimed == "ball" && actions.Use() is null && actions.Held == "ball", $"she picks the ball up; the crosshair is on {actions.Aimed}");
@@ -42,8 +43,8 @@ public partial class RoomFlowChecks
         await Until(() => ask.IsResting("ball"), 3, "the ball must come to rest");
         var slice = ask.Bounds("ball", "Ⅱ")!.Value;
         Check(ask.State("ball").Pose.Position.Y is > .24 and < .26 && slice.Position.Y > .1f && slice.Position.Y < .13f,
-            $"the ball rests on the floor of page I and hangs 11 cm over the pit in page II: {slice}");
-        await Until(() => room.Now == CatRoom.Stage.Chasing, 8, "the cat must cross on the ball");
+            $"the ball rests on the floor of section I and hangs 11 cm over the pit in section II: {slice}");
+        await Until(() => room.Entries(CatRoom.Stage.Chasing) > 0, 8, "the cat must cross on the ball");
         Check(cat.Section == "Ⅱ" && cat.Position.Z < 3.95f && cat.Position.Y < .3f, $"the cat is across the pit: {cat.Position}");
     }
 
@@ -72,31 +73,30 @@ public partial class RoomFlowChecks
         await Until(() => !ask.State("nut").Rotating, 3, "the stand-up must end");
         Button(MouseButton.Right, false);
         var ring = ask.Bounds("nut", "Ⅱ", "ring");
-        Check(ring is not null, "the ring of the nut is in page II");
+        Check(ring is not null, "the ring of the nut is in section II");
         Near(ring!.Value.GetCenter(), new(6.71f, .9f, 4.3f), "the ring stands in front of the seam at the height of her chest");
         Check(actions.Use() is null && actions.Held is null, "she lets the nut go and the ring stays");
         // The yarn is put beyond the ring, as if she had waved the wand there.
+        var finished = false;
+        room.Finished += () => finished = true;
+        PickUpAt(CatRoom.Stage.Leaping);
         var wand = ask.State("wand");
         var yarn = ask.Bounds("wand", "Ⅱ", "yarn")!.Value.GetCenter();
         var at = wand.Pose.Position;
         var shifted = wand.Pose with { Position = new(at.X + 7f - yarn.X, at.Y, at.Z + 4.3f - yarn.Z, at.W) };
         Check(room.Home.Region.World!.PlaceEntity(new("wand"), shifted) is UpdateResult.Updated, "the wand is put where the yarn is beyond the ring");
-        // The cat leaps; picked up in the middle of the leap it is sent to the lure again, and leaps once more.
-        await Until(() => room.Now == CatRoom.Stage.Leaping, 20, "the cat must run up to the ring and leap");
-        // She is in page I and the cat in page II: the pick-up ends at once, the way a command is dropped when the cat is let go.
-        cat.GetNode<Interactable3D>("Pickup").Interact();
+        // The cat leaps; picked up the moment it leaps, it is sent to the lure again and leaps once more.
+        await Until(() => interrupted, 20, "the cat must run up to the ring and leap");
         await Frames(5);
         player.PutDown?.Invoke();
-        await Until(() => room.Now == CatRoom.Stage.Leaping, 20, "the cat must leap again");
-        var finished = false;
-        room.Finished += () => finished = true;
-        await Until(() => room.Now == CatRoom.Stage.Gone, 10, "the cat must vanish in the middle of the leap");
-        Check(cat.Section == "Ⅲ" && cat.Mirrored, $"the cat is in page III and mirrored: {cat.Section}");
+        await Until(() => room.Entries(CatRoom.Stage.Leaping) > 1, 20, "the cat must leap again");
+        await Until(() => room.Entries(CatRoom.Stage.Gone) > 0, 10, "the cat must vanish in the middle of the leap");
+        Check(cat.Section == "Ⅲ" && cat.Mirrored, $"the cat is in section III and mirrored: {cat.Section}");
         Check(room.Home.Hud.UnlockedPages.Contains(7), "the notebook has the page about the three kinds of things");
         await Until(() => finished, 8, "the scene must end");
     }
 
-    // The path of the lines drawn in the lens of page II, of a color.
+    // The path of the lines drawn in the lens of section II, of a color.
     private System.Collections.Generic.IEnumerable<Vector3> Lines(Color color)
     {
         var preview = room.Home.Region.GetNodeOrNull<MeshInstance3D>("Generated/Ⅱ/Overlay/Preview");

@@ -16,7 +16,7 @@ namespace Game.Tests;
 /// <summary>
 /// Scene 8 played through in one run, on the real physics and the real inputs: the cat leaps into the seam, the wand is
 /// flipped over the guard and stood up, the stool and the cabinet bring the board down, the ball bridges the pit, the nut's
-/// ring is set up and the cat leaps through it into page III. The cat is picked up in the middle of some of its commands.
+/// ring is set up and the cat leaps through it into section III. The cat is picked up in the middle of some of its commands.
 /// </summary>
 public partial class RoomFlowChecks : Node
 {
@@ -28,6 +28,11 @@ public partial class RoomFlowChecks : Node
     private PlayerActions actions = null!;
     private RoomQueries ask = null!;
     private Character3D cat = null!;
+    private long ticks;
+    private CatRoom.Stage? interrupt;
+    private bool interrupted;
+
+    public override void _PhysicsProcess(double delta) => ticks++;
 
     public override async void _Ready()
     {
@@ -38,8 +43,15 @@ public partial class RoomFlowChecks : Node
             await Frames(3);
             player = room.Home.Player;
             actions = room.Home.Region.Actions!;
-            ask = new RoomQueries(room.Home.Region.World!);
+            ask = new RoomQueries(room.Home.Region);
             cat = room.CatBody;
+            room.StageEntered += entered =>
+            {
+                if (entered != interrupt) return;
+                interrupt = null;
+                interrupted = true;
+                cat.GetNode<Interactable3D>("Pickup").Interact();
+            };
             await CheckIntro();
             await CheckFlipOverGuard();
             await CheckStandWand();
@@ -47,7 +59,7 @@ public partial class RoomFlowChecks : Node
             await CheckBoardAndPit();
             await CheckBall();
             await CheckRing();
-            GD.Print("Room flow checks passed: intro, flip over the guard, wand, stool and cabinet, pit, ball, ring and leap into page III, "
+            GD.Print("Room flow checks passed: intro, flip over the guard, wand, stool and cabinet, pit, ball, ring and leap into section III, "
                 + "with the cat picked up on the way.");
             RemoveChild(room);
             room.Free();
@@ -67,7 +79,7 @@ public partial class RoomFlowChecks : Node
 
     private async Task CheckIntro()
     {
-        Check(room.Now == CatRoom.Stage.Watching && cat.Posture == Posture.Sitting && cat.Section == "Ⅰ", "the cat sits in the corner of page I at first");
+        Check(room.Now == CatRoom.Stage.Watching && cat.Posture == Posture.Sitting && cat.Section == "Ⅰ", "the cat sits in the corner of section I at first");
         Check(room.Home.Hud.UnlockedPages.SequenceEqual([1, 2, 3, 4, 8]) && room.Home.Hud.NotebookAvailable, "she has the pages of the earlier scenes");
         Check(Flat(cat.Position - new Vector3(6.4f, 0, 4.3f)).Length() < .2f, $"the cat watches the corner from {cat.Position}");
         var pickup = cat.GetNode<Interactable3D>("Pickup");
@@ -77,17 +89,18 @@ public partial class RoomFlowChecks : Node
         pickup.Interact();
         await Frames(100);
         Check(room.Now == CatRoom.Stage.Watching && cat.GetNode<Cat>("Cat").Held, "the cat in her arms does not leap");
+        // Picked up again the moment it leaps, it leaps again when put down. A leap lasts a few frames, so the pick-up is made
+        // when the cat enters the stage and not when a poll happens to see it.
+        PickUpAt(CatRoom.Stage.Entering);
         player.PutDown!();
-        await Until(() => room.Now == CatRoom.Stage.Entering, 4, "the cat must leap at the seam once she looks at it");
-        // Picked up again in the middle of the leap, it leaps again when put down.
-        pickup.Interact();
+        await Until(() => interrupted, 4, "the cat must leap at the seam once she looks at it");
         await Frames(5);
         Check(cat.GetNode<Cat>("Cat").Held && room.Now == CatRoom.Stage.Entering, "the cat is in her arms in the middle of its leap");
         player.PutDown!();
-        await Until(() => room.Now == CatRoom.Stage.Perched, 6, "the cat must get into the seam all the same");
+        await Until(() => room.Entries(CatRoom.Stage.Perched) > 0, 6, "the cat must get into the seam all the same");
         Button(MouseButton.Right, false);
         Check(cat.Section == "Ⅱ" && Flat(cat.Position - new Vector3(3.85f, 0, 5.78f)).Length() < .2f && cat.Position.Y > 2.3f,
-            $"the cat is on top of the cabinet in page II: {cat.Position}");
+            $"the cat is on top of the cabinet in section II: {cat.Position}");
         Check(cat.Posture == Posture.Lying && !room.Home.Hud.UnlockedPages.Contains(5), "it lies there; she has not crossed yet");
     }
 
@@ -115,11 +128,11 @@ public partial class RoomFlowChecks : Node
         await Walk(new(5f, Floor, 4f));
         Face(new(5f, Floor, 4f), new(0, 0, -1));
         await Frames(10);
-        Check(actions.StandOrLay() is null, "the wand can be stood up toward page II");
+        Check(actions.StandOrLay() is null, "the wand can be stood up toward section II");
         await Until(() => !ask.State("wand").Rotating, 3, "the stand-up must end");
         var yarn = ask.Bounds("wand", "Ⅱ", "yarn");
-        Check(yarn is not null && ask.Bounds("wand", "Ⅰ", "yarn") is null, "only the yarn of the stood-up wand reaches page II");
-        Near(yarn!.Value.GetCenter(), new(4.78f, 1f, 3.4f), "the yarn lies in page II at the height of her hand, 0.22 m back from it");
+        Check(yarn is not null && ask.Bounds("wand", "Ⅰ", "yarn") is null, "only the yarn of the stood-up wand reaches section II");
+        Near(yarn!.Value.GetCenter(), new(4.78f, 1f, 3.4f), "the yarn lies in section II at the height of her hand, 0.22 m back from it");
         // The cat on the cabinet looks at the yarn.
         await Frames(10);
         var toYarn = Flat(yarn.Value.GetCenter() - cat.Position).Normalized();
@@ -131,7 +144,7 @@ public partial class RoomFlowChecks : Node
             player.Position = start + new Vector3(i % 2 == 0 ? .4f : 0, 0, 0);
             await Frames(4);
         }
-        Check(room.Home.Hud.UnlockedPages.Contains(6), "the page about operating one page from another is in the notebook");
+        Check(room.Home.Hud.UnlockedPages.Contains(6), "the page about operating one section from another is in the notebook");
         player.Position = start;
         await Frames(4);
         Check(actions.Use() is null && actions.Held is null && ask.Bounds("wand", "Ⅱ", "yarn") is not null, "she lets the stood-up wand go and it stays");
@@ -139,6 +152,8 @@ public partial class RoomFlowChecks : Node
 
     private async Task CheckCabinet()
     {
+        // The cat is picked up the moment it starts down the board.
+        PickUpAt(CatRoom.Stage.Descending);
         // The stool is carried to the door and put down under the cabinet.
         Look(new(6.3f, Floor, 3.9f), new(6.3f, .45f, 3.3f));
         await Frames(3);
@@ -166,7 +181,7 @@ public partial class RoomFlowChecks : Node
         Press(Key.E);
         await Until(() => ask.DevicePosition("cabinet") <= -Math.PI / 2 + 1e-9, 4, "the flap must open all the way");
         Check(ask.Bounds("cabinet", "Ⅱ", "plank") is { } plank && plank.Position.Y < .2f && plank.End.Y > 1.9f,
-            "the board of page II lies from the hinge down to the floor");
+            "the board of section II lies from the hinge down to the floor");
         Press(Key.Space);
         await Frames(30);
         Check(player.Position.Y < .1f, "Space steps off the stool");
@@ -174,15 +189,14 @@ public partial class RoomFlowChecks : Node
 
     private async Task CheckBoardAndPit()
     {
-        // The cat comes down for the yarn; picked up on its way, it is sent again.
-        await Until(() => room.Now == CatRoom.Stage.Descending, 6, "the cat must come down once the board is down and the yarn is near");
-        // She is in page I and the cat in page II: the pick-up ends at once, the way a command is dropped when the cat is let go.
-        cat.GetNode<Interactable3D>("Pickup").Interact();
+        // The cat comes down for the yarn; picked up on its way, it is sent again. She is in section I and the cat in section II, so
+        // the pick-up ends at once, the way a command is dropped when the cat is let go.
+        await Until(() => interrupted, 6, "the cat must come down once the board is down and the yarn is near");
         await Frames(5);
         player.PutDown?.Invoke();
-        await Until(() => room.Now == CatRoom.Stage.AtPit, 10, "the cat must come down the board all the same");
+        await Until(() => room.Entries(CatRoom.Stage.AtPit) > 0, 10, "the cat must come down the board all the same");
         Check(cat.Section == "Ⅱ" && Flat(cat.Position - new Vector3(4.95f, 0, 4.58f)).Length() < .15f && cat.Position.Y < .5f, $"the cat waits at the foot of the board: {cat.Position}");
-        // To page II through the seam: the page about seams, and a fall into the pit takes her back to where she stood.
+        // To section II through the seam: the page about seams, and a fall into the pit takes her back to where she stood.
         await Walk(new(7.1f, Floor, 4.3f));
         Look(Seam, new(7.1f, 1.3f, 3.3f));
         Button(MouseButton.Right, true);
@@ -190,10 +204,21 @@ public partial class RoomFlowChecks : Node
         Button(MouseButton.Left, true);
         await Frames(10);
         Button(MouseButton.Left, false);
-        Check(room.Home.Region.CurrentSection == "Ⅱ" && room.Home.Hud.UnlockedPages.Contains(5), "she crosses into page II and the notebook has the page about seams");
+        Check(room.Home.Region.CurrentSection == "Ⅱ" && room.Home.Hud.UnlockedPages.Contains(5), "she crosses into section II and the notebook has the page about seams");
         await Frames(10);
         player.Position = new(5f, .3f, 4.2f);
         await Until(() => player.Position.Y > -1 && player.IsOnFloor() && Flat(player.Position - Seam).Length() < .6f, 5, $"falling into the pit takes her back to where she stood; she is at {player.Position}");
+        // In section II she picks the cat up at the foot of the board, walks off with it and puts it down: it goes back to the foot.
+        cat.GetNode<Interactable3D>("Pickup").Interact();
+        await Frames(5);
+        Check(cat.GetNode<Cat>("Cat").Held && Flat(cat.Position - player.Position).Length() < 1f, $"the cat is in her arms: {cat.Position}");
+        await Walk(new(6.1f, Floor, 4.3f));
+        await Frames(5);
+        Check(Flat(cat.Position - player.Position).Length() < 1f, "it goes with her");
+        player.PutDown!();
+        await Until(() => Flat(cat.Position - new Vector3(4.95f, 0, 4.58f)).Length() < .3f && room.Now == CatRoom.Stage.AtPit, 6, "put down away from the board, the cat must go back to its foot");
+        await Walk(Seam);
+        Look(Seam, new(7.1f, 1.3f, 3.3f));
         Button(MouseButton.Left, true);
         await Frames(10);
         Button(MouseButton.Left, false);
@@ -202,6 +227,13 @@ public partial class RoomFlowChecks : Node
     }
 
     private static Vector3 Flat(Vector3 v) => new(v.X, 0, v.Z);
+
+    /// <summary>Has the cat picked up the moment it enters a stage: the leap of a stage may be over between two looks at it.</summary>
+    private void PickUpAt(CatRoom.Stage stage)
+    {
+        interrupt = stage;
+        interrupted = false;
+    }
 
     /// <summary>Puts her feet at a place with the eyes level, turned toward a direction.</summary>
     private void Face(Vector3 feet, Vector3 direction) => Look(feet, feet + new Vector3(0, 1.3f, 0) + direction);
@@ -228,9 +260,11 @@ public partial class RoomFlowChecks : Node
 
     private async Task Until(Func<bool> condition, double seconds, string message)
     {
-        for (var frame = 0; !condition(); frame++)
+        // Seconds of the game: physics frames at 60 a second, however many of them a frame of the process holds.
+        var limit = ticks + (long)(seconds * 60);
+        while (!condition())
         {
-            Check(frame < seconds * 60, $"{message} (not within {seconds} s)");
+            Check(ticks < limit, $"{message} (not within {seconds} s)");
             await Frames(1);
         }
     }

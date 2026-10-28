@@ -48,6 +48,9 @@ public partial class Region3D : Node3D
             new(0, 0, 0, sectionPositions[sourceSection]));
     }
 
+    /// <summary>The depth W of a section, as authored.</summary>
+    internal double DepthOf(string section) => sectionPositions[section];
+
     private double previewW;
     private bool prismEnabled = true;
     private Node? generated;

@@ -35,8 +35,7 @@ public partial class CatRoom
         var player = home.Player;
         if (player.Position.Y > OnSomething)
         {
-            var ahead = -player.Basis.Z;
-            player.Position += new Vector3(ahead.X, 0, ahead.Z).Normalized() * StepOff;
+            StepDown();
             return;
         }
         if (home.Region.Actions!.Holding || player.PutDown is not null)
@@ -44,10 +43,26 @@ public partial class CatRoom
             Say("小满", 2, "手里拿着东西呢。");
             return;
         }
-        if (!ask.IsResting("stool") || ask.Bounds("stool", home.Region.CurrentSection, "seat") is not { } seat) return;
+        // Only a stool that lies flat can be stood on: an upright one is a sheet in the section, which holds nothing up.
+        if (ask.State("stool").UprightOrigin is not null || !ask.IsResting("stool")
+            || ask.Bounds("stool", home.Region.CurrentSection, "seat") is not { } seat) return;
         var middle = seat.GetCenter();
         if (Flat(middle - player.Position).Length() > StoolReach) return;
         player.Position = new(middle.X, seat.End.Y + .03f, middle.Z);
         player.Velocity = Vector3.Zero;
+    }
+
+    // Steps off to the first side where nothing is in the way, starting ahead of her.
+    private void StepDown()
+    {
+        var player = home.Player;
+        var ahead = Flat(-player.Basis.Z).Normalized();
+        foreach (var degrees in new[] { 0, 45, -45, 90, -90, 135, -135, 180 })
+        {
+            var step = ahead.Rotated(Vector3.Up, Mathf.DegToRad(degrees)) * StepOff;
+            if (player.TestMove(player.GlobalTransform, step)) continue;
+            player.Position += step;
+            return;
+        }
     }
 }
