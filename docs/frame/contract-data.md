@@ -146,8 +146,8 @@ public abstract record SharedValueReadResult
 }
 ```
 
-动态添加接受 Turnable、Item、Device、Creature3、Grazer 五类，复用载入时的几何/引用/尺寸校验（Grazer 只校验它自己的 ID、姿态和形体，不涉及楼房）；Turnable/Item 的 Building 必须引用已载入楼房，正反竖起和隐藏结构范围也在添加前校验；静态楼房与固定物随世界载入。非法定义返回 InvalidInput，带 Source 的详情；已用 ID 返回 DuplicateId。成功后立即可读、可切片，事件由下一次 Step 交付。
+动态添加接受 Turnable、Item、Device、Creature3、Grazer 和固定物六类，复用载入时的几何/引用/尺寸校验（Grazer 只校验它自己的 ID、姿态和形体，不涉及楼房）；Turnable/Item 的 Building 必须引用已载入楼房，正反竖起和隐藏结构范围也在添加前校验；楼房元素只随世界载入。非法定义返回 InvalidInput，带 Source 的详情；已用 ID 返回 DuplicateId。添加固定物时还要通过占据检查：它的形体与现有的任何实体相交，或落在正在进行的旋转扫掠里，返回 TranslationBlocked，前者附接触。成功后立即可读、可切片，增加修订号，事件由下一次 Step 交付。
 
-RemoveEntity 只移除动态实体，Grazer 属于动态实体。不存在返回 UnknownId，静态类别返回 WrongEntityKind，正在旋转、被持有或携有物品时返回 EntityInUse；宿主先松手/放下并等动作结束。成功后切片和碰撞立即消失，其他实体的支撑在下一次 Step 重新求解。读取不存在的 ID 返回 Missing，不改变任何状态。
+RemoveEntity 移除动态实体和固定物，Grazer 属于动态实体。不存在返回 UnknownId，楼房元素返回 WrongEntityKind（楼房元素只能被啃食者咬掉），正在旋转、被持有或携有物品时返回 EntityInUse；宿主先松手/放下并等动作结束。成功后切片和碰撞立即消失，增加修订号，其他实体的支撑在下一次 Step 重新求解。移除的 ID 不能再被 AddEntity 使用，所以要换位置的固定物，用新 ID 重新添加。读取不存在的 ID 返回 Missing，不改变任何状态。
 
 例：添加 R=0.25、Position.W=0.21 的球，在 W=0 和 0.42 得到相同球切片；把其 XYZ 平移 0.1m 后，两份切片都移动 0.1m；移除后两个截面的切片均不存在。
