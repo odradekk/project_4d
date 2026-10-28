@@ -17,6 +17,8 @@ public static class DebugScenes
             "math-class" => "res://flow/math_class.tscn",
             "school-road" => "res://flow/school_road.tscn",
             "home-road" => "res://flow/home_road.tscn",
+            "recess" => "res://flow/recess.tscn",
+            "duty" => "res://flow/duty.tscn",
             _ => null
         };
 #else

@@ -48,6 +48,9 @@ public partial class FirstPersonPlayer : CharacterBody3D
     /// </summary>
     public IReadOnlyDictionary<string, string> LensMarks { get; set; } = new Dictionary<string, string>();
 
+    /// <summary>The prompts for the devices that are not pulled, such as a window that is pushed, by entity ID.</summary>
+    public IReadOnlyDictionary<string, string> DevicePrompts { get; set; } = new Dictionary<string, string>();
+
     /// <summary>E was pressed with the crosshair on one of the <see cref="LensMarks"/> in the lens.</summary>
     [Signal] public delegate void LensMarkedEventHandler(string entity);
 
@@ -224,7 +227,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
         var keys = new List<string>();
         var holding = actions is { Holding: true };
         if (PutDown is not null && !holding) keys.Add("E  放下");
-        else if (!holding && aimedEntity is not null && actions is not null && actions.IsDevice(aimedEntity)) keys.Add("E  拉动");
+        else if (!holding && aimedEntity is not null && actions is not null && actions.IsDevice(aimedEntity))
+            keys.Add($"E  {DevicePrompts.GetValueOrDefault(aimedEntity, "拉动")}");
         if (actions is null || (!holding && (aimedEntity is null || !actions.IsHoldable(aimedEntity)))) return keys;
         var upright = holding ? actions.HeldIsUpright : actions.IsUpright(aimedEntity!);
         if (holding) keys.Add(upright ? "E  松手" : "E  放下");
