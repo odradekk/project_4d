@@ -20,10 +20,13 @@ internal sealed partial class SceneReader
                 continue;
             }
             var steps = new List<ExpectedStep>();
-            foreach (var step in operation.Steps)
+            for (var index = 0; index < operation.Steps.Count; index++)
             {
-                if (ReadStep(step) is { } read) steps.Add(read);
-                else Error(node, "Operation", "A step is missing or of an unknown kind.");
+                var step = operation.Steps[index];
+                if (step is ExpectedRotationResource { Kind: not ExpectedRotationKind.StandUp, Target: not "" })
+                    Error(node, $"Operation.Steps[{index}]", "Only a StandUp has a Target.");
+                else if (ReadStep(step) is { } read) steps.Add(read);
+                else Error(node, $"Operation.Steps[{index}]", "A step is missing or of an unknown kind.");
             }
             operations.Add(new(new(operation.Id), At(node, "Operation"), new([], [], [], []), steps));
         }
