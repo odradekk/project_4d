@@ -4,8 +4,8 @@ namespace Game.Adapter;
 
 /// <summary>
 /// A grazer as authored: where its body starts, and its body as balls. The body origin is the node's X, Y and Z and
-/// <see cref="W"/>, and its turn is <see cref="Rotation4"/>; the node's own rotation is not read. A grazer moves by
-/// script, so the node only gives its first frame.
+/// <see cref="W"/>. Its turn is the rotation of the node or <see cref="Rotation4"/>, not both, as for the items. A grazer
+/// moves by script, so the node only gives its first frame.
 /// Decision note: 2026-10-26-region-scene-authoring
 /// </summary>
 [Tool, GlobalClass]

@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝、啃食者，以及玩家和角色的出生点、四维球、隐藏圆环物和放样装置，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform；Grazer3D 的 `Rotation4` 已导出。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝、啃食者，以及玩家和角色的出生点、四维球、隐藏圆环物和放样装置，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。
 
 ## 节点与导出属性
 
@@ -71,7 +71,7 @@ double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
-放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)；啃食者的形体和时间轴，见[啃食者搭法](grazer-authoring.md)。
+放样装置里各截面的零件怎么搭，见[装置搭法](device-authoring.md)；角色场景的格式、路线和抱猫，见[角色搭法](character-authoring.md)。
 
 ## 独立前置布置与预期操作
 

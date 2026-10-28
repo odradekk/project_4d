@@ -109,6 +109,15 @@ public partial class GrazerChecks : Node
         Check(loaded is LoadResult.Loaded { World: var world } && ((EntityReadResult.Found)world.ReadEntity(Grazer)).Entity.Pose.Rotation.X == new Vec4(0, 1, 0, 0),
             "Rotation4 is read a column at a time");
         node.Rotation4 = [];
+        node.RotationDegrees = new(0, 90, 0);
+        node.Rotation4 = [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        Check(Reports("Rotation4"), "a node that is rotated and has a Rotation4 as well is reported at Rotation4");
+        node.Rotation4 = [];
+        var turned = new SceneReader(play.Region).Load();
+        // A quarter turn of the node about the vertical axis takes +X to -Z.
+        Check(turned is LoadResult.Loaded { World: var turnedWorld } && Near(((EntityReadResult.Found)turnedWorld.ReadEntity(Grazer)).Entity.Pose.Rotation.X, new(0, 0, -1, 0)),
+            "a grazer with no Rotation4 turns as its node does");
+        node.RotationDegrees = Vector3.Zero;
         // Trying the open shape at load leaves the grazer shut: with its first frame in section I, the slice is as wide as the
         // ring of lips, 2 m round plus what the surface adds, and not 3 m round as with the mouth open.
         node.W = 0;
@@ -161,6 +170,9 @@ public partial class GrazerChecks : Node
         Refused("a bite of a seam that is not there", "grazer", [], [new("nowhere")]);
         Check(!grazers.IsPlaying("grazer"), "a refused timeline does not start");
     }
+
+    private static bool Near(Vec4 actual, Vec4 expected) =>
+        Math.Abs(actual.X - expected.X) + Math.Abs(actual.Y - expected.Y) + Math.Abs(actual.Z - expected.Z) + Math.Abs(actual.W - expected.W) < 1e-6;
 
     private static void Near4(Vec4 actual, Vec4 expected, string message) =>
         Check(Math.Abs(actual.X - expected.X) + Math.Abs(actual.Y - expected.Y) + Math.Abs(actual.Z - expected.Z) + Math.Abs(actual.W - expected.W) < 1e-9,
