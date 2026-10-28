@@ -32,7 +32,7 @@ public sealed partial class World
     {
         if (ReadEntity(entity) is not EntityReadResult.Found found)
             return new SupportResult.Rejected(Fail(FailureCode.UnknownId, "Unknown entity.", entity));
-        var candidates = SupportCandidates(entity).ToArray();
+        var candidates = SupportCandidates(entity, SolidsByEntity().ToArray(), pairLandings);
         if (candidates.Length == 0) return new SupportResult.Unsupported();
         var best = candidates.Min(candidate => candidate.Drop);
         var contacts = candidates
@@ -47,11 +47,10 @@ public sealed partial class World
     // A box the entity lands on, and how far the entity falls to reach it.
     private sealed record SupportCandidate(double Drop, SupportContact Contact);
 
-    private SupportCandidate[] SupportCandidates(EntityId entity) =>
-        SupportCandidates(entity, SolidsByEntity().ToArray(), []);
-
     // The landing of each pair is taken from `pairLandings` while neither of its records has been replaced; the pairs
-    // used go into `kept`.
+    // used go into `kept`. The candidates of one pair come moving solid first, then supporting solid. FindSupport
+    // sorts its contacts by support entity and part, and the sort is stable, so contacts on one part of one entity
+    // come back in that order.
     private SupportCandidate[] SupportCandidates(EntityId entity, EntitySolids[] owners, Dictionary<(EntityId, EntityId), PairLandings> kept)
     {
         if (owners.SingleOrDefault(owner => owner.Id == entity) is not { } moving) return [];
@@ -60,7 +59,7 @@ public sealed partial class World
         foreach (var support in owners.Where(owner => owner.Id != entity))
         {
             var key = (entity, support.Id);
-            if (!pairLandings.TryGetValue(key, out var pair) || pair.Moving != moving.Record || pair.Support != support.Record)
+            if (!pairLandings.TryGetValue(key, out var pair) || !ReferenceEquals(pair.Moving, moving.Record) || !ReferenceEquals(pair.Support, support.Record))
             {
                 var supportSolids = support.Solids.ToArray();
                 var landings = movingSolids.SelectMany(solid => supportSolids.Select(other => Landing(solid, other))).OfType<SupportCandidate>();
