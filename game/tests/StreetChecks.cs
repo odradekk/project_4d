@@ -22,6 +22,7 @@ public partial class StreetChecks : Node
     private static readonly Vector3 Landing = new(0, 3.02f, -12.5f);
     private static readonly Vector3 RampFoot = new(.75f, 0, -6.2f);
     private static readonly Vector3 Entrance = new(0, 0, -3.5f);
+    private static readonly Vector3 AtGate = new(62.5f, .02f, 2.5f);
 
     private TurningFixture play = null!;
     private Node scene = null!;
@@ -76,7 +77,7 @@ public partial class StreetChecks : Node
         await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
     }
 
-    private Interactable3D Prop(string name) => play.Region.GetNode<Interactable3D>($"Props/{name}");
+    private Interactable3D Prop(string name) => play.Region.Props("Ⅰ")!.GetNode<Interactable3D>(name);
 
     // Walks the player to a point with the movement keys, in a straight line, and lets go of them there.
     private async Task WalkTo(params Vector3[] points)
@@ -95,10 +96,10 @@ public partial class StreetChecks : Node
         Input.ActionRelease("run");
     }
 
-    // The prompt the crosshair shows for a prop from where the player stands.
-    private async Task<string> PromptAt(Vector3 feet, string prop)
+    // The prompt the crosshair shows for a point from where the player stands.
+    private async Task<string> PromptAt(Vector3 feet, Vector3 target)
     {
-        play.LookAt(feet, Prop(prop).GlobalPosition);
+        play.LookAt(feet, target);
         await play.Frames(2);
         return player.Hud.HintText;
     }
@@ -144,14 +145,15 @@ public partial class StreetChecks : Node
 
         // The cat is talked to before there is a bun, and cannot be carried.
         Check(coal.Posture == Posture.Sitting, "the cat sits under the stair");
-        Check(coal.GetNode<CollisionShape3D>("Pickup/Shape").Disabled, "the cat cannot be picked up on the school road");
-        Check(await PromptAt(new(-.6f, .02f, -8), "CatFeed") == "E  看看煤球", "the cat is offered for talking to");
+        Check(!coal.GetNode<Cat>("Cat").Holdable, "the cat cannot be picked up on the school road");
+        var catAt = new Vector3(0, .2f, 0);
+        Check(await PromptAt(new(-.6f, .02f, -8), coal.Position + catAt) == "E  看看煤球", "the cat is offered for talking to");
         Press(Key.E);
         await play.Until(() => subtitle.Contains("买个包子"), 6, "the cat must be promised a bun");
         Check(road.Wallet.Mao == 20 && coal.Posture == Posture.Sitting, "nothing is spent and the cat sits on");
 
         // The gate does not end the scene before the cat has been fed: she is reminded.
-        player.Position = new(64.2f, .02f, 2.5f);
+        await UseProp(AtGate, "SchoolGate", "进校门");
         await Says("煤球还在楼梯底下");
         Check(finished == 0, "the scene does not end at the gate while the cat has not been fed");
         player.Position = new(0, .02f, -3.5f);
@@ -166,8 +168,8 @@ public partial class StreetChecks : Node
 
         // Back at the cat: half the bun, then the stare at the empty corner and the question.
         await WalkTo(new Vector3(4, 0, -1.6f), Entrance, new Vector3(-.6f, 0, -7.5f));
-        Check(await PromptAt(new(-.6f, .02f, -8), "CatFeed") == "E  掰一半喂煤球", "the cat can be fed now");
-        var corner = play.Region.GetNode<Node3D>("Marks/EmptyCorner").GlobalPosition;
+        Check(await PromptAt(new(-.6f, .02f, -8), coal.Position + catAt) == "E  掰一半喂煤球", "the cat can be fed now");
+        var corner = play.Region.Props("Ⅰ")!.GetNode<Node3D>("EmptyCorner").GlobalPosition;
         var toCorner = Flat(corner - coal.Position).Normalized();
         Check(Forward(coal).Dot(toCorner) < .9f, "the cat is not looking at the corner before it has eaten");
         Press(Key.E);
@@ -176,15 +178,15 @@ public partial class StreetChecks : Node
         await play.Until(() => player.Camera.Position.Y < .9f, 4, "Xiaoman must kneel");
         await play.Until(() => subtitle == "小满：你看什么呢？", 3, "she must ask what the cat is looking at");
         await play.Until(() => player.Camera.Position.Y > 1.29f, 8, "Xiaoman must stand up again");
-        Check(Forward(coal).Dot(toCorner) > .99f && Prop("CatFeed").CollisionLayer == 0, "the cat goes on staring and is not fed twice");
+        Check(Forward(coal).Dot(toCorner) > .99f && !coal.HasNode("Feed"), "the cat goes on staring and is not fed twice");
         await play.Until(() => subtitle == "小满：算了，要迟到了。", 4, "she must give up and go on");
 
         // The toy stall at the gate has things to look at, and the gate ends the scene.
         await UseProp(new(59, .02f, -1.6f), "ToyStall", "看看小摊");
         await play.Until(() => subtitle.Contains("玻璃弹珠"), 4, "the toy stall must have marbles");
         Check(finished == 0, "the scene is not over before the gate");
-        await WalkTo(new Vector3(64.2f, 0, 2.5f));
-        Check(finished == 1, "the scene is over at the school gate");
+        await UseProp(AtGate, "SchoolGate", "进校门");
+        Check(finished == 1, "the scene is over once she goes in at the school gate");
         await Unload();
     }
 }

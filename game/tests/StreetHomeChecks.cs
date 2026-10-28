@@ -15,9 +15,9 @@ public partial class StreetChecks
         var road = Open<HomeRoad>("home_road");
         await play.Use(road.Region);
         Check(player.Position.X > 60 && Forward(player).Dot(Vector3.Left) > .99f, "scene 6 starts at the school gate, facing home");
-        Check(Prop("BunStall").CollisionLayer == 0 && Prop("CatFeed").CollisionLayer == 0, "the stall of the morning is not used");
+        Check(Prop("BunStall").CollisionLayer == 0 && !coal.HasNode("Feed"), "the stall and the feeding of the morning are not used");
         Check(coal.Posture == Posture.Sitting && Apart(coal.Position, new(.8f, 0, -5.9f)) < .2f, "the cat waits in the mouth of the stairwell");
-        Check(!coal.GetNode<CollisionShape3D>("Pickup/Shape").Disabled, "the cat can be picked up on the way home");
+        Check(coal.GetNode<Cat>("Cat").Holdable, "the cat can be picked up on the way home");
         Button(MouseButton.Right, true);
         await play.Frames(3);
         Check(!player.PrismRaised, "the prism cannot be raised on the way home");
@@ -45,7 +45,7 @@ public partial class StreetChecks
         await Unload();
     }
 
-    // The door opens for neither an empty bag nor a cat that is left behind.
+    // The door opens for neither an empty bag nor a cat that is not in her arms.
     private async Task CheckDoorWaits()
     {
         var road = Open<HomeRoad>("home_road");
@@ -58,8 +58,8 @@ public partial class StreetChecks
         road.Wallet = new(5);
         await UseProp(Counter(40.25f), "Sausage", "买火腿肠（5 毛）");
         await UseProp(Landing, "HomeDoor", "开门");
-        await Says("煤球呢");
-        Check(finished == 0, "the door does not open without the cat");
+        await Says("先把煤球抱起来");
+        Check(finished == 0, "the door does not open without the cat in her arms");
         await Unload();
     }
 
@@ -77,9 +77,10 @@ public partial class StreetChecks
         await Says("煤球！", 12);
         await ClimbToLanding();
         await CatIsOnTheLanding();
+        await PickUpCat();
 
         await UseProp(Landing, "HomeDoor", "开门");
-        Check(coal.GetNode<Cat>("Cat").Held && Prop("HomeDoor").CollisionLayer == 0, "she has the cat in her arms and the door is spent");
+        Check(Prop("HomeDoor").CollisionLayer == 0, "the door is spent");
         await play.Until(() => subtitle == "小满：爸不让养猫，你可别出声啊。", 5, "she must tell the cat to keep quiet");
         Check(finished == 0, "the scene is not over before she has said it");
         await play.Until(() => finished == 1, 5, "the scene must end at the door");
@@ -103,20 +104,25 @@ public partial class StreetChecks
     {
         await StartHome();
         await WalkTo(Entrance);
-        await play.Until(() => Apart(coal.Position, player.Position) < 1.6f, 8, "the cat must come to her");
-        // The cat settles where it stops.
-        await play.Frames(60);
-        play.LookAt(player.Position, coal.Position + new Vector3(0, .2f, 0));
-        await play.Until(() => player.Hud.HintText == "E  抱起", 4, "the cat must be offered for carrying");
-        Press(Key.E);
-        await play.Frames(3);
-        Check(coal.GetNode<Cat>("Cat").Held, "she has the cat in her arms");
+        await PickUpCat();
         Press(Key.E);
         await play.Frames(3);
         Check(!coal.GetNode<Cat>("Cat").Held, "she has put the cat down");
         await ClimbToLanding();
         await CatIsOnTheLanding();
         await Unload();
+    }
+
+    // She waits for the cat to come to her and settle, and picks it up.
+    private async Task PickUpCat()
+    {
+        await play.Until(() => Apart(coal.Position, player.Position) < 1.6f, 8, "the cat must come to her");
+        await play.Frames(60);
+        play.LookAt(player.Position, coal.Position + new Vector3(0, .2f, 0));
+        await play.Until(() => player.Hud.HintText == "E  抱起", 4, "the cat must be offered for carrying");
+        Press(Key.E);
+        await play.Frames(3);
+        Check(coal.GetNode<Cat>("Cat").Held, "she has the cat in her arms");
     }
 
     // Scene 6 opened, with the sausage bought and the player in the street in front of the building.

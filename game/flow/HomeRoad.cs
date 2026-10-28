@@ -1,7 +1,6 @@
 using System.Linq;
 using Game.Adapter;
 using Game.Characters;
-using Game.Interaction;
 using Game.UI;
 using Godot;
 
@@ -10,8 +9,8 @@ namespace Game.Flow;
 /// <summary>
 /// Scene 6 of the prologue, from the school gate to the door of the home at dusk. At the kiosk Xiaoman picks one thing
 /// with the change from the morning and buys a ham sausage for the cat, which waits in the mouth of the stairwell and
-/// follows her up the stair; at the door she picks it up and takes it in. The scene ends there: <see cref="Finished"/>
-/// follows, and the home of scene 7 is the next scene's. The prism cannot be used here.
+/// follows her up the stair. At the door she opens with the cat in her arms and the sausage bought; the scene ends there:
+/// <see cref="Finished"/> follows, and the home of scene 7 is the next scene's. The prism cannot be used here.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 public partial class HomeRoad : Node
@@ -19,16 +18,13 @@ public partial class HomeRoad : Node
     private const int SausagePrice = 5;
     // The cat gets up and follows when the player is this near.
     private const float CatFollowRange = 4f;
-    // The cat is at the door of the home when it is up on the landing and near the player.
-    private const float LandingHeight = 2.5f;
-    private const float CatAtDoorRange = 3f;
     // The player is up the stair when she is higher than this, and a cat is on the ramp when it is higher than that.
     private const float StairHeight = 1f;
     private const float OnRamp = .15f;
-    // A cat that walks to a point stops within a few centimetres of it.
-    private const float AtMouth = .2f;
     // A cat on the floor this much farther in than the mouth of the ramp is beside the ramp or under it, not in front of it.
     private const float DeepInHall = 1f;
+    // A cat on the floor is in line with the ramp when it is this near the middle of its mouth, across.
+    private const float MouthHalfWidth = .7f;
 
     private static readonly (string Prop, string Name, int Price)[] Goods =
     [
@@ -48,7 +44,6 @@ public partial class HomeRoad : Node
     private string? picked;
     private bool hasSausage;
     private bool called;
-    private bool catAtMouth;
 
     private GameHud Hud => street.Hud;
 
@@ -77,13 +72,10 @@ public partial class HomeRoad : Node
         Hud.Say("", "放学了。黄昏的光斜斜地照在街上。", 3.5);
     }
 
+    // A cat that waits, or that has been put down, follows the player who comes near.
     public override void _PhysicsProcess(double delta)
     {
-        var player = street.Player.GlobalPosition;
-        // The cat has been at the mouth of the ramp for this climb, until the player is down on the floor again.
-        catAtMouth = player.Y > StairHeight && (catAtMouth || Distance(coal.GlobalPosition, street.Mark("RampMouth").GlobalPosition) < AtMouth);
-        // A cat that waits, or that has been put down, follows the player who comes near.
-        if (brain.Held || coal.Busy || Distance(player, coal.GlobalPosition) > CatFollowRange) return;
+        if (brain.Held || coal.Busy || Distance(street.Player.GlobalPosition, coal.GlobalPosition) > CatFollowRange) return;
         brain.Follow(TowardStairs);
         if (called) return;
         called = true;
@@ -122,15 +114,17 @@ public partial class HomeRoad : Node
         if (picked is not null && hasSausage) Hud.Say("小满", "好了，回家。煤球还在等我呢。", 3);
     }
 
-    // The cat goes straight at the player, which from beside the ramp or from deep in the hall would take it under the ramp,
-    // where it is too low. So while the player is up the stair and the cat is still on the floor and has not been at the
-    // mouth of the ramp, it goes to the mouth first, by the free floor beside the ramp if it is deep in the hall, and from
-    // there straight up.
+    // The cat goes straight at the player, which from beside the ramp or from deep in the hall would take it under the
+    // ramp, where it is too low. So while the player is up the stair and the cat is still on the floor, a cat deep in the
+    // hall goes out by the free floor beside the ramp, a cat that is not in line with the ramp goes to its mouth, and one
+    // in line with it goes straight up. The way is chosen again from where the cat is, every frame.
     private Vector3 TowardStairs(Vector3 player)
     {
-        if (player.Y <= StairHeight || catAtMouth || coal.Position.Y > OnRamp) return player;
+        var cat = coal.GlobalPosition;
+        if (player.Y <= StairHeight || cat.Y > OnRamp) return player;
         var mouth = street.Mark("RampMouth").GlobalPosition;
-        return coal.GlobalPosition.Z < mouth.Z - DeepInHall ? street.Mark("WalkwayFront").GlobalPosition : mouth;
+        if (cat.Z < mouth.Z - DeepInHall) return street.Mark("WalkwayFront").GlobalPosition;
+        return Mathf.Abs(cat.X - mouth.X) < MouthHalfWidth ? player : mouth;
     }
 
     private void OpenDoor()
@@ -140,17 +134,14 @@ public partial class HomeRoad : Node
             Hud.Say("小满", "还没给煤球买火腿肠呢。", 3);
             return;
         }
-        var catIsWithHer = brain.Held
-            || (coal.Position.Y > LandingHeight && Distance(street.Player.GlobalPosition, coal.GlobalPosition) < CatAtDoorRange);
-        if (!catIsWithHer)
+        if (!brain.Held)
         {
-            Hud.Say("小满", "煤球呢？", 2.5);
+            Hud.Say("小满", "先把煤球抱起来，别让邻居看见。", 3);
             return;
         }
         street.Prop("HomeDoor").CollisionLayer = 0;
-        if (!brain.Held) coal.GetNode<Interactable3D>("Pickup").Interact();
         var ending = CreateTween();
-        ending.TweenCallback(Callable.From(() => Hud.Say("", "小满左右看看，楼道里没有人，把煤球抱进怀里。", 3.5)));
+        ending.TweenCallback(Callable.From(() => Hud.Say("", "小满左右看看，楼道里没有人。", 3.5)));
         ending.TweenInterval(3.5);
         ending.TweenCallback(Callable.From(() => Hud.Say("小满", "爸不让养猫，你可别出声啊。", 3.5)));
         ending.TweenInterval(3.5);

@@ -16,6 +16,7 @@ namespace Game.Flow;
 /// </summary>
 internal sealed class Street
 {
+    private const string Section = "Ⅰ";
     private const double BellInterval = 8;
 
     internal Street(Node host)
@@ -25,18 +26,15 @@ internal sealed class Street
         host.AddChild(Region);
         if (!Region.Loaded) throw new InvalidOperationException($"The street did not load: {Region.Diagnostics}");
         Player = Region.GetNode<FirstPersonPlayer>("Generated/Player");
+        Region.GetViewport().AudioListenerEnable3D = true;
         var broadcast = Sound("broadcast", "Speaker");
         broadcast.Finished += () => broadcast.Play();
-        // The sounds start a moment after the scene does, and a bicycle bell rings now and then. A sound that is playing
-        // when the game exits keeps its stream in use, which Godot reports as an error.
+        broadcast.Play();
+        // A bicycle bell rings now and then.
         var bell = Sound("bell", "Bell");
-        var timer = new Timer { WaitTime = 1, Autostart = true };
-        timer.Timeout += () =>
-        {
-            timer.WaitTime = BellInterval;
-            bell.Play();
-            if (!broadcast.Playing) broadcast.Play();
-        };
+        bell.Play();
+        var timer = new Timer { WaitTime = BellInterval, Autostart = true };
+        timer.Timeout += () => bell.Play();
         bell.AddChild(timer);
     }
 
@@ -44,9 +42,12 @@ internal sealed class Street
     internal FirstPersonPlayer Player { get; }
     internal GameHud Hud => Player.Hud;
 
-    internal Interactable3D Prop(string name) => Region.GetNode<Interactable3D>($"Props/{name}");
+    // What the section holds under Props: the things to press E on, the marks and the signs.
+    private Node3D Props => Region.Props(Section)!;
 
-    internal Node3D Mark(string name) => Region.GetNode<Node3D>($"Marks/{name}");
+    internal Interactable3D Prop(string name) => Props.GetNode<Interactable3D>(name);
+
+    internal Node3D Mark(string name) => Props.GetNode<Node3D>(name);
 
     /// <summary>The way a node faces on the ground plane, as the yaw that characters and the player turn by.</summary>
     internal static float Yaw(Node3D node) => Mathf.Atan2(node.GlobalBasis.Z.X, node.GlobalBasis.Z.Z);
@@ -54,7 +55,7 @@ internal sealed class Street
     /// <summary>Switches off every prop but the ones named; their prompts do not show and E does not reach them.</summary>
     internal void UseProps(params string[] names)
     {
-        foreach (var prop in Region.GetNode("Props").GetChildren().OfType<Interactable3D>())
+        foreach (var prop in Props.GetChildren().OfType<Interactable3D>())
             if (!names.Contains(prop.Name.ToString())) prop.CollisionLayer = 0;
     }
 

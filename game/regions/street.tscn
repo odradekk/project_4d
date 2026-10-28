@@ -1,328 +1,121 @@
-[gd_scene load_steps=91 format=3]
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="e3"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="e4"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://characters/schoolmate.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://characters/vendor.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://characters/cat.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/street/road.tscn" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/street/building.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/street/kiosk.tscn" id="e11"]
+[ext_resource type="PackedScene" path="res://regions/street/things.tscn" id="e12"]
+[ext_resource type="PackedScene" path="res://regions/street/props.tscn" id="e13"]
 
-[ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
-[ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
-[ext_resource type="Script" path="res://adapter/Building3D.cs" id="3"]
-[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="4"]
-[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="5"]
-[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
-[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="7"]
-[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="8"]
-[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="9"]
-[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="10"]
-[ext_resource type="PackedScene" path="res://characters/schoolmate.tscn" id="11"]
-[ext_resource type="PackedScene" path="res://characters/vendor.tscn" id="12"]
-[ext_resource type="PackedScene" path="res://characters/cat.tscn" id="13"]
-
-[sub_resource type="Resource" id="Uv0"]
-script = ExtResource("8")
-Axis = 0
-Positive = false
-
-[sub_resource type="Resource" id="Uv1"]
-script = ExtResource("8")
-Axis = 0
-Positive = true
-
-[sub_resource type="Resource" id="Uv2"]
-script = ExtResource("8")
-Axis = 1
-Positive = false
-
-[sub_resource type="Resource" id="Uv3"]
-script = ExtResource("8")
-Axis = 1
-Positive = true
-
-[sub_resource type="Resource" id="Uv4"]
-script = ExtResource("8")
-Axis = 2
-Positive = false
-
-[sub_resource type="Resource" id="Uv5"]
-script = ExtResource("8")
-Axis = 2
-Positive = true
-
-[sub_resource type="StandardMaterial3D" id="M_road"]
-albedo_color = Color(0.45, 0.45, 0.47, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_brick"]
-albedo_color = Color(0.62, 0.38, 0.32, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_brick2"]
-albedo_color = Color(0.58, 0.5, 0.4, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_wall"]
-albedo_color = Color(0.7, 0.66, 0.58, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_stair"]
-albedo_color = Color(0.55, 0.55, 0.5, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_floor"]
-albedo_color = Color(0.5, 0.48, 0.44, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_wood"]
-albedo_color = Color(0.6, 0.45, 0.3, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_bamboo"]
-albedo_color = Color(0.8, 0.7, 0.4, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_red"]
-albedo_color = Color(0.75, 0.15, 0.15, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_grey"]
-albedo_color = Color(0.5, 0.5, 0.52, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_white"]
-albedo_color = Color(0.9, 0.9, 0.9, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_door"]
-albedo_color = Color(0.45, 0.3, 0.2, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_green"]
-albedo_color = Color(0.3, 0.6, 0.4, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_orange"]
-albedo_color = Color(0.9, 0.55, 0.2, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_pink"]
-albedo_color = Color(0.9, 0.55, 0.65, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_blue"]
-albedo_color = Color(0.3, 0.45, 0.75, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_yellow"]
-albedo_color = Color(0.9, 0.8, 0.3, 1)
-
-[sub_resource type="StandardMaterial3D" id="M_toy"]
-albedo_color = Color(0.4, 0.6, 0.8, 1)
-
-[sub_resource type="BoxMesh" id="Box0"]
-material = SubResource("M_road")
-size = Vector3(86, 0.2, 28)
-
-[sub_resource type="BoxMesh" id="Box1"]
-material = SubResource("M_brick2")
-size = Vector3(2, 6, 28)
-
-[sub_resource type="BoxMesh" id="Box2"]
-material = SubResource("M_brick2")
-size = Vector3(86, 7, 4)
-
-[sub_resource type="BoxMesh" id="Box3"]
-material = SubResource("M_wall")
-size = Vector3(60, 4, 11)
-
-[sub_resource type="BoxMesh" id="Box4"]
-material = SubResource("M_brick")
-size = Vector3(10.5, 9, 11)
-
-[sub_resource type="BoxMesh" id="Box5"]
-material = SubResource("M_brick")
-size = Vector3(3, 9, 2)
-
-[sub_resource type="BoxMesh" id="Box6"]
-material = SubResource("M_wall")
-size = Vector3(3, 3.8, 9)
-
-[sub_resource type="BoxMesh" id="Box7"]
-material = SubResource("M_brick")
-size = Vector3(3, 2.4, 0.5)
-
-[sub_resource type="BoxMesh" id="Box8"]
-material = SubResource("M_stair")
-size = Vector3(1.5, 0.2, 5.38034)
-
-[sub_resource type="BoxMesh" id="Box9"]
-material = SubResource("M_floor")
-size = Vector3(3, 0.2, 3.71556)
-
-[sub_resource type="BoxMesh" id="Box10"]
-material = SubResource("M_grey")
-size = Vector3(0.2, 5, 0.2)
-
-[sub_resource type="BoxMesh" id="Box11"]
-material = SubResource("M_red")
-size = Vector3(0.06, 1, 11.4)
-
-[sub_resource type="BoxMesh" id="Box12"]
-material = SubResource("M_grey")
-size = Vector3(0.15, 5, 0.15)
-
-[sub_resource type="BoxMesh" id="Box13"]
-material = SubResource("M_grey")
-size = Vector3(0.4, 0.3, 0.5)
-
-[sub_resource type="BoxMesh" id="Box14"]
-material = SubResource("M_orange")
-size = Vector3(0.2, 3.2, 3)
-
-[sub_resource type="BoxMesh" id="Box15"]
-material = SubResource("M_orange")
-size = Vector3(5.6, 1, 0.2)
-
-[sub_resource type="BoxMesh" id="Box16"]
-material = SubResource("M_orange")
-size = Vector3(5.6, 1.2, 0.2)
-
-[sub_resource type="BoxMesh" id="Box17"]
-material = SubResource("M_grey")
-size = Vector3(6.4, 0.2, 3.6)
-
-[sub_resource type="BoxMesh" id="Box18"]
-material = SubResource("M_wood")
-size = Vector3(5.6, 0.08, 0.6)
-
-[sub_resource type="BoxMesh" id="Box19"]
-material = SubResource("M_wall")
-size = Vector3(0.6, 4, 5.5)
-
-[sub_resource type="BoxMesh" id="Box20"]
-material = SubResource("M_wall")
-size = Vector3(0.6, 4, 3.5)
-
-[sub_resource type="BoxMesh" id="Box21"]
-material = SubResource("M_wall")
-size = Vector3(0.6, 1, 4)
-
-[sub_resource type="BoxMesh" id="Box22"]
-material = SubResource("M_door")
-size = Vector3(1, 2, 0.1)
-
-[sub_resource type="BoxMesh" id="Box23"]
-material = SubResource("M_wood")
-size = Vector3(2.4, 0.9, 1)
-
-[sub_resource type="BoxMesh" id="Box24"]
-material = SubResource("M_bamboo")
-size = Vector3(0.6, 0.4, 0.6)
-
-[sub_resource type="BoxMesh" id="Box25"]
-material = SubResource("M_red")
-size = Vector3(3, 0.08, 2.2)
-
-[sub_resource type="BoxMesh" id="Box26"]
-material = SubResource("M_grey")
-size = Vector3(0.08, 2, 0.08)
-
-[sub_resource type="BoxMesh" id="Box27"]
-material = SubResource("M_toy")
-size = Vector3(2.2, 0.9, 1)
-
-[sub_resource type="BoxMesh" id="Box28"]
-material = SubResource("M_blue")
-size = Vector3(0.5, 0.15, 0.4)
-
-[sub_resource type="BoxMesh" id="Box29"]
-material = SubResource("M_pink")
-size = Vector3(0.6, 0.05, 0.4)
-
-[sub_resource type="BoxMesh" id="Box30"]
-material = SubResource("M_yellow")
-size = Vector3(2.8, 0.08, 2)
-
-[sub_resource type="BoxMesh" id="Box31"]
-material = SubResource("M_white")
-size = Vector3(0.03, 0.03, 3)
-
-[sub_resource type="BoxMesh" id="Box32"]
-material = SubResource("M_wood")
-size = Vector3(5.4, 0.05, 0.5)
-
-[sub_resource type="BoxMesh" id="Box33"]
-material = SubResource("M_red")
-size = Vector3(2, 0.3, 0.3)
-
-[sub_resource type="BoxMesh" id="Box34"]
-material = SubResource("M_green")
-size = Vector3(2, 0.3, 0.3)
-
-[sub_resource type="BoxMesh" id="Box35"]
-material = SubResource("M_yellow")
-size = Vector3(2, 0.3, 0.3)
-
-[sub_resource type="BoxMesh" id="Box36"]
-material = SubResource("M_blue")
-size = Vector3(2, 0.3, 0.3)
-
-[sub_resource type="BoxMesh" id="Box37"]
-material = SubResource("M_pink")
-size = Vector3(2, 0.3, 0.3)
-
-[sub_resource type="BoxMesh" id="Box38"]
-material = SubResource("M_orange")
-size = Vector3(2, 0.3, 0.3)
-
-[sub_resource type="BoxMesh" id="Box39"]
-material = SubResource("M_white")
-size = Vector3(0.8, 0.4, 0.4)
-
-[sub_resource type="BoxMesh" id="Box40"]
-material = SubResource("M_green")
-size = Vector3(0.7, 0.3, 0.4)
-
-[sub_resource type="BoxMesh" id="Box41"]
-material = SubResource("M_orange")
-size = Vector3(0.25, 0.3, 0.25)
-
-[sub_resource type="BoxMesh" id="Box42"]
-material = SubResource("M_pink")
-size = Vector3(0.6, 0.6, 0.04)
-
-[sub_resource type="BoxMesh" id="Box43"]
-material = SubResource("M_red")
-size = Vector3(0.5, 0.25, 0.3)
-
-[sub_resource type="BoxShape3D" id="Shape_BunStall"]
-size = Vector3(2, 0.7, 0.5)
-
-[sub_resource type="SphereShape3D" id="Shape_CatFeed"]
-radius = 0.45
-
-[sub_resource type="BoxShape3D" id="Shape_ToyStall"]
-size = Vector3(2, 0.7, 0.5)
-
-[sub_resource type="BoxShape3D" id="Shape_HomeDoor"]
-size = Vector3(1.2, 2, 0.4)
-
-[sub_resource type="BoxShape3D" id="Shape_IcePop"]
-size = Vector3(0.9, 0.6, 0.6)
-
-[sub_resource type="BoxShape3D" id="Shape_Soda"]
-size = Vector3(0.9, 0.6, 0.6)
-
-[sub_resource type="BoxShape3D" id="Shape_Spicy"]
-size = Vector3(0.9, 0.6, 0.6)
-
-[sub_resource type="BoxShape3D" id="Shape_Stickers"]
-size = Vector3(0.9, 0.6, 0.6)
-
-[sub_resource type="BoxShape3D" id="Shape_Sausage"]
-size = Vector3(0.9, 0.6, 0.6)
 
 [node name="Street" type="Node3D"]
-script = ExtResource("1")
+script = ExtResource("e1")
 PrismEnabled = false
 
 [node name="Sections" type="Node" parent="."]
 
 [node name="Ⅰ" type="Node3D" parent="Sections"]
-script = ExtResource("2")
+script = ExtResource("e2")
 SectionId = "Ⅰ"
 W = 0
 
 [node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
 
+[node name="Things" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e12")]
+
 [node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 3.02, -12.3)
+script = ExtResource("e4")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("e5")
+
+[node name="cat" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.75, 0.02, -8)
+script = ExtResource("e4")
+EntityId = "cat"
+PassageRadius = 0.15
+PassageHeight = 0.4
+CanUseSeamsWithoutPrism = true
+CharacterScene = ExtResource("e8")
+
+[node name="bun_vendor" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.02, -4.55)
+script = ExtResource("e4")
+EntityId = "bun_vendor"
+PassageRadius = 0.25
+PassageHeight = 1.7
+DisplayName = "摊主"
+CharacterScene = ExtResource("e7")
+
+[node name="toy_vendor" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 0.02, -4.4)
+script = ExtResource("e4")
+EntityId = "toy_vendor"
+PassageRadius = 0.25
+PassageHeight = 1.7
+DisplayName = "摊主"
+CharacterScene = ExtResource("e7")
+
+[node name="clerk" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.02, -3.6)
+script = ExtResource("e4")
+EntityId = "clerk"
+PassageRadius = 0.25
+PassageHeight = 1.7
+DisplayName = "老板娘"
+CharacterScene = ExtResource("e7")
+
+[node name="rope_a" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.02, 3.7)
+script = ExtResource("e4")
+EntityId = "rope_a"
+PassageRadius = 0.2
+PassageHeight = 1.35
+DisplayName = "孩子"
+CharacterScene = ExtResource("e6")
+
+[node name="rope_b" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 28, 0.02, 7.3)
+script = ExtResource("e4")
+EntityId = "rope_b"
+PassageRadius = 0.2
+PassageHeight = 1.35
+DisplayName = "孩子"
+CharacterScene = ExtResource("e6")
+
+[node name="rope_c" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 28.8, 0.02, 5.5)
+script = ExtResource("e4")
+EntityId = "rope_c"
+PassageRadius = 0.2
+PassageHeight = 1.35
+DisplayName = "孩子"
+CharacterScene = ExtResource("e6")
+
+[node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e13")]
 
 [node name="Buildings" type="Node3D" parent="."]
 
 [node name="Street" type="Node3D" parent="Buildings"]
-script = ExtResource("3")
+script = ExtResource("e3")
 BuildingId = "street"
 WMin = -0.5
 WMax = 0.5
+
+[node name="Road" parent="Buildings/Street" instance=ExtResource("e9")]
+
+[node name="Building" parent="Buildings/Street" instance=ExtResource("e10")]
+
+[node name="Kiosk" parent="Buildings/Street" instance=ExtResource("e11")]
 
 [node name="Items" type="Node" parent="."]
 
@@ -333,828 +126,3 @@ WMax = 0.5
 [node name="Seams" type="Node" parent="."]
 
 [node name="ExpectedPuzzleOperations" type="Node" parent="."]
-
-[node name="Props" type="Node3D" parent="."]
-
-[node name="Marks" type="Node3D" parent="."]
-
-[node name="Signs" type="Node3D" parent="."]
-
-[node name="Ground" type="Node3D" parent="Buildings/Street"]
-position = Vector3(29, -0.1, -2)
-script = ExtResource("4")
-EntityId = "Ground"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/Ground"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box0")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="WestEnd" type="Node3D" parent="Buildings/Street"]
-position = Vector3(-13, 3, -2)
-script = ExtResource("4")
-EntityId = "WestEnd"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/WestEnd"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box1")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="EastEnd" type="Node3D" parent="Buildings/Street"]
-position = Vector3(71, 3, -2)
-script = ExtResource("4")
-EntityId = "EastEnd"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/EastEnd"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box1")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="SouthRow" type="Node3D" parent="Buildings/Street"]
-position = Vector3(29, 3.5, 10)
-script = ExtResource("4")
-EntityId = "SouthRow"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/SouthRow"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box2")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="NorthRow" type="Node3D" parent="Buildings/Street"]
-position = Vector3(42, 2, -10.5)
-script = ExtResource("4")
-EntityId = "NorthRow"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/NorthRow"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box3")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="WestBlock" type="Node3D" parent="Buildings/Street"]
-position = Vector3(-6.75, 4.5, -10.5)
-script = ExtResource("4")
-EntityId = "WestBlock"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/WestBlock"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box4")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="EastBlock" type="Node3D" parent="Buildings/Street"]
-position = Vector3(6.75, 4.5, -10.5)
-script = ExtResource("4")
-EntityId = "EastBlock"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/EastBlock"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box4")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="HallBack" type="Node3D" parent="Buildings/Street"]
-position = Vector3(0, 4.5, -15)
-script = ExtResource("4")
-EntityId = "HallBack"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/HallBack"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box5")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="HallCeiling" type="Node3D" parent="Buildings/Street"]
-position = Vector3(0, 7.1, -9.5)
-script = ExtResource("4")
-EntityId = "HallCeiling"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/HallCeiling"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box6")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="HallHeader" type="Node3D" parent="Buildings/Street"]
-position = Vector3(0, 4, -5.25)
-script = ExtResource("4")
-EntityId = "HallHeader"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/HallHeader"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box7")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="Stair" type="Node3D" parent="Buildings/Street"]
-position = Vector3(0.75, 1.37507, -8.13814)
-script = ExtResource("4")
-EntityId = "Stair"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/Stair"]
-transform = Transform3D(1, 0, 0, 0, 0.81915, -0.57358, 0, 0.57358, 0.81915, 0, 0, 0)
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box8")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="Landing" type="Node3D" parent="Buildings/Street"]
-position = Vector3(0, 2.9, -12.14222)
-script = ExtResource("4")
-EntityId = "Landing"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/Landing"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box9")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="BannerPostNorth" type="Node3D" parent="Buildings/Street"]
-position = Vector3(18, 2.5, -4.4)
-script = ExtResource("4")
-EntityId = "BannerPostNorth"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/BannerPostNorth"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box10")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="BannerPostSouth" type="Node3D" parent="Buildings/Street"]
-position = Vector3(18, 2.5, 7.2)
-script = ExtResource("4")
-EntityId = "BannerPostSouth"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/BannerPostSouth"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box10")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="Banner" type="Node3D" parent="Buildings/Street"]
-position = Vector3(18, 4.4, 1.4)
-script = ExtResource("4")
-EntityId = "Banner"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/Banner"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box11")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="SpeakerPole" type="Node3D" parent="Buildings/Street"]
-position = Vector3(14, 2.5, -4.3)
-script = ExtResource("4")
-EntityId = "SpeakerPole"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/SpeakerPole"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box12")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="SpeakerHorn" type="Node3D" parent="Buildings/Street"]
-position = Vector3(14, 5, -4)
-script = ExtResource("4")
-EntityId = "SpeakerHorn"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/SpeakerHorn"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box13")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="KioskLeft" type="Node3D" parent="Buildings/Street"]
-position = Vector3(35.1, 1.6, -3.5)
-script = ExtResource("4")
-EntityId = "KioskLeft"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/KioskLeft"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box14")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="KioskRight" type="Node3D" parent="Buildings/Street"]
-position = Vector3(40.9, 1.6, -3.5)
-script = ExtResource("4")
-EntityId = "KioskRight"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/KioskRight"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box14")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="KioskFront" type="Node3D" parent="Buildings/Street"]
-position = Vector3(38, 0.5, -2.1)
-script = ExtResource("4")
-EntityId = "KioskFront"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/KioskFront"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box15")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="KioskHeader" type="Node3D" parent="Buildings/Street"]
-position = Vector3(38, 2.6, -2.1)
-script = ExtResource("4")
-EntityId = "KioskHeader"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/KioskHeader"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box16")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="KioskRoof" type="Node3D" parent="Buildings/Street"]
-position = Vector3(38, 3.3, -3.4)
-script = ExtResource("4")
-EntityId = "KioskRoof"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/KioskRoof"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box17")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="Counter" type="Node3D" parent="Buildings/Street"]
-position = Vector3(38, 1.04, -2.2)
-script = ExtResource("4")
-EntityId = "Counter"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/Counter"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box18")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="GateWallNorth" type="Node3D" parent="Buildings/Street"]
-position = Vector3(65, 2, -2.25)
-script = ExtResource("4")
-EntityId = "GateWallNorth"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/GateWallNorth"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box19")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="GateWallSouth" type="Node3D" parent="Buildings/Street"]
-position = Vector3(65, 2, 6.25)
-script = ExtResource("4")
-EntityId = "GateWallSouth"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/GateWallSouth"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box20")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="GateLintel" type="Node3D" parent="Buildings/Street"]
-position = Vector3(65, 3.5, 2.5)
-script = ExtResource("4")
-EntityId = "GateLintel"
-BuildingId = "street"
-WMin = -0.5
-WMax = 0.5
-
-[node name="body" type="MeshInstance3D" parent="Buildings/Street/GateLintel"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box21")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="HomeDoor" type="Node3D" parent="Sections/Ⅰ/Fixed"]
-position = Vector3(0, 4, -13.95)
-script = ExtResource("5")
-EntityId = "HomeDoor"
-
-[node name="body" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/HomeDoor"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box22")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="BunCart" type="Node3D" parent="Sections/Ⅰ/Fixed"]
-position = Vector3(7, 0, -3.6)
-script = ExtResource("5")
-EntityId = "BunCart"
-
-[node name="body" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(0, 0.45, 0)
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box23")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="steamer1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(-0.6, 1.1, 0)
-script = ExtResource("6")
-PartId = "steamer1"
-mesh = SubResource("Box24")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="steamer2" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(0.6, 1.1, 0)
-script = ExtResource("6")
-PartId = "steamer2"
-mesh = SubResource("Box24")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="canopy" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(0, 2.3, -0.1)
-script = ExtResource("6")
-PartId = "canopy"
-mesh = SubResource("Box25")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(-1.4, 1.3, 1)
-script = ExtResource("6")
-PartId = "post1"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post2" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(1.4, 1.3, 1)
-script = ExtResource("6")
-PartId = "post2"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post3" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(-1.4, 1.3, -1)
-script = ExtResource("6")
-PartId = "post3"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post4" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/BunCart"]
-position = Vector3(1.4, 1.3, -1)
-script = ExtResource("6")
-PartId = "post4"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="ToyCart" type="Node3D" parent="Sections/Ⅰ/Fixed"]
-position = Vector3(59, 0, -3.4)
-script = ExtResource("5")
-EntityId = "ToyCart"
-
-[node name="body" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(0, 0.45, 0)
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box27")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="marbles" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(-0.6, 0.975, 0)
-script = ExtResource("6")
-PartId = "marbles"
-mesh = SubResource("Box28")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="stickers" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(0.4, 0.925, 0)
-script = ExtResource("6")
-PartId = "stickers"
-mesh = SubResource("Box29")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="canopy" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(0, 2.3, -0.1)
-script = ExtResource("6")
-PartId = "canopy"
-mesh = SubResource("Box30")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(-1.3, 1.3, 0.8)
-script = ExtResource("6")
-PartId = "post1"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post2" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(1.3, 1.3, 0.8)
-script = ExtResource("6")
-PartId = "post2"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post3" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(-1.3, 1.3, -0.8)
-script = ExtResource("6")
-PartId = "post3"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="post4" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ToyCart"]
-position = Vector3(1.3, 1.3, -0.8)
-script = ExtResource("6")
-PartId = "post4"
-mesh = SubResource("Box26")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="Rope" type="Node3D" parent="Sections/Ⅰ/Fixed"]
-position = Vector3(28, 0.5, 5.5)
-script = ExtResource("5")
-EntityId = "Rope"
-
-[node name="body" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Rope"]
-script = ExtResource("6")
-PartId = "body"
-mesh = SubResource("Box31")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="Shelves" type="Node3D" parent="Sections/Ⅰ/Fixed"]
-position = Vector3(38, 0, -4.7)
-script = ExtResource("5")
-EntityId = "Shelves"
-
-[node name="board0" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(0, 0.9, 0)
-script = ExtResource("6")
-PartId = "board0"
-mesh = SubResource("Box32")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="board1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(0, 1.5, 0)
-script = ExtResource("6")
-PartId = "board1"
-mesh = SubResource("Box32")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="board2" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(0, 2.1, 0)
-script = ExtResource("6")
-PartId = "board2"
-mesh = SubResource("Box32")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="goods0_0" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(-1.3, 1.075, 0)
-script = ExtResource("6")
-PartId = "goods0_0"
-mesh = SubResource("Box33")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="goods0_1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(1.3, 1.075, 0)
-script = ExtResource("6")
-PartId = "goods0_1"
-mesh = SubResource("Box34")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="goods1_0" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(-1.3, 1.675, 0)
-script = ExtResource("6")
-PartId = "goods1_0"
-mesh = SubResource("Box35")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="goods1_1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(1.3, 1.675, 0)
-script = ExtResource("6")
-PartId = "goods1_1"
-mesh = SubResource("Box36")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="goods2_0" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(-1.3, 2.275, 0)
-script = ExtResource("6")
-PartId = "goods2_0"
-mesh = SubResource("Box37")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="goods2_1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/Shelves"]
-position = Vector3(1.3, 2.275, 0)
-script = ExtResource("6")
-PartId = "goods2_1"
-mesh = SubResource("Box38")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="CounterGoods" type="Node3D" parent="Sections/Ⅰ/Fixed"]
-position = Vector3(38, 1.08, -2.35)
-script = ExtResource("5")
-EntityId = "CounterGoods"
-
-[node name="icepop" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/CounterGoods"]
-position = Vector3(-2, 0.2, 0)
-script = ExtResource("6")
-PartId = "icepop"
-mesh = SubResource("Box39")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="soda" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/CounterGoods"]
-position = Vector3(-0.9, 0.15, 0)
-script = ExtResource("6")
-PartId = "soda"
-mesh = SubResource("Box40")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="spicy1" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/CounterGoods"]
-position = Vector3(0.2, 0.15, -0.05)
-script = ExtResource("6")
-PartId = "spicy1"
-mesh = SubResource("Box41")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="spicy2" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/CounterGoods"]
-position = Vector3(0.5, 0.15, -0.05)
-script = ExtResource("6")
-PartId = "spicy2"
-mesh = SubResource("Box41")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="stickers" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/CounterGoods"]
-position = Vector3(1.3, 0.3, 0)
-script = ExtResource("6")
-PartId = "stickers"
-mesh = SubResource("Box42")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="sausage" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/CounterGoods"]
-position = Vector3(2.2, 0.125, 0)
-script = ExtResource("6")
-PartId = "sausage"
-mesh = SubResource("Box43")
-FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
-
-[node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 3.02, -12.3)
-script = ExtResource("7")
-EntityId = "xiaoman"
-CharacterScene = ExtResource("9")
-
-[node name="cat" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.75, 0.02, -8)
-script = ExtResource("7")
-EntityId = "cat"
-PassageRadius = 0.15
-PassageHeight = 0.4
-CanUseSeamsWithoutPrism = true
-CharacterScene = ExtResource("13")
-
-[node name="bun_vendor" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.02, -4.55)
-script = ExtResource("7")
-EntityId = "bun_vendor"
-PassageRadius = 0.25
-PassageHeight = 1.7
-DisplayName = "摊主"
-CharacterScene = ExtResource("12")
-
-[node name="toy_vendor" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 0.02, -4.4)
-script = ExtResource("7")
-EntityId = "toy_vendor"
-PassageRadius = 0.25
-PassageHeight = 1.7
-DisplayName = "摊主"
-CharacterScene = ExtResource("12")
-
-[node name="clerk" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.02, -3.6)
-script = ExtResource("7")
-EntityId = "clerk"
-PassageRadius = 0.25
-PassageHeight = 1.7
-DisplayName = "老板娘"
-CharacterScene = ExtResource("12")
-
-[node name="rope_a" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.02, 3.7)
-script = ExtResource("7")
-EntityId = "rope_a"
-PassageRadius = 0.2
-PassageHeight = 1.35
-DisplayName = "孩子"
-CharacterScene = ExtResource("11")
-
-[node name="rope_b" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 28, 0.02, 7.3)
-script = ExtResource("7")
-EntityId = "rope_b"
-PassageRadius = 0.2
-PassageHeight = 1.35
-DisplayName = "孩子"
-CharacterScene = ExtResource("11")
-
-[node name="rope_c" type="Node3D" parent="Sections/Ⅰ/Spawns"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 28.8, 0.02, 5.5)
-script = ExtResource("7")
-EntityId = "rope_c"
-PassageRadius = 0.2
-PassageHeight = 1.35
-DisplayName = "孩子"
-CharacterScene = ExtResource("11")
-
-[node name="BunStall" type="StaticBody3D" parent="Props"]
-position = Vector3(7, 0.95, -2.85)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/BunStall"]
-shape = SubResource("Shape_BunStall")
-
-[node name="CatFeed" type="StaticBody3D" parent="Props"]
-position = Vector3(0.75, 0.25, -8)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/CatFeed"]
-shape = SubResource("Shape_CatFeed")
-
-[node name="ToyStall" type="StaticBody3D" parent="Props"]
-position = Vector3(59, 0.95, -2.85)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/ToyStall"]
-shape = SubResource("Shape_ToyStall")
-
-[node name="HomeDoor" type="StaticBody3D" parent="Props"]
-position = Vector3(0, 4, -13.6)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/HomeDoor"]
-shape = SubResource("Shape_HomeDoor")
-
-[node name="IcePop" type="StaticBody3D" parent="Props"]
-position = Vector3(36, 1.35, -2.2)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/IcePop"]
-shape = SubResource("Shape_IcePop")
-
-[node name="Soda" type="StaticBody3D" parent="Props"]
-position = Vector3(37.1, 1.35, -2.2)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/Soda"]
-shape = SubResource("Shape_Soda")
-
-[node name="Spicy" type="StaticBody3D" parent="Props"]
-position = Vector3(38.2, 1.35, -2.2)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/Spicy"]
-shape = SubResource("Shape_Spicy")
-
-[node name="Stickers" type="StaticBody3D" parent="Props"]
-position = Vector3(39.3, 1.35, -2.2)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/Stickers"]
-shape = SubResource("Shape_Stickers")
-
-[node name="Sausage" type="StaticBody3D" parent="Props"]
-position = Vector3(40.25, 1.35, -2.2)
-collision_layer = 4
-collision_mask = 0
-script = ExtResource("10")
-
-[node name="Shape" type="CollisionShape3D" parent="Props/Sausage"]
-shape = SubResource("Shape_Sausage")
-
-[node name="EmptyCorner" type="Marker3D" parent="Marks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 1, -13.9)
-
-[node name="Speaker" type="Marker3D" parent="Marks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 5, -4)
-
-[node name="Bell" type="Marker3D" parent="Marks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.4, 2)
-
-[node name="SchoolGate" type="Marker3D" parent="Marks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 0, 2.5)
-
-[node name="GateStart" type="Marker3D" parent="Marks"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 62.5, 0.02, 2.5)
-
-[node name="CatWaits" type="Marker3D" parent="Marks"]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.8, 0.02, -5.9)
-
-[node name="RampMouth" type="Marker3D" parent="Marks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, -5.6)
-
-[node name="WalkwayFront" type="Marker3D" parent="Marks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, -5.3)
-
-[node name="BannerText" type="Label3D" parent="Signs"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.96, 4.4, 1.4)
-pixel_size = 0.01
-modulate = Color(1, 0.95, 0.8, 1)
-text = "迎接新千年"
-font_size = 96
-
-[node name="BannerTextBack" type="Label3D" parent="Signs"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 18.04, 4.4, 1.4)
-pixel_size = 0.01
-modulate = Color(1, 0.95, 0.8, 1)
-text = "迎接新千年"
-font_size = 96
-
-[node name="SchoolSign" type="Label3D" parent="Signs"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 64.65, 3.5, 2.5)
-pixel_size = 0.01
-modulate = Color(1, 0.95, 0.8, 1)
-text = "厂子弟小学"
-font_size = 72

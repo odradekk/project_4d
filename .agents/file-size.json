@@ -16,9 +16,7 @@
     "**/*.svg",
     "archives/**"
   ],
-  "exceptions": {
-    "game/regions/street.tscn": "one region is one Godot scene (decision note 2026-10-26-region-scene-authoring); the file is a list of boxes with six face UVs each, without logic"
-  },
+  "exceptions": {},
   "baseline": {
     "docs/gameplay.md": 9343,
     "docs/prologue.md": 6037

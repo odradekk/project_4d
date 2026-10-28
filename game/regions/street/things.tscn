@@ -1,0 +1,323 @@
+[gd_scene load_steps=37 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m_door"]
+albedo_color = Color(0.45, 0.3, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m_door")
+size = Vector3(1, 2, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="m_wood"]
+albedo_color = Color(0.6, 0.45, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m_wood")
+size = Vector3(2.4, 0.9, 1)
+
+[sub_resource type="StandardMaterial3D" id="m_bamboo"]
+albedo_color = Color(0.8, 0.7, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m_bamboo")
+size = Vector3(0.6, 0.4, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="m_red"]
+albedo_color = Color(0.75, 0.15, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m_red")
+size = Vector3(3, 0.08, 2.2)
+
+[sub_resource type="StandardMaterial3D" id="m_grey"]
+albedo_color = Color(0.5, 0.5, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m_grey")
+size = Vector3(0.08, 2, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="m_toy"]
+albedo_color = Color(0.4, 0.6, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m_toy")
+size = Vector3(2.2, 0.9, 1)
+
+[sub_resource type="StandardMaterial3D" id="m_blue"]
+albedo_color = Color(0.3, 0.45, 0.75, 1)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m_blue")
+size = Vector3(0.5, 0.15, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="m_pink"]
+albedo_color = Color(0.9, 0.55, 0.65, 1)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m_pink")
+size = Vector3(0.6, 0.05, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="m_yellow"]
+albedo_color = Color(0.9, 0.8, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m_yellow")
+size = Vector3(2.8, 0.08, 2)
+
+[sub_resource type="StandardMaterial3D" id="m_white"]
+albedo_color = Color(0.9, 0.9, 0.9, 1)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m_white")
+size = Vector3(0.03, 0.03, 3)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m_wood")
+size = Vector3(5.4, 0.05, 0.5)
+
+[sub_resource type="BoxMesh" id="b12"]
+material = SubResource("m_red")
+size = Vector3(2, 0.3, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="m_green"]
+albedo_color = Color(0.3, 0.6, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="b13"]
+material = SubResource("m_green")
+size = Vector3(2, 0.3, 0.3)
+
+[sub_resource type="BoxMesh" id="b14"]
+material = SubResource("m_yellow")
+size = Vector3(2, 0.3, 0.3)
+
+[sub_resource type="BoxMesh" id="b15"]
+material = SubResource("m_blue")
+size = Vector3(2, 0.3, 0.3)
+
+[sub_resource type="BoxMesh" id="b16"]
+material = SubResource("m_pink")
+size = Vector3(2, 0.3, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="m_orange"]
+albedo_color = Color(0.9, 0.55, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="b17"]
+material = SubResource("m_orange")
+size = Vector3(2, 0.3, 0.3)
+
+[sub_resource type="BoxMesh" id="b18"]
+material = SubResource("m_white")
+size = Vector3(0.8, 0.4, 0.4)
+
+[sub_resource type="BoxMesh" id="b19"]
+material = SubResource("m_green")
+size = Vector3(0.7, 0.3, 0.4)
+
+[sub_resource type="BoxMesh" id="b20"]
+material = SubResource("m_orange")
+size = Vector3(0.25, 0.3, 0.25)
+
+[sub_resource type="BoxMesh" id="b21"]
+material = SubResource("m_pink")
+size = Vector3(0.6, 0.6, 0.04)
+
+[sub_resource type="BoxMesh" id="b22"]
+material = SubResource("m_red")
+size = Vector3(0.5, 0.25, 0.3)
+
+[node name="Things" type="Node3D"]
+
+[node name="HomeDoor" type="Node3D" parent="."]
+position = Vector3(0, 4, -13.95)
+script = ExtResource("e1")
+EntityId = "HomeDoor"
+
+[node name="body" parent="HomeDoor" instance=ExtResource("e2")]
+mesh = SubResource("b1")
+PartId = "body"
+
+[node name="BunCart" type="Node3D" parent="."]
+position = Vector3(7, 0, -3.6)
+script = ExtResource("e1")
+EntityId = "BunCart"
+
+[node name="body" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(0, 0.45, 0)
+mesh = SubResource("b2")
+PartId = "body"
+
+[node name="steamer1" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(-0.6, 1.1, 0)
+mesh = SubResource("b3")
+PartId = "steamer1"
+
+[node name="steamer2" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(0.6, 1.1, 0)
+mesh = SubResource("b3")
+PartId = "steamer2"
+
+[node name="canopy" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(0, 2.3, -0.1)
+mesh = SubResource("b4")
+PartId = "canopy"
+
+[node name="post1" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(-1.4, 1.3, 1)
+mesh = SubResource("b5")
+PartId = "post1"
+
+[node name="post2" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(1.4, 1.3, 1)
+mesh = SubResource("b5")
+PartId = "post2"
+
+[node name="post3" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(-1.4, 1.3, -1)
+mesh = SubResource("b5")
+PartId = "post3"
+
+[node name="post4" parent="BunCart" instance=ExtResource("e2")]
+position = Vector3(1.4, 1.3, -1)
+mesh = SubResource("b5")
+PartId = "post4"
+
+[node name="ToyCart" type="Node3D" parent="."]
+position = Vector3(59, 0, -3.4)
+script = ExtResource("e1")
+EntityId = "ToyCart"
+
+[node name="body" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(0, 0.45, 0)
+mesh = SubResource("b6")
+PartId = "body"
+
+[node name="marbles" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(-0.6, 0.975, 0)
+mesh = SubResource("b7")
+PartId = "marbles"
+
+[node name="stickers" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(0.4, 0.925, 0)
+mesh = SubResource("b8")
+PartId = "stickers"
+
+[node name="canopy" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(0, 2.3, -0.1)
+mesh = SubResource("b9")
+PartId = "canopy"
+
+[node name="post1" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(-1.3, 1.3, 0.8)
+mesh = SubResource("b5")
+PartId = "post1"
+
+[node name="post2" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(1.3, 1.3, 0.8)
+mesh = SubResource("b5")
+PartId = "post2"
+
+[node name="post3" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(-1.3, 1.3, -0.8)
+mesh = SubResource("b5")
+PartId = "post3"
+
+[node name="post4" parent="ToyCart" instance=ExtResource("e2")]
+position = Vector3(1.3, 1.3, -0.8)
+mesh = SubResource("b5")
+PartId = "post4"
+
+[node name="Rope" type="Node3D" parent="."]
+position = Vector3(28, 0.5, 5.5)
+script = ExtResource("e1")
+EntityId = "Rope"
+
+[node name="body" parent="Rope" instance=ExtResource("e2")]
+mesh = SubResource("b10")
+PartId = "body"
+
+[node name="Shelves" type="Node3D" parent="."]
+position = Vector3(38, 0, -4.7)
+script = ExtResource("e1")
+EntityId = "Shelves"
+
+[node name="board0" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(0, 0.9, 0)
+mesh = SubResource("b11")
+PartId = "board0"
+
+[node name="board1" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(0, 1.5, 0)
+mesh = SubResource("b11")
+PartId = "board1"
+
+[node name="board2" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(0, 2.1, 0)
+mesh = SubResource("b11")
+PartId = "board2"
+
+[node name="goods0_0" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(-1.3, 1.075, 0)
+mesh = SubResource("b12")
+PartId = "goods0_0"
+
+[node name="goods0_1" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(1.3, 1.075, 0)
+mesh = SubResource("b13")
+PartId = "goods0_1"
+
+[node name="goods1_0" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(-1.3, 1.675, 0)
+mesh = SubResource("b14")
+PartId = "goods1_0"
+
+[node name="goods1_1" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(1.3, 1.675, 0)
+mesh = SubResource("b15")
+PartId = "goods1_1"
+
+[node name="goods2_0" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(-1.3, 2.275, 0)
+mesh = SubResource("b16")
+PartId = "goods2_0"
+
+[node name="goods2_1" parent="Shelves" instance=ExtResource("e2")]
+position = Vector3(1.3, 2.275, 0)
+mesh = SubResource("b17")
+PartId = "goods2_1"
+
+[node name="CounterGoods" type="Node3D" parent="."]
+position = Vector3(38, 1.08, -2.35)
+script = ExtResource("e1")
+EntityId = "CounterGoods"
+
+[node name="icepop" parent="CounterGoods" instance=ExtResource("e2")]
+position = Vector3(-2, 0.2, 0)
+mesh = SubResource("b18")
+PartId = "icepop"
+
+[node name="soda" parent="CounterGoods" instance=ExtResource("e2")]
+position = Vector3(-0.9, 0.15, 0)
+mesh = SubResource("b19")
+PartId = "soda"
+
+[node name="spicy1" parent="CounterGoods" instance=ExtResource("e2")]
+position = Vector3(0.2, 0.15, -0.05)
+mesh = SubResource("b20")
+PartId = "spicy1"
+
+[node name="spicy2" parent="CounterGoods" instance=ExtResource("e2")]
+position = Vector3(0.5, 0.15, -0.05)
+mesh = SubResource("b20")
+PartId = "spicy2"
+
+[node name="stickers" parent="CounterGoods" instance=ExtResource("e2")]
+position = Vector3(1.3, 0.3, 0)
+mesh = SubResource("b21")
+PartId = "stickers"
+
+[node name="sausage" parent="CounterGoods" instance=ExtResource("e2")]
+position = Vector3(2.2, 0.125, 0)
+mesh = SubResource("b22")
+PartId = "sausage"
