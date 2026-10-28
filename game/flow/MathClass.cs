@@ -10,7 +10,7 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// Scene 3 of the prologue, the math class, in the school region. Xiaoman sits at her desk and can only look around.
+/// Scene 3 of the prologue, the math class, in the school Region. Xiaoman sits at her desk and can only look around.
 /// The teacher lectures, asks her a question that does not matter, and sets to writing on the board; from then on she
 /// can hold the prism up in her desk to see the empty classroom of section Ⅱ. She marks the three differences by
 /// putting the crosshair on them in the lens and pressing E, and the teacher, who walks the aisle when the chalk stops, sends her back to the
@@ -44,7 +44,6 @@ public partial class MathClass : Node
 
     private SceneScript script = null!;
     private readonly HashSet<int> found = [];
-    private Region3D region = null!;
     private FirstPersonPlayer player = null!;
     private PrismView prism = null!;
     private Character3D teacherBody = null!;
@@ -59,22 +58,21 @@ public partial class MathClass : Node
     {
         if (Region is null)
         {
-            Region = GD.Load<PackedScene>("res://regions/school.tscn").Instantiate<Region3D>();
+            Region = GD.Load<PackedScene>(SchoolRoom.RegionPath).Instantiate<Region3D>();
             Region.Name = "Region";
             AddChild(Region);
         }
-        region = Region;
         // The prism stays in the desk until the lecture is over.
-        region.PrismEnabled = false;
-        player = region.GetNode<FirstPersonPlayer>("Generated/Player");
+        Region.PrismEnabled = false;
+        player = Region.GetNode<FirstPersonPlayer>("Generated/Player");
         script = new(player.Hud);
-        prism = region.GetNode<PrismView>("Generated/Prism");
+        prism = Region.GetNode<PrismView>("Generated/Prism");
         player.Seated = true;
-        teacherBody = region.Character("teacher");
+        teacherBody = Region.Character("teacher");
         teacher = teacherBody.GetNode<Teacher>("Teacher");
-        props = region.Props("Ⅰ")!;
+        props = Region.Props("Ⅰ")!;
         aid = props.GetNode<Node3D>("TeachingAid");
-        foreach (var classmate in region.GetNode("Generated/Ⅰ").GetChildren().OfType<Character3D>().Where(c => c != teacherBody))
+        foreach (var classmate in Region.GetNode("Generated/Ⅰ").GetChildren().OfType<Character3D>().Where(c => c != teacherBody))
             classmate.Sit();
         ShowMarks();
         player.LensMarked += Found;
@@ -153,7 +151,7 @@ public partial class MathClass : Node
     // From here the teacher walks the aisle, and the prism can come out of the desk.
     private void Peek()
     {
-        region.PrismEnabled = true;
+        Region!.PrismEnabled = true;
         teacher.Checkpoint = checkpoint;
         teacher.Patrol([teacherBody.Position, props.GetNode<Marker3D>("AisleEnd").Position], WriteSeconds);
         player.Hud.Say("小满", "粉笔声一停，老师就要下来巡视了……桌肚里的棱镜，偷偷看一眼应该没事。", 6);
