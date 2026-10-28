@@ -15,7 +15,8 @@ public partial class HomeEvening : Node
 {
     private const double HeatSeconds = 2.5;
     private const double HomeworkSeconds = 8.5;
-    private static readonly Vector3 Arrival = new(1.8f, .02f, 9.8f);
+    // She comes in at the front door, which is where scene 6 ends, and the cat comes up behind her.
+    private static readonly Vector3 Arrival = new(1.9f, .02f, 7.45f);
     private static readonly Vector3 Dinner = new(5.8f, 0, 8.5f);
     // The cat stops this close to its spot, since she may be standing on it.
     private const float DinnerReach = .4f;
@@ -49,7 +50,7 @@ public partial class HomeEvening : Node
             {
                 Name = "Cat",
                 EntityId = "cat",
-                Position = Arrival + new Vector3(0, 0, -.6f),
+                Position = Arrival + new Vector3(0, 0, .6f),
                 PassageRadius = .15,
                 PassageHeight = .4,
                 CanUseSeamsWithoutPrism = true,
