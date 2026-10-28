@@ -8,7 +8,9 @@
 - [内容分类](content.md)：各类内容的形状、行为、计算方式与资产制作。
 - [跨截面规则与尺寸规范](rules.md)：跨截面交互及关卡尺寸约束。
 - [引擎模块](engine.md)：三层分工、解耦规则、接口分组、模块与校验流程。
+- [家的区域](home-region.md)：序章里家和小满房间的限制，以及留给第 8、9 场的位置。
+- [家的区域](home-region.md)：序章里家和小满房间的限制，以及留给第 8、9 场的位置。
 
 ## 公共契约（待批准）
 
-实现引擎、适配层、场景标注或谜题查询前，读[公共契约](contract.md)。实体形状见[数据定义](contract-data.md)，运动和事件见[动作与推进](contract-actions.md)，抓取、携带和受控布置见[抓取与布置](contract-carry.md)，网格和通用查询见[截面与查询](contract-views.md)，关卡制作与报错见[场景标注](scene-authoring.md)，放样装置的搭法见[装置搭法](device-authoring.md)，角色的搭法见[角色搭法](character-authoring.md)，啃食者的搭法见[啃食者搭法](grazer-authoring.md)，家的区域的坐标和留给第 8、9 场的位置见[家的区域](home-region.md)。契约未经用户批准前不作为实现授权。
+实现引擎、适配层、场景标注或谜题查询前，读[公共契约](contract.md)。实体形状见[数据定义](contract-data.md)，运动和事件见[动作与推进](contract-actions.md)，抓取、携带和受控布置见[抓取与布置](contract-carry.md)，网格和通用查询见[截面与查询](contract-views.md)，关卡制作与报错见[场景标注](scene-authoring.md)，放样装置的搭法见[装置搭法](device-authoring.md)，角色的搭法见[角色搭法](character-authoring.md)，啃食者的搭法见[啃食者搭法](grazer-authoring.md)。契约未经用户批准前不作为实现授权。
