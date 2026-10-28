@@ -22,28 +22,16 @@ internal sealed class RoomQueries(Region3D region)
     private const float MiddleShare = .7f;
 
     private readonly World world = region.World!;
-    private readonly Dictionary<(string, string, string?), ((Pose4, SectionId?, double?, bool) State, Aabb? Bounds)> known = [];
 
     internal EntityState State(string entity) => ((EntityReadResult.Found)world.ReadEntity(new EntityId(entity))).Entity;
 
     /// <summary>Where a device is on its way: its angle for a hinge, its distance for a slide.</summary>
     internal double DevicePosition(string device) => State(device).DevicePosition!.Value;
 
-    /// <summary>
-    /// The bounds of an entity's slice in a section, or of one of its parts; null when there is none. The engine cuts the whole
-    /// world to answer, which takes milliseconds, and the slice of an entity depends on nothing but its own state, so an answer
-    /// is kept until the entity changes.
-    /// </summary>
-    internal Aabb? Bounds(string entity, string section, string? part = null)
-    {
-        var state = State(entity);
-        var signature = (state.Pose, state.Section, state.DevicePosition, state.Rotating);
-        if (known.TryGetValue((entity, section, part), out var kept) && kept.State.Equals(signature)) return kept.Bounds;
-        var bounds = world.GetSliceBounds(new(entity), new(section), part is null ? null : new PartId(part)) is SliceBoundsResult.Bounds box
-            ? new Aabb(V(box.Min), V(box.Max) - V(box.Min)) : (Aabb?)null;
-        known[(entity, section, part)] = (signature, bounds);
-        return bounds;
-    }
+    /// <summary>The bounds of an entity's slice in a section, or of one of its parts; null when there is none.</summary>
+    internal Aabb? Bounds(string entity, string section, string? part = null) =>
+        world.GetSliceBounds(new(entity), new(section), part is null ? null : new PartId(part)) is SliceBoundsResult.Bounds box
+            ? new Aabb(V(box.Min), V(box.Max) - V(box.Min)) : null;
 
     /// <summary>Whether the entity lies still on something that holds it up: not in a hand, not turning, and where it would come to rest.</summary>
     internal bool IsResting(string entity)

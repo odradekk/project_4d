@@ -35,7 +35,7 @@ public partial class CatRoom : Node
     private const double WatchSeconds = 40;
     private const double LookSeconds = 1;
     private const float LookAngle = .7f;
-    // The ring is tried this often, and the rest of the scene thinks this often: each look at the engine cuts the whole world.
+    // The ring is tried this often, and the rest of the scene looks at the engine this often.
     private const double RingAttemptSeconds = 1;
     private const double ThinkSeconds = .1;
     private const float FallLimit = -3;
@@ -151,7 +151,12 @@ public partial class CatRoom : Node
                 if (ringTimer <= 0)
                 {
                     ringTimer = RingAttemptSeconds;
-                    if (RingIsLuring() && cat.JumpThroughRing("nut", "ring", "wand")) Become(Stage.Leaping, give: false);
+                    if (RingIsLuring() && cat.JumpThroughRing("nut", "ring", "wand"))
+                    {
+                        // Only a leap that ends on its own without the seam counts as a miss: one that the player breaks off does not.
+                        then = LeapMissed;
+                        Become(Stage.Leaping, give: false);
+                    }
                 }
                 break;
         }
@@ -211,8 +216,7 @@ public partial class CatRoom : Node
                 cat.Chase(() => yarn);
                 break;
             case Stage.Leaping:
-                // The leap ended without the seam being reached, or was dropped: back to the lure.
-                leaps++;
+                // The leap was dropped when the cat was picked up: back to the lure.
                 Become(Stage.Chasing);
                 break;
             case Stage.Gone:
@@ -244,6 +248,12 @@ public partial class CatRoom : Node
         Say("", 4, "它跳进那道光里去了。透过镜片看，第Ⅱ页的吊柜顶上缩着一团黑影。");
         Say("", 4, "要过去看看吗？举着棱镜走到缝前，按左键。");
         Become(Stage.Perched);
+    }
+
+    private void LeapMissed()
+    {
+        leaps++;
+        Become(Stage.Chasing);
     }
 
     private void Bridged()
