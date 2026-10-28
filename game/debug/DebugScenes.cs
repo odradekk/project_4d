@@ -11,6 +11,7 @@ public static class DebugScenes
             "systems-demo" => "res://tests/systems_demo.tscn",
             "seam-demo" => "res://tests/seam_demo.tscn",
             "item-test" => "res://regions/item_test.tscn",
+            "grazer-demo" => "res://tests/grazer_demo.tscn",
             _ => null
         };
 #else

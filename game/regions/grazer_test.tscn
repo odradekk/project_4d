@@ -1,0 +1,565 @@
+[gd_scene load_steps=40 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="4"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="7"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="8"]
+[ext_resource type="Script" path="res://adapter/Seam3D.cs" id="12"]
+[ext_resource type="Script" path="res://adapter/Grazer3D.cs" id="13"]
+[ext_resource type="Script" path="res://adapter/MetaballShapeResource.cs" id="14"]
+[ext_resource type="Script" path="res://adapter/MetaballResource.cs" id="15"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="9"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("8")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("8")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("8")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("8")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("8")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("8")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="MatFloor"]
+albedo_color = Color(0.42, 0.45, 0.49, 1)
+[sub_resource type="BoxMesh" id="BoxFloor"]
+material = SubResource("MatFloor")
+size = Vector3(12, 0.2, 12)
+
+[sub_resource type="StandardMaterial3D" id="MatWallLeft"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+[sub_resource type="BoxMesh" id="BoxWallLeft"]
+material = SubResource("MatWallLeft")
+size = Vector3(4, 3, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="MatWallRight"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+[sub_resource type="BoxMesh" id="BoxWallRight"]
+material = SubResource("MatWallRight")
+size = Vector3(4, 3, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="MatDoor"]
+albedo_color = Color(0.6, 0.45, 0.3, 1)
+[sub_resource type="BoxMesh" id="BoxDoor"]
+material = SubResource("MatDoor")
+size = Vector3(2, 2.2, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="MatLintel"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+[sub_resource type="BoxMesh" id="BoxLintel"]
+material = SubResource("MatLintel")
+size = Vector3(2, 0.8, 0.2)
+
+[sub_resource type="Resource" id="ShutBall0"]
+script = ExtResource("15")
+Id = "lip0"
+Center = PackedFloat64Array(1, 0, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall1"]
+script = ExtResource("15")
+Id = "lip1"
+Center = PackedFloat64Array(0.866, 0.5, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall2"]
+script = ExtResource("15")
+Id = "lip2"
+Center = PackedFloat64Array(0.5, 0.866, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall3"]
+script = ExtResource("15")
+Id = "lip3"
+Center = PackedFloat64Array(0, 1, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall4"]
+script = ExtResource("15")
+Id = "lip4"
+Center = PackedFloat64Array(-0.5, 0.866, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall5"]
+script = ExtResource("15")
+Id = "lip5"
+Center = PackedFloat64Array(-0.866, 0.5, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall6"]
+script = ExtResource("15")
+Id = "lip6"
+Center = PackedFloat64Array(-1, 0, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall7"]
+script = ExtResource("15")
+Id = "lip7"
+Center = PackedFloat64Array(-0.866, -0.5, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall8"]
+script = ExtResource("15")
+Id = "lip8"
+Center = PackedFloat64Array(-0.5, -0.866, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall9"]
+script = ExtResource("15")
+Id = "lip9"
+Center = PackedFloat64Array(-0, -1, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall10"]
+script = ExtResource("15")
+Id = "lip10"
+Center = PackedFloat64Array(0.5, -0.866, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall11"]
+script = ExtResource("15")
+Id = "lip11"
+Center = PackedFloat64Array(0.866, -0.5, 0, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall12"]
+script = ExtResource("15")
+Id = "tooth0"
+Center = PackedFloat64Array(0, 0.75, -0.15, 0)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall13"]
+script = ExtResource("15")
+Id = "tooth1"
+Center = PackedFloat64Array(0, 0.5303, -0.15, 0.5303)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall14"]
+script = ExtResource("15")
+Id = "tooth2"
+Center = PackedFloat64Array(0, 0, -0.15, 0.75)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall15"]
+script = ExtResource("15")
+Id = "tooth3"
+Center = PackedFloat64Array(0, -0.5303, -0.15, 0.5303)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall16"]
+script = ExtResource("15")
+Id = "tooth4"
+Center = PackedFloat64Array(0, -0.75, -0.15, 0)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall17"]
+script = ExtResource("15")
+Id = "tooth5"
+Center = PackedFloat64Array(0, -0.5303, -0.15, -0.5303)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall18"]
+script = ExtResource("15")
+Id = "tooth6"
+Center = PackedFloat64Array(0, -0, -0.15, -0.75)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall19"]
+script = ExtResource("15")
+Id = "tooth7"
+Center = PackedFloat64Array(0, 0.5303, -0.15, -0.5303)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall20"]
+script = ExtResource("15")
+Id = "spine1"
+Center = PackedFloat64Array(0, 0.0841, 1, 0.35)
+Radius = 1.05
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall21"]
+script = ExtResource("15")
+Id = "spine2"
+Center = PackedFloat64Array(0, 0.0909, 1.5, 0.7)
+Radius = 1
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall22"]
+script = ExtResource("15")
+Id = "spine3"
+Center = PackedFloat64Array(0, 0.0141, 2, 1.05)
+Radius = 0.95
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall23"]
+script = ExtResource("15")
+Id = "spine4"
+Center = PackedFloat64Array(0, -0.0757, 2.5, 1.4)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="ShutBall24"]
+script = ExtResource("15")
+Id = "spine5"
+Center = PackedFloat64Array(0, -0.0959, 3, 1.75)
+Radius = 0.85
+Weight = 1
+
+[sub_resource type="Resource" id="ShutShape"]
+script = ExtResource("14")
+Balls = Array[ExtResource("15")]([SubResource("ShutBall0"), SubResource("ShutBall1"), SubResource("ShutBall2"), SubResource("ShutBall3"), SubResource("ShutBall4"), SubResource("ShutBall5"), SubResource("ShutBall6"), SubResource("ShutBall7"), SubResource("ShutBall8"), SubResource("ShutBall9"), SubResource("ShutBall10"), SubResource("ShutBall11"), SubResource("ShutBall12"), SubResource("ShutBall13"), SubResource("ShutBall14"), SubResource("ShutBall15"), SubResource("ShutBall16"), SubResource("ShutBall17"), SubResource("ShutBall18"), SubResource("ShutBall19"), SubResource("ShutBall20"), SubResource("ShutBall21"), SubResource("ShutBall22"), SubResource("ShutBall23"), SubResource("ShutBall24")])
+Threshold = 0.25
+
+[sub_resource type="Resource" id="OpenBall0"]
+script = ExtResource("15")
+Id = "lip0"
+Center = PackedFloat64Array(1.5, 0, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall1"]
+script = ExtResource("15")
+Id = "lip1"
+Center = PackedFloat64Array(1.299, 0.75, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall2"]
+script = ExtResource("15")
+Id = "lip2"
+Center = PackedFloat64Array(0.75, 1.299, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall3"]
+script = ExtResource("15")
+Id = "lip3"
+Center = PackedFloat64Array(0, 1.5, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall4"]
+script = ExtResource("15")
+Id = "lip4"
+Center = PackedFloat64Array(-0.75, 1.299, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall5"]
+script = ExtResource("15")
+Id = "lip5"
+Center = PackedFloat64Array(-1.299, 0.75, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall6"]
+script = ExtResource("15")
+Id = "lip6"
+Center = PackedFloat64Array(-1.5, 0, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall7"]
+script = ExtResource("15")
+Id = "lip7"
+Center = PackedFloat64Array(-1.299, -0.75, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall8"]
+script = ExtResource("15")
+Id = "lip8"
+Center = PackedFloat64Array(-0.75, -1.299, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall9"]
+script = ExtResource("15")
+Id = "lip9"
+Center = PackedFloat64Array(-0, -1.5, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall10"]
+script = ExtResource("15")
+Id = "lip10"
+Center = PackedFloat64Array(0.75, -1.299, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall11"]
+script = ExtResource("15")
+Id = "lip11"
+Center = PackedFloat64Array(1.299, -0.75, -0.25, 0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall12"]
+script = ExtResource("15")
+Id = "tooth0"
+Center = PackedFloat64Array(0, 1, -0.4, 0)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall13"]
+script = ExtResource("15")
+Id = "tooth1"
+Center = PackedFloat64Array(0, 0.7071, -0.4, 0.7071)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall14"]
+script = ExtResource("15")
+Id = "tooth2"
+Center = PackedFloat64Array(0, 0, -0.4, 1)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall15"]
+script = ExtResource("15")
+Id = "tooth3"
+Center = PackedFloat64Array(0, -0.7071, -0.4, 0.7071)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall16"]
+script = ExtResource("15")
+Id = "tooth4"
+Center = PackedFloat64Array(0, -1, -0.4, 0)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall17"]
+script = ExtResource("15")
+Id = "tooth5"
+Center = PackedFloat64Array(0, -0.7071, -0.4, -0.7071)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall18"]
+script = ExtResource("15")
+Id = "tooth6"
+Center = PackedFloat64Array(0, -0, -0.4, -1)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall19"]
+script = ExtResource("15")
+Id = "tooth7"
+Center = PackedFloat64Array(0, 0.7071, -0.4, -0.7071)
+Radius = 0.3
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall20"]
+script = ExtResource("15")
+Id = "spine1"
+Center = PackedFloat64Array(0, 0.0841, 1, 0.35)
+Radius = 1.05
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall21"]
+script = ExtResource("15")
+Id = "spine2"
+Center = PackedFloat64Array(0, 0.0909, 1.5, 0.7)
+Radius = 1
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall22"]
+script = ExtResource("15")
+Id = "spine3"
+Center = PackedFloat64Array(0, 0.0141, 2, 1.05)
+Radius = 0.95
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall23"]
+script = ExtResource("15")
+Id = "spine4"
+Center = PackedFloat64Array(0, -0.0757, 2.5, 1.4)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="OpenBall24"]
+script = ExtResource("15")
+Id = "spine5"
+Center = PackedFloat64Array(0, -0.0959, 3, 1.75)
+Radius = 0.85
+Weight = 1
+
+[sub_resource type="Resource" id="OpenShape"]
+script = ExtResource("14")
+Balls = Array[ExtResource("15")]([SubResource("OpenBall0"), SubResource("OpenBall1"), SubResource("OpenBall2"), SubResource("OpenBall3"), SubResource("OpenBall4"), SubResource("OpenBall5"), SubResource("OpenBall6"), SubResource("OpenBall7"), SubResource("OpenBall8"), SubResource("OpenBall9"), SubResource("OpenBall10"), SubResource("OpenBall11"), SubResource("OpenBall12"), SubResource("OpenBall13"), SubResource("OpenBall14"), SubResource("OpenBall15"), SubResource("OpenBall16"), SubResource("OpenBall17"), SubResource("OpenBall18"), SubResource("OpenBall19"), SubResource("OpenBall20"), SubResource("OpenBall21"), SubResource("OpenBall22"), SubResource("OpenBall23"), SubResource("OpenBall24")])
+Threshold = 0.25
+
+[node name="GrazerTest" type="Node3D"]
+script = ExtResource("1")
+PrismEnabled = true
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Ⅱ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅱ"
+W = 1.2
+
+[node name="Ⅲ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅲ"
+W = 2.4
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(0, 0.02, 3)
+script = ExtResource("7")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("9")
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Home" type="Node3D" parent="Buildings"]
+script = ExtResource("3")
+BuildingId = "home"
+WMin = -1.0
+WMax = 3.4
+
+[node name="Floor" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, -0.1, 0)
+script = ExtResource("4")
+EntityId = "Floor"
+BuildingId = "home"
+WMin = -1
+WMax = 3.4
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Floor"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloor")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WallLeft" type="Node3D" parent="Buildings/Home"]
+position = Vector3(-3, 1.5, -4)
+script = ExtResource("4")
+EntityId = "WallLeft"
+BuildingId = "home"
+WMin = -1
+WMax = 3.4
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/WallLeft"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxWallLeft")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WallRight" type="Node3D" parent="Buildings/Home"]
+position = Vector3(3, 1.5, -4)
+script = ExtResource("4")
+EntityId = "WallRight"
+BuildingId = "home"
+WMin = -1
+WMax = 3.4
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/WallRight"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxWallRight")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Door" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 1.1, -4)
+script = ExtResource("4")
+EntityId = "Door"
+BuildingId = "home"
+WMin = -1
+WMax = 3.4
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Door"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxDoor")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Lintel" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 2.6, -4)
+script = ExtResource("4")
+EntityId = "Lintel"
+BuildingId = "home"
+WMin = -1
+WMax = 3.4
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Lintel"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxLintel")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Items" type="Node" parent="."]
+
+[node name="Devices" type="Node" parent="."]
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Grazer" type="Node3D" parent="Grazers"]
+position = Vector3(0, 1.4, -2.2)
+script = ExtResource("13")
+EntityId = "grazer"
+W = 11.0
+Shape = SubResource("ShutShape")
+OpenShape = SubResource("OpenShape")
+
+[node name="Seams" type="Node3D" parent="."]
+
+[node name="Needle" type="Node3D" parent="Seams"]
+position = Vector3(2, 0, 1)
+script = ExtResource("12")
+SeamId = "needle"
+Sections = PackedStringArray("Ⅰ", "Ⅱ")
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]

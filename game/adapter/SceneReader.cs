@@ -26,6 +26,7 @@ internal sealed partial class SceneReader(Region3D region)
             Errors.AddRange(invalid.Errors
                 .Where(e => !(e.Code == LoadErrorCode.InvalidGeometry && unavailableParts.Contains(e.Source)))
                 .Select(e => e with { Source = Locate(e.Source) }));
+        else if (result is LoadResult.Loaded loaded) TryOpenShapes(loaded.World);
         return Errors.Count > 0 ? new LoadResult.Invalid(Errors) : result;
     }
 
@@ -92,6 +93,8 @@ internal sealed partial class SceneReader(Region3D region)
                 ReadRingItem(nut, entities);
             else if (node is LoftDevice3D device)
                 ReadDevice(device, entities);
+            else if (node is Grazer3D grazer)
+                entities.Add(ReadGrazer(grazer));
             else if (node is Seam3D seam)
                 seams.Add(ReadSeam(seam));
             else if (node is BoxPart3D part && part.GetParent() is not BuildingElement3D

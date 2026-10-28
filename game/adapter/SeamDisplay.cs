@@ -31,6 +31,7 @@ internal sealed class SeamDisplay
     private readonly IReadOnlyList<SectionScene> scenes;
     private readonly Dictionary<string, MirrorHum> hums = [];
     private readonly Dictionary<string, (string Section, bool Open, bool Severed)> shown = [];
+    private readonly Dictionary<(string Section, string Seam), Node3D> lights = [];
     private readonly IReadOnlyList<SeamMark> marks;
     private string current = "";
 
@@ -93,9 +94,12 @@ internal sealed class SeamDisplay
     {
         foreach (var scene in scenes.Where(scene => mark.Sections.Contains(scene.Id.Value)))
         {
-            var seams = scene.Overlay.GetNode("Seams");
-            seams.GetNodeOrNull(mark.Id)?.Free();
-            if (mark.Sections.Contains(current)) seams.AddChild(Light(mark, state));
+            var key = (scene.Id.Value, mark.Id);
+            if (lights.Remove(key, out var old)) old.Free();
+            if (!mark.Sections.Contains(current)) continue;
+            var light = Light(mark, state);
+            scene.Overlay.GetNode("Seams").AddChild(light);
+            lights.Add(key, light);
         }
     }
 
