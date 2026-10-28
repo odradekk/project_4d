@@ -1,0 +1,93 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://adapter/ExpectedOperationNode.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/ExpectedOperationResource.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/ExpectedRotationResource.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/ExpectedDeviceResource.cs" id="4"]
+[ext_resource type="Script" path="res://adapter/ExpectedStepResource.cs" id="5"]
+
+[sub_resource type="Resource" id="FlipEraser"]
+script = ExtResource("3")
+Kind = 2
+Actor = "xiaoman"
+Entity = "eraser"
+
+[sub_resource type="Resource" id="StandDeskPencil"]
+script = ExtResource("3")
+Actor = "xiaoman"
+Entity = "pencilDesk"
+Target = "Ⅱ"
+
+[sub_resource type="Resource" id="LayDeskPencil"]
+script = ExtResource("3")
+Kind = 1
+Actor = "xiaoman"
+Entity = "pencilDesk"
+
+[sub_resource type="Resource" id="StandWindowPencil"]
+script = ExtResource("3")
+Actor = "xiaoman"
+Entity = "pencilWindow"
+Target = "Ⅱ"
+
+[sub_resource type="Resource" id="LayWindowPencil"]
+script = ExtResource("3")
+Kind = 1
+Actor = "xiaoman"
+Entity = "pencilWindow"
+
+[sub_resource type="Resource" id="CloseWindow1"]
+script = ExtResource("4")
+Device = "sash1"
+Target = 0.69
+ExpectedPosition = 0.69
+
+[sub_resource type="Resource" id="CloseWindow3"]
+script = ExtResource("4")
+Device = "sash3"
+Target = 0.69
+ExpectedPosition = 0.69
+
+[sub_resource type="Resource" id="StopWindow1"]
+script = ExtResource("4")
+Device = "sash1"
+Target = 0.69
+ExpectedPosition = 0.214
+
+[sub_resource type="Resource" id="FlipOperation"]
+script = ExtResource("2")
+Id = "eraser-flips"
+Steps = Array[ExtResource("5")]([SubResource("FlipEraser")])
+
+[sub_resource type="Resource" id="StandOperation"]
+script = ExtResource("2")
+Id = "desk-pencil-stands-and-lies"
+Steps = Array[ExtResource("5")]([SubResource("StandDeskPencil"), SubResource("LayDeskPencil")])
+
+[sub_resource type="Resource" id="ClearOperation"]
+script = ExtResource("2")
+Id = "windows-close-past-a-lying-pencil"
+Steps = Array[ExtResource("5")]([SubResource("CloseWindow1"), SubResource("CloseWindow3")])
+
+[sub_resource type="Resource" id="StuckOperation"]
+script = ExtResource("2")
+Id = "window-stops-at-a-standing-pencil-and-closes-once-it-lies"
+Steps = Array[ExtResource("5")]([SubResource("StandWindowPencil"), SubResource("StopWindow1"), SubResource("LayWindowPencil"), SubResource("CloseWindow1")])
+
+[node name="ExpectedPuzzleOperations" type="Node"]
+
+[node name="EraserFlips" type="Node" parent="."]
+script = ExtResource("1")
+Operation = SubResource("FlipOperation")
+
+[node name="DeskPencil" type="Node" parent="."]
+script = ExtResource("1")
+Operation = SubResource("StandOperation")
+
+[node name="WindowsClear" type="Node" parent="."]
+script = ExtResource("1")
+Operation = SubResource("ClearOperation")
+
+[node name="WindowStuck" type="Node" parent="."]
+script = ExtResource("1")
+Operation = SubResource("StuckOperation")

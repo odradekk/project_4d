@@ -66,6 +66,8 @@ public partial class SchoolChecks : Node
             await ReachPeek(Key.Up);
             Check(said.Any(line => line.Contains("再想想")), "a wrong answer gets the teacher's correction and the class goes on");
             await Unload();
+            // A sound that is still fading out when the game quits is reported as a resource in use.
+            await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
             GD.Print("School checks passed: classroom, differences, seat, lecture, question, round, peeking, caught, marked then caught, finish.");
             GetTree().Quit();
         }
@@ -151,8 +153,9 @@ public partial class SchoolChecks : Node
         Check(first.Contains(teacher) && first.Count(person => person.Posture == Posture.Sitting) == 47,
             "section Ⅰ has the teacher and a class sitting at their desks");
         Check(!region.GetNode("Generated/Ⅱ").GetChildren().OfType<Character3D>().Any(), "section Ⅱ has nobody in it");
-        // The chair stands on the desk upside down in Ⅱ, which makes the desk reach higher than it does in Ⅰ.
-        Check(Bounds("deskII22", "Ⅱ").Max.Y > Bounds("deskI22", "Ⅰ").Max.Y + .4, "in Ⅱ the chairs are on the desks");
+        // The chair stands on the desk upside down in Ⅱ, which makes it reach higher than the desk does in Ⅰ; Ⅰ has no chairs to see.
+        Check(Bounds("chairII22", "Ⅱ").Max.Y > Bounds("deskI22", "Ⅰ").Max.Y + .4 && Slices("Ⅱ").Count(slice => slice.Entity.Value.StartsWith("chair")) == 49
+            && !Slices("Ⅰ").Any(slice => slice.Entity.Value.StartsWith("chair")), "in Ⅱ the chairs are on the desks");
         // The podium is one block in Ⅰ and two steps in Ⅱ, and it is the lens's glowing kind of thing in Ⅱ.
         var front = new Vector3(-1.26f, .15f, -5.1f);
         var back = new Vector3(-1.26f, .15f, -5.5f);
@@ -183,7 +186,7 @@ public partial class SchoolChecks : Node
         (string Entity, Vector3 Target)[] targets =
         [
             ("clockII", Where("clockII")),
-            ("deskII49", DeskTarget),
+            ("chairII49", DeskTarget),
             ("chimneyII1", Where("chimneyII1")),
             ("chimneyII2", Where("chimneyII2")),
             ("PodiumSteps", new(-.7f, .1f, -4.95f)),

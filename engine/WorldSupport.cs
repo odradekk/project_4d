@@ -25,7 +25,10 @@ public sealed partial class World
             yield return new(device.Definition.Id, device, Solids(device, device.Position));
     }
 
-    private IEnumerable<Solid4> Solids() => SolidsByEntity().SelectMany(owner => owner.Solids);
+    // The solids of the world; a static entity that never reaches into `within` can be left out of a question about it.
+    private IEnumerable<Solid4> Solids(Interval? within = null) => SolidsByEntity()
+        .Where(owner => within is not { } span || owner.Record is not StaticEntity entity || entity.Segments.Any(segment => segment.Max >= span.Min && segment.Min <= span.Max))
+        .SelectMany(owner => owner.Solids);
 
     /// <summary>Finds the highest actual contact while translating the entity downward.</summary>
     public SupportResult FindSupport(EntityId entity)

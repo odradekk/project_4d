@@ -1,0 +1,201 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/school/chair.tscn" id="1"]
+
+[node name="Chairs" type="Node3D"]
+
+[node name="C00" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, -2.68)
+EntityId = "chairII00"
+
+[node name="C01" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, -2.68)
+EntityId = "chairII01"
+
+[node name="C02" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, -2.68)
+EntityId = "chairII02"
+
+[node name="C03" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, -2.68)
+EntityId = "chairII03"
+
+[node name="C04" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, -2.68)
+EntityId = "chairII04"
+
+[node name="C05" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, -2.68)
+EntityId = "chairII05"
+
+[node name="C10" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, -1.73)
+EntityId = "chairII10"
+
+[node name="C11" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, -1.73)
+EntityId = "chairII11"
+
+[node name="C12" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, -1.73)
+EntityId = "chairII12"
+
+[node name="C13" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, -1.73)
+EntityId = "chairII13"
+
+[node name="C14" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, -1.73)
+EntityId = "chairII14"
+
+[node name="C15" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, -1.73)
+EntityId = "chairII15"
+
+[node name="C20" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, -0.78)
+EntityId = "chairII20"
+
+[node name="C21" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, -0.78)
+EntityId = "chairII21"
+
+[node name="C22" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, -0.78)
+EntityId = "chairII22"
+
+[node name="C23" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, -0.78)
+EntityId = "chairII23"
+
+[node name="C24" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, -0.78)
+EntityId = "chairII24"
+
+[node name="C25" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, -0.78)
+EntityId = "chairII25"
+
+[node name="C30" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 0.17)
+EntityId = "chairII30"
+
+[node name="C31" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 0.17)
+EntityId = "chairII31"
+
+[node name="C32" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 0.17)
+EntityId = "chairII32"
+
+[node name="C33" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 0.17)
+EntityId = "chairII33"
+
+[node name="C34" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 0.17)
+EntityId = "chairII34"
+
+[node name="C35" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 0.17)
+EntityId = "chairII35"
+
+[node name="C40" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 1.12)
+EntityId = "chairII40"
+
+[node name="C41" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 1.12)
+EntityId = "chairII41"
+
+[node name="C42" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 1.12)
+EntityId = "chairII42"
+
+[node name="C43" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 1.12)
+EntityId = "chairII43"
+
+[node name="C44" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 1.12)
+EntityId = "chairII44"
+
+[node name="C45" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 1.12)
+EntityId = "chairII45"
+
+[node name="C50" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 2.07)
+EntityId = "chairII50"
+
+[node name="C51" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 2.07)
+EntityId = "chairII51"
+
+[node name="C52" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 2.07)
+EntityId = "chairII52"
+
+[node name="C53" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 2.07)
+EntityId = "chairII53"
+
+[node name="C54" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 2.07)
+EntityId = "chairII54"
+
+[node name="C55" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 2.07)
+EntityId = "chairII55"
+
+[node name="C60" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 3.02)
+EntityId = "chairII60"
+
+[node name="C61" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 3.02)
+EntityId = "chairII61"
+
+[node name="C62" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 3.02)
+EntityId = "chairII62"
+
+[node name="C63" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 3.02)
+EntityId = "chairII63"
+
+[node name="C64" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 3.02)
+EntityId = "chairII64"
+
+[node name="C65" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 3.02)
+EntityId = "chairII65"
+
+[node name="C70" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 3.97)
+EntityId = "chairII70"
+
+[node name="C71" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 3.97)
+EntityId = "chairII71"
+
+[node name="C72" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 3.97)
+EntityId = "chairII72"
+
+[node name="C73" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 3.97)
+EntityId = "chairII73"
+
+[node name="C74" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 3.97)
+EntityId = "chairII74"
+
+[node name="C75" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 3.97)
+EntityId = "chairII75"
+
+[node name="C49" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -1.26, 1.23, 4.87)
+EntityId = "chairII49"

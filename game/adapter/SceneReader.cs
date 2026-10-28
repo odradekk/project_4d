@@ -69,14 +69,7 @@ internal sealed partial class SceneReader(Region3D region)
                     Shape(element, new(element.EntityId))));
             }
             else if (node is FixedObject3D fixedObject)
-            {
-                var section = Ancestor<Section3D>(fixedObject);
-                Map(fixedObject, "EntityId", "Pose", fixedObject, "Transform");
-                if (section is not null) Map(fixedObject, "EntityId", "Pose.Position.W", section, "W");
-                if (section is null) Error(fixedObject, "EntityId", "A fixed object must belong to a Section3D.");
-                else entities.Add(new FixedDefinition(new(fixedObject.EntityId), Pose(fixedObject, section.W),
-                    At(fixedObject, "EntityId"), new(section.SectionId), Shape(fixedObject, new(fixedObject.EntityId))));
-            }
+                ReadFixed(fixedObject, entities);
             else if (node is TurnableObject3D turnable)
                 ReadTurnable(turnable, entities);
             else if (node is CreatureSpawn3D spawn)
@@ -105,7 +98,17 @@ internal sealed partial class SceneReader(Region3D region)
         foreach (var building in nodes.OfType<Building3D>()) MapRange(building, "BuildingId");
         return new(sections.Select(s => new SectionDefinition(new(s.SectionId), s.W, At(s, "W"))).ToArray(),
             nodes.OfType<Building3D>().Select(b => new BuildingDefinition(new(b.BuildingId), new(b.WMin, b.WMax), At(b, "BuildingId"))).ToArray(),
-            entities, seams, [], []);
+            entities, seams, [], ReadOperations(nodes));
+    }
+
+    internal void ReadFixed(FixedObject3D fixedObject, List<EntityDefinition> entities)
+    {
+        var section = Ancestor<Section3D>(fixedObject);
+        Map(fixedObject, "EntityId", "Pose", fixedObject, "Transform");
+        if (section is not null) Map(fixedObject, "EntityId", "Pose.Position.W", section, "W");
+        if (section is null) Error(fixedObject, "EntityId", "A fixed object must belong to a Section3D.");
+        else entities.Add(new FixedDefinition(new(fixedObject.EntityId), Pose(fixedObject, section.W),
+            At(fixedObject, "EntityId"), new(section.SectionId), Shape(fixedObject, new(fixedObject.EntityId))));
     }
 
     private SeamDefinition ReadSeam(Seam3D seam)

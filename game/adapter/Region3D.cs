@@ -21,6 +21,9 @@ public partial class Region3D : Node3D
     private readonly Dictionary<string, Character3D> characters = [];
     private readonly Dictionary<string, Node3D> sectionProps = [];
     private Dictionary<string, World3D> worlds = new();
+    private Dictionary<string, Node> viewports = new();
+    private IReadOnlyList<SectionScene> sectionScenes = [];
+    private SceneReader? loader;
     internal World? World { get; private set; }
     internal PlayerActions? Actions { get; private set; }
     internal SeamTravel? Travel { get; private set; }
@@ -89,9 +92,12 @@ public partial class Region3D : Node3D
         Travel = null;
         Grazers = null;
         sectionPositions.Clear();
+        viewports = new();
+        sectionScenes = [];
         if (generated is not null) { RemoveChild(generated); generated.Free(); }
         generated = null;
         var reader = new SceneReader(this);
+        loader = reader;
         var result = reader.Load();
         var description = reader.Description!;
         foreach (var part in SceneReader.Descendants(this).OfType<BoxPart3D>()) part.Visible = false;
@@ -143,6 +149,7 @@ public partial class Region3D : Node3D
         var notStatic = movable.Concat(reader.Grazers.Keys).ToHashSet();
         worlds = new Dictionary<string, World3D>();
         var sectionNodes = new Dictionary<string, Node>();
+        viewports = sectionNodes;
         var scenes = new List<SectionScene>();
         foreach (var section in description.Sections)
         {
@@ -184,6 +191,7 @@ public partial class Region3D : Node3D
             worlds.Add(section.Id.Value, viewport.World3D);
             sectionNodes.Add(section.Id.Value, viewport);
         }
+        sectionScenes = scenes;
         var home = SceneReader.Ancestor<Section3D>(spawn)!;
         World = world;
         sectionPositions = description.Sections.ToDictionary(s => s.Id.Value, s => s.W);

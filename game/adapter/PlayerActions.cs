@@ -65,8 +65,11 @@ public sealed partial class PlayerActions : Node
     /// <summary>Whether the player is a mirror image, as the engine has her: it turns the view and the controls over.</summary>
     public bool Mirrored => State(actor).Handedness == Handedness.Mirrored;
 
-    /// <summary>Raised with the reason when a device that the player pulled is stopped by something in its way.</summary>
-    internal event Action<string>? DeviceBlocked;
+    /// <summary>
+    /// Raised when a device that the player pulled is stopped by something in its way: the device, the entity that stops it
+    /// (empty when the engine names none), and what the player says about it.
+    /// </summary>
+    internal event Action<string, string, string>? DeviceBlocked;
 
     internal void Configure(World world, string actor, FirstPersonPlayer player, PrismView prism,
         IReadOnlyList<SectionScene> scenes, DynamicSlices slices, LensOverlay overlay, Region3D region)
@@ -78,7 +81,7 @@ public sealed partial class PlayerActions : Node
         this.scenes = scenes;
         this.slices = slices;
         this.overlay = overlay;
-        devices = new DeviceDrive(world, scenes, overlay, region, SectionOf, () => CurrentSection, line => DeviceBlocked?.Invoke(line));
+        devices = new DeviceDrive(world, scenes, overlay, region, SectionOf, () => CurrentSection, (device, obstacle, line) => DeviceBlocked?.Invoke(device, obstacle, line));
         shadows = new BallShadows(world, scenes, slices.Entities);
         scratch = new AudioStreamPlayer { Name = "Scratch", Stream = GD.Load<AudioStream>("res://audio/scratch.wav") };
         AddChild(scratch);

@@ -109,7 +109,8 @@ public sealed partial class World
             TurnableDefinition or ItemDefinition => AddDynamic(definition),
             DeviceDefinition device => AddDeviceEntity(device),
             GrazerDefinition grazer => AddGrazer(grazer),
-            _ => Reject(FailureCode.WrongEntityKind, "Only creatures, grazers, turnables, items and devices can currently be added.")
+            FixedDefinition fixedObject => AddFixed(fixedObject),
+            _ => Reject(FailureCode.WrongEntityKind, "Only creatures, grazers, fixed objects, turnables, items and devices can currently be added.")
         };
     }
 
@@ -138,6 +139,29 @@ public sealed partial class World
         return new AddEntityResult.Added(State(dynamicEntities[definition.Id]));
     }
 
+    // A fixed object stands where it is added: it must be valid, outside every reserved rotation sweep, and clear of everything solid.
+    private AddEntityResult AddFixed(FixedDefinition definition)
+    {
+        // Nothing but its own shape and section is in question, so the rest of the region is not checked again.
+        if (ValidationFailure([definition], definition.Id) is { } failure)
+            return new AddEntityResult.Rejected(failure);
+        var w = definition.Pose.Position.W;
+        var added = new StaticEntity(definition.Id, definition.Pose, definition.Shape.Parts.ToArray(), [new Interval(w - Epsilon, w + Epsilon)], false);
+        var solids = added.Parts.SelectMany(part => added.Segments.Select(segment => Box4.From(added, part, segment))).ToArray();
+        if (IntersectsReservation(solids, definition.Id))
+            return new AddEntityResult.Rejected(Fail(FailureCode.TranslationBlocked, "Entity intersects a reserved rotation sweep.", definition.Id));
+        var obstacles = Solids(new Interval(w - Epsilon, w + Epsilon)).ToArray();
+        var contacts = solids
+            .SelectMany(moving => obstacles.Where(moving.BoundsMayOverlap).Select(obstacle => Collision.Touch(moving, obstacle)).OfType<Contact>())
+            .ToList();
+        if (contacts.Count > 0)
+            return new AddEntityResult.Rejected(Fail(FailureCode.TranslationBlocked, "Fixed object would intersect another entity.", definition.Id, DistinctContacts(contacts)));
+        entities = [.. entities, AddStatic(definition)];
+        revision++;
+        Enqueue(new EntityAdded(definition.Id), time);
+        return new AddEntityResult.Added(((EntityReadResult.Found)ReadEntity(definition.Id)).Entity);
+    }
+
     // The first validation error of the region with these entities as an InvalidInput failure, or null when it is valid.
     private Failure? ValidationFailure(IEnumerable<EntityDefinition> definitions, EntityId added) =>
         FirstFailure(WorldValidation.Check(new(sections, buildings, definitions.ToArray(), [], [], [])), added);
@@ -155,6 +179,15 @@ public sealed partial class World
             return new RemoveEntityResult.Rejected(Fail(FailureCode.EntityInUse, "Entity is rotating, held, or holding an item.", entity));
         if (actors.Remove(entity) || dynamicEntities.Remove(entity) || devices.Remove(entity) || grazers.Remove(entity))
         {
+            retired.Add(entity);
+            revision++;
+            Enqueue(new EntityRemoved(entity), time);
+            return new RemoveEntityResult.Removed(entity);
+        }
+        if (staticDefinitions.GetValueOrDefault(entity) is FixedDefinition)
+        {
+            staticDefinitions.Remove(entity);
+            entities = entities.Where(solid => solid.Id != entity).ToArray();
             retired.Add(entity);
             revision++;
             Enqueue(new EntityRemoved(entity), time);
