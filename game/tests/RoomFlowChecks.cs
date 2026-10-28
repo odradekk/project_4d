@@ -137,13 +137,15 @@ public partial class RoomFlowChecks : Node
         await Frames(10);
         var toYarn = Flat(yarn.Value.GetCenter() - cat.Position).Normalized();
         Check((-cat.GlobalBasis.Z).Dot(toYarn) > .9f, "the cat on the cabinet looks at the yarn");
-        // Shaking the handle moves the yarn; after some metres of it the notebook has the page.
+        // Shaking the handle moves the yarn; after some metres of it the notebook has the page. Each swing is a smooth 0.4 m over
+        // ten frames, the way a hand moves: the scene looks at the yarn every tenth of a second.
         var start = player.Position;
-        for (var i = 0; i < 6; i++)
-        {
-            player.Position = start + new Vector3(i % 2 == 0 ? .4f : 0, 0, 0);
-            await Frames(4);
-        }
+        for (var swing = 0; swing < 6; swing++)
+            for (var frame = 0; frame < 10; frame++)
+            {
+                player.Position += new Vector3(swing % 2 == 0 ? .04f : -.04f, 0, 0);
+                await Frames(1);
+            }
         Check(room.Home.Hud.UnlockedPages.Contains(6), "the page about operating one section from another is in the notebook");
         player.Position = start;
         await Frames(4);
@@ -205,7 +207,9 @@ public partial class RoomFlowChecks : Node
         await Frames(10);
         Button(MouseButton.Left, false);
         Check(room.Home.Region.CurrentSection == "Ⅱ" && room.Home.Hud.UnlockedPages.Contains(5), "she crosses into section II and the notebook has the page about seams");
-        await Frames(10);
+        // She stands at the seam for more than the half second the trail of safe spots goes back; the walk to it was made at
+        // half a metre a frame and is not where she should come back to.
+        await Frames(40);
         player.Position = new(5f, .3f, 4.2f);
         await Until(() => player.Position.Y > -1 && player.IsOnFloor() && Flat(player.Position - Seam).Length() < .6f, 5, $"falling into the pit takes her back to where she stood; she is at {player.Position}");
         // In section II she picks the cat up at the foot of the board, walks off with it and puts it down: it goes back to the foot.
