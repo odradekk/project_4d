@@ -106,7 +106,7 @@ public sealed record ExpectedAdvance(double Delta) : ExpectedStep;
 
 ExpectedFailure=null 表示必须成功；非 null 必须得到该失败且世界不变。旋转成功步骤立即 Start 后按配置时长推进到结束，再进入下一步；ExpectedAdvance 用于显式模拟额外时间。Move/Device 同时核对实际位移/位置，比较容差 `1e-9m`（旋转位置为 `1e-9rad`）。装置步骤即时完成，不推进时间；ExpectedFailure=null 时装置的实际位置须等于 ExpectedPosition，被障碍挡在 target 之前停下也算成功，位置就是停下处；ExpectedFailure 非 null 时不比较 ExpectedPosition。此容差只核对预期值，不取代碰撞容差。所有可推导错误均一次收集；步骤失败后停止该序列，继续其他独立操作。
 
-前置布置资源的字段如下。ID使用string，枚举原样，四维值按本页数组格式；资源读取后生成完整引擎定义。
+前置布置资源的字段如下。四维值按本页数组格式，`Entity`路径从区域根起算；已读EntityOverrides、Carry和旋转、装置、穿缝步骤。
 
 | Resource | 全部导出字段与含义 |
 |---|---|
@@ -117,7 +117,7 @@ ExpectedFailure=null 表示必须成功；非 null 必须得到该失败且世�
 | SharedValueOverrideResource | `string Id`、`double Value` |
 | CarrySetupResource | `string Actor/Item`、`CarryLocation Location` |
 
-ExpectedStepResource是封闭抽象Resource，各变体如下。
+ExpectedStepResource是封闭基类Resource（非抽象），各变体如下。
 
 | Resource | 全部导出字段 |
 |---|---|
