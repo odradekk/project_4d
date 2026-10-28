@@ -8,7 +8,8 @@ namespace Game.Flow;
 /// <summary>
 /// Scene 2 of the prologue, from the door of the home down the stair to the school gate. Xiaoman buys a bun at the stall
 /// outside, breaks half of it for the cat under the stair, and kneels to ask the cat what it is staring at in the empty
-/// corner of the hall. The prism cannot be used here. <see cref="Finished"/> follows when she reaches the school gate.
+/// corner of the hall. The prism cannot be used here. <see cref="Finished"/> follows when she reaches the school gate, once
+/// she has done that; before it she is reminded of the cat.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 public partial class SchoolRoad : Node
@@ -31,6 +32,8 @@ public partial class SchoolRoad : Node
     private Character3D coal = null!;
     private bool hasBun;
     private bool fed;
+    private bool beatDone;
+    private bool reminded;
     private bool finished;
 
     private GameHud Hud => street.Hud;
@@ -39,7 +42,7 @@ public partial class SchoolRoad : Node
     {
         street = new Street(this);
         street.UseProps("BunStall", "CatFeed", "ToyStall");
-        coal = Region.Character("coal");
+        coal = Region.Character("cat");
         // On this road the cat is fed, not carried. The shape is switched off for the physics, which is not done in a callback.
         coal.GetNode<CollisionShape3D>("Pickup/Shape").SetDeferred(CollisionShape3D.PropertyName.Disabled, true);
         coal.Sit();
@@ -60,7 +63,19 @@ public partial class SchoolRoad : Node
         if (finished) return;
         var gate = street.Mark("SchoolGate").GlobalPosition;
         var player = street.Player.GlobalPosition;
-        if (new Vector2(gate.X - player.X, gate.Z - player.Z).Length() > GateReach) return;
+        var distance = new Vector2(gate.X - player.X, gate.Z - player.Z).Length();
+        if (distance > GateReach)
+        {
+            reminded &= distance < 2 * GateReach;
+            return;
+        }
+        // The cat staring at the corner is the one odd thing on the road, so the scene does not end before it has been seen.
+        if (!beatDone)
+        {
+            if (!reminded) Hud.Say("小满", "煤球还在楼梯底下呢，先去看看它。", 3);
+            reminded = true;
+            return;
+        }
         finished = true;
         Hud.Say("小满", "到学校了。", 2);
         EmitSignal(SignalName.Finished);
@@ -104,6 +119,10 @@ public partial class SchoolRoad : Node
         beat.TweenCallback(Callable.From(() => Hud.Say("小满", "那里明明什么也没有……", 3)));
         beat.TweenInterval(2);
         beat.TweenProperty(eyes, "position:y", StandingEyes, KneelSeconds);
-        beat.TweenCallback(Callable.From(() => Hud.Say("小满", "算了，要迟到了。", 2.5)));
+        beat.TweenCallback(Callable.From(() =>
+        {
+            Hud.Say("小满", "算了，要迟到了。", 2.5);
+            beatDone = true;
+        }));
     }
 }

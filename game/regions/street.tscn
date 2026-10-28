@@ -970,10 +970,10 @@ script = ExtResource("7")
 EntityId = "xiaoman"
 CharacterScene = ExtResource("9")
 
-[node name="coal" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+[node name="cat" type="Node3D" parent="Sections/Ⅰ/Spawns"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.75, 0.02, -8)
 script = ExtResource("7")
-EntityId = "coal"
+EntityId = "cat"
 PassageRadius = 0.15
 PassageHeight = 0.4
 CanUseSeamsWithoutPrism = true
@@ -1134,6 +1134,9 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.8, 0.02, -5.9)
 
 [node name="RampMouth" type="Marker3D" parent="Marks"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, -5.6)
+
+[node name="WalkwayFront" type="Marker3D" parent="Marks"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, -5.3)
 
 [node name="BannerText" type="Label3D" parent="Signs"]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.96, 4.4, 1.4)

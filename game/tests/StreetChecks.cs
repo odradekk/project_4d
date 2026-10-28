@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Game.Audio;
 using Game.Characters;
 using Game.Debugging;
 using Game.Flow;
@@ -25,7 +27,7 @@ public partial class StreetChecks : Node
     private Node scene = null!;
     private FirstPersonPlayer player => play.Player;
     private string subtitle => player.Hud.SubtitleText;
-    private Character3D coal => play.Region.Character("coal");
+    private Character3D coal => play.Region.Character("cat");
 
     public override async void _Ready()
     {
@@ -34,12 +36,15 @@ public partial class StreetChecks : Node
         {
             await CheckSchoolRoad();
             await CheckKiosk();
-            await CheckStair();
+            await CheckDoorWaits();
+            await CheckCatFollowsFromWaiting();
+            await CheckCatFollowsFromTheEndOfTheHall();
+            await CheckCatFollowsAfterBeingCarried();
 #if DEBUG
             Check(DebugScenes.Find("school-road") == "res://flow/school_road.tscn" && DebugScenes.Find("home-road") == "res://flow/home_road.tscn",
                 "the debug entries start the two scenes");
 #endif
-            GD.Print("Street checks passed: walk out, bun, cat stares, school gate, kiosk, cat follows up the stair, door.");
+            GD.Print("Street checks passed: sounds, walk out, bun, cat stares, school gate, kiosk, door, cat follows up the stair three ways.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -107,6 +112,9 @@ public partial class StreetChecks : Node
         await play.Frames(2);
     }
 
+    private bool IsPlaying(string file) => player.GetParent().GetChildren().OfType<SectionSound>()
+        .Any(sound => sound.Stream.ResourcePath.EndsWith($"{file}.wav") && sound.Playing);
+
     // Lines wait for the one before them, so a line is waited for.
     private Task Says(string text, double seconds = 6) => play.Until(() => subtitle.Contains(text), seconds, $"the subtitle must say '{text}'");
 
@@ -120,6 +128,7 @@ public partial class StreetChecks : Node
         var finished = 0;
         road.Finished += () => finished++;
         Check(player.Position.Y > 2.9f && Forward(player).Dot(Vector3.Back) > .99f, "scene 2 starts on the landing, facing the hall");
+        await play.Until(() => IsPlaying("bell") && IsPlaying("broadcast"), 1, "the bicycle bell and the loudspeaker must sound from the start");
         Button(MouseButton.Right, true);
         await play.Frames(3);
         Check(!player.PrismRaised, "the prism cannot be raised on the school road");
@@ -135,10 +144,17 @@ public partial class StreetChecks : Node
 
         // The cat is talked to before there is a bun, and cannot be carried.
         Check(coal.Posture == Posture.Sitting, "the cat sits under the stair");
-        Check(await PromptAt(new(-.6f, .02f, -8), "CatFeed") == "E  看看煤球", "the cat is not offered for carrying on the school road");
+        Check(coal.GetNode<CollisionShape3D>("Pickup/Shape").Disabled, "the cat cannot be picked up on the school road");
+        Check(await PromptAt(new(-.6f, .02f, -8), "CatFeed") == "E  看看煤球", "the cat is offered for talking to");
         Press(Key.E);
         await play.Until(() => subtitle.Contains("买个包子"), 6, "the cat must be promised a bun");
         Check(road.Wallet.Mao == 20 && coal.Posture == Posture.Sitting, "nothing is spent and the cat sits on");
+
+        // The gate does not end the scene before the cat has been fed: she is reminded.
+        player.Position = new(64.2f, .02f, 2.5f);
+        await Says("煤球还在楼梯底下");
+        Check(finished == 0, "the scene does not end at the gate while the cat has not been fed");
+        player.Position = new(0, .02f, -3.5f);
 
         // The bun is bought outside, once.
         await WalkTo(new Vector3(4, 0, -1.6f), new Vector3(7, 0, -1.6f));
@@ -169,78 +185,6 @@ public partial class StreetChecks : Node
         Check(finished == 0, "the scene is not over before the gate");
         await WalkTo(new Vector3(64.2f, 0, 2.5f));
         Check(finished == 1, "the scene is over at the school gate");
-        await Unload();
-    }
-
-    private async Task CheckKiosk()
-    {
-        var road = Open<HomeRoad>("home_road");
-        await play.Use(road.Region);
-        Check(player.Position.X > 60 && Forward(player).Dot(Vector3.Left) > .99f, "scene 6 starts at the school gate, facing home");
-        Check(Prop("BunStall").CollisionLayer == 0 && Prop("CatFeed").CollisionLayer == 0, "the stall of the morning is not used");
-        Check(coal.Posture == Posture.Sitting && Apart(coal.Position, new(.8f, 0, -5.9f)) < .2f, "the cat waits in the mouth of the stairwell");
-        Button(MouseButton.Right, true);
-        await play.Frames(3);
-        Check(!player.PrismRaised, "the prism cannot be raised on the way home");
-        Button(MouseButton.Right, false);
-
-        // With 3 mao the sausage cannot be bought.
-        road.Wallet = new(3);
-        await UseProp(Counter(40.25f), "Sausage", "买火腿肠（5 毛）");
-        Check(road.Wallet.Mao == 3, "the sausage is refused for want of money");
-        await Says("钱不够了");
-
-        // With 15 mao a soda is 10 and the sausage 5, which is all of it. One thing is picked, not two.
-        road.Wallet = new(15);
-        await UseProp(Counter(37.1f), "Soda", "买汽水（1 块）");
-        Check(road.Wallet.Mao == 5, $"the soda costs 1 yuan; the wallet has {road.Wallet.Mao}");
-        await UseProp(Counter(36), "IcePop", "买冰棍（3 毛）");
-        Check(road.Wallet.Mao == 5, "a second pick is refused");
-        await Says("买一样就够了");
-        await UseProp(Counter(40.25f), "Sausage", "买火腿肠（5 毛）");
-        Check(road.Wallet.Mao == 0, "the sausage is paid for with what is left");
-        await UseProp(Counter(40.25f), "Sausage", "买火腿肠（5 毛）");
-        Check(road.Wallet.Mao == 0, "a second sausage is not bought");
-        await Says("回家", 12);
-        await Says("已经买了", 12);
-        await Unload();
-    }
-
-    private async Task CheckStair()
-    {
-        var road = Open<HomeRoad>("home_road");
-        await play.Use(road.Region);
-        var finished = 0;
-        road.Finished += () => finished++;
-
-        // The door opens for neither an empty bag nor a cat that is left behind.
-        await UseProp(Landing, "HomeDoor", "开门");
-        await Says("没给煤球买火腿肠");
-        Check(finished == 0, "the door does not open without the sausage");
-        road.Wallet = new(5);
-        await UseProp(Counter(40.25f), "Sausage", "买火腿肠（5 毛）");
-        await UseProp(Landing, "HomeDoor", "开门");
-        await Says("煤球呢");
-        Check(finished == 0, "the door does not open without the cat");
-
-        // The cat sits until the player is near, then follows. It is beside the stair, where a straight line to the player
-        // up the stair would take it under the ramp, and the player is already up.
-        coal.PlaceAt(new(-1.2f, .02f, -5.8f), 0);
-        await play.Frames(30);
-        Check(coal.Posture == Posture.Sitting && !coal.Busy, "the cat does not follow from afar");
-        player.Position = new(.75f, 2.2f, -9);
-        await play.Until(() => coal.Busy, 2, "the cat must get up and follow");
-        Check(coal.Posture == Posture.Standing, "the cat stands up to follow");
-        await Says("煤球！");
-        await WalkTo(new Vector3(.75f, 0, -10), new Vector3(0, 0, -12.5f));
-        await play.Until(() => coal.Position.Y > 2.9f && Apart(coal.Position, player.Position) < 1.6f, 15, "the cat must follow her up the stair");
-
-        // At the door she picks the cat up and takes it in.
-        await UseProp(Landing, "HomeDoor", "开门");
-        Check(coal.GetNode<Cat>("Cat").Held && Prop("HomeDoor").CollisionLayer == 0, "she has the cat in her arms and the door is spent");
-        await play.Until(() => subtitle == "小满：爸不让养猫，你可别出声啊。", 5, "she must tell the cat to keep quiet");
-        Check(finished == 0, "the scene is not over before she has said it");
-        await play.Until(() => finished == 1, 5, "the scene must end at the door");
         await Unload();
     }
 }

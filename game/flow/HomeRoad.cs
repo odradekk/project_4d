@@ -22,10 +22,13 @@ public partial class HomeRoad : Node
     // The cat is at the door of the home when it is up on the landing and near the player.
     private const float LandingHeight = 2.5f;
     private const float CatAtDoorRange = 3f;
-    // The player is up the stair when she is higher than this.
+    // The player is up the stair when she is higher than this, and a cat is on the ramp when it is higher than that.
     private const float StairHeight = 1f;
+    private const float OnRamp = .15f;
     // A cat that walks to a point stops within a few centimetres of it.
     private const float AtMouth = .2f;
+    // A cat on the floor this much farther in than the mouth of the ramp is beside the ramp or under it, not in front of it.
+    private const float DeepInHall = 1f;
 
     private static readonly (string Prop, string Name, int Price)[] Goods =
     [
@@ -44,7 +47,7 @@ public partial class HomeRoad : Node
     private Cat brain = null!;
     private string? picked;
     private bool hasSausage;
-    private bool following;
+    private bool called;
     private bool catAtMouth;
 
     private GameHud Hud => street.Hud;
@@ -54,7 +57,7 @@ public partial class HomeRoad : Node
         street = new Street(this);
         street.UseProps([.. Goods.Select(goods => goods.Prop), "Sausage", "HomeDoor"]);
         street.PlacePlayer("GateStart");
-        coal = Region.Character("coal");
+        coal = Region.Character("cat");
         brain = coal.GetNode<Cat>("Cat");
         var waits = street.Mark("CatWaits");
         coal.PlaceAt(waits.GlobalPosition, Street.Yaw(waits));
@@ -76,9 +79,14 @@ public partial class HomeRoad : Node
 
     public override void _PhysicsProcess(double delta)
     {
-        if (following || Distance(street.Player.GlobalPosition, coal.GlobalPosition) > CatFollowRange) return;
-        following = true;
+        var player = street.Player.GlobalPosition;
+        // The cat has been at the mouth of the ramp for this climb, until the player is down on the floor again.
+        catAtMouth = player.Y > StairHeight && (catAtMouth || Distance(coal.GlobalPosition, street.Mark("RampMouth").GlobalPosition) < AtMouth);
+        // A cat that waits, or that has been put down, follows the player who comes near.
+        if (brain.Held || coal.Busy || Distance(player, coal.GlobalPosition) > CatFollowRange) return;
         brain.Follow(TowardStairs);
+        if (called) return;
+        called = true;
         Hud.Say("小满", "煤球！", 1.5);
     }
 
@@ -114,13 +122,15 @@ public partial class HomeRoad : Node
         if (picked is not null && hasSausage) Hud.Say("小满", "好了，回家。煤球还在等我呢。", 3);
     }
 
-    // The cat goes straight at the player, which would take it under the ramp from the side. So while the player is up the
-    // stair and the cat has not yet been at the mouth of the ramp, it goes there first, and from there straight up.
+    // The cat goes straight at the player, which from beside the ramp or from deep in the hall would take it under the ramp,
+    // where it is too low. So while the player is up the stair and the cat is still on the floor and has not been at the
+    // mouth of the ramp, it goes to the mouth first, by the free floor beside the ramp if it is deep in the hall, and from
+    // there straight up.
     private Vector3 TowardStairs(Vector3 player)
     {
+        if (player.Y <= StairHeight || catAtMouth || coal.Position.Y > OnRamp) return player;
         var mouth = street.Mark("RampMouth").GlobalPosition;
-        catAtMouth |= Distance(coal.GlobalPosition, mouth) < AtMouth;
-        return player.Y > StairHeight && !catAtMouth ? mouth : player;
+        return coal.GlobalPosition.Z < mouth.Z - DeepInHall ? street.Mark("WalkwayFront").GlobalPosition : mouth;
     }
 
     private void OpenDoor()
