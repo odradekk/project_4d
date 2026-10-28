@@ -118,6 +118,8 @@ public partial class Teacher : Node
         phase = Phase.Caught;
         timer = CaughtSeconds;
         body.Face(player.Position);
+        // What is on the screen waits for nothing: the line must be seen before the scene goes back.
+        player.Hud.ClearText();
         body.Say(CaughtLine, CaughtSeconds);
         EmitSignal(SignalName.Spotted);
     }

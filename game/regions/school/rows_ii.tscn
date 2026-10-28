@@ -1,0 +1,202 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/school/desk_ii.tscn" id="1"]
+
+
+[node name="Desks" type="Node3D"]
+
+[node name="D00" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, -2.8)
+EntityId = "deskII00"
+
+[node name="D01" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, -2.8)
+EntityId = "deskII01"
+
+[node name="D02" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, -2.8)
+EntityId = "deskII02"
+
+[node name="D03" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, -2.8)
+EntityId = "deskII03"
+
+[node name="D04" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, -2.8)
+EntityId = "deskII04"
+
+[node name="D05" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, -2.8)
+EntityId = "deskII05"
+
+[node name="D10" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, -1.85)
+EntityId = "deskII10"
+
+[node name="D11" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, -1.85)
+EntityId = "deskII11"
+
+[node name="D12" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, -1.85)
+EntityId = "deskII12"
+
+[node name="D13" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, -1.85)
+EntityId = "deskII13"
+
+[node name="D14" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, -1.85)
+EntityId = "deskII14"
+
+[node name="D15" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, -1.85)
+EntityId = "deskII15"
+
+[node name="D20" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, -0.9)
+EntityId = "deskII20"
+
+[node name="D21" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, -0.9)
+EntityId = "deskII21"
+
+[node name="D22" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, -0.9)
+EntityId = "deskII22"
+
+[node name="D23" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, -0.9)
+EntityId = "deskII23"
+
+[node name="D24" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, -0.9)
+EntityId = "deskII24"
+
+[node name="D25" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, -0.9)
+EntityId = "deskII25"
+
+[node name="D30" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, 0.05)
+EntityId = "deskII30"
+
+[node name="D31" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, 0.05)
+EntityId = "deskII31"
+
+[node name="D32" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, 0.05)
+EntityId = "deskII32"
+
+[node name="D33" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, 0.05)
+EntityId = "deskII33"
+
+[node name="D34" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, 0.05)
+EntityId = "deskII34"
+
+[node name="D35" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, 0.05)
+EntityId = "deskII35"
+
+[node name="D40" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, 1)
+EntityId = "deskII40"
+
+[node name="D41" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, 1)
+EntityId = "deskII41"
+
+[node name="D42" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, 1)
+EntityId = "deskII42"
+
+[node name="D43" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, 1)
+EntityId = "deskII43"
+
+[node name="D44" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, 1)
+EntityId = "deskII44"
+
+[node name="D45" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, 1)
+EntityId = "deskII45"
+
+[node name="D50" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, 1.95)
+EntityId = "deskII50"
+
+[node name="D51" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, 1.95)
+EntityId = "deskII51"
+
+[node name="D52" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, 1.95)
+EntityId = "deskII52"
+
+[node name="D53" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, 1.95)
+EntityId = "deskII53"
+
+[node name="D54" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, 1.95)
+EntityId = "deskII54"
+
+[node name="D55" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, 1.95)
+EntityId = "deskII55"
+
+[node name="D60" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, 2.9)
+EntityId = "deskII60"
+
+[node name="D61" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, 2.9)
+EntityId = "deskII61"
+
+[node name="D62" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, 2.9)
+EntityId = "deskII62"
+
+[node name="D63" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, 2.9)
+EntityId = "deskII63"
+
+[node name="D64" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, 2.9)
+EntityId = "deskII64"
+
+[node name="D65" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, 2.9)
+EntityId = "deskII65"
+
+[node name="D70" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0, 3.85)
+EntityId = "deskII70"
+
+[node name="D71" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0, 3.85)
+EntityId = "deskII71"
+
+[node name="D72" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0, 3.85)
+EntityId = "deskII72"
+
+[node name="D73" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0, 3.85)
+EntityId = "deskII73"
+
+[node name="D74" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0, 3.85)
+EntityId = "deskII74"
+
+[node name="D75" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0, 3.85)
+EntityId = "deskII75"
+
+[node name="D49" parent="." instance=ExtResource("1")]
+position = Vector3(-1.26, 0, 4.75)
+EntityId = "deskII49"

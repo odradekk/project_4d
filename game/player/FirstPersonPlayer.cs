@@ -23,11 +23,33 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private bool captureBeforeNotebook;
     private Interactable3D? target;
     private string? aimedEntity;
+    private string? markedEntity;
+    private bool seated;
     internal bool PointerCaptured => pointerCaptured;
     internal bool PrismRaised => prism?.Raised ?? false;
 
     /// <summary>What E does while both arms hold something, such as a cat; null when they are free.</summary>
     internal Action? PutDown { get; set; }
+
+    /// <summary>Whether she sits at a desk: she can look around and use her hands, but not walk.</summary>
+    public bool Seated
+    {
+        get => seated;
+        set
+        {
+            seated = value;
+            prism?.Seated = value;
+        }
+    }
+
+    /// <summary>
+    /// The entities that E can mark when the crosshair is on them in the lens, each with the prompt shown for it. A scene sets
+    /// this to what it is looking for, and is told by <see cref="LensMarked"/>.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> LensMarks { get; set; } = new Dictionary<string, string>();
+
+    /// <summary>E was pressed with the crosshair on one of the <see cref="LensMarks"/> in the lens.</summary>
+    [Signal] public delegate void LensMarkedEventHandler(string entity);
 
     /// <summary>Whether the hand holds an object.</summary>
     internal bool HoldsItem => actions is { Holding: true };
@@ -37,6 +59,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
     internal void Bind(PrismView view, PlayerActions hands, SeamTravel seams)
     {
         prism = view;
+        prism.Seated = seated;
         actions = hands;
         travel = seams;
         hands.DeviceBlocked += Say;
@@ -75,6 +98,12 @@ public partial class FirstPersonPlayer : CharacterBody3D
             if (key.Keycode == Key.E && pointerCaptured && GodotObject.IsInstanceValid(target))
             {
                 target!.Interact();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+            if (key.Keycode == Key.E && pointerCaptured && markedEntity is { } marked)
+            {
+                EmitSignal(SignalName.LensMarked, marked);
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -148,8 +177,11 @@ public partial class FirstPersonPlayer : CharacterBody3D
     {
         target = null;
         aimedEntity = null;
+        markedEntity = null;
+        Hud.LensUp = PrismRaised;
         if (pointerCaptured && !Hud.NotebookOpen)
         {
+            if (prism?.SeenEntity() is { } seen && LensMarks.ContainsKey(seen)) markedEntity = seen;
             var from = Camera.GlobalPosition;
             var query = PhysicsRayQueryParameters3D.Create(from, from - Camera.GlobalBasis.Z * 2f, ~PhysicsLayers.Characters);
             query.Exclude = [GetRid()];
@@ -165,7 +197,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         Hud.SetHint(HintText());
         if (prism is not null) prism.GetNode<Label>("Controls").Visible = !prism.Raised && Hud.HintText == "" &&
             (!Hud.SubtitleVisible || Hud.SubtitleText == "");
-        var input = pointerCaptured && !Hud.NotebookOpen
+        var input = pointerCaptured && !Hud.NotebookOpen && !Seated
             ? Input.GetVector("move_left", "move_right", "move_forward", "move_back") : Vector2.Zero;
         var direction = Basis * new Vector3(input.X * ScreenSide, 0, input.Y);
         var speed = Input.IsActionPressed("run") ? RunSpeed : WalkSpeed;
@@ -180,6 +212,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private string HintText()
     {
         if (target is not null) return $"E  {target.Prompt}";
+        if (markedEntity is not null) return $"E  {LensMarks[markedEntity]}";
         var keys = new List<string>();
         if (travel is { CanCross: true }) keys.Add("左键  穿缝");
         keys.AddRange(HandKeys());

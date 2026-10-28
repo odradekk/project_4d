@@ -16,6 +16,8 @@ public partial class PrismView : CanvasLayer
     // A mirror seam's band is about as wide as a full-length mirror, and the shader has room for this many in view.
     private const float BandWidth = .35f;
     private const int MaxBands = 4;
+    // How far the lens sees along the crosshair: past the far end of any region.
+    private const float LensReach = 100;
     // How strong the band of a shut seam is drawn, where an open seam's is 1.
     private const float ShutBand = .4f;
     // The band is drawn from this far in front of the camera on, and is hidden by anything that stands this far before the seam.
@@ -55,9 +57,34 @@ public partial class PrismView : CanvasLayer
     private bool enabled;
     private bool requested;
     private bool flipped;
+    private bool seated;
     public bool Raised => lens.Visible;
     public bool Enabled => enabled;
     public string? TargetSection => targets.Count == 0 ? null : targets[target].Id;
+
+    /// <summary>Whether she sits, in which case the help does not tell her how to walk.</summary>
+    internal bool Seated
+    {
+        set
+        {
+            seated = value;
+            UpdateHelp();
+        }
+    }
+
+    /// <summary>
+    /// The entity the crosshair is on in the section the lens shows, whatever the distance, or null when the lens is down
+    /// or the crosshair is on nothing. This is looking, so what stands in the way hides what is behind it.
+    /// </summary>
+    internal string? SeenEntity()
+    {
+        if (!Raised || source is null) return null;
+        var from = source.GlobalPosition;
+        var ray = PhysicsRayQueryParameters3D.Create(from, from - source.GlobalBasis.Z * LensReach, ~(PhysicsLayers.Characters | PhysicsLayers.Pickups));
+        var hit = targets[target].World.DirectSpaceState.IntersectRay(ray);
+        // A slice's collision body is a child of the node that is named for its entity.
+        return hit.Count > 0 && hit["collider"].AsGodotObject() is Node body ? body.GetParent().Name.ToString() : null;
+    }
 
     /// <summary>Whether the lens is shown left to right reversed, as the player's whole view is while she is a mirror image.</summary>
     internal bool Flipped
@@ -101,9 +128,14 @@ public partial class PrismView : CanvasLayer
     {
         enabled = value;
         if (!value) requested = false;
-        help.Text = value ? "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标\n按住右键观察\n滚轮切换截面\nE 拿放 · F 竖起放倒 · R 翻面"
-            : "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标";
+        UpdateHelp();
         Refresh();
+    }
+
+    private void UpdateHelp()
+    {
+        var keys = seated ? "鼠标转向 · Esc 释放鼠标" : "WASD 移动 · Shift 跑\n鼠标转向 · Esc 释放鼠标";
+        help.Text = enabled ? keys + "\n按住右键观察\n滚轮切换截面\nE 拿放 · F 竖起放倒 · R 翻面" : keys;
     }
     internal void SetRaised(bool value) { requested = value && enabled; Refresh(); }
 
