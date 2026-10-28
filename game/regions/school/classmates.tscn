@@ -1,0 +1,195 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/school/classmate.tscn" id="1"]
+
+
+[node name="Classmates" type="Node3D"]
+
+[node name="C00" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, -2.3)
+EntityId = "classmate00"
+
+[node name="C01" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, -2.3)
+EntityId = "classmate01"
+
+[node name="C02" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, -2.3)
+EntityId = "classmate02"
+
+[node name="C03" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, -2.3)
+EntityId = "classmate03"
+
+[node name="C04" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, -2.3)
+EntityId = "classmate04"
+
+[node name="C05" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, -2.3)
+EntityId = "classmate05"
+
+[node name="C10" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, -1.35)
+EntityId = "classmate10"
+
+[node name="C11" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, -1.35)
+EntityId = "classmate11"
+
+[node name="C12" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, -1.35)
+EntityId = "classmate12"
+
+[node name="C13" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, -1.35)
+EntityId = "classmate13"
+
+[node name="C14" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, -1.35)
+EntityId = "classmate14"
+
+[node name="C15" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, -1.35)
+EntityId = "classmate15"
+
+[node name="C20" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, -0.4)
+EntityId = "classmate20"
+
+[node name="C21" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, -0.4)
+EntityId = "classmate21"
+
+[node name="C22" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, -0.4)
+EntityId = "classmate22"
+
+[node name="C23" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, -0.4)
+EntityId = "classmate23"
+
+[node name="C24" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, -0.4)
+EntityId = "classmate24"
+
+[node name="C25" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, -0.4)
+EntityId = "classmate25"
+
+[node name="C30" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, 0.55)
+EntityId = "classmate30"
+
+[node name="C31" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, 0.55)
+EntityId = "classmate31"
+
+[node name="C32" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, 0.55)
+EntityId = "classmate32"
+
+[node name="C33" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, 0.55)
+EntityId = "classmate33"
+
+[node name="C34" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, 0.55)
+EntityId = "classmate34"
+
+[node name="C35" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, 0.55)
+EntityId = "classmate35"
+
+[node name="C40" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, 1.5)
+EntityId = "deskmate"
+DisplayName = "同桌"
+
+[node name="C42" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, 1.5)
+EntityId = "classmate42"
+
+[node name="C43" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, 1.5)
+EntityId = "classmate43"
+
+[node name="C44" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, 1.5)
+EntityId = "classmate44"
+
+[node name="C45" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, 1.5)
+EntityId = "classmate45"
+
+[node name="C50" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, 2.45)
+EntityId = "classmate50"
+
+[node name="C51" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, 2.45)
+EntityId = "classmate51"
+
+[node name="C52" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, 2.45)
+EntityId = "classmate52"
+
+[node name="C53" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, 2.45)
+EntityId = "classmate53"
+
+[node name="C54" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, 2.45)
+EntityId = "classmate54"
+
+[node name="C55" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, 2.45)
+EntityId = "classmate55"
+
+[node name="C60" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, 3.4)
+EntityId = "classmate60"
+
+[node name="C61" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, 3.4)
+EntityId = "classmate61"
+
+[node name="C62" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, 3.4)
+EntityId = "classmate62"
+
+[node name="C63" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, 3.4)
+EntityId = "classmate63"
+
+[node name="C64" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, 3.4)
+EntityId = "classmate64"
+
+[node name="C65" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, 3.4)
+EntityId = "classmate65"
+
+[node name="C70" parent="." instance=ExtResource("1")]
+position = Vector3(-2.85, 0.02, 4.35)
+EntityId = "classmate70"
+
+[node name="C71" parent="." instance=ExtResource("1")]
+position = Vector3(-2.2, 0.02, 4.35)
+EntityId = "classmate71"
+
+[node name="C72" parent="." instance=ExtResource("1")]
+position = Vector3(-0.325, 0.02, 4.35)
+EntityId = "classmate72"
+
+[node name="C73" parent="." instance=ExtResource("1")]
+position = Vector3(0.325, 0.02, 4.35)
+EntityId = "classmate73"
+
+[node name="C74" parent="." instance=ExtResource("1")]
+position = Vector3(2.2, 0.02, 4.35)
+EntityId = "classmate74"
+
+[node name="C75" parent="." instance=ExtResource("1")]
+position = Vector3(2.85, 0.02, 4.35)
+EntityId = "classmate75"

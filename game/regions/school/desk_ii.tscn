@@ -1,0 +1,130 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="3"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("3")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("3")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("3")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("3")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("3")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("3")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="Mat0"]
+albedo_color = Color(0.72, 0.52, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="Box0"]
+material = SubResource("Mat0")
+size = Vector3(0.6, 0.04, 0.46)
+
+[sub_resource type="StandardMaterial3D" id="Mat1"]
+albedo_color = Color(0.55, 0.4, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="Box1"]
+material = SubResource("Mat1")
+size = Vector3(0.04, 0.72, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="Mat2"]
+albedo_color = Color(0.3, 0.45, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="Box2"]
+material = SubResource("Mat2")
+size = Vector3(0.38, 0.04, 0.38)
+
+[sub_resource type="BoxMesh" id="Box3"]
+material = SubResource("Mat2")
+size = Vector3(0.38, 0.3, 0.04)
+
+[sub_resource type="BoxMesh" id="Box4"]
+material = SubResource("Mat2")
+size = Vector3(0.04, 0.43, 0.04)
+
+[node name="Desk" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Top" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.74, 0)
+script = ExtResource("2")
+PartId = "top"
+mesh = SubResource("Box0")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Left" type="MeshInstance3D" parent="."]
+position = Vector3(-0.26, 0.36, 0)
+script = ExtResource("2")
+PartId = "left"
+mesh = SubResource("Box1")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Right" type="MeshInstance3D" parent="."]
+position = Vector3(0.26, 0.36, 0)
+script = ExtResource("2")
+PartId = "right"
+mesh = SubResource("Box1")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Seat" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.78, 0.12)
+script = ExtResource("2")
+PartId = "seat"
+mesh = SubResource("Box2")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="ChairBack" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.65, 0.29)
+script = ExtResource("2")
+PartId = "chairBack"
+mesh = SubResource("Box3")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="LegLeftFront" type="MeshInstance3D" parent="."]
+position = Vector3(-0.17, 1.015, -0.03)
+script = ExtResource("2")
+PartId = "legLeftFront"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="LegLeftBack" type="MeshInstance3D" parent="."]
+position = Vector3(-0.17, 1.015, 0.27)
+script = ExtResource("2")
+PartId = "legLeftBack"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="LegRightFront" type="MeshInstance3D" parent="."]
+position = Vector3(0.17, 1.015, -0.03)
+script = ExtResource("2")
+PartId = "legRightFront"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="LegRightBack" type="MeshInstance3D" parent="."]
+position = Vector3(0.17, 1.015, 0.27)
+script = ExtResource("2")
+PartId = "legRightBack"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])

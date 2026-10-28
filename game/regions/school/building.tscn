@@ -1,0 +1,288 @@
+[gd_scene load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="4"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("4")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("4")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("4")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("4")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("4")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("4")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="Mat0"]
+albedo_color = Color(0.55, 0.56, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="Box0"]
+material = SubResource("Mat0")
+size = Vector3(120, 0.2, 120)
+
+[sub_resource type="StandardMaterial3D" id="Mat1"]
+albedo_color = Color(0.9, 0.9, 0.88, 1)
+
+[sub_resource type="BoxMesh" id="Box1"]
+material = SubResource("Mat1")
+size = Vector3(7.8, 0.2, 11.7)
+
+[sub_resource type="StandardMaterial3D" id="Mat2"]
+albedo_color = Color(0.86, 0.84, 0.76, 1)
+
+[sub_resource type="BoxMesh" id="Box2"]
+material = SubResource("Mat2")
+size = Vector3(7.2, 3.2, 0.3)
+
+[sub_resource type="BoxMesh" id="Box3"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 3.2, 11.7)
+
+[sub_resource type="BoxMesh" id="Box4"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 0.9, 11.7)
+
+[sub_resource type="BoxMesh" id="Box5"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 1.1, 11.7)
+
+[sub_resource type="BoxMesh" id="Box6"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 1.2, 1.88)
+
+[sub_resource type="BoxMesh" id="Box7"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 1.2, 0.88)
+
+[sub_resource type="BoxMesh" id="Box8"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 1.2, 0.88)
+
+[sub_resource type="BoxMesh" id="Box9"]
+material = SubResource("Mat2")
+size = Vector3(0.3, 1.2, 1.58)
+
+[sub_resource type="StandardMaterial3D" id="Mat3"]
+albedo_color = Color(0.12, 0.3, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="Box10"]
+material = SubResource("Mat3")
+size = Vector3(4.6, 1.2, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="Mat4"]
+albedo_color = Color(0.62, 0.62, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="Box11"]
+material = SubResource("Mat4")
+size = Vector3(2.6, 0.2, 0.8)
+
+[sub_resource type="BoxMesh" id="Box12"]
+material = SubResource("Mat4")
+size = Vector3(2.6, 0.1, 0.8)
+
+[sub_resource type="BoxMesh" id="Box13"]
+material = SubResource("Mat4")
+size = Vector3(2.6, 0.2, 0.4)
+
+[node name="School" type="Node3D"]
+script = ExtResource("1")
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Floor" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "Floor"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="Floor"]
+position = Vector3(0, -0.1, 0)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box0")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Ceiling" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "Ceiling"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="Ceiling"]
+position = Vector3(0, 3.3, -0.15)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box1")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WallFront" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "WallFront"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="WallFront"]
+position = Vector3(0, 1.6, -5.85)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box2")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WallBack" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "WallBack"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="WallBack"]
+position = Vector3(0, 1.6, 5.55)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box2")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WallRight" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "WallRight"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="WallRight"]
+position = Vector3(3.75, 1.6, -0.15)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box3")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WallLeft" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "WallLeft"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 0.45, -0.15)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box4")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part1" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 2.65, -0.15)
+script = ExtResource("3")
+PartId = "part1"
+mesh = SubResource("Box5")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part2" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 1.5, -5.06)
+script = ExtResource("3")
+PartId = "part2"
+mesh = SubResource("Box6")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part3" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 1.5, -2.28)
+script = ExtResource("3")
+PartId = "part3"
+mesh = SubResource("Box7")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part4" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 1.5, 0)
+script = ExtResource("3")
+PartId = "part4"
+mesh = SubResource("Box8")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part5" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 1.5, 2.28)
+script = ExtResource("3")
+PartId = "part5"
+mesh = SubResource("Box7")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part6" type="MeshInstance3D" parent="WallLeft"]
+position = Vector3(-3.75, 1.5, 4.91)
+script = ExtResource("3")
+PartId = "part6"
+mesh = SubResource("Box9")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Blackboard" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "Blackboard"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="Blackboard"]
+position = Vector3(-0.7, 1.6, -5.68)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box10")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="PodiumBlock" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "PodiumBlock"
+BuildingId = "school"
+WMin = -0.3
+WMax = 0.21
+
+[node name="Part0" type="MeshInstance3D" parent="PodiumBlock"]
+position = Vector3(-1.26, 0.1, -5.3)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box11")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="PodiumSteps" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "PodiumSteps"
+BuildingId = "school"
+WMin = 0.21
+WMax = 0.72
+
+[node name="Part0" type="MeshInstance3D" parent="PodiumSteps"]
+position = Vector3(-1.26, 0.05, -5.3)
+script = ExtResource("3")
+PartId = "part0"
+mesh = SubResource("Box12")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part1" type="MeshInstance3D" parent="PodiumSteps"]
+position = Vector3(-1.26, 0.1, -5.5)
+script = ExtResource("3")
+PartId = "part1"
+mesh = SubResource("Box13")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])

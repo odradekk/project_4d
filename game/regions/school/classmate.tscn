@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="1"]
+[ext_resource type="PackedScene" path="res://characters/schoolmate.tscn" id="2"]
+
+
+[node name="Classmate" type="Node3D"]
+script = ExtResource("1")
+PassageRadius = 0.2
+PassageHeight = 1.35
+CharacterScene = ExtResource("2")
+DisplayName = "同学"
