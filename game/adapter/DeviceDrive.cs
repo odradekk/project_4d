@@ -16,9 +16,9 @@ namespace Game.Adapter;
 /// </summary>
 /// <param name="sectionOf">The section that shows what a contact is against, null when none does.</param>
 /// <param name="currentSection">The section the player is in.</param>
-/// <param name="say">Called with what the player says when a device is stopped by something in its way.</param>
+/// <param name="blocked">Called with the device, the entity that stops it and what the player says when a device is stopped.</param>
 internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scenes, LensOverlay overlay,
-    Region3D region, Func<IReadOnlyList<Contact>, string?> sectionOf, Func<string> currentSection, Action<string> say)
+    Region3D region, Func<IReadOnlyList<Contact>, string?> sectionOf, Func<string> currentSection, Action<string, string, string> blocked)
 {
     // A device takes this long to travel the whole way between its limits.
     private const double TravelSeconds = 1.2;
@@ -111,7 +111,7 @@ internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scene
         retrying.Remove(device);
         stalled[device] = heading;
         overlay.MarkContacts(contacts);
-        say(RefusalLines.ForDevice(sectionOf(contacts), currentSection()));
+        blocked(device.Value, contacts.Count > 0 ? contacts[0].Obstacle.Value : "", RefusalLines.ForDevice(sectionOf(contacts), currentSection()));
         Thud(device);
     }
 

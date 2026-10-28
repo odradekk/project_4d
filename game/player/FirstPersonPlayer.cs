@@ -51,6 +51,9 @@ public partial class FirstPersonPlayer : CharacterBody3D
     /// <summary>The prompts for the devices that are not pulled, such as a window that is pushed, by entity ID.</summary>
     public IReadOnlyDictionary<string, string> DevicePrompts { get; set; } = new Dictionary<string, string>();
 
+    /// <summary>A device she pulled has been stopped, with the entity that stops it, or none.</summary>
+    [Signal] public delegate void DeviceBlockedEventHandler(string device, string obstacle);
+
     /// <summary>E was pressed with the crosshair on one of the <see cref="LensMarks"/> in the lens.</summary>
     [Signal] public delegate void LensMarkedEventHandler(string entity);
 
@@ -65,7 +68,11 @@ public partial class FirstPersonPlayer : CharacterBody3D
         prism.Seated = seated;
         actions = hands;
         travel = seams;
-        hands.DeviceBlocked += Say;
+        hands.DeviceBlocked += (device, obstacle, line) =>
+        {
+            Say(line);
+            EmitSignal(SignalName.DeviceBlocked, device, obstacle);
+        };
     }
 
     public override void _Ready()
