@@ -3,7 +3,7 @@ using Godot;
 
 namespace Game;
 
-/// <summary>Debug builds accept -- --start=systems-demo, --start=seam-demo or --start=item-test to launch a registered scene.</summary>
+/// <summary>Debug builds accept -- --start=&lt;id&gt; to launch a scene that DebugScenes lists, such as math-class.</summary>
 public partial class Main : Node
 {
     public override void _Ready()

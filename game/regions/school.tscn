@@ -1,46 +1,45 @@
-[gd_scene load_steps=34 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="3"]
 [ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="4"]
-[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="5"]
-[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
-[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="7"]
-[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="8"]
-[ext_resource type="PackedScene" path="res://characters/teacher.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://regions/school/rows_i.tscn" id="10"]
-[ext_resource type="PackedScene" path="res://regions/school/rows_ii.tscn" id="11"]
-[ext_resource type="PackedScene" path="res://regions/school/classmates.tscn" id="12"]
-[ext_resource type="PackedScene" path="res://regions/school/building.tscn" id="13"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="5"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="6"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://characters/teacher.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://regions/school/rows_i.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://regions/school/rows_ii.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://regions/school/classmates.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://regions/school/building.tscn" id="12"]
 
 [sub_resource type="Resource" id="Uv0"]
-script = ExtResource("7")
+script = ExtResource("6")
 Axis = 0
 Positive = false
 
 [sub_resource type="Resource" id="Uv1"]
-script = ExtResource("7")
+script = ExtResource("6")
 Axis = 0
 Positive = true
 
 [sub_resource type="Resource" id="Uv2"]
-script = ExtResource("7")
+script = ExtResource("6")
 Axis = 1
 Positive = false
 
 [sub_resource type="Resource" id="Uv3"]
-script = ExtResource("7")
+script = ExtResource("6")
 Axis = 1
 Positive = true
 
 [sub_resource type="Resource" id="Uv4"]
-script = ExtResource("7")
+script = ExtResource("6")
 Axis = 2
 Positive = false
 
 [sub_resource type="Resource" id="Uv5"]
-script = ExtResource("7")
+script = ExtResource("6")
 Axis = 2
 Positive = true
 
@@ -83,15 +82,6 @@ albedo_color = Color(0.8, 0.8, 0.75, 1)
 material = SubResource("Mat4")
 size = Vector3(0.3, 0.22, 0.01)
 
-[sub_resource type="BoxShape3D" id="MarkShape_Clock"]
-size = Vector3(0.16, 0.16, 0.16)
-
-[sub_resource type="BoxShape3D" id="MarkShape_Desk"]
-size = Vector3(0.2, 0.2, 0.2)
-
-[sub_resource type="BoxShape3D" id="MarkShape_Chimneys"]
-size = Vector3(0.12, 0.4, 0.52)
-
 [node name="School" type="Node3D"]
 script = ExtResource("1")
 
@@ -119,7 +109,7 @@ W = 0.42
 position = Vector3(-2.2, 0.02, 1.5)
 script = ExtResource("4")
 EntityId = "xiaoman"
-CharacterScene = ExtResource("8")
+CharacterScene = ExtResource("7")
 
 [node name="Teacher" type="Node3D" parent="Sections/Ⅰ/Spawns"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.26, 0.02, -4.55)
@@ -127,13 +117,13 @@ script = ExtResource("4")
 EntityId = "teacher"
 PassageRadius = 0.25
 PassageHeight = 1.7
-CharacterScene = ExtResource("9")
+CharacterScene = ExtResource("8")
 
-[node name="Classmates" parent="Sections/Ⅰ/Spawns" instance=ExtResource("12")]
+[node name="Classmates" parent="Sections/Ⅰ/Spawns" instance=ExtResource("11")]
 
-[node name="Desks" parent="Sections/Ⅰ/Fixed" instance=ExtResource("10")]
+[node name="Desks" parent="Sections/Ⅰ/Fixed" instance=ExtResource("9")]
 
-[node name="Desks" parent="Sections/Ⅱ/Fixed" instance=ExtResource("11")]
+[node name="Desks" parent="Sections/Ⅱ/Fixed" instance=ExtResource("10")]
 
 [node name="ClockI" type="Node3D" parent="Sections/Ⅰ/Fixed"]
 position = Vector3(-0.7, 2.7, -5.67)
@@ -142,24 +132,24 @@ EntityId = "clockI"
 
 [node name="Face" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ClockI"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "face"
 mesh = SubResource("Box0")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Hour" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ClockI"]
 transform = Transform3D(0.08715574, -0.9961947, 0, 0.9961947, 0.08715574, 0, 0, 0, 1, -0.0797, 0.007, 0.04)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "hour"
 mesh = SubResource("Box1")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Minute" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ClockI"]
 transform = Transform3D(0.5, 0.8660254, 0, -0.8660254, 0.5, 0, 0, 0, 1, 0.0953, 0.055, 0.04)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "minute"
 mesh = SubResource("Box2")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="ClockII" type="Node3D" parent="Sections/Ⅱ/Fixed"]
 position = Vector3(-0.7, 2.7, -5.67)
@@ -168,24 +158,24 @@ EntityId = "clockII"
 
 [node name="Face" type="MeshInstance3D" parent="Sections/Ⅱ/Fixed/ClockII"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "face"
 mesh = SubResource("Box0")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Hour" type="MeshInstance3D" parent="Sections/Ⅱ/Fixed/ClockII"]
 transform = Transform3D(-0.64278761, 0.76604444, 0, -0.76604444, -0.64278761, 0, 0, 0, 1, 0.0613, -0.0514, 0.04)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "hour"
 mesh = SubResource("Box1")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Minute" type="MeshInstance3D" parent="Sections/Ⅱ/Fixed/ClockII"]
 transform = Transform3D(-0.5, 0.8660254, 0, -0.8660254, -0.5, 0, 0, 0, 1, 0.0953, -0.055, 0.04)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "minute"
 mesh = SubResource("Box2")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="ChimneyI1" type="Node3D" parent="Sections/Ⅰ/Fixed"]
 position = Vector3(-30, 8, -12)
@@ -194,10 +184,10 @@ EntityId = "chimneyI1"
 
 [node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ChimneyI1"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "body"
 mesh = SubResource("Box3")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="ChimneyI2" type="Node3D" parent="Sections/Ⅰ/Fixed"]
 position = Vector3(-30, 8, -2.5)
@@ -206,10 +196,10 @@ EntityId = "chimneyI2"
 
 [node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ChimneyI2"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "body"
 mesh = SubResource("Box3")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="ChimneyI3" type="Node3D" parent="Sections/Ⅰ/Fixed"]
 position = Vector3(-30, 8, 6)
@@ -218,10 +208,10 @@ EntityId = "chimneyI3"
 
 [node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Fixed/ChimneyI3"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "body"
 mesh = SubResource("Box3")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="ChimneyII1" type="Node3D" parent="Sections/Ⅱ/Fixed"]
 position = Vector3(-30, 8, -12)
@@ -230,10 +220,10 @@ EntityId = "chimneyII1"
 
 [node name="Part" type="MeshInstance3D" parent="Sections/Ⅱ/Fixed/ChimneyII1"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "body"
 mesh = SubResource("Box3")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="ChimneyII2" type="Node3D" parent="Sections/Ⅱ/Fixed"]
 position = Vector3(-30, 8, 6)
@@ -242,14 +232,14 @@ EntityId = "chimneyII2"
 
 [node name="Part" type="MeshInstance3D" parent="Sections/Ⅱ/Fixed/ChimneyII2"]
 position = Vector3(0, 0, 0)
-script = ExtResource("6")
+script = ExtResource("5")
 PartId = "body"
 mesh = SubResource("Box3")
-FaceUvs = Array[ExtResource("7")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Buildings" type="Node3D" parent="."]
 
-[node name="School" parent="Buildings" instance=ExtResource("13")]
+[node name="School" parent="Buildings" instance=ExtResource("12")]
 
 [node name="Items" type="Node" parent="."]
 
@@ -283,35 +273,3 @@ mesh = SubResource("Box4")
 [node name="Card" type="MeshInstance3D" parent="Lesson/TeachingAid"]
 position = Vector3(0.16, 0.1, 0)
 mesh = SubResource("Box5")
-
-[node name="Marks" type="Node3D" parent="Lesson"]
-
-[node name="Clock" type="StaticBody3D" parent="Lesson/Marks"]
-position = Vector3(-2.0793, 1.4311, 0.9229)
-collision_layer = 0
-collision_mask = 0
-script = ExtResource("5")
-Prompt = "记下这处不一样"
-
-[node name="Shape" type="CollisionShape3D" parent="Lesson/Marks/Clock"]
-shape = SubResource("MarkShape_Clock")
-
-[node name="Desk" type="StaticBody3D" parent="Lesson/Marks"]
-position = Vector3(-2.034, 1.2635, 2.0738)
-collision_layer = 0
-collision_mask = 0
-script = ExtResource("5")
-Prompt = "记下这处不一样"
-
-[node name="Shape" type="CollisionShape3D" parent="Lesson/Marks/Desk"]
-shape = SubResource("MarkShape_Desk")
-
-[node name="Chimneys" type="StaticBody3D" parent="Lesson/Marks"]
-position = Vector3(-2.7806, 1.4386, 1.406)
-collision_layer = 0
-collision_mask = 0
-script = ExtResource("5")
-Prompt = "记下这处不一样"
-
-[node name="Shape" type="CollisionShape3D" parent="Lesson/Marks/Chimneys"]
-shape = SubResource("MarkShape_Chimneys")

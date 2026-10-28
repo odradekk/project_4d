@@ -4,7 +4,6 @@ using System.Linq;
 using Game.Adapter;
 using Game.Characters;
 using Game.Flow;
-using Game.Interaction;
 using Game.Player;
 using Game.Rendering;
 using Godot;
@@ -15,7 +14,7 @@ namespace Game.Prologue;
 /// Scene 3 of the prologue, the math class, in the school region. Xiaoman sits at her desk and can only look around.
 /// The teacher lectures, asks her a question that does not matter, and sets to writing on the board; from then on she
 /// can hold the prism up in her desk to see the empty classroom of section Ⅱ. She marks the three differences by
-/// aiming at them and pressing E, and the teacher, who walks the aisle when the chalk stops, sends her back to the
+/// putting the crosshair on them in the lens and pressing E, and the teacher, who walks the aisle when the chalk stops, sends her back to the
 /// start of this stretch if the teacher sees her peeking. The third difference ends the scene.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
@@ -27,13 +26,15 @@ public partial class MathClass : Node
     private const string AnswerKeysShown = "←  长方形      ↑  圆      →  三角形";
     private static readonly Key[] AnswerKeys = [Key.Left, Key.Up, Key.Right];
 
-    // Each difference is a mark in the region: the crosshair reaches 2 m, so the mark stands before the desk on the
-    // line to what the lens shows, and only while the lens is up.
-    private static readonly (string Mark, string Line)[] Differences =
+    private const string Question = "小满，你来说说，圆柱的侧面展开是什么形状？";
+    private const string MarkPrompt = "记下这处不一样";
+
+    // The entities in section Ⅱ that make each difference, and what she says about it.
+    private static readonly (string[] Entities, string Line)[] Differences =
     [
-        ("Clock", "挂钟停在另一个时间……这边明明是九点多，那边的钟指着四点二十。"),
-        ("Desk", "那边多了一张课桌！数一数……第四十九张。我们班明明只有四十八个人。"),
-        ("Chimneys", "窗外的烟囱，这边是三根，那边只剩两根。")
+        (["clockII"], "挂钟停在另一个时间……这边明明是九点多，那边的钟指着四点二十。"),
+        (["deskII49"], "那边多了一张课桌！数一数……第四十九张。我们班明明只有四十八个人。"),
+        (["chimneyII1", "chimneyII2"], "窗外的烟囱，这边是三根，那边只剩两根。")
     ];
 
     /// <summary>Emitted once, after the third difference is found and the notebook page and the remark on the podium are shown.</summary>
@@ -48,7 +49,6 @@ public partial class MathClass : Node
     private Teacher teacher = null!;
     private SceneCheckpoint checkpoint = null!;
     private Node3D aid = null!;
-    private Interactable3D[] marks = [];
     private bool asking;
     private int? answer;
 
@@ -67,12 +67,8 @@ public partial class MathClass : Node
         aid = region.GetNode<Node3D>("Lesson/TeachingAid");
         foreach (var classmate in region.GetNode("Generated/Ⅰ").GetChildren().OfType<Character3D>().Where(c => c != teacherBody))
             classmate.Sit();
-        marks = Differences.Select(d => region.GetNode<Interactable3D>($"Lesson/Marks/{d.Mark}")).ToArray();
-        for (var i = 0; i < marks.Length; i++)
-        {
-            var index = i;
-            marks[i].Interacted += () => Found(index);
-        }
+        ShowMarks();
+        player.LensMarked += Found;
         var seat = player.Transform;
         checkpoint = new SceneCheckpoint();
         AddChild(checkpoint);
@@ -93,12 +89,6 @@ public partial class MathClass : Node
     public override void _Process(double delta)
     {
         if (script.Count > 0 && script.Peek()(delta)) script.Dequeue();
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        for (var i = 0; i < marks.Length; i++)
-            marks[i].CollisionLayer = prism.Raised && !found.Contains(i) ? PhysicsLayers.Pickups : 0;
     }
 
     public override void _UnhandledInput(InputEvent input)
@@ -146,15 +136,15 @@ public partial class MathClass : Node
         Do(() => aid.Visible = false);
         Teach("点动成线，线动成面，面动成体。这句课本上没有，记住了。", 5);
         Narrate("", "小满听得入神，在课本页边写下一行小字：「那体动了，会变成什么？」", 5.5);
-        Teach("小满，你来说说，圆柱的侧面展开是什么形状？", 3.5);
+        Teach(Question, 3.5);
         Do(Ask);
     }
 
-    // Any answer, or none, leads to the same place.
+    // Any answer, or none, leads to the same place. The question stays on the screen with the answers.
     private void Ask()
     {
         asking = true;
-        player.Hud.ShowNotice(AnswerKeysShown, AnswerSeconds);
+        player.Hud.ShowNotice($"{Question}\n{AnswerKeysShown}", AnswerSeconds);
         var left = AnswerSeconds;
         script.Enqueue(delta => (left -= delta) <= 0 || answer is not null);
         Do(Reply);
@@ -184,9 +174,16 @@ public partial class MathClass : Node
         player.Hud.Say("小满", "要是看到哪里和这边不一样，就按 E 记下来。", 5);
     }
 
-    private void Found(int index)
+    // What she may mark: the differences that are not found yet.
+    private void ShowMarks() => player.LensMarks = Differences.Where((_, i) => !found.Contains(i))
+        .SelectMany(difference => difference.Entities)
+        .ToDictionary(entity => entity, _ => MarkPrompt);
+
+    private void Found(string entity)
     {
+        var index = Array.FindIndex(Differences, difference => difference.Entities.Contains(entity));
         found.Add(index);
+        ShowMarks();
         player.Hud.ShowNotice($"找到了一处不一样（{found.Count}/{Differences.Length}）", 2);
         player.Hud.Say("小满", Differences[index].Line, 4);
         if (found.Count == Differences.Length) Finish();

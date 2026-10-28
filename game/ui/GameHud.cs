@@ -20,6 +20,7 @@ public partial class GameHud : CanvasLayer
     private Control notebook = null!;
     private double remaining;
     private double noticeRemaining;
+    private bool lensUp;
     private string prompt = "";
     private int currentPage;
     public bool NotebookAvailable { get => Notebook.Available; set => Notebook.Available = value; }
@@ -104,7 +105,19 @@ public partial class GameHud : CanvasLayer
     private void RefreshVisibility()
     {
         subtitle.Visible = noticeRemaining <= 0;
-        crosshair.Visible = !NotebookOpen && (noticeRemaining > 0 || remaining <= 0);
+        crosshair.Visible = !NotebookOpen && (lensUp || noticeRemaining > 0 || remaining <= 0);
+    }
+
+    /// <summary>Whether the lens is up: she aims through it, so the crosshair stays whatever is being said.</summary>
+    public bool LensUp
+    {
+        get => lensUp;
+        set
+        {
+            if (lensUp == value) return;
+            lensUp = value;
+            RefreshVisibility();
+        }
     }
     public void UnlockPage(int number)
     {

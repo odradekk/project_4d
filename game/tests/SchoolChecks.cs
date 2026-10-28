@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FourD;
 using Game.Adapter;
@@ -31,6 +32,9 @@ public partial class SchoolChecks : Node
     private MathClass scene = null!;
     private int finished;
 
+    // The front-left leg of the chair on the extra desk, which is what she sees of the desk from her seat.
+    private Vector3 DeskTarget => Where("deskII49") + new Vector3(-.17f, 1.1f, -.03f);
+
     private Region3D region => scene.GetNode<Region3D>("Region");
     private FirstPersonPlayer player => region.GetNode<FirstPersonPlayer>("Generated/Player");
     private PrismView prism => region.GetNode<PrismView>("Generated/Prism");
@@ -57,11 +61,12 @@ public partial class SchoolChecks : Node
             await Load();
             await ReachPeek(null);
             Check(said.Any(line => line.Contains("没想起来")), "an unanswered question gets the teacher's answer and the class goes on");
+            await CheckMarkedThenCaught();
             await Load();
             await ReachPeek(Key.Up);
             Check(said.Any(line => line.Contains("再想想")), "a wrong answer gets the teacher's correction and the class goes on");
             await Unload();
-            GD.Print("School checks passed: classroom, differences, seat, lecture, question, round, peeking, caught, finish.");
+            GD.Print("School checks passed: classroom, differences, seat, lecture, question, round, peeking, caught, marked then caught, finish.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -163,6 +168,9 @@ public partial class SchoolChecks : Node
             "the clocks show different times");
         Check(Slices("Ⅰ").Count(slice => slice.Entity.Value.StartsWith("desk")) == 48 && Slices("Ⅱ").Count(slice => slice.Entity.Value.StartsWith("desk")) == 49,
             "section Ⅱ has one desk more");
+        // The desks are where they were: the extra one is the only difference among them.
+        var desks = Slices("Ⅰ").Select(slice => slice.Entity.Value).Where(id => Regex.IsMatch(id, @"^deskI\d+$")).ToArray();
+        Check(desks.Length == 48 && desks.All(id => Where(id) == Where("deskII" + id[5..])), "every desk of Ⅰ has a desk of Ⅱ in the same place");
         Check(Slices("Ⅰ").Count(slice => slice.Entity.Value.StartsWith("chimney")) == 3 && Slices("Ⅱ").Count(slice => slice.Entity.Value.StartsWith("chimney")) == 2,
             "section Ⅱ has one chimney less");
         var spot = Where("deskII49");
@@ -175,7 +183,7 @@ public partial class SchoolChecks : Node
         (string Entity, Vector3 Target)[] targets =
         [
             ("clockII", Where("clockII")),
-            ("deskII49", Where("deskII49") + new Vector3(-.17f, 1.1f, -.03f)),
+            ("deskII49", DeskTarget),
             ("chimneyII1", Where("chimneyII1")),
             ("chimneyII2", Where("chimneyII2")),
             ("PodiumSteps", new(-.7f, .1f, -4.95f)),
@@ -198,6 +206,7 @@ public partial class SchoolChecks : Node
         await play.Frames(30);
         Input.ActionRelease("move_forward");
         Check(seat.DistanceTo(player.Position) < .001f, "she sits at her desk and does not walk");
+        Check(!prism.GetNode<Label>("Controls").Text.Contains("WASD"), "the help does not tell her to walk");
         var yaw = player.Rotation.Y;
         Input.ParseInputEvent(new InputEventMouseMotion { Relative = new(30, 0), ScreenRelative = new(30, 0) });
         await play.Frames(2);
@@ -222,6 +231,7 @@ public partial class SchoolChecks : Node
             return player.Hud.HintText.Contains("长方形");
         }, 90, "the teacher must ask the question");
         Check(aidSeen && aidTurned && !aid.Visible, "the teacher shows the board on a stick, turns it, and puts it away");
+        Check(player.Hud.HintText.Contains("侧面展开"), "the question stays on the screen while she answers");
         Check(said.Any(line => line.Contains("长方形绕着它的一条边转一圈")) && said.Any(line => line.Contains("点动成线，线动成面，面动成体")),
             "the teacher says what a cylinder is and the line that is not in the book");
         Check(said.Any(line => line.Contains("那体动了，会变成什么？")), "she writes her question in the margin");
@@ -249,7 +259,8 @@ public partial class SchoolChecks : Node
         player.Camera.Rotation = new(Mathf.Atan2(offset.Y, new Vector2(offset.X, offset.Z).Length()), 0, 0);
     }
 
-    private async Task Find(string entity, Vector3 target, string count)
+    // Marks the difference that the entity is a part of, and checks that what she says is about that difference.
+    private async Task Find(string entity, Vector3 target, string count, string line)
     {
         Aim(target);
         await play.Frames(2);
@@ -257,7 +268,9 @@ public partial class SchoolChecks : Node
         Press(Key.E);
         await play.Frames(2);
         Check(player.Hud.HintText.Contains(count), $"{entity} makes {count}, but the notice is '{player.Hud.HintText}'");
-        await play.Frames(130);
+        await play.Until(() => player.Hud.SubtitleVisible && player.Hud.SubtitleText.Contains(line), 10, $"she must say what is different about {entity}");
+        Check(player.Hud.CrosshairVisible, "the crosshair stays while she speaks with the lens up");
+        await play.Frames(60);
         Check(player.Hud.HintText != Prompt, $"{entity} is marked once");
     }
 
@@ -270,11 +283,35 @@ public partial class SchoolChecks : Node
         Button(MouseButton.Right, true);
         await play.Frames(2);
         Check(prism.Raised && prism.TargetSection == "Ⅱ", "she holds the lens up to section Ⅱ");
-        await Find("clockII", clock, "1/3");
-        // Either chimney of Ⅱ is the mark of the chimneys.
-        Aim(Where("chimneyII1"));
+        // What is not a difference offers nothing, however near it is to one.
+        (string What, Vector3 Target)[] others =
+        [
+            ("the middle of the board", new(-.7f, 1.6f, -5.66f)),
+            ("the top of the board", new(-.7f, 2.2f, -5.66f)),
+            ("the wall under the clock", new(-.7f, 2.3f, -5.7f)),
+            ("the ceiling over the clock", new(-.7f, 3.2f, -5.2f)),
+            ("an ordinary desk", Where("deskII31") + new Vector3(0, .76f, 0)),
+            ("the wall between two windows", new(-3.6f, 1.5f, 0)),
+            ("the sky between the chimneys", new(-30, 12, -3))
+        ];
+        foreach (var (what, target) in others)
+        {
+            Aim(target);
+            await play.Frames(2);
+            Check(player.Hud.HintText != Prompt, $"aiming at {what} in the lens offers nothing");
+        }
+        // The lens says what is under the crosshair in Ⅱ, however far, and nothing for the sky.
+        (string Entity, Vector3 Target)[] seen = [("clockII", clock), ("chimneyII1", Where("chimneyII1")), ("Blackboard", new(-.7f, 2.1f, -5.66f)), (null!, new(-30, 12, -3))];
+        foreach (var (entity, target) in seen)
+        {
+            Aim(target);
+            Check(prism.SeenEntity() == entity, $"the lens sees {entity ?? "nothing"} at {target}, but it sees {prism.SeenEntity() ?? "nothing"}");
+        }
+        await Find("clockII", clock, "1/3", "挂钟");
+        // Either chimney of Ⅱ makes the difference of the chimneys, and it is marked once for both.
+        Aim(Where("chimneyII2"));
         await play.Frames(2);
-        Check(player.Hud.HintText == Prompt, "aiming at the first chimney of Ⅱ offers to mark it");
+        Check(player.Hud.HintText == Prompt, "aiming at a chimney of Ⅱ offers to mark it");
     }
 
     private async Task CheckCaught()
@@ -294,11 +331,27 @@ public partial class SchoolChecks : Node
         Check(player.Hud.HintText != Prompt, "what she marked before she was caught stays marked");
     }
 
+    // She marks a difference just as the teacher comes into view: the teacher's words must still be seen.
+    private async Task CheckMarkedThenCaught()
+    {
+        Button(MouseButton.Right, true);
+        await Fast(() => teacher.Position.Z > -3.5f, 90, "the teacher must come down the aisle");
+        await play.Until(() => teacher.Position.Z > -3.1f, 3, "the teacher must come nearer");
+        Aim(DeskTarget);
+        await play.Frames(1);
+        Press(Key.E);
+        await play.Frames(2);
+        Check(player.Hud.HintText.Contains("1/3"), "she marks a difference");
+        await Fast(() => said.Any(line => line.Contains("看哪儿呢")), 5, "the teacher's words are shown although she has just marked a difference");
+        await Fast(() => !prism.Raised, 5, "the lens must go down when she is sent back");
+        Button(MouseButton.Right, false);
+    }
+
     private async Task CheckFinish()
     {
-        await Find("deskII49", Where("deskII49") + new Vector3(0, 1, 0), "2/3");
+        await Find("deskII49", DeskTarget, "2/3", "第四十九张");
         Check(finished == 0 && !player.Hud.UnlockedPages.Contains(1), "the scene is not over with two differences found");
-        await Find("chimneyII2", Where("chimneyII2"), "3/3");
+        await Find("chimneyII2", Where("chimneyII2"), "3/3", "烟囱");
         await Fast(() => finished == 1, 60, "the scene must finish after the third difference");
         Check(player.Hud.UnlockedPages.Count == 1 && player.Hud.UnlockedPages.Contains(1), "the first notebook page is unlocked");
         Check(said.Any(line => line.Contains("讲台")), "she remarks on the podium");
