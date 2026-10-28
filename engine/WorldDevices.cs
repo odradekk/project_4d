@@ -3,8 +3,9 @@ namespace FourD;
 // Decision note: 2026-10-26-device-translation
 public sealed partial class World
 {
-    // A device, its lofted pieces, and how far along its rotation or track it stands.
-    private sealed record Device(DeviceDefinition Definition, LoftPiece[] Pieces, double Position);
+    // A device, its lofted pieces, and how far along its rotation or track it stands. A record is replaced and never
+    // edited in place, because pairLandings keeps results while it is the same object (see PairLandings).
+    private sealed record Device(DeviceDefinition Definition, IReadOnlyList<LoftPiece> Pieces, double Position);
 
     private readonly Dictionary<EntityId, Device> devices = [];
 
@@ -34,8 +35,6 @@ public sealed partial class World
         var pose = DeviceKinematics.PoseAt(device.Definition, position);
         return device.Pieces.Select(piece => Loft4.At(device.Definition.Id, piece, pose));
     }
-
-    private IEnumerable<Loft4> DeviceSolids() => devices.Values.SelectMany(device => Solids(device, device.Position));
 
     private IEnumerable<SliceGeometry> DeviceSlices(double w) => devices.Values.Select(device => Slice(device, w)).OfType<SliceGeometry>();
 

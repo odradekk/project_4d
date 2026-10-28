@@ -92,7 +92,6 @@ public sealed partial class World
         var target = sections.FirstOrDefault(candidate => candidate.Id == section);
         if (target is null || ReadEntity(entity) is EntityReadResult.Missing)
             return new SlicePresenceResult.Rejected(Fail(FailureCode.UnknownId, "Unknown entity or section.", entity));
-        var geometry = (SectionGeometryResult.Geometry)GetGeometryAtW(target.W);
-        return new SlicePresenceResult.Present(geometry.Entities.Any(slice => slice.Entity == entity));
+        return new SlicePresenceResult.Present(SliceOf(entity, target.W) is not null);
     }
 }

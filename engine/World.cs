@@ -128,14 +128,26 @@ public sealed partial class World
     {
         if (!double.IsFinite(w)) return RejectedGeometry(FailureCode.InvalidInput, "W must be finite.");
         var slices = entities
-            .Where(entity => entity.Segments.Any(segment => w >= segment.Min && w <= segment.Max))
-            .Select(entity => entity.Slice())
+            .Select(entity => Slice(entity, w))
+            .OfType<SliceGeometry>()
             .Concat(DynamicSlices(w))
             .Concat(DeviceSlices(w))
             .Concat(GrazerSlices(w))
             .OrderBy(slice => slice.Entity.Value, StringComparer.Ordinal)
             .ToArray();
         return new SectionGeometryResult.Geometry(w, Array.AsReadOnly(slices));
+    }
+
+    private static SliceGeometry? Slice(StaticEntity entity, double w) =>
+        entity.Segments.Any(segment => w >= segment.Min && w <= segment.Max) ? entity.Slice() : null;
+
+    // The slice of one entity at w, cut without cutting the rest of the section; null when it has none there.
+    private SliceGeometry? SliceOf(EntityId entity, double w)
+    {
+        if (dynamicEntities.TryGetValue(entity, out var item)) return Slice(item, w);
+        if (devices.TryGetValue(entity, out var device)) return Slice(device, w);
+        if (grazers.TryGetValue(entity, out var grazer)) return Slice(grazer, w);
+        return entities.FirstOrDefault(solid => solid.Id == entity) is { } found ? Slice(found, w) : null;
     }
 
     private static SectionGeometryResult RejectedGeometry(FailureCode code, string detail) =>

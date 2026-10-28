@@ -5,11 +5,25 @@ public sealed partial class World
     // `Moving` rests on `Support` after falling `Gap` more than `Support` does.
     private sealed record SupportEdge(EntityId Support, EntityId Moving, double Gap);
 
+    // Where the solids of one entity land on those of another, kept while neither entity's record is replaced. A
+    // settle keeps the pairs it used and drops the rest.
+    //
+    // This rests on the records of StaticEntity, Dynamic and Device being replaced and never edited in place: a record
+    // that is still the same object is taken to have the same solids. An edit in place would leave the old landings
+    // in use. A turnable would then hang in the air until some other write replaced a record, and FindSupport would
+    // return a landing that is out of date. That is why these records hold read-only lists, and why a change to one
+    // builds a new record.
+    private sealed record PairLandings(object Moving, object Support, SupportCandidate[] Candidates);
+
+    private Dictionary<(EntityId Moving, EntityId Support), PairLandings> pairLandings = [];
+
     // The Y at which each turnable comes to rest. One resting on a static box falls until it touches it; one
     // resting on another turnable falls as far as that one does, plus the gap between them.
     private Dictionary<EntityId, double> SettledHeights(IReadOnlySet<EntityId> held)
     {
         var ids = dynamicEntities.Keys.ToArray();
+        var owners = SolidsByEntity().ToArray();
+        var kept = new Dictionary<(EntityId, EntityId), PairLandings>();
         var startY = ids.ToDictionary(id => id, id => dynamicEntities[id].Pose.Position.Y);
         var drops = ids.ToDictionary(id => id, _ => double.PositiveInfinity);
         var edges = new List<SupportEdge>();
@@ -38,7 +52,7 @@ public sealed partial class World
                 LimitDrop(id, 0);
                 continue;
             }
-            var candidates = SupportCandidates(id).ToArray();
+            var candidates = SupportCandidates(id, owners, kept);
             if (candidates.Length == 0) LimitDrop(id, 0);
             foreach (var candidate in candidates)
             {
@@ -71,6 +85,7 @@ public sealed partial class World
             foreach (var member in group) LimitDrop(member, 0);
         }
         Propagate();
+        pairLandings = kept;
         return ids.ToDictionary(id => id, id => startY[id] - drops[id]);
     }
 }
