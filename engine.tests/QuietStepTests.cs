@@ -5,8 +5,8 @@ using static FourD.Tests.ItemScenes;
 
 namespace FourD.Tests;
 
-// A Step that finds nothing changed since the last one has no turnable to settle. Whatever then changes where a
-// turnable rests must still reach the next Step, so each test lets the world go quiet first.
+// A settle keeps where each pair of entities lands for as long as neither of them is replaced. Whatever then changes
+// where a turnable rests must still reach the next Step, so each test lets the world go quiet first.
 public class QuietStepTests
 {
     // A world whose turnables have all settled, and that has gone through two Steps with nothing to report.
