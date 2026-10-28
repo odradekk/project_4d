@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="FixedObject3D"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="box"]
@@ -12,20 +12,24 @@ size = Vector3(1.3, 0.03, 0.03)
 
 [sub_resource type="BoxMesh" id="s3"]
 material = SubResource("s1")
+size = Vector3(0.03, 1.27, 0.275)
+
+[sub_resource type="BoxMesh" id="s4"]
+material = SubResource("s1")
 size = Vector3(0.016, 1.24, 0.03)
 
-[sub_resource type="StandardMaterial3D" id="s4"]
+[sub_resource type="StandardMaterial3D" id="s5"]
 albedo_color = Color(0.8, 0.8, 0.78, 1)
 
-[sub_resource type="BoxMesh" id="s5"]
-material = SubResource("s4")
+[sub_resource type="BoxMesh" id="s6"]
+material = SubResource("s5")
 size = Vector3(1.3, 0.98, 0.26)
 
-[sub_resource type="StandardMaterial3D" id="s6"]
+[sub_resource type="StandardMaterial3D" id="s7"]
 albedo_color = Color(0.9, 0.5, 0.7, 1)
 
-[sub_resource type="BoxMesh" id="s7"]
-material = SubResource("s6")
+[sub_resource type="BoxMesh" id="s8"]
+material = SubResource("s7")
 size = Vector3(0.04, 0.04, 0.402683)
 
 [node name="Pieces" type="Node3D"]
@@ -45,69 +49,79 @@ position = Vector3(5.6, 1.045, 2.76)
 mesh = SubResource("s2")
 PartId = "bottom"
 
+[node name="westend" parent="Guard" instance=ExtResource("box")]
+position = Vector3(4.935, 1.665, 2.6375)
+mesh = SubResource("s3")
+PartId = "westend"
+
+[node name="eastend" parent="Guard" instance=ExtResource("box")]
+position = Vector3(6.265, 1.665, 2.6375)
+mesh = SubResource("s3")
+PartId = "eastend"
+
 [node name="rod1" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod1"
 
 [node name="rod2" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.1, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod2"
 
 [node name="rod3" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.2, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod3"
 
 [node name="rod4" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.3, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod4"
 
 [node name="rod5" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.4, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod5"
 
 [node name="rod6" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.5, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod6"
 
 [node name="rod7" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.6, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod7"
 
 [node name="rod8" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.7, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod8"
 
 [node name="rod9" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.8, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod9"
 
 [node name="rod10" parent="Guard" instance=ExtResource("box")]
 position = Vector3(5.9, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod10"
 
 [node name="rod11" parent="Guard" instance=ExtResource("box")]
 position = Vector3(6, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod11"
 
 [node name="rod12" parent="Guard" instance=ExtResource("box")]
 position = Vector3(6.1, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod12"
 
 [node name="rod13" parent="Guard" instance=ExtResource("box")]
 position = Vector3(6.2, 1.665, 2.76)
-mesh = SubResource("s3")
+mesh = SubResource("s4")
 PartId = "rod13"
 
 [node name="Heater" type="Node3D" parent="."]
@@ -117,7 +131,7 @@ EntityId = "heater"
 
 [node name="cover" parent="Heater" instance=ExtResource("box")]
 position = Vector3(5.6, 0.49, 2.63)
-mesh = SubResource("s5")
+mesh = SubResource("s6")
 PartId = "cover"
 
 [node name="Hoop" type="Node3D" parent="."]
@@ -128,47 +142,47 @@ EntityId = "hoop"
 [node name="side1" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-1.963495, 0, 0)
 position = Vector3(0, 0.176777, 0.426777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side1"
 
 [node name="side2" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-2.748894, 0, 0)
 position = Vector3(0, 0.426777, 0.176777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side2"
 
 [node name="side3" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-3.534292, 0, 0)
 position = Vector3(0, 0.426777, -0.176777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side3"
 
 [node name="side4" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-4.31969, 0, 0)
 position = Vector3(0, 0.176777, -0.426777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side4"
 
 [node name="side5" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-5.105088, 0, 0)
 position = Vector3(0, -0.176777, -0.426777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side5"
 
 [node name="side6" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-5.890486, 0, 0)
 position = Vector3(0, -0.426777, -0.176777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side6"
 
 [node name="side7" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-6.675884, 0, 0)
 position = Vector3(0, -0.426777, 0.176777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side7"
 
 [node name="side8" parent="Hoop" instance=ExtResource("box")]
 rotation = Vector3(-7.461283, 0, 0)
 position = Vector3(0, -0.176777, 0.426777)
-mesh = SubResource("s7")
+mesh = SubResource("s8")
 PartId = "side8"
