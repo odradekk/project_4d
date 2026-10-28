@@ -12,8 +12,8 @@ public sealed partial class World
         if (item.Holder is not null) return Reject(FailureCode.EntityInUse, "Entity is held.");
         if (!WorldValidation.IsValidPose(pose)) return Reject(FailureCode.InvalidInput, "Invalid pose.");
 
-        // A ball has no section to lie in or stand up from, so any pose is open to it.
         var proposed = item with { Pose = pose };
+        // A ball has no section to lie in or stand up from, so any pose is open to it.
         if (!DynamicShapes.IsBall(item.Definition))
         {
             var origin = item.Origin ?? item.Section!.Value;

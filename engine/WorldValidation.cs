@@ -45,9 +45,8 @@ internal sealed partial class WorldValidation
         errors.AddRange(WorldInterference.Check(description, errors));
         ValidateSeams(description, root);
         if (description.SharedValues is null) Error(LoadErrorCode.InvalidGeometry, root, "SharedValues collection is required.");
-        else
-            foreach (var value in description.SharedValues)
-                Error(LoadErrorCode.UnsupportedDefinition, value is null ? root : value.Source, "SharedValues are not implemented.");
+        foreach (var value in description.SharedValues ?? [])
+            Error(LoadErrorCode.UnsupportedDefinition, value is null ? root : value.Source, "SharedValues are not implemented.");
         if (description.ExpectedOperations is null)
             Error(LoadErrorCode.InvalidGeometry, root, "ExpectedOperations collection is required.");
     }
