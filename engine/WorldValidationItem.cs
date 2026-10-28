@@ -43,8 +43,8 @@ internal sealed partial class WorldValidation
         Shape(hidden.Body, Field(source, "Body"), item.Id, validPose);
         var errorsBeforeInteraction = errors.Count;
         Interaction(item, hidden.Body, owner);
-        var ring = Ring(item, hidden, Field(source, "Ring"));
-        if (ring && errors.Count == errorsBeforeInteraction && validPose is Pose4 pose)
+        var ringValid = Ring(item, hidden, Field(source, "Ring"));
+        if (ringValid && errors.Count == errorsBeforeInteraction && validPose is Pose4 pose)
         {
             HiddenStructure(item, hidden.Ring, pose);
             RingCoverage(item, hidden.Ring, owner);
