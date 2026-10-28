@@ -36,6 +36,14 @@ internal sealed class TurningFixture(Node host)
         await Frames(3);
     }
 
+    /// <summary>Plays a region that something else has loaded, such as a scene script.</summary>
+    internal async Task Use(Region3D region)
+    {
+        Region = region;
+        Player = Region.GetNode<FirstPersonPlayer>("Generated/Player");
+        await Frames(3);
+    }
+
     /// <summary>Removes the region and waits for the audio server to let go of the sounds that were playing in it.</summary>
     internal async Task Unload()
     {
