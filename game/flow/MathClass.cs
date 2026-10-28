@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Game.Adapter;
 using Game.Characters;
-using Game.Flow;
 using Game.Player;
 using Game.Rendering;
 using Godot;
 
-namespace Game.Prologue;
+namespace Game.Flow;
 
 /// <summary>
 /// Scene 3 of the prologue, the math class, in the school region. Xiaoman sits at her desk and can only look around.
@@ -48,6 +47,7 @@ public partial class MathClass : Node
     private Character3D teacherBody = null!;
     private Teacher teacher = null!;
     private SceneCheckpoint checkpoint = null!;
+    private Node3D props = null!;
     private Node3D aid = null!;
     private bool asking;
     private int? answer;
@@ -64,7 +64,8 @@ public partial class MathClass : Node
         player.Seated = true;
         teacherBody = region.Character("teacher");
         teacher = teacherBody.GetNode<Teacher>("Teacher");
-        aid = region.GetNode<Node3D>("Lesson/TeachingAid");
+        props = region.Props("Ⅰ")!;
+        aid = props.GetNode<Node3D>("TeachingAid");
         foreach (var classmate in region.GetNode("Generated/Ⅰ").GetChildren().OfType<Character3D>().Where(c => c != teacherBody))
             classmate.Sit();
         ShowMarks();
@@ -169,7 +170,7 @@ public partial class MathClass : Node
     {
         region.PrismEnabled = true;
         teacher.Checkpoint = checkpoint;
-        teacher.Patrol([teacherBody.Position, region.GetNode<Marker3D>("Lesson/AisleEnd").Position], WriteSeconds);
+        teacher.Patrol([teacherBody.Position, props.GetNode<Marker3D>("AisleEnd").Position], WriteSeconds);
         player.Hud.Say("小满", "粉笔声一停，老师就要下来巡视了……桌肚里的棱镜，偷偷看一眼应该没事。", 6);
         player.Hud.Say("小满", "要是看到哪里和这边不一样，就按 E 记下来。", 5);
     }

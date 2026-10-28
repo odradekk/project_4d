@@ -14,7 +14,7 @@ public static class DebugScenes
             "grazer-demo" => "res://tests/grazer_demo.tscn",
             "home-morning" => "res://flow/home_morning.tscn",
             "home-evening" => "res://flow/home_evening_debug.tscn",
-            "math-class" => "res://prologue/math_class.tscn",
+            "math-class" => "res://flow/math_class.tscn",
             _ => null
         };
 #else

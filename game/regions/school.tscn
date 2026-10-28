@@ -251,25 +251,25 @@ FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 
 [node name="ExpectedPuzzleOperations" type="Node" parent="."]
 
-[node name="Lesson" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="Sections/Ⅰ"]
 
-[node name="BoardText" type="Label3D" parent="Lesson"]
+[node name="BoardText" type="Label3D" parent="Sections/Ⅰ/Props"]
 position = Vector3(-0.7, 1.75, -5.65)
 pixel_size = 0.005
 modulate = Color(0.95, 0.95, 0.9, 1)
 text = "圆柱的认识"
 font_size = 100
 
-[node name="AisleEnd" type="Marker3D" parent="Lesson"]
+[node name="AisleEnd" type="Marker3D" parent="Sections/Ⅰ/Props"]
 position = Vector3(-1.26, 0.02, 4)
 
-[node name="TeachingAid" type="Node3D" parent="Lesson"]
+[node name="TeachingAid" type="Node3D" parent="Sections/Ⅰ/Props"]
 visible = false
 position = Vector3(-1.26, 1.35, -4.15)
 
-[node name="Stick" type="MeshInstance3D" parent="Lesson/TeachingAid"]
+[node name="Stick" type="MeshInstance3D" parent="Sections/Ⅰ/Props/TeachingAid"]
 mesh = SubResource("Box4")
 
-[node name="Card" type="MeshInstance3D" parent="Lesson/TeachingAid"]
+[node name="Card" type="MeshInstance3D" parent="Sections/Ⅰ/Props/TeachingAid"]
 position = Vector3(0.16, 0.1, 0)
 mesh = SubResource("Box5")

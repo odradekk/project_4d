@@ -2,7 +2,7 @@
 
 [框架目录](README.md) · [场景标注](scene-authoring.md) · [角色搭法](character-authoring.md)
 
-学校区域是 `game/regions/school.tscn`，序章第 3、4、5 场都在这里。目前只有第 3 场用到的一间教室。
+学校区域是 `game/regions/school.tscn`，序章第 3、4、5 场都在这里。目前只有第 3 场用到的一间教室，脚本是 `game/flow/MathClass.cs`。课堂用到的节点（板书的字 `BoardText`、教具 `TeachingAid`、过道尽头的点 `AisleEnd`）放在 `Sections/Ⅰ/Props` 下，用 `Region3D.Props("Ⅰ")` 取，做法见[家的区域](home-region.md)。
 
 ## 截面和楼房
 

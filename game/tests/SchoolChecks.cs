@@ -8,7 +8,7 @@ using Game.Adapter;
 using Game.Characters;
 using Game.Debugging;
 using Game.Player;
-using Game.Prologue;
+using Game.Flow;
 using Game.Rendering;
 using Godot;
 using static Game.Tests.CharacterFixture;
@@ -22,7 +22,7 @@ namespace Game.Tests;
 /// </summary>
 public partial class SchoolChecks : Node
 {
-    private const string ScenePath = "res://prologue/math_class.tscn";
+    private const string ScenePath = "res://flow/math_class.tscn";
     private const string Prompt = "E  记下这处不一样";
     // How much faster than real time the waits for the lecture and the teacher's round run.
     private const float Speed = 8;
@@ -221,8 +221,8 @@ public partial class SchoolChecks : Node
     {
         var aidSeen = false;
         var aidTurned = false;
-        var aid = region.GetNode<Node3D>("Lesson/TeachingAid");
-        Check(region.GetNode<Label3D>("Lesson/BoardText").Text.Contains("圆柱"), "the board says what the lesson is");
+        var aid = region.Props("Ⅰ")!.GetNode<Node3D>("TeachingAid");
+        Check(region.Props("Ⅰ")!.GetNode<Label3D>("BoardText").Text.Contains("圆柱"), "the board says what the lesson is");
         await Fast(() =>
         {
             aidSeen |= aid.Visible;
