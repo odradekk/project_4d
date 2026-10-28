@@ -71,6 +71,24 @@ public class FixedEntityTests
     }
 
     [Fact]
+    public void WhatStoodOnAFixedObjectThatIsRemovedAfterTheWorldWasStillFallsAtTheNextStep()
+    {
+        var world = Scene(FloorOf(new(-.5, 1)), Post("post", 0, SectionI), RodAt(.53));
+        // Two steps in which nothing moves, so that the landings of the rod are known by the time the post goes.
+        Assert.Empty(world.StepEvents(.1));
+        Assert.Empty(world.StepEvents(.1));
+
+        Assert.IsType<RemoveEntityResult.Removed>(world.RemoveEntity(PostId));
+
+        var events = world.StepEvents(.1);
+        Assert.Equal(new EntityRemoved(PostId), events[0].Event);
+        var fell = Assert.IsType<EntityFell>(events[1].Event);
+        Assert.Equal(RodId, fell.Entity);
+        Assert.Equal(.53, fell.FromY, 10);
+        Assert.Equal(.03, fell.ToY, 10);
+    }
+
+    [Fact]
     public void RemovingAFixedObjectMakesEarlierPlansStale()
     {
         var actor = Actor();
