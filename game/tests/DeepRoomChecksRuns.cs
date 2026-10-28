@@ -43,8 +43,14 @@ public partial class DeepRoomChecks
         await End();
     }
 
-    // Standing on the route of the grazer, with the cat in her arms: it tears loose, there is a chase, and then she screams.
+    // Standing where the grazer goes while it is at its bites, with the cat in her arms: it pushes her back, and she is not held and the cat does
+    // not tear loose until it comes for her; then the cat tears loose, there is a chase, and then she screams.
     private async Task CheckStandingOnTheRoute()
+    {
+        foreach (var spot in new Vector3[] { new(7f, Floor, 5.2f), new(7.4f, Floor, 5.6f), S2 }) await CheckStandingAt(spot);
+    }
+
+    private async Task CheckStandingAt(Vector3 spot)
     {
         await Start();
         await Until(() => play.Region.CurrentSection == "Ⅱ", 3, "she must have followed the cat into section II");
@@ -52,12 +58,17 @@ public partial class DeepRoomChecks
         await Until(() => room.Entries(DeepRoom.Stage.Arrived) > 0, 2, "the scene must know she has arrived");
         CatBody.GetNode<Interactable3D>("Pickup").Interact();
         await Until(() => room.Entries(DeepRoom.Stage.Panic) > 0, 1, "picking the cat up must start the grazer");
-        await Walk(new(7.4f, Floor, 5.6f));
+        await Walk(spot);
         Engine.TimeScale = 6;
+        await Until(() => eaten.Contains(DeepGrazer.Frame), 100, $"it must bite the window frame while she stands at {spot}");
+        Check(!room.CatFled && !play.Player.Seated && room.Entries(DeepRoom.Stage.Grazing) == 0,
+            $"standing at {spot} she is not held and the cat does not tear loose while it is still at its bites");
         await Until(() => room.Entries(DeepRoom.Stage.Scream) > 0, 200, "she must scream in the end");
-        // She stands where it bites, so the cat tears loose while the grazer is still at its bites.
-        Check(fledAt >= 0 && fledAt - panicAt < 75, $"the cat tears loose {fledAt - panicAt:F1} s after she picked it up");
+        Check(fledAt >= grazingAt && grazingAt > 0, $"the cat tears loose {fledAt - grazingAt:F1} s after the chase has begun");
         CheckChase();
+        // The lines about her own room are not said to someone who has not looked, and her father is called for before the first bite.
+        InOrder("爸爸！", "那扇多出来的门");
+        Check(!shown.Any(line => line.Contains("笔记本摊在桌上")), "she has not looked at her room, and is not told what is in it");
         await Until(() => finished, 60, "the scene must end");
         await End();
     }
