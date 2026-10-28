@@ -15,6 +15,8 @@ public static class DebugScenes
             "home-morning" => "res://flow/home_morning.tscn",
             "home-evening" => "res://flow/home_evening_debug.tscn",
             "math-class" => "res://flow/math_class.tscn",
+            "school-road" => "res://flow/school_road.tscn",
+            "home-road" => "res://flow/home_road.tscn",
             _ => null
         };
 #else
