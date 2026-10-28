@@ -64,7 +64,7 @@ public partial class RoomChecks : Node
         Check(diagnostics.Contains("ExpectedOperationFailed nut-stand[0]"), $"a success written as a refusal must be reported: {diagnostics}");
         // Only a stand-up has a target; given to a flip, it would hide a mistake.
         diagnostics = Fails("wand-flip", step => step.Target = "Ⅱ");
-        Check(diagnostics.Contains("Only a stand-up has a target"), $"a target on a flip must be refused: {diagnostics}");
+        Check(diagnostics.Contains("Only a StandUp has a Target"), $"a target on a flip must be refused: {diagnostics}");
     }
 
     private static Region3D Instance() => GD.Load<PackedScene>(Room).Instantiate<Region3D>();
