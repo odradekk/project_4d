@@ -105,7 +105,7 @@ internal sealed partial class SceneReader(Region3D region)
         foreach (var building in nodes.OfType<Building3D>()) MapRange(building, "BuildingId");
         return new(sections.Select(s => new SectionDefinition(new(s.SectionId), s.W, At(s, "W"))).ToArray(),
             nodes.OfType<Building3D>().Select(b => new BuildingDefinition(new(b.BuildingId), new(b.WMin, b.WMax), At(b, "BuildingId"))).ToArray(),
-            entities, seams, [], []);
+            entities, seams, [], ReadOperations(nodes));
     }
 
     private SeamDefinition ReadSeam(Seam3D seam)
