@@ -68,7 +68,7 @@ Room (Node3D, Region3D)
 
 double[] 四维点长度为 4，顺序 XYZW；Rotation4 长度为 16，按 X/Y/Z/W 四列，每列 XYZW；空数组只表示单位旋转（节点上的 Rotation4 为空时取节点 Transform 的旋转，见上），四维点不可用空数组。适配层只做布局转换与基础格式校验，旋转是否合法交给引擎。所有数组默认空集合，必需的 Resource 未赋值报告节点属性错误。未知脚本节点不静默当四维实体。
 
-测试区域为 `game/regions/section_test.tscn`，可直接运行；`game/main.tscn` 实例化它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。
+测试区域为 `game/regions/section_test.tscn`，可直接运行；主场景不再载入它。`game/regions/item_test.tscn` 放四维球、螺母、吊柜和推拉窗。楼房白模材质使用 StandardMaterial3D，镜片沿用材质，并以实体遮罩绘制纯色轮廓；球、圆环和放样零件没有网格，着色取各自的 `Material`，缺省用默认材质；其他着色材质留到表现层工作。
 
 `[Tool]` 的 PreviewW 变动时调用 GetGeometryAtW，只显示该 W 的生成切片；不由工具脚本重算 W 区间、球半径或放样。表现层灯光/贴花仍由宿主管理。白模 debug 游戏可以用滚轮选择任意已配置 Section；连续 W 查看是同一只读引擎入口。
 
