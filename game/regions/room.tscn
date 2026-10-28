@@ -1,0 +1,63 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/home.tscn" id="home"]
+[ext_resource type="PackedScene" path="res://characters/cat.tscn" id="cat"]
+[ext_resource type="PackedScene" path="res://regions/room/turnables.tscn" id="turnables"]
+[ext_resource type="PackedScene" path="res://regions/room/items.tscn" id="items"]
+[ext_resource type="PackedScene" path="res://regions/room/cabinet.tscn" id="cabinet"]
+[ext_resource type="PackedScene" path="res://regions/room/fittings.tscn" id="fittings"]
+[ext_resource type="PackedScene" path="res://regions/room/operations.tscn" id="operations"]
+[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="interactable"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="CreatureSpawn3D"]
+[ext_resource type="Script" path="res://adapter/Seam3D.cs" id="Seam3D"]
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(0.2, 1.1, 1.1)
+
+[node name="Room" instance=ExtResource("home")]
+
+[node name="Xiaoman" parent="Sections/Ⅰ/Spawns" index="0"]
+position = Vector3(4.8, 0.02, 4.9)
+
+[node name="Cat" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(6.4, 0, 4.3)
+rotation = Vector3(0, -1.5708, 0)
+script = ExtResource("CreatureSpawn3D")
+EntityId = "cat"
+PassageRadius = 0.15
+PassageHeight = 0.4
+CanUseSeamsWithoutPrism = true
+CharacterScene = ExtResource("cat")
+
+[node name="Pieces" parent="Sections/Ⅰ/Turnables" instance=ExtResource("turnables")]
+
+[node name="Pieces" parent="Sections/Ⅰ/Fixed" instance=ExtResource("fittings")]
+
+[node name="Hoop" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(3.2, 0.55, 5.35)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("interactable")
+Prompt = "看呼啦圈"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Hoop"]
+shape = SubResource("s1")
+
+[node name="Pieces" parent="Items" instance=ExtResource("items")]
+
+[node name="Pieces" parent="Devices" instance=ExtResource("cabinet")]
+
+[node name="S1" type="Node3D" parent="Seams"]
+position = Vector3(7.1, 0, 4.3)
+script = ExtResource("Seam3D")
+SeamId = "s1"
+Sections = PackedStringArray("Ⅰ", "Ⅱ")
+
+[node name="S2" type="Node3D" parent="Seams"]
+position = Vector3(6.25, 0, 4.3)
+script = ExtResource("Seam3D")
+SeamId = "s2"
+Sections = PackedStringArray("Ⅱ", "Ⅲ")
+Mirrored = true
+
+[node name="Operations" parent="ExpectedPuzzleOperations" instance=ExtResource("operations")]
