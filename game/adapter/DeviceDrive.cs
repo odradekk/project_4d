@@ -25,25 +25,32 @@ internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scene
     private const double Same = 1e-9;
 
     private readonly Dictionary<EntityId, double> targets = [];
-    private readonly HashSet<EntityId> stalled = [];
+    // Devices that something stopped, and the end each was heading for.
+    private readonly Dictionary<EntityId, double> stalled = [];
+    // Stalled devices that were pulled again and have not yet moved: if they cannot move the same way, they go the other way.
+    private readonly HashSet<EntityId> retrying = [];
     private readonly Dictionary<(EntityId, string), SectionSound> thuds = [];
 
     internal bool IsDevice(EntityId id) => State(id).Definition is DeviceDefinition;
 
     /// <summary>
     /// Sets a device moving to the far end of its way, the one away from where it started. A device that is there, or already
-    /// heading there, goes back to where it started, and so does one that something stopped on its way, which could never come
-    /// back otherwise.
+    /// heading there, goes back to where it started. A device that something stopped goes on the way it was going, and the
+    /// other way if it cannot move that way.
     /// </summary>
     internal void Pull(EntityId device)
     {
         var state = State(device);
         var (limits, initial) = Track(state);
-        var position = state.DevicePosition!.Value;
-        var far = Math.Abs(limits.Max - initial) > Math.Abs(limits.Min - initial) ? limits.Max : limits.Min;
-        var heading = targets.GetValueOrDefault(device, position);
-        var back = stalled.Remove(device) && Math.Abs(position - initial) > Same;
-        targets[device] = back || Math.Abs(heading - far) < Same ? initial : far;
+        var far = FarEnd(limits, initial);
+        if (stalled.Remove(device, out var heading))
+        {
+            targets[device] = heading;
+            retrying.Add(device);
+            return;
+        }
+        heading = targets.GetValueOrDefault(device, state.DevicePosition!.Value);
+        targets[device] = Math.Abs(heading - far) < Same ? initial : far;
     }
 
     internal void Step(double delta)
@@ -51,25 +58,43 @@ internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scene
         foreach (var (device, target) in targets.ToArray())
         {
             var state = State(device);
-            var limits = Track(state).Limits;
+            var (limits, initial) = Track(state);
             var position = state.DevicePosition!.Value;
             var reach = (limits.Max - limits.Min) / TravelSeconds * delta;
             var next = position + Math.Clamp(target - position, -reach, reach);
-            switch (world.DriveDevice(device, next))
+            var result = world.DriveDevice(device, next);
+            var moved = result is DriveDeviceResult.Driven step && Math.Abs(step.Position - position) > Same;
+            if (retrying.Contains(device) && !moved)
+            {
+                // It cannot go on: it goes the other way, unless it is already at the other end.
+                var other = Math.Abs(target - FarEnd(limits, initial)) < Same ? initial : FarEnd(limits, initial);
+                if (Math.Abs(other - position) > Same)
+                {
+                    targets[device] = other;
+                    retrying.Remove(device);
+                    continue;
+                }
+            }
+            if (moved) retrying.Remove(device);
+            switch (result)
             {
                 case DriveDeviceResult.Driven { Contacts.Count: > 0 } stopped:
-                    Stop(device, stopped.Contacts);
+                    Stop(device, stopped.Contacts, target);
                     break;
                 case DriveDeviceResult.Driven driven when Math.Abs(driven.Position - target) < Same:
                     targets.Remove(device);
                     Thud(device);
                     break;
                 case DriveDeviceResult.Rejected rejected:
-                    Stop(device, rejected.Failure.Contacts);
+                    Stop(device, rejected.Failure.Contacts, target);
                     break;
             }
         }
     }
+
+    // The end of a device's way that is farther from where it starts.
+    private static double FarEnd(Interval limits, double initial) =>
+        Math.Abs(limits.Max - initial) > Math.Abs(limits.Min - initial) ? limits.Max : limits.Min;
 
     // The limits of a device's way, and where it starts.
     private static (Interval Limits, double Initial) Track(EntityState device) => ((DeviceDefinition)device.Definition).Motion switch
@@ -79,11 +104,12 @@ internal sealed class DeviceDrive(World world, IReadOnlyList<SectionScene> scene
         _ => throw new NotSupportedException("Unknown device motion.")
     };
 
-    // The device is stopped where it is, and the player sees, hears and is told why.
-    private void Stop(EntityId device, IReadOnlyList<Contact> contacts)
+    // The device is stopped where it is on its way to `heading`, and the player sees, hears and is told why.
+    private void Stop(EntityId device, IReadOnlyList<Contact> contacts, double heading)
     {
         targets.Remove(device);
-        stalled.Add(device);
+        retrying.Remove(device);
+        stalled[device] = heading;
         overlay.MarkContacts(contacts);
         say(RefusalLines.ForDevice(sectionOf(contacts), currentSection()));
         Thud(device);

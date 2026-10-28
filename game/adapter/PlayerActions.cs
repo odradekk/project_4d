@@ -324,11 +324,13 @@ public sealed partial class PlayerActions : Node
         }
     }
 
-    // The preview that is cheap to make: the rings, and the sweeps of an object that is not a nut.
+    // The preview that is cheap to make: the rings, the fold plane of R, and the sweep of F of an object that is not a nut.
     private void ShowLight(SectionId section, EntityId? subject)
     {
         rings = RingsIn(section);
-        var (sweep, flip) = subject is { } id && !IsRingItem(id) ? SweepsOf(id, section) : (null, null);
+        RotationPreview? sweep = null, flip = null;
+        if (subject is { } id)
+            (sweep, flip) = IsRingItem(id) ? (null, Sweep(new Flip(actor, id), section)) : SweepsOf(id, section);
         overlay.ShowPreview(section, sweep, flip?.FoldPlane ?? [], rings);
     }
 

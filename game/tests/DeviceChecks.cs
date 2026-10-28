@@ -32,9 +32,11 @@ public partial class DeviceChecks : Node
             await play.Load(r => AddBlock(r, "BlockII", new(-.93f, 1.25f, -3f), new(.3f, .3f, .4f), .3), Scene);
             await CheckCabinetStopped();
             await play.Load(null, Scene);
+            await CheckStoppedCabinetKeepsItsWay();
+            await play.Load(null, Scene);
             await CheckWindowBlockedByStandingPencil();
             await play.Unload();
-            GD.Print("Device checks passed: sections, glow, cabinet, thud, stopped cabinet, window and pencil.");
+            GD.Print("Device checks passed: sections, glow, cabinet, thud, stopped cabinet, stopped cabinet keeps its way, window and pencil.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -88,10 +90,9 @@ public partial class DeviceChecks : Node
         player.PutDown = null;
         await play.Frames(2);
         Press(Key.E);
-        await play.Frames(30);
-        var halfway = (double)play.State("cabinet").DevicePosition!;
-        Check(halfway < -.3 && halfway > -1.3, $"the flap must be on its way after half a second; it is at {halfway}");
-        await play.Frames(60);
+        var halfway = await UntilBelow("cabinet", -.3);
+        Check(halfway > -1.3, $"the flap must be on its way, not at the end, when it first passes -.3; it is at {halfway}");
+        await UntilStopped("cabinet");
         Check(Math.Abs(play.State("cabinet").DevicePosition!.Value + Math.PI / 2) < 1e-9, "the cabinet must open to a quarter turn");
 
         // The flap lies along +x from the hinge at y = 2, 2 cm thick. The plank, which leaned to x = 1.97 and y = .98 above the
@@ -112,9 +113,46 @@ public partial class DeviceChecks : Node
         Check(knock.GlobalPosition.DistanceTo(plank.GetCenter()) < .1f, $"the knock must come from the plank, at {plank.GetCenter()}; it comes from {knock.GlobalPosition}");
 
         Press(Key.E);
-        await play.Frames(90);
+        await UntilStopped("cabinet");
         Check(Math.Abs(play.State("cabinet").DevicePosition!.Value) < 1e-9, "E again must close the cabinet");
         Check(play.SliceBounds("Ⅱ", "cabinet").End.Y > 2.9f, "the plank must be back under the ceiling");
+    }
+
+    private async Task CheckStoppedCabinetKeepsItsWay()
+    {
+        // Opened, the cabinet is pulled shut, and a ball held in the arc of the plank, 1.6 m from the hinge at y = 1.45, stops it.
+        play.LookAt(new(-1.9f, .02f, -3f), new(-3f, 2.2f, -3f));
+        await play.Frames(2);
+        Press(Key.E);
+        await UntilStopped("cabinet");
+        Check(play.Region.World!.PlaceEntity(new("ball"), new(new(-1.5, .25, -2.5, .21), SceneReader.Identity)) is FourD.UpdateResult.Updated, "the ball must be put near her");
+        Check(play.Actions.Hold(new("ball")) is null, "the ball must come into the hand");
+        player.Position = new(-1.5f, 0, -2.4f);
+        player.Rotation = Vector3.Zero;
+        player.Camera.Rotation = new(Mathf.DegToRad(40), 0, 0);
+        await play.Frames(10);
+        Near(play.Position("ball"), new(-1.5f, 1.45f, -3f), "the ball must be held in the arc of the plank");
+
+        var stopped = await Pull();
+        Check(stopped is < -.3 and > -1.4, $"the ball must stop the cabinet on its way shut; it is at {stopped}");
+        // Pulled again, it cannot go on shut, so it goes the other way, to the end it came from.
+        Check(Math.Abs(await Pull() + Math.PI / 2) < 1e-9, "a cabinet that cannot go on must go back to where it was opened to");
+        stopped = await Pull();
+        Check(stopped is < -.3 and > -1.4, $"the ball must stop the cabinet again; it is at {stopped}");
+        // With the ball carried out of the way, it goes on the way it was going, and one pull shuts it.
+        player.Position = new(-.5f, 0, -2.4f);
+        await play.Frames(10);
+        Near(play.Position("ball"), new(-.5f, 1.45f, -3f), "the ball must be carried out of the arc of the plank");
+        Check(Math.Abs(await Pull()) < 1e-9, "a stopped cabinet whose way is clear must go on to the end in one pull");
+    }
+
+    // Pulls the cabinet as E does and waits for it to stop; its position.
+    private async Task<double> Pull()
+    {
+        play.Actions.Aim("cabinet");
+        play.Actions.Pull();
+        await UntilStopped("cabinet");
+        return play.State("cabinet").DevicePosition!.Value;
     }
 
     private async Task CheckCabinetStopped()
@@ -129,10 +167,21 @@ public partial class DeviceChecks : Node
         Check(player.Hud.SubtitleText.Contains("动不了") && player.Hud.SubtitleText.Contains("那一页"), $"the player must say that the other section is in the way; saw '{player.Hud.SubtitleText}'");
         Check(knocked, "a cabinet that is stopped knocks in the other section, as a window does");
 
-        // Pulled again, a stopped cabinet goes back to where it started, since the block would stop it again on the way out.
+        // Pulled again, it cannot go on, since the block would stop it again, so it goes back to where it started.
         Press(Key.E);
-        await play.Frames(90);
-        Check(Math.Abs(play.State("cabinet").DevicePosition!.Value) < 1e-9, "a stopped cabinet must go back to where it started");
+        await UntilStopped("cabinet");
+        Check(Math.Abs(play.State("cabinet").DevicePosition!.Value) < 1e-9, "a stopped cabinet that cannot go on must go back to where it started");
+    }
+
+    // Waits until a device has gone below a position, and says where it is then.
+    private async Task<double> UntilBelow(string device, double level)
+    {
+        for (var i = 0; i < 300; i++)
+        {
+            await play.Frames(1);
+            if (play.State(device).DevicePosition!.Value < level) return play.State(device).DevicePosition!.Value;
+        }
+        throw new InvalidOperationException($"{device} must pass {level}");
     }
 
     // Waits until a device that was pulled stands still, and says whether it knocked on the way. How many physics steps a
@@ -186,17 +235,12 @@ public partial class DeviceChecks : Node
         Press(Key.F);
         await play.Frames(TurnFrames);
         Check(play.State("pencil").UprightOrigin is null, "F must lay the pencil down");
-        // The window that was stopped goes back to where it started when it is pulled, and the next pull closes it.
+        // The window that was stopped goes on the way it was going, so one pull closes it.
         play.LookAt(new(.5f, .02f, -2.2f), new(.5f, 1.4f, -3.2f));
         await play.Frames(2);
         Press(Key.E);
-        await play.Frames(90);
-        Check(Math.Abs(play.State("sash").DevicePosition!.Value) < 1e-9, "a window that was stopped must go back to where it started");
-        play.LookAt(new(.2f, .02f, -2.2f), new(.2f, 1.4f, -3.2f));
-        await play.Frames(2);
-        Press(Key.E);
-        await play.Frames(90);
-        Check(Math.Abs(play.State("sash").DevicePosition!.Value - 1) < 1e-9, "the window must close once the pencil lies down");
+        await UntilStopped("sash");
+        Check(Math.Abs(play.State("sash").DevicePosition!.Value - 1) < 1e-9, "the window must close in one pull once the pencil lies down");
         Check(Mathf.Abs(play.SliceBounds("Ⅰ", "sash").End.X - 1.4f) < .001f, "the pane must have slid 1 m along its track");
     }
 }
