@@ -18,6 +18,8 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
 {
     // Render layers: 1 is the main view and 2 the lens, as set on the slice meshes.
     private const uint MainAndLens = 3;
+    // Poses closer than this, in metres or in the entries of a rotation, are the same to anyone looking.
+    private const double Unnoticed = 1e-4;
 
     private readonly Dictionary<EntityId, (Pose4 Pose, SectionId? Section, EntityId? Holder, bool Packed, bool Rotating)> seen = [];
     private readonly Dictionary<(SectionId, EntityId), Node3D> nodes = [];
@@ -41,6 +43,14 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
         return hulls;
     }
 
+    // A held object pushed against a wall is moved by the engine a hair's breadth every frame; that is not a change worth a rebuild.
+    private static bool Close(Pose4 a, Pose4 b)
+    {
+        static IEnumerable<double> Numbers(Pose4 p) => new[] { p.Rotation.X, p.Rotation.Y, p.Rotation.Z, p.Rotation.W }
+            .Prepend(p.Position).SelectMany(v => new[] { v.X, v.Y, v.Z, v.W });
+        return Numbers(a).Zip(Numbers(b)).All(pair => System.Math.Abs(pair.First - pair.Second) < Unnoticed);
+    }
+
     internal void Refresh()
     {
         var changed = new List<EntityState>();
@@ -48,7 +58,8 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
         {
             var state = ((EntityReadResult.Found)world.ReadEntity(id)).Entity;
             var now = (state.Pose, state.Section, state.Holder, state.InBackpack, state.Rotating);
-            if (seen.TryGetValue(id, out var before) && before == now) continue;
+            if (seen.TryGetValue(id, out var before) && (before.Section, before.Holder, before.Packed, before.Rotating) == (now.Section, now.Holder, now.InBackpack, now.Rotating)
+                && Close(before.Pose, now.Pose)) continue;
             seen[id] = now;
             changed.Add(state);
         }
