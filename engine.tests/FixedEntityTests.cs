@@ -71,6 +71,18 @@ public class FixedEntityTests
     }
 
     [Fact]
+    public void RemovingAFixedObjectMakesEarlierPlansStale()
+    {
+        var actor = Actor();
+        var world = Scene(FloorOf(new(-.5, 1)), Post("post", 2, SectionI), actor, RodAt(.03));
+        var plan = world.AllowedPlan(new StandUp(actor.Id, RodId, II));
+
+        Assert.IsType<RemoveEntityResult.Removed>(world.RemoveEntity(PostId));
+
+        Assert.Equal(FailureCode.StalePlan, Assert.IsType<StartRotationResult.Rejected>(world.StartRotation(plan)).Failure.Code);
+    }
+
+    [Fact]
     public void AFixedObjectCannotBeAddedWhereSomethingIsOrWhenItIsNotValid()
     {
         var world = Scene(FloorOf(new(-.5, 1)), Post("post", 0, SectionI), RodAt(1));

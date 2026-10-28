@@ -150,7 +150,7 @@ public sealed partial class World
         var solids = added.Parts.SelectMany(part => added.Segments.Select(segment => Box4.From(added, part, segment))).ToArray();
         if (IntersectsReservation(solids, definition.Id))
             return new AddEntityResult.Rejected(Fail(FailureCode.TranslationBlocked, "Entity intersects a reserved rotation sweep.", definition.Id));
-        var obstacles = Solids().ToArray();
+        var obstacles = Solids(new Interval(w - Epsilon, w + Epsilon)).ToArray();
         var contacts = solids
             .SelectMany(moving => obstacles.Where(moving.BoundsMayOverlap).Select(obstacle => Collision.Touch(moving, obstacle)).OfType<Contact>())
             .ToList();
