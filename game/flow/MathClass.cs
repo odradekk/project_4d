@@ -10,7 +10,7 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// Scene 3 of the prologue, the math class, in the school Region. Xiaoman sits at her desk and can only look around.
+/// Scene 3 of the prologue, the math class, in the school region. Xiaoman sits at her desk and can only look around.
 /// The teacher lectures, asks her a question that does not matter, and sets to writing on the board; from then on she
 /// can hold the prism up in her desk to see the empty classroom of section Ⅱ. She marks the three differences by
 /// putting the crosshair on them in the lens and pressing E, and the teacher, who walks the aisle when the chalk stops, sends her back to the
