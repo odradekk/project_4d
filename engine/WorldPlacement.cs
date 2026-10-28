@@ -13,10 +13,8 @@ public sealed partial class World
         if (!WorldValidation.IsValidPose(pose)) return Reject(FailureCode.InvalidInput, "Invalid pose.");
 
         // A ball has no section to lie in or stand up from, so any pose is open to it.
-        var definition = item.Definition;
-        var ball = DynamicShapes.IsBall(definition);
         var proposed = item with { Pose = pose };
-        if (!ball)
+        if (!DynamicShapes.IsBall(item.Definition))
         {
             var origin = item.Origin ?? item.Section!.Value;
             var section = sections.Single(candidate => candidate.Id == origin);
@@ -48,7 +46,6 @@ public sealed partial class World
     {
         var definition = proposed.Definition;
         var pose = proposed.Pose;
-        var ball = DynamicShapes.IsBall(definition);
         var rings = DynamicShapes.Rounds(definition, pose).Where(round => round.Major > 0);
         if (proposed.Origin is null && rings.Any(ring => sections.Any(section => ring.TooCloseToSection(section.W))))
             return Fail(FailureCode.InvalidInput, "Hidden ring is too close to a section.", entity);
@@ -57,7 +54,7 @@ public sealed partial class World
         if (boxes.Any(box => !box.Representable()))
             return Fail(FailureCode.InvalidInput, "Pose cannot represent nondegenerate box geometry.", entity);
         var longAxis = LocalAxis(pose.Rotation, DynamicShapes.Interaction(definition).LongAxis);
-        if (!ball && Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
+        if (!DynamicShapes.IsBall(definition) && Math.Abs(Math.Abs(longAxis.W) - 1) <= RoundingMargin && boxes.Any(EndsNearSection))
             return Fail(FailureCode.InvalidInput, "Upright part end is too close to a section.", entity);
         var solids = DynamicShapes.Solids(definition, pose);
         if (LeavesBuilding(proposed, solids)) return Fail(FailureCode.OutOfRange, "Object extends outside its building.", entity);
@@ -84,14 +81,5 @@ public sealed partial class World
         var span = box.WSpan;
         return sections.Any(section =>
             Math.Abs(section.W - span.Min) < SectionClearance || Math.Abs(section.W - span.Max) < SectionClearance);
-    }
-
-    /// <summary>Reports whether a given entity has a three-dimensional slice at the section.</summary>
-    public SlicePresenceResult HasSlice(EntityId entity, SectionId section)
-    {
-        var target = sections.FirstOrDefault(candidate => candidate.Id == section);
-        if (target is null || ReadEntity(entity) is EntityReadResult.Missing)
-            return new SlicePresenceResult.Rejected(Fail(FailureCode.UnknownId, "Unknown entity or section.", entity));
-        return new SlicePresenceResult.Present(SliceOf(entity, target.W) is not null);
     }
 }

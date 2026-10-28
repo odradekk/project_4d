@@ -50,6 +50,15 @@ public sealed partial class World
         return new SliceDirectionResult.Direction(new(sign * unit[0], sign * unit[1], sign * unit[2]));
     }
 
+    /// <summary>Reports whether a given entity has a three-dimensional slice at the section.</summary>
+    public SlicePresenceResult HasSlice(EntityId entity, SectionId section)
+    {
+        var target = sections.FirstOrDefault(candidate => candidate.Id == section);
+        if (target is null || ReadEntity(entity) is EntityReadResult.Missing)
+            return new SlicePresenceResult.Rejected(Fail(FailureCode.UnknownId, "Unknown entity or section.", entity));
+        return new SlicePresenceResult.Present(SliceOf(entity, target.W) is not null);
+    }
+
     private static IReadOnlyList<BoxPart> BoxParts(EntityDefinition definition) => definition switch
     {
         BuildingElementDefinition element => element.Shape.Parts,
