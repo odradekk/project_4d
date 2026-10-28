@@ -103,6 +103,8 @@ public partial class GrazerMusicChecks : Node
         Check(scrape.VolumeDb > slowScrape, "and the scraping is louder");
         Check(AudioServer.GetBusVolumeDb(environment) < quiet - 12, "the other ambient sounds are pushed well down");
         music.Free();
+        // The audio thread fades a stopped sound out before it lets go of it, which takes time and not frames.
+        await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
         Check(AudioServer.GetBusVolumeDb(environment) == quiet, "the other sounds come back when the music goes");
     }
 

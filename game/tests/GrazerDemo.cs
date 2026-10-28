@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using FourD;
 using Game.Adapter;
 using Game.Audio;
@@ -10,7 +12,8 @@ namespace Game.Tests;
 
 /// <summary>
 /// The grazer debug scene: a grazer comes up from the deep sections of the grazer test region, opens its mouth at the
-/// door, bites it and a seam, then turns toward the player. Its music and flicker follow its distance.
+/// door, bites it and a seam, then turns toward the player. Its music and flicker follow its distance. Launch it with
+/// <c>-- --run-through</c> to have it end by itself after the timeline.
 /// </summary>
 public partial class GrazerDemo : Node
 {
@@ -44,7 +47,7 @@ public partial class GrazerDemo : Node
     private static GrazerKey Key(double time, double z, double w, double yaw, double tilt, double mouth) =>
         new(time, new(0, 1.4, z, w), [new(RotationPlane.XZ, yaw), new(RotationPlane.XW, tilt)], mouth);
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         region = GD.Load<PackedScene>(Scene).Instantiate<Region3D>();
         region.Name = "Region";
@@ -62,6 +65,18 @@ public partial class GrazerDemo : Node
         label.AddThemeColorOverride("font_outline_color", Colors.Black);
         layer.AddChild(label);
         region.Grazers!.Play(Grazer, Timeline());
+        if (OS.GetCmdlineUserArgs().Contains("--run-through")) await RunThrough();
+    }
+
+    // For an unattended run: lets the timeline play out, then takes the music away and waits for the audio thread to let go of
+    // its sounds before the run ends, which keeps a headless run free of errors about sounds still in use.
+    private async Task RunThrough()
+    {
+        while (region.Grazers!.IsPlaying(Grazer)) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        SetProcess(false);
+        music.Free();
+        await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
+        GetTree().Quit();
     }
 
     public override void _Process(double delta)

@@ -221,6 +221,7 @@ internal sealed partial class SceneReader(Region3D region)
             var place = $"{property}.Balls[{i}]";
             if (ball is null)
             {
+                // Left out, so the balls after it count one less in the engine's errors.
                 Error(grazer, place, "A metaball resource is missing.");
                 continue;
             }

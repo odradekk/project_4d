@@ -7,7 +7,9 @@ namespace Game.Audio;
 /// <summary>
 /// The grazer's music, in three layers that follow its distance (see <see cref="GrazerLayers"/>): a low bass from far off,
 /// then a pulse that comes faster with scraping mixed in, and then the other ambient sounds pushed down. The sounds are
-/// placeholders: a looped drone (grazer_bass.wav), the thud and the scratch.
+/// placeholders: a looped drone (grazer_bass.wav), the thud and the scratch. The audio thread lets go of a stopped sound
+/// only after it has faded out, so a program that ends right after the music is removed, as a headless run does, should
+/// wait half a second first, or it reports the sounds as still in use.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 public partial class GrazerMusic : Node
@@ -84,10 +86,6 @@ public partial class GrazerMusic : Node
         bass.Stop();
         pulse.Stop();
         scrape.Stop();
-        // The audio thread fades a stopped sound out before it lets go of it, and a program that ends before that, as a
-        // headless run does, reports the sound as still in use. A mix step lasts about 25 ms. The players are stopped by now,
-        // since the children of a node leave the tree first, so whether anything was playing is read from the layers.
-        if (Levels.Bass > 0) OS.DelayMsec(100);
         if (region is not null) AudioServer.SetBusVolumeDb(environment, environmentDb);
     }
 

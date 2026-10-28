@@ -143,9 +143,8 @@ public partial class Region3D : Node3D
             generated.AddChild(viewport);
             var scene = new SectionScene(section.Id, section.W);
             scenes.Add(scene);
-            scene.Geometry = SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
-                scene.MaskIds, notStatic);
-            viewport.AddChild(scene.Geometry);
+            viewport.AddChild(SliceMesh.Build((SectionGeometryResult.Geometry)world.GetSectionGeometry(section.Id), reader.Materials, true,
+                scene.MaskIds, notStatic, scene.StaticNodes));
             viewport.AddChild(scene.Dynamic);
             viewport.AddChild(scene.Overlay);
             viewport.AddChild(new WorldEnvironment

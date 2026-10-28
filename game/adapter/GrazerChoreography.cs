@@ -123,7 +123,8 @@ public sealed partial class GrazerChoreography : Node
             foreach (var element in bite.Elements)
             {
                 bitten.Add(element);
-                foreach (var scene in scenes) scene.Geometry.GetNodeOrNull(NodeName.Of(element.Value))?.Free();
+                foreach (var scene in scenes)
+                    if (scene.StaticNodes.Remove(element, out var node)) node.Free();
             }
         }
         return true;

@@ -12,8 +12,8 @@ internal sealed class SectionScene(SectionId id, double w)
     /// <summary>The depth of the section.</summary>
     internal double W { get; } = w;
 
-    /// <summary>The slices of the entities that do not move, which a bite takes elements out of.</summary>
-    internal Node3D Geometry { get; set; } = null!;
+    /// <summary>The nodes of the slices of the entities that do not move, by entity, which a bite takes elements out of.</summary>
+    internal Dictionary<EntityId, Node3D> StaticNodes { get; } = [];
 
     /// <summary>The slices of the entities that move, rebuilt whenever they change.</summary>
     internal Node3D Dynamic { get; } = new() { Name = "Dynamic" };

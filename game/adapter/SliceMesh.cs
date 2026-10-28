@@ -7,15 +7,22 @@ namespace Game.Adapter;
 
 internal static class SliceMesh
 {
-    /// <summary>Builds the entities of a section; those in <paramref name="skip"/> are built elsewhere.</summary>
+    /// <summary>
+    /// Builds the entities of a section; those in <paramref name="skip"/> are built elsewhere. The node of each entity is
+    /// added to <paramref name="nodes"/> when it is given.
+    /// </summary>
     internal static Node3D Build(SectionGeometryResult.Geometry geometry,
         IReadOnlyDictionary<(EntityId, PartId), Material> materials, bool collision,
-        Dictionary<EntityId, int> maskIds, IReadOnlySet<EntityId>? skip = null)
+        Dictionary<EntityId, int> maskIds, IReadOnlySet<EntityId>? skip = null, Dictionary<EntityId, Node3D>? nodes = null)
     {
         var root = new Node3D { Name = "Geometry" };
         foreach (var slice in geometry.Entities)
-            if (skip is null || !skip.Contains(slice.Entity))
-                root.AddChild(Entity(slice, materials, maskIds, collision ? new StaticBody3D { Name = "Collision" } : null));
+        {
+            if (skip is not null && skip.Contains(slice.Entity)) continue;
+            var node = Entity(slice, materials, maskIds, collision ? new StaticBody3D { Name = "Collision" } : null);
+            root.AddChild(node);
+            if (nodes is not null) nodes[slice.Entity] = node;
+        }
         return root;
     }
 

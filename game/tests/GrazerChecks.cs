@@ -42,7 +42,7 @@ public partial class GrazerChecks : Node
             CheckHoldingStill();
             await Load();
             await CheckBite();
-            await CheckBiteOfOddNames();
+            await CheckBiteOfIdsWithOneNodeName();
             GD.Print("Grazer checks passed: authoring, path, slices, bite.");
             GetTree().Quit();
         }
@@ -237,23 +237,42 @@ public partial class GrazerChecks : Node
         Check(play.Region.GetNode("Generated/Ⅰ/Dynamic/grazer").GetInstanceId() == slice, "a grazer that holds still is not cut again");
     }
 
-    // An ID may hold characters that Godot does not keep in a node name.
-    private async Task CheckBiteOfOddNames()
+    // Two IDs that Godot gives the same node name, Door.1 and Door_1: the second node is renamed. A bite takes the one it names.
+    private async Task CheckBiteOfIdsWithOneNodeName()
     {
         await play.Load(region =>
         {
             region.GetNode<BuildingElement3D>("Buildings/Home/Door").EntityId = "Door.1";
-            region.GetNode<Seam3D>("Seams/Needle").SeamId = "needle.1";
+            region.GetNode<BuildingElement3D>("Buildings/Home/Lintel").EntityId = "Door_1";
+            var needle = region.GetNode<Seam3D>("Seams/Needle");
+            var other = (Seam3D)needle.Duplicate();
+            other.Name = "Other";
+            other.SeamId = "needle_1";
+            other.Position = new(-2, 0, 1);
+            needle.SeamId = "needle.1";
+            region.GetNode("Seams").AddChild(other);
         }, GrazerDemo.Scene);
         grazers.SetProcess(false);
-        Check(play.Region.HasNode("Generated/Ⅰ/Geometry/Door_1"), "Godot names the node of Door.1 Door_1");
+        // The door is 2.2 m high and stands on the floor, the lintel above it: their centers are 1.1 and 2.6 m up.
+        float[] Heights(string section) => play.Region.GetNode($"Generated/{section}/Geometry").GetChildren().OfType<Node3D>()
+            .Select(node => node.GetNode<MeshInstance3D>("Surface").Mesh.GetAabb().GetCenter())
+            .Where(center => Math.Abs(center.X) < .1f && Math.Abs(center.Z + 4) < .1f).Select(center => center.Y).Order().ToArray();
+        Check(Heights("Ⅰ").Length == 2 && Heights("Ⅱ").Length == 2, "the door and the lintel stand in both sections");
         GrazerKey Still(double time) => new(time, new(0, 1.4, -2.2, .1), [], 0);
-        grazers.Play("grazer", new GrazerTimeline([Still(0), Still(1)], [new(1, [new("Door.1")], [new("needle.1")])]));
+        grazers.Play("grazer", new GrazerTimeline([Still(0), Still(1)], [new(1, [new("Door_1")], [new("needle.1")])]));
         grazers.Advance(1);
-        Check(!play.Region.HasNode("Generated/Ⅰ/Geometry/Door_1") && !play.Region.HasNode("Generated/Ⅱ/Geometry/Door_1"),
-            "the bitten element is gone from the section worlds, whatever its ID");
+        var world = play.Region.World!;
+        Check(world.ReadEntity(new("Door_1")) is EntityReadResult.Missing && world.ReadEntity(new("Door.1")) is EntityReadResult.Found,
+            "the engine took the lintel and left the door");
+        foreach (var section in new[] { "Ⅰ", "Ⅱ" })
+        {
+            var left = Heights(section);
+            Check(left.Length == 1 && Math.Abs(left[0] - 1.1f) < .05f, $"the world of {section} took the lintel and left the door");
+        }
         await play.Frames(3);
-        Check(play.Region.HasNode("Generated/Ⅱ/Overlay/Seams/needle_1/Cut"), "and the bitten seam, whatever its ID, shows as cut");
+        var lights = play.Region.GetNode("Generated/Ⅱ/Overlay/Seams").GetChildren().Cast<Node3D>().ToArray();
+        Check(lights.Length == 2 && lights.Single(light => light.HasNode("Cut")).Position.X > 1 && lights.Single(light => !light.HasNode("Cut")).Position.X < -1,
+            "the seam that was bitten shows as cut, and the one with the same node name does not");
     }
 
     private async Task CheckBite()
