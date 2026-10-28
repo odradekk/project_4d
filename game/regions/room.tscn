@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://regions/home.tscn" id="home"]
 [ext_resource type="PackedScene" path="res://characters/cat.tscn" id="cat"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://regions/room/cabinet.tscn" id="cabinet"]
 [ext_resource type="PackedScene" path="res://regions/room/fittings.tscn" id="fittings"]
 [ext_resource type="PackedScene" path="res://regions/room/operations.tscn" id="operations"]
+[ext_resource type="PackedScene" path="res://regions/room/grazer.tscn" id="grazer"]
 [ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="interactable"]
 [ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="CreatureSpawn3D"]
 [ext_resource type="Script" path="res://adapter/Seam3D.cs" id="Seam3D"]
@@ -47,6 +48,8 @@ shape = SubResource("s1")
 
 [node name="Pieces" parent="Devices" instance=ExtResource("cabinet")]
 
+[node name="Pieces" parent="Grazers" instance=ExtResource("grazer")]
+
 [node name="S1" type="Node3D" parent="Seams"]
 position = Vector3(7.1, 0, 4.3)
 script = ExtResource("Seam3D")
@@ -59,5 +62,6 @@ script = ExtResource("Seam3D")
 SeamId = "s2"
 Sections = PackedStringArray("Ⅱ", "Ⅲ")
 Mirrored = true
+Open = false
 
 [node name="Operations" parent="ExpectedPuzzleOperations" instance=ExtResource("operations")]

@@ -17,6 +17,7 @@ namespace Game.Flow;
 internal sealed class HomeScene
 {
     internal const string RegionPath = "res://regions/home.tscn";
+    internal const string RoomPath = "res://regions/room.tscn";
     internal const string Section = "Ⅰ";
 
     private readonly Dictionary<string, uint> layers = [];
@@ -47,6 +48,12 @@ internal sealed class HomeScene
         if (!region.Loaded) throw new InvalidOperationException($"The home region did not load:\n{region.Diagnostics}");
         return new HomeScene(region);
     }
+
+    /// <summary>The scene's view of a home region that an earlier scene has loaded and left in its state.</summary>
+    internal static HomeScene Of(Region3D region) => new(region);
+
+    /// <summary>Where the seam node of that name stands, on the floor.</summary>
+    internal Vector3 SeamAt(string node) => SceneReader.RelativeTransform(Region.GetNode<Seam3D>($"Seams/{node}"), Region).Origin;
 
     internal T Prop<T>(string name, string section = Section) where T : Node => Region.Props(section)!.GetNode<T>(name);
 
