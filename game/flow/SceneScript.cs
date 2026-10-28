@@ -42,6 +42,9 @@ internal sealed class SceneScript(GameHud hud)
         Wait(seconds);
     }
 
+    /// <summary>Drops the steps that have not run yet.</summary>
+    internal void Clear() => steps.Clear();
+
     internal void Tick(double delta)
     {
         if (steps.Count > 0 && steps.Peek()(delta)) steps.Dequeue();

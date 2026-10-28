@@ -53,8 +53,8 @@ internal static class DeepGrazer
             Key(67, 8.3, 6.1, Depth, -2.5 * Quarter, .1, 1),
             // Up the east wall and along the north wall to the window.
             Key(77, 8.3, 2, Depth, -4 * Quarter, .1, .6),
-            Key(85, 5.5, 1.9, Depth, -4 * Quarter, .1, 1),
-            Key(88, 5.5, 1.9, Depth, -4 * Quarter, .1, 1)
+            Key(85, 5.5, 1.5, Depth, -4 * Quarter, .1, 1),
+            Key(88, 5.5, 1.5, Depth, -4 * Quarter, .1, 1)
         ],
         [
             new(1, [], [new SeamId(Seam)]),
@@ -65,16 +65,15 @@ internal static class DeepGrazer
 
     /// <summary>
     /// The next leg of the chase from <paramref name="start"/> toward the place she stands at: the body turns toward her as far
-    /// as it can in the time, walks to within a step of her, and opens its mouth the nearer it is. <paramref name="pace"/> is 1 for
-    /// its ordinary walking speed.
+    /// as it can in the time, walks to within a step of her, and opens its mouth the nearer it is.
     /// </summary>
-    internal static GrazerTimeline Leg(GrazerKey start, double x, double z, double pace)
+    internal static GrazerTimeline Leg(GrazerKey start, double x, double z)
     {
         var (fromX, fromZ, yaw) = (start.Position.X, start.Position.Z, start.Turns[0].Angle);
         var (dx, dz) = (x - fromX, z - fromZ);
         var distance = Math.Sqrt(dx * dx + dz * dz);
         var turn = Math.IEEERemainder(Math.Atan2(dx, -dz) - yaw, Math.Tau);
-        var step = Math.Clamp(distance - StopAt, 0, Speed * pace * LegSeconds);
+        var step = Math.Clamp(distance - StopAt, 0, Speed * LegSeconds);
         var toward = distance == 0 ? 0 : step / distance;
         var (endX, endZ) = (fromX + dx * toward, fromZ + dz * toward);
         var left = Math.Max(distance - step, 0);

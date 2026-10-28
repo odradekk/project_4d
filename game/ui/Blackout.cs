@@ -9,6 +9,7 @@ namespace Game.UI;
 public partial class Blackout : CanvasLayer
 {
     private const int TitleSize = 64;
+    private const double FadeInSeconds = 1.5;
 
     private readonly Label title = new() { Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
 
@@ -28,9 +29,12 @@ public partial class Blackout : CanvasLayer
         title.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
     }
 
+    /// <summary>Shows the title, which fades in.</summary>
     public void ShowTitle(string text)
     {
         title.Text = text;
+        title.Modulate = new(1, 1, 1, 0);
         title.Visible = true;
+        CreateTween().TweenProperty(title, "modulate:a", 1.0, FadeInSeconds);
     }
 }

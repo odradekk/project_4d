@@ -9,12 +9,16 @@ namespace Game.Flow;
 // The way in, the sounds of her body, the grazer's chase and the end of the scene.
 public partial class DeepRoom
 {
-    // The grazer is this near, as the engine measures it from her feet to the body origin, when the cat tears loose and she
-    // can no longer move, and when she screams.
+    // The grazer is this near, as the engine measures it from her feet to the body origin (her height over the floor is in it),
+    // when she is in its mouth, which is caught while it is still at its bites: the cat tears loose and she can no longer move.
+    private const double EngulfDistance = 2.6;
+    // When it is on its way to her, the same happens at this distance; and she screams when it is at the last.
     private const double FleeDistance = 6;
     private const double ScreamDistance = 3.6;
-    // If it has not come this near by then it has been coming this long, and she can no longer move.
+    // If it has not come this near by then it has been coming this long, and she can no longer move, so that the scene ends.
     private const double ChaseSeconds = 40;
+    // The cat has been loose and the grazer has gone for her at least this long, a leg and a little over, before she screams.
+    private const double MinChaseSeconds = 3.5;
     private const double ScreamSeconds = 1.8;
     private const double BlackSeconds = 3;
     private const double TitleSeconds = 5;
@@ -23,6 +27,7 @@ public partial class DeepRoom
     private AudioStreamPlayer heartbeat = null!, breathing = null!, shriek = null!, hiss = null!;
     private GrazerFlicker flicker = null!;
     private Blackout? blackout;
+    private double corneredFor;
     private bool bodySounds, cornered;
 
     /// <summary>Whether the cat has torn loose from her and run.</summary>
@@ -40,7 +45,7 @@ public partial class DeepRoom
         SendCat("S2", "s2", SectionIII);
         catBody.PlaceAt(CatRoom.Deep, 0);
         cat.Sit(CatRoom.Deep + Vector3.Right);
-        var s1 = ask.SeamAt("S1");
+        var s1 = home.SeamAt("S1");
         script.Do(() =>
         {
             Place(s1 + new Vector3(0, .02f, 0));
@@ -52,13 +57,13 @@ public partial class DeepRoom
         {
             if (home.Region.Travel!.Cross() is { } refused) throw new InvalidOperationException($"She could not follow the cat into section II: {refused.Code}");
             prism.SetRaised(false);
-            Place(ask.SeamAt("S2") + new Vector3(-.7f, .02f, 0));
+            Place(home.SeamAt("S2") + new Vector3(-.7f, .02f, 0));
         });
     }
 
     private void SendCat(string node, string seam, string target)
     {
-        catBody.PlaceAt(ask.SeamAt(node), 0);
+        catBody.PlaceAt(home.SeamAt(node), 0);
         if (catBody.CrossSeam(seam, target) is { } refused) throw new InvalidOperationException($"The cat could not cross {seam}: {refused}");
     }
 
@@ -108,19 +113,18 @@ public partial class DeepRoom
         var grazers = home.Region.Grazers!;
         var distance = grazers.Distance(DeepGrazer.Id);
         if (!cornered && (distance < FleeDistance || stageClock > ChaseSeconds)) Corner();
-        if (distance < ScreamDistance || stageClock > ChaseSeconds + 30)
+        if (cornered && stageClock >= MinChaseSeconds && corneredFor >= MinChaseSeconds && distance < ScreamDistance)
         {
             Become(Stage.Scream);
             return;
         }
         if (grazers.IsPlaying(DeepGrazer.Id)) return;
-        // The longer it takes, the faster it comes, so that someone who only runs round the room is caught in the end.
-        var leg = DeepGrazer.Leg(chaseFrom, home.Player.Position.X, home.Player.Position.Z, Math.Max(1, 1 + (stageClock - ChaseSeconds) / 10));
+        var leg = DeepGrazer.Leg(chaseFrom, home.Player.Position.X, home.Player.Position.Z);
         chaseFrom = DeepGrazer.End(leg);
         grazers.Play(DeepGrazer.Id, leg);
     }
 
-    // She backs against the wall and cannot move; she still looks, and the cat tears out of her arms.
+    // She is caught: her keys and the mouse are off and the scene turns her eyes to the grazer, and the cat tears out of her arms.
     private void Corner()
     {
         cornered = true;
@@ -131,7 +135,7 @@ public partial class DeepRoom
         player.Seated = true;
         player.SetProcessUnhandledInput(false);
         cat.Holdable = false;
-        Say(Xiaoman, 2, "煤球——！", now: true);
+        Say(Xiaoman, 2, "煤球——！");
         // It is in front of her chest, so it jumps down and runs off to her side, the one that is farther from the grazer. Any
         // command to the cat ends the carrying if she has it in her arms.
         var side = new Vector3(player.Basis.X.X, 0, player.Basis.X.Z).Normalized();
@@ -146,7 +150,7 @@ public partial class DeepRoom
         return new((float)at.X, (float)at.Y, (float)at.Z);
     }
 
-    // Her eyes follow the mouth of the grazer once she is backed into the wall.
+    // Her eyes follow the mouth of the grazer once she is caught.
     private void LookAtGrazer(double delta)
     {
         if (!cornered) return;
@@ -159,8 +163,7 @@ public partial class DeepRoom
 
     private void StartScream()
     {
-        if (!cornered) Corner();
-        Say("", ScreamSeconds, "啊——！", now: true);
+        Say("", ScreamSeconds, "啊——！");
         shriek.Play();
     }
 
@@ -170,7 +173,6 @@ public partial class DeepRoom
         StopSounds();
         music.Free();
         flicker.Free();
-        home.Hud.ClearText();
         blackout = new Blackout { Name = "Blackout" };
         AddChild(blackout);
         script.Wait(BlackSeconds);

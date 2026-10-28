@@ -23,7 +23,7 @@ public partial class CatRoom : Node
 
     // Marks on the cabinet, the pit and the room of section III, for the cat's route; the seams are read from the region.
     private static readonly Vector3 Perch = new(3.85f, 2.4f, 5.78f);
-    internal static readonly Vector3 Deep = new(4f, 0, 5.9f);
+    internal static readonly Vector3 Deep = new(5f, 0, 4f);
     private const float PitFarZ = 3.7f;
     // Where along the board, as a fraction from the hinge to the foot, the cat comes onto it and waits; and how far above the
     // slice's line it stands.
@@ -37,8 +37,6 @@ public partial class CatRoom : Node
     // The ring is tried this often, and the rest of the scene looks at the engine this often.
     private const double RingAttemptSeconds = 1;
     private const double ThinkSeconds = .1;
-    private const float FallLimit = -3;
-    private const double SafeSeconds = .5;
     private const float LureReach = 3;
     private const float RingLureReach = 1.5f;
     private const float RingCatReach = 3.5f;
@@ -56,7 +54,7 @@ public partial class CatRoom : Node
     private double clock, lookedAtSeam, stageClock, ringTimer, thought, lureClock;
     private float yarnTravel;
     private Vector3? yarn, lastYarn;
-    private readonly SafeSpot playerSafe = new(), catSafe = new();
+    private SafeSpots safe = null!;
     private readonly int[] entries = new int[Enum.GetValues<Stage>().Length];
     private readonly HashSet<string> told = [];
     private bool bridged, ringSeen, boardSeen, wandFlipped;
@@ -81,7 +79,7 @@ public partial class CatRoom : Node
     {
         home = HomeScene.Open(this, path: HomeScene.RoomPath);
         ask = new RoomQueries(home.Region);
-        seam1 = ask.SeamAt("S1");
+        seam1 = home.SeamAt("S1");
         // This is the room at night: nothing of the flat's day is to be used. The hoop on the wall is for looking at.
         foreach (var prop in home.Region.Props(HomeScene.Section)!.GetChildren().OfType<Interactable3D>().Where(prop => prop.Name != "Hoop"))
             home.Enable(prop.Name, false);
@@ -98,8 +96,8 @@ public partial class CatRoom : Node
             next?.Invoke();
         };
         catBody.ActionReplaced += () => then = null;
-        playerSafe.Set(home.Player.Position, clock);
-        catSafe.Set(catBody.Position, clock);
+        safe = new(home, catBody);
+        safe.Start(clock);
         Say("", 3.5, "晚上九点。煤球又弓着背盯住衣柜和书桌之间的墙角，尾巴一甩一甩。");
         Say("", 3.5, "那边什么也没有啊。举起棱镜看看？（按住右键）");
     }
@@ -109,7 +107,7 @@ public partial class CatRoom : Node
         clock += delta;
         stageClock += delta;
         thought += delta;
-        Recover();
+        safe.Recover(clock);
         if (thought >= ThinkSeconds)
         {
             Think(thought);
@@ -152,8 +150,7 @@ public partial class CatRoom : Node
                     ringTimer = RingAttemptSeconds;
                     if (RingIsLuring() && cat.JumpThroughRing("nut", "ring", "wand"))
                     {
-                        // The seam to section III is shut until the cat leaps at it, so that she finds it after the cat has gone.
-                        home.Region.World!.SetSeamOpen(new("s2"), true);
+                        OpenSeamToDeep(true);
                         // Only a leap that ends on its own without the seam counts as a miss: one that the player breaks off does not.
                         then = LeapMissed;
                         Become(Stage.Leaping, give: false);
@@ -172,6 +169,8 @@ public partial class CatRoom : Node
 
     private void Become(Stage next, bool give = true)
     {
+        // The leap is over, and so is the way through.
+        if (next == Stage.Chasing) OpenSeamToDeep(false);
         Now = next;
         stageClock = 0;
         entries[(int)next]++;
@@ -243,7 +242,7 @@ public partial class CatRoom : Node
         }
         catBody.PlaceAt(Perch, 0);
         catBody.Posture = Posture.Lying;
-        catSafe.Set(Perch, clock);
+        safe.CatAt(Perch, clock);
         cat.Holdable = false;
         Say("小满", 2.5, "煤球？！");
         Say("", 4, "它跳进那道光里去了。透过镜片看，第Ⅱ页的吊柜顶上缩着一团黑影。");
@@ -260,19 +259,35 @@ public partial class CatRoom : Node
     private void Bridged()
     {
         bridged = true;
-        catSafe.Set(catBody.Position, clock);
+        safe.CatAt(catBody.Position, clock);
         Say("", 3, "煤球踩着皮球过去了。");
         Become(Stage.Chasing);
     }
 
-    private void Vanish()
+    internal void Vanish()
     {
         catBody.PlaceAt(Deep, 0);
+        // She can follow it now.
+        OpenSeamToDeep(true);
         Say("小满", 2.5, "煤球？！");
         Say("", 4, "它在半空里消失了。圆环前面，还藏着一道从这一页看不见的缝。");
-        GetTree().CreateTimer(5).Timeout += () => EmitSignal(SignalName.Finished);
+        GetTree().CreateTimer(5).Timeout += Finish;
         Become(Stage.Gone);
     }
+
+    // The scene stops commanding the cat and listening for keys, so that the scene after it has the room to itself. Its node is not
+    // stopped: it hosts the region.
+    private void Finish()
+    {
+        SetPhysicsProcess(false);
+        SetProcessInput(false);
+        SetProcessUnhandledInput(false);
+        EmitSignal(SignalName.Finished);
+    }
+
+    // The seam to section III is shut except while the cat leaps at it and once it has gone through, so that she finds it after the
+    // cat has gone.
+    private void OpenSeamToDeep(bool open) => home.Region.World!.SetSeamOpen(new("s2"), open);
 
     // The cat's slide down the board is a walk with no floor under it: the board is steeper than the cat can stand on.
     private void Slide(Vector3 end) => catBody.Do(delta =>
@@ -343,40 +358,6 @@ public partial class CatRoom : Node
         if (home.Hud.UnlockedPages.Contains(page)) return;
         home.Hud.UnlockPage(page);
         Say("", 4, line);
-    }
-
-    // Falling out of the room takes her back to where she stood half a second before she left the floor, and the cat likewise.
-    private void Recover()
-    {
-        var player = home.Player;
-        if (player.IsOnFloor()) playerSafe.Stand(player.Position, clock);
-        else if (player.Position.Y < FallLimit)
-        {
-            player.Position = playerSafe.Spot;
-            player.Velocity = Vector3.Zero;
-            Say("小满", 2.5, "差点掉下去！");
-        }
-        if (catBody.IsOnFloor()) catSafe.Stand(catBody.Position, clock);
-        else if (catBody.Position.Y < FallLimit) catBody.PlaceAt(catSafe.Spot, catBody.Rotation.Y);
-    }
-
-    // The places something stood on the floor in the last half second; the oldest is far enough back from an edge it fell over.
-    private sealed class SafeSpot
-    {
-        private readonly Queue<(double Time, Vector3 Position)> trail = new();
-        internal Vector3 Spot => trail.Peek().Position;
-
-        internal void Set(Vector3 position, double time)
-        {
-            trail.Clear();
-            trail.Enqueue((time, position));
-        }
-
-        internal void Stand(Vector3 position, double time)
-        {
-            trail.Enqueue((time, position));
-            while (trail.Count > 1 && time - trail.Peek().Time > SafeSeconds) trail.Dequeue();
-        }
     }
 
     private void Hints()

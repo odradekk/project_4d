@@ -52,6 +52,9 @@ internal sealed class HomeScene
     /// <summary>The scene's view of a home region that an earlier scene has loaded and left in its state.</summary>
     internal static HomeScene Of(Region3D region) => new(region);
 
+    /// <summary>Where the seam node of that name stands, on the floor.</summary>
+    internal Vector3 SeamAt(string node) => SceneReader.RelativeTransform(Region.GetNode<Seam3D>($"Seams/{node}"), Region).Origin;
+
     internal T Prop<T>(string name, string section = Section) where T : Node => Region.Props(section)!.GetNode<T>(name);
 
     internal Interactable3D Prop(string name) => Prop<Interactable3D>(name);

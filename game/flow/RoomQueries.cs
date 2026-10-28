@@ -25,9 +25,6 @@ internal sealed class RoomQueries(Region3D region)
 
     internal EntityState State(string entity) => ((EntityReadResult.Found)world.ReadEntity(new EntityId(entity))).Entity;
 
-    /// <summary>Where the seam node of that name stands, on the floor.</summary>
-    internal Vector3 SeamAt(string node) => SceneReader.RelativeTransform(region.GetNode<Seam3D>($"Seams/{node}"), region).Origin;
-
     /// <summary>Whether the entity is still in the world: a building element is gone once a grazer has eaten it.</summary>
     internal bool Exists(string entity) => world.ReadEntity(new EntityId(entity)) is EntityReadResult.Found;
 
