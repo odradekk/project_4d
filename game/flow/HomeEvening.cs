@@ -1,6 +1,7 @@
 using System;
 using Game.Adapter;
 using Game.Characters;
+using Game.Interaction;
 using Godot;
 
 namespace Game.Flow;
@@ -15,7 +16,8 @@ public partial class HomeEvening : Node
 {
     private const double HeatSeconds = 2.5;
     private const double HomeworkSeconds = 8.5;
-    private static readonly Vector3 Arrival = new(1.8f, .02f, 9.8f);
+    // One step inside the front door, which is where scene 6 ends, facing into the flat with the door behind her.
+    private static readonly Vector3 Arrival = new(3.4f, .02f, 7.45f);
     private static readonly Vector3 Dinner = new(5.8f, 0, 8.5f);
     // The cat stops this close to its spot, since she may be standing on it.
     private const float DinnerReach = .4f;
@@ -30,6 +32,9 @@ public partial class HomeEvening : Node
 
     /// <summary>For the debug entry: the pages of the notebook that the earlier scenes would have drawn.</summary>
     [Export] public bool WithEarlierPages { get; set; }
+
+    /// <summary>Whether she comes in with the cat in her arms, as scene 6 ends. Otherwise it follows her, from beside her.</summary>
+    public bool CarryingCat { get; set; }
 
     public bool NoteRead { get; private set; }
     public bool ClipTaken { get; private set; }
@@ -69,6 +74,7 @@ public partial class HomeEvening : Node
         catBody = home.Region.Character("cat");
         cat = catBody.GetNode<Cat>("Cat");
         FollowPlayer();
+        if (CarryingCat) catBody.GetNode<Interactable3D>("Pickup").Interact();
         if (WithEarlierPages)
             for (var page = 1; page <= 4; page++) home.Hud.UnlockPage(page);
         home.Hud.NotebookAvailable = true;
