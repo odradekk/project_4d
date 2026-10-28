@@ -28,11 +28,12 @@ public partial class DeepRoom : Node
     // How long she is left alone before the scene tells her what to do next.
     private const double FollowHintSeconds = 40;
     private const double CarryHintSeconds = 30;
-    private const double LensHintSeconds = 30;
+    private const double LensHintSeconds = 20;
     // The seam is found gone when she looks at where it was, or after this long.
     private const double DiscoverSeconds = 14;
     private const double LookSeconds = 1.5;
-    private const double CrySeconds = 50;
+    // She cries for her father by now whether or not she has looked, which is before the first bite.
+    private const double CrySeconds = 30;
     // Looking at something with the lens is the crosshair within this angle of it, in radians.
     private const float LookAngle = .7f;
     private const string Xiaoman = "小满";
@@ -50,7 +51,7 @@ public partial class DeepRoom : Node
     private double clock, stageClock, thought, lookedHome;
     private readonly int[] entries = new int[Enum.GetValues<Stage>().Length];
     private readonly HashSet<string> told = [];
-    private bool discovered, sawHome, appeared, carried;
+    private bool discovered, sawHome, appeared, carried, pushed;
 
     [Signal] public delegate void FinishedEventHandler();
 
@@ -99,6 +100,7 @@ public partial class DeepRoom : Node
         stageClock += delta;
         thought += delta;
         safe.Recover(clock);
+        Retreat(delta);
         script.Tick(delta);
         if (thought < ThinkSeconds) return;
         Think(thought);
@@ -158,7 +160,8 @@ public partial class DeepRoom : Node
                 StartPanic();
                 break;
             case Stage.Grazing:
-                Say("", 4, "它朝这边滑过来了，很慢。");
+                // Not said to someone it has already caught.
+                Say("", 4, "它朝这边滑过来了，很慢。", () => home.Region.Grazers!.Distance(DeepGrazer.Id) < FleeDistance);
                 break;
             case Stage.Scream:
                 StartScream();
@@ -197,7 +200,8 @@ public partial class DeepRoom : Node
             Say(Xiaoman, 3, "回不去了……");
         }
         lookedHome = Looking(SectionI, marks.Select(mark => mark.GlobalPosition).ToArray()) ? lookedHome + elapsed : 0;
-        if (!sawHome && (lookedHome >= LookSeconds || stageClock > CrySeconds)) SeenHome();
+        // Not once it has pushed her back: by then the lines about her father would come after the bites.
+        if (!sawHome && !pushed && (lookedHome >= LookSeconds || stageClock > CrySeconds)) SeenHome();
         Tell("rhythm", music.Levels.Rhythm > 0, "远处传来有节奏的刮擦声，一下一下，越来越近。");
         Tell("nothing", stageClock > 25 && discovered, "别的缝呢？一道也没有……", Xiaoman);
         if (!appeared && ask.Bounds(DeepGrazer.Id, SectionIII) is not null)
@@ -205,8 +209,6 @@ public partial class DeepRoom : Node
             appeared = true;
             Say("", 5, "半空中冒出几块互不相连的东西，慢慢胀大，连成了一块。");
         }
-        // Once it is in the room, being in its mouth is being caught.
-        if (appeared && !cornered && home.Region.Grazers!.Distance(DeepGrazer.Id) < EngulfDistance) Corner();
         Ate("door", DeepGrazer.Door, "那扇多出来的门不见了。断面平得像刀切的。");
         Ate("corner", DeepGrazer.Corner, "墙角也被它吃掉了。");
         Ate("frame", DeepGrazer.Frame, "窗框没了，粉色的天光直接照了进来。");
@@ -216,8 +218,9 @@ public partial class DeepRoom : Node
     private void SeenHome()
     {
         sawHome = true;
-        Say(Xiaoman, 3, lookedHome < LookSeconds ? "爸爸……" : "那是我的房间……台灯还亮着。");
-        Say("", 4, "笔记本摊在桌上，闹钟指着九点四十。");
+        var looked = lookedHome >= LookSeconds;
+        Say(Xiaoman, 3, looked ? "那是我的房间……台灯还亮着。" : "爸爸……");
+        if (looked) Say("", 4, "笔记本摊在桌上，闹钟指着九点四十。");
         Say(Xiaoman, 2.5, "爸爸！");
         Say(Xiaoman, 3, "爸爸——！");
         Say("", 4, "爸爸在厂里上中班，家里没有人。");

@@ -6,8 +6,8 @@ namespace Game.Flow;
 
 /// <summary>
 /// What a fall out of the room comes to in scenes 8 and 9: she goes back to where she stood half a second before she left the
-/// floor, and the cat likewise. Nothing in these rooms catches either of them, since where something is missing or eaten there is
-/// no floor.
+/// floor, and the cat likewise. The pit in the floor of section II catches nothing, and scene 9 can have her there before the
+/// seam is cut; where the grazer has eaten the walls of section III there are faces of sky, so nothing falls there.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 internal sealed class SafeSpots(HomeScene home, Character3D cat)

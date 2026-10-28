@@ -10,13 +10,13 @@ namespace Game.Flow;
 public partial class DeepRoom
 {
     // The grazer is this near, as the engine measures it from her feet to the body origin (her height over the floor is in it),
-    // when she is in its mouth, which is caught while it is still at its bites: the cat tears loose and she can no longer move.
+    // when she is in its mouth: while it is at its bites that pushes her back, as fast as she walks, and she can walk on.
     private const double EngulfDistance = 2.6;
-    // When it is on its way to her, the same happens at this distance; and she screams when it is at the last.
+    private const float RetreatSpeed = 2.5f;
+    // Once it is on its way to her, at this distance she is caught: the cat tears loose and she can no longer move; and she
+    // screams when it is at the last.
     private const double FleeDistance = 6;
     private const double ScreamDistance = 3.6;
-    // If it has not come this near by then it has been coming this long, and she can no longer move, so that the scene ends.
-    private const double ChaseSeconds = 40;
     // The cat has been loose and the grazer has gone for her at least this long, a leg and a little over, before she screams.
     private const double MinChaseSeconds = 3.5;
     private const double ScreamSeconds = 1.8;
@@ -112,7 +112,7 @@ public partial class DeepRoom
     {
         var grazers = home.Region.Grazers!;
         var distance = grazers.Distance(DeepGrazer.Id);
-        if (!cornered && (distance < FleeDistance || stageClock > ChaseSeconds)) Corner();
+        if (!cornered && distance < FleeDistance) Corner();
         if (cornered && stageClock >= MinChaseSeconds && corneredFor >= MinChaseSeconds && distance < ScreamDistance)
         {
             Become(Stage.Scream);
@@ -122,6 +122,20 @@ public partial class DeepRoom
         var leg = DeepGrazer.Leg(chaseFrom, home.Player.Position.X, home.Player.Position.Z);
         chaseFrom = DeepGrazer.End(leg);
         grazers.Play(DeepGrazer.Id, leg);
+    }
+
+    // While the grazer is at its bites, being in its mouth pushes her back, a little each frame, away from it. She can still walk, the
+    // cat stays in her arms and nothing else changes; the grazer has not come for her yet.
+    private void Retreat(double delta)
+    {
+        if (Now != Stage.Panic || !appeared || home.Region.Grazers!.Distance(DeepGrazer.Id) >= EngulfDistance) return;
+        var player = home.Player;
+        var away = player.Position - GrazerAt();
+        away.Y = 0;
+        player.MoveAndCollide((away.LengthSquared() < 1e-6f ? player.Basis.Z : away.Normalized()) * RetreatSpeed * (float)delta);
+        if (pushed) return;
+        pushed = true;
+        Say(Xiaoman, 3, "它过来了，往后退！");
     }
 
     // She is caught: her keys and the mouse are off and the scene turns her eyes to the grazer, and the cat tears out of her arms.
