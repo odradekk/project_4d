@@ -1,0 +1,103 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://adapter/TurnableResource.cs" id="TurnableResource"]
+[ext_resource type="Script" path="res://adapter/TurnableObject3D.cs" id="TurnableObject3D"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="box"]
+
+[sub_resource type="Resource" id="s1"]
+script = ExtResource("TurnableResource")
+Holdable = true
+HorizontalRadius = 0.24
+Hinge = Vector3(-0.22, 0, 0)
+Reach = 0.46
+
+[sub_resource type="StandardMaterial3D" id="s2"]
+albedo_color = Color(0.82, 0.68, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="s3"]
+material = SubResource("s2")
+size = Vector3(0.38, 0.02, 0.02)
+
+[sub_resource type="StandardMaterial3D" id="s4"]
+albedo_color = Color(0.85, 0.25, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="s5"]
+material = SubResource("s4")
+size = Vector3(0.1, 0.12, 0.12)
+
+[sub_resource type="Resource" id="s6"]
+script = ExtResource("TurnableResource")
+Holdable = true
+HorizontalRadius = 0.26
+LongAxis = 1
+Hinge = Vector3(0, -0.22, 0)
+Reach = 0.47
+
+[sub_resource type="StandardMaterial3D" id="s7"]
+albedo_color = Color(0.55, 0.38, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="s8"]
+material = SubResource("s7")
+size = Vector3(0.36, 0.08, 0.36)
+
+[sub_resource type="BoxMesh" id="s9"]
+material = SubResource("s7")
+size = Vector3(0.045, 0.42, 0.045)
+
+[node name="Pieces" type="Node3D"]
+
+[node name="Wand" type="Node3D" parent="."]
+position = Vector3(5.25, 1.09, 2.63)
+script = ExtResource("TurnableObject3D")
+EntityId = "wand"
+BuildingId = "home"
+Interaction = SubResource("s1")
+
+[node name="stick" parent="Wand" instance=ExtResource("box")]
+position = Vector3(-0.05, 0, 0)
+mesh = SubResource("s3")
+PartId = "stick"
+
+[node name="yarn" parent="Wand" instance=ExtResource("box")]
+position = Vector3(0.19, 0, 0)
+mesh = SubResource("s5")
+PartId = "yarn"
+
+[node name="Name" type="Label3D" parent="Wand"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -0.1, 0.0115, 0)
+pixel_size = 0.0007
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "满满"
+font_size = 64
+
+[node name="Stool" type="Node3D" parent="."]
+position = Vector3(6.3, 0.25, 3.3)
+script = ExtResource("TurnableObject3D")
+EntityId = "stool"
+BuildingId = "home"
+Interaction = SubResource("s6")
+
+[node name="seat" parent="Stool" instance=ExtResource("box")]
+position = Vector3(0, 0.21, 0)
+mesh = SubResource("s8")
+PartId = "seat"
+
+[node name="leg1" parent="Stool" instance=ExtResource("box")]
+position = Vector3(-0.1575, -0.04, -0.1575)
+mesh = SubResource("s9")
+PartId = "leg1"
+
+[node name="leg2" parent="Stool" instance=ExtResource("box")]
+position = Vector3(0.1575, -0.04, -0.1575)
+mesh = SubResource("s9")
+PartId = "leg2"
+
+[node name="leg3" parent="Stool" instance=ExtResource("box")]
+position = Vector3(-0.1575, -0.04, 0.1575)
+mesh = SubResource("s9")
+PartId = "leg3"
+
+[node name="leg4" parent="Stool" instance=ExtResource("box")]
+position = Vector3(0.1575, -0.04, 0.1575)
+mesh = SubResource("s9")
+PartId = "leg4"

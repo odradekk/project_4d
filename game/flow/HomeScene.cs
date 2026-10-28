@@ -34,10 +34,13 @@ internal sealed class HomeScene
     internal FirstPersonPlayer Player { get; }
     internal GameHud Hud => Player.Hud;
 
-    /// <summary>Loads the region into <paramref name="host"/>, after <paramref name="change"/> has edited it.</summary>
-    internal static HomeScene Open(Node host, Action<Region3D>? change = null)
+    /// <summary>
+    /// Loads the region into <paramref name="host"/>, after <paramref name="change"/> has edited it. The region is the home
+    /// by default, or a scene that inherits it, such as the room of scenes 8 and 9.
+    /// </summary>
+    internal static HomeScene Open(Node host, Action<Region3D>? change = null, string path = RegionPath)
     {
-        var region = GD.Load<PackedScene>(RegionPath).Instantiate<Region3D>();
+        var region = GD.Load<PackedScene>(path).Instantiate<Region3D>();
         region.Name = "Region";
         change?.Invoke(region);
         host.AddChild(region);

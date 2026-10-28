@@ -17,7 +17,7 @@ namespace Game.Adapter;
 internal sealed class CreatureLink(World world, string id, string player, Func<string, Node> sectionNode)
 {
     // Half the W thickness of an ordinary object, docs/frame/principles.md. A box that tests a creature's path has it.
-    private const double Epsilon = .006;
+    internal const double Epsilon = .006;
 
     internal string Section => State(id).Section!.Value.Value;
     internal Handedness Handedness => State(id).Handedness;

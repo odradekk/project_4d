@@ -1,0 +1,239 @@
+[gd_scene load_steps=45 format=3]
+
+[ext_resource type="Script" path="res://adapter/ExpectedOperationNode.cs" id="ExpectedOperationNode"]
+[ext_resource type="Script" path="res://adapter/ExpectedStepResource.cs" id="ExpectedStepResource"]
+[ext_resource type="Script" path="res://adapter/EntityOverrideResource.cs" id="EntityOverrideResource"]
+[ext_resource type="Script" path="res://adapter/ExpectedRotationResource.cs" id="ExpectedRotationResource"]
+[ext_resource type="Script" path="res://adapter/ExpectedSetupResource.cs" id="ExpectedSetupResource"]
+[ext_resource type="Script" path="res://adapter/ExpectedOperationResource.cs" id="ExpectedOperationResource"]
+[ext_resource type="Script" path="res://adapter/CarrySetupResource.cs" id="CarrySetupResource"]
+[ext_resource type="Script" path="res://adapter/ExpectedDeviceResource.cs" id="ExpectedDeviceResource"]
+[ext_resource type="Script" path="res://adapter/ExpectedCrossingResource.cs" id="ExpectedCrossingResource"]
+
+[sub_resource type="Resource" id="s1"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Spawns/Xiaoman")
+Position = Vector3(5.25, 0.02, 3.3)
+
+[sub_resource type="Resource" id="s2"]
+script = ExtResource("ExpectedRotationResource")
+Kind = 2
+Actor = "xiaoman"
+Entity = "wand"
+
+[sub_resource type="Resource" id="s3"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([SubResource("s1")])
+Carry = Array[ExtResource("CarrySetupResource")]([])
+
+[sub_resource type="Resource" id="s4"]
+script = ExtResource("ExpectedOperationResource")
+Id = "wand-flip"
+Setup = SubResource("s3")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s2")])
+
+[sub_resource type="Resource" id="s5"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Spawns/Xiaoman")
+Position = Vector3(5.8, 0.02, 4)
+
+[sub_resource type="Resource" id="s6"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Turnables/Pieces/Wand")
+Position = Vector3(5.8, 1, 3.4)
+
+[sub_resource type="Resource" id="s7"]
+script = ExtResource("CarrySetupResource")
+Actor = "xiaoman"
+Item = "wand"
+
+[sub_resource type="Resource" id="s8"]
+script = ExtResource("ExpectedRotationResource")
+Kind = 0
+Actor = "xiaoman"
+Entity = "wand"
+Target = "Ⅱ"
+
+[sub_resource type="Resource" id="s9"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([SubResource("s5"), SubResource("s6")])
+Carry = Array[ExtResource("CarrySetupResource")]([SubResource("s7")])
+
+[sub_resource type="Resource" id="s10"]
+script = ExtResource("ExpectedOperationResource")
+Id = "wand-stand"
+Setup = SubResource("s9")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s8")])
+
+[sub_resource type="Resource" id="s11"]
+script = ExtResource("ExpectedDeviceResource")
+Device = "cabinet"
+Target = -1.5707963267948966
+ExpectedPosition = -1.5707963267948966
+
+[sub_resource type="Resource" id="s12"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([])
+Carry = Array[ExtResource("CarrySetupResource")]([])
+
+[sub_resource type="Resource" id="s13"]
+script = ExtResource("ExpectedOperationResource")
+Id = "cabinet-open"
+Setup = SubResource("s12")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s11")])
+
+[sub_resource type="Resource" id="s14"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Spawns/Xiaoman")
+Position = Vector3(7.1, 0.02, 4.3)
+
+[sub_resource type="Resource" id="s15"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Items/Pieces/Nut")
+Position = Vector3(6.49, 1, 4.3)
+
+[sub_resource type="Resource" id="s16"]
+script = ExtResource("CarrySetupResource")
+Actor = "xiaoman"
+Item = "nut"
+
+[sub_resource type="Resource" id="s17"]
+script = ExtResource("ExpectedRotationResource")
+Kind = 0
+Actor = "xiaoman"
+Entity = "nut"
+Target = "Ⅱ"
+
+[sub_resource type="Resource" id="s18"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([SubResource("s14"), SubResource("s15")])
+Carry = Array[ExtResource("CarrySetupResource")]([SubResource("s16")])
+
+[sub_resource type="Resource" id="s19"]
+script = ExtResource("ExpectedOperationResource")
+Id = "nut-stand"
+Setup = SubResource("s18")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s17")])
+
+[sub_resource type="Resource" id="s20"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Spawns/Xiaoman")
+Position = Vector3(7.35, 0.02, 4.3)
+
+[sub_resource type="Resource" id="s21"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Items/Pieces/Nut")
+Position = Vector3(7.55, 1, 4.3)
+
+[sub_resource type="Resource" id="s22"]
+script = ExtResource("CarrySetupResource")
+Actor = "xiaoman"
+Item = "nut"
+
+[sub_resource type="Resource" id="s23"]
+script = ExtResource("ExpectedRotationResource")
+Kind = 0
+Actor = "xiaoman"
+Entity = "nut"
+Target = "Ⅱ"
+ShouldFail = true
+Failure = 15
+
+[sub_resource type="Resource" id="s24"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([SubResource("s20"), SubResource("s21")])
+Carry = Array[ExtResource("CarrySetupResource")]([SubResource("s22")])
+
+[sub_resource type="Resource" id="s25"]
+script = ExtResource("ExpectedOperationResource")
+Id = "nut-at-wall"
+Setup = SubResource("s24")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s23")])
+
+[sub_resource type="Resource" id="s26"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Spawns/Xiaoman")
+Position = Vector3(7.1, 0.02, 4.3)
+
+[sub_resource type="Resource" id="s27"]
+script = ExtResource("ExpectedCrossingResource")
+Actor = "xiaoman"
+Seam = "s1"
+Target = "Ⅱ"
+HasPrism = true
+FreeBackpackSlots = 4
+
+[sub_resource type="Resource" id="s28"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([SubResource("s26")])
+Carry = Array[ExtResource("CarrySetupResource")]([])
+
+[sub_resource type="Resource" id="s29"]
+script = ExtResource("ExpectedOperationResource")
+Id = "seam-cross"
+Setup = SubResource("s28")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s27")])
+
+[sub_resource type="Resource" id="s30"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Spawns/Xiaoman")
+Position = Vector3(7.1, 0.02, 4.3)
+
+[sub_resource type="Resource" id="s31"]
+script = ExtResource("EntityOverrideResource")
+Entity = NodePath("Sections/Ⅰ/Turnables/Pieces/Wand")
+Position = Vector3(6.4, 1, 4.3)
+
+[sub_resource type="Resource" id="s32"]
+script = ExtResource("CarrySetupResource")
+Actor = "xiaoman"
+Item = "wand"
+
+[sub_resource type="Resource" id="s33"]
+script = ExtResource("ExpectedCrossingResource")
+Actor = "xiaoman"
+Seam = "s1"
+Target = "Ⅱ"
+HasPrism = true
+FreeBackpackSlots = 4
+
+[sub_resource type="Resource" id="s34"]
+script = ExtResource("ExpectedSetupResource")
+EntityOverrides = Array[ExtResource("EntityOverrideResource")]([SubResource("s30"), SubResource("s31")])
+Carry = Array[ExtResource("CarrySetupResource")]([SubResource("s32")])
+
+[sub_resource type="Resource" id="s35"]
+script = ExtResource("ExpectedOperationResource")
+Id = "seam-cross-wand"
+Setup = SubResource("s34")
+Steps = Array[ExtResource("ExpectedStepResource")]([SubResource("s33")])
+
+[node name="Operations" type="Node"]
+
+[node name="wand-flip" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s4")
+
+[node name="wand-stand" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s10")
+
+[node name="cabinet-open" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s13")
+
+[node name="nut-stand" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s19")
+
+[node name="nut-at-wall" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s25")
+
+[node name="seam-cross" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s29")
+
+[node name="seam-cross-wand" type="Node" parent="."]
+script = ExtResource("ExpectedOperationNode")
+Operation = SubResource("s35")

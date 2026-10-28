@@ -58,6 +58,9 @@ public sealed partial class PlayerActions : Node
 
     /// <summary>The entity in the hand: a flat object carried, or the slice of an upright one gripped.</summary>
     internal string? Held => HeldId()?.Value;
+
+    /// <summary>The entity the crosshair is on, or null.</summary>
+    internal string? Aimed => aimed;
     public bool Holding => HeldId() is not null;
     public bool HeldIsUpright => HeldId() is { } id && State(id).UprightOrigin is not null;
     public string CurrentSection => State(actor).Section?.Value ?? "";
@@ -327,13 +330,13 @@ public sealed partial class PlayerActions : Node
         }
     }
 
-    // The preview that is cheap to make: the rings, the fold plane of R, and the sweep of F of an object that is not a nut.
+    // The preview that is cheap to make: the rings, and the sweeps of F and R of an object that is not a nut. Both sweeps of a nut
+    // take tens of milliseconds, the fold plane of R among them, and are made once it is still.
     private void ShowLight(SectionId section, EntityId? subject)
     {
         rings = RingsIn(section);
         RotationPreview? sweep = null, flip = null;
-        if (subject is { } id)
-            (sweep, flip) = IsRingItem(id) ? (null, Sweep(new Flip(actor, id), section)) : SweepsOf(id, section);
+        if (subject is { } id && !IsRingItem(id)) (sweep, flip) = SweepsOf(id, section);
         overlay.ShowPreview(section, sweep, flip?.FoldPlane ?? [], rings);
     }
 
