@@ -55,6 +55,6 @@ ExpectedStepResource是封闭的基类Resource，不用抽象类（原因见 `ga
 | ExpectedCrossingResource | `string Actor/Seam/Target`、`bool HasPrism`、`int FreeBackpackSlots`、`bool ShouldFail`、`FailureCode Failure` |
 | ExpectedAdvanceResource | `double Delta` |
 
-ShouldFail=false时忽略Failure；StandUp之外Target必须为空，防止无效设置掩盖错误。
+ShouldFail=false时忽略Failure；StandUp之外Target必须为空，防止无效设置掩盖错误。读不出的步骤和多给的 Target，报在节点的 `Operation.Steps[i]` 上。
 
 至少配置学校铅笔原页放倒后关窗，以及房间逗猫棒越栏、正反竖起、隐藏圆环在预期空地竖起等解法。墙根受阻可以作为 ExpectedFailure=RotationBlocked 的独立教学反例，不把它当设计错误。前置布置明确角色站位和朝向，不能只写“螺母能转”。
