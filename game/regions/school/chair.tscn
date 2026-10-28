@@ -1,0 +1,83 @@
+[gd_scene load_steps=11 format=3]
+
+[sub_resource type="StandardMaterial3D" id="Mat"]
+albedo_color = Color(0.3, 0.45, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="SeatMesh"]
+material = SubResource("Mat")
+size = Vector3(0.38, 0.04, 0.38)
+
+[sub_resource type="BoxMesh" id="BackMesh"]
+material = SubResource("Mat")
+size = Vector3(0.38, 0.3, 0.04)
+
+[sub_resource type="BoxMesh" id="LegMesh"]
+material = SubResource("Mat")
+size = Vector3(0.04, 0.43, 0.04)
+
+[sub_resource type="BoxShape3D" id="SeatShape"]
+size = Vector3(0.38, 0.04, 0.38)
+
+[sub_resource type="BoxShape3D" id="BackShape"]
+size = Vector3(0.38, 0.3, 0.04)
+
+[sub_resource type="BoxShape3D" id="LegShape"]
+size = Vector3(0.04, 0.43, 0.04)
+
+[node name="Chair" type="Node3D"]
+
+[node name="Seat" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+layers = 3
+mesh = SubResource("SeatMesh")
+
+[node name="Back" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0.17)
+layers = 3
+mesh = SubResource("BackMesh")
+
+[node name="LegLeftFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, -0.15)
+layers = 3
+mesh = SubResource("LegMesh")
+
+[node name="LegLeftBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, 0.15)
+layers = 3
+mesh = SubResource("LegMesh")
+
+[node name="LegRightFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, -0.15)
+layers = 3
+mesh = SubResource("LegMesh")
+
+[node name="LegRightBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, 0.15)
+layers = 3
+mesh = SubResource("LegMesh")
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="SeatShape" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("SeatShape")
+
+[node name="BackShape" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0.17)
+shape = SubResource("BackShape")
+
+[node name="LegLeftFrontShape" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, -0.15)
+shape = SubResource("LegShape")
+
+[node name="LegLeftBackShape" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, 0.15)
+shape = SubResource("LegShape")
+
+[node name="LegRightFrontShape" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, -0.15)
+shape = SubResource("LegShape")
+
+[node name="LegRightBackShape" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, 0.15)
+shape = SubResource("LegShape")

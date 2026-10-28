@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/school/sash.tscn" id="1"]
+
+[node name="Windows" type="Node3D"]
+
+[node name="Window1" parent="." instance=ExtResource("1")]
+position = Vector3(-3.72, 0, -4.12)
+EntityId = "sash1"
+
+[node name="Window2" parent="." instance=ExtResource("1")]
+position = Vector3(-3.72, 0, -1.84)
+EntityId = "sash2"
+
+[node name="Window3" parent="." instance=ExtResource("1")]
+position = Vector3(-3.72, 0, 0.44)
+EntityId = "sash3"
+
+[node name="Window4" parent="." instance=ExtResource("1")]
+position = Vector3(-3.72, 0, 2.72)
+EntityId = "sash4"

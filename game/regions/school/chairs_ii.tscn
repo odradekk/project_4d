@@ -1,0 +1,152 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/school/chair.tscn" id="1"]
+
+[node name="Chairs" type="Node3D"]
+
+[node name="ChairII00" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, -2.68)
+
+[node name="ChairII01" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, -2.68)
+
+[node name="ChairII02" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, -2.68)
+
+[node name="ChairII03" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, -2.68)
+
+[node name="ChairII04" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, -2.68)
+
+[node name="ChairII05" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, -2.68)
+
+[node name="ChairII10" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, -1.73)
+
+[node name="ChairII11" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, -1.73)
+
+[node name="ChairII12" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, -1.73)
+
+[node name="ChairII13" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, -1.73)
+
+[node name="ChairII14" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, -1.73)
+
+[node name="ChairII15" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, -1.73)
+
+[node name="ChairII20" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, -0.78)
+
+[node name="ChairII21" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, -0.78)
+
+[node name="ChairII22" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, -0.78)
+
+[node name="ChairII23" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, -0.78)
+
+[node name="ChairII24" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, -0.78)
+
+[node name="ChairII25" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, -0.78)
+
+[node name="ChairII30" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 0.17)
+
+[node name="ChairII31" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 0.17)
+
+[node name="ChairII32" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 0.17)
+
+[node name="ChairII33" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 0.17)
+
+[node name="ChairII34" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 0.17)
+
+[node name="ChairII35" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 0.17)
+
+[node name="ChairII40" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 1.12)
+
+[node name="ChairII41" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 1.12)
+
+[node name="ChairII42" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 1.12)
+
+[node name="ChairII43" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 1.12)
+
+[node name="ChairII44" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 1.12)
+
+[node name="ChairII45" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 1.12)
+
+[node name="ChairII50" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 2.07)
+
+[node name="ChairII51" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 2.07)
+
+[node name="ChairII52" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 2.07)
+
+[node name="ChairII53" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 2.07)
+
+[node name="ChairII54" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 2.07)
+
+[node name="ChairII55" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 2.07)
+
+[node name="ChairII60" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 3.02)
+
+[node name="ChairII61" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 3.02)
+
+[node name="ChairII62" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 3.02)
+
+[node name="ChairII63" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 3.02)
+
+[node name="ChairII64" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 3.02)
+
+[node name="ChairII65" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 3.02)
+
+[node name="ChairII70" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.85, 1.23, 3.97)
+
+[node name="ChairII71" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -2.2, 1.23, 3.97)
+
+[node name="ChairII72" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.325, 1.23, 3.97)
+
+[node name="ChairII73" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.325, 1.23, 3.97)
+
+[node name="ChairII74" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.2, 1.23, 3.97)
+
+[node name="ChairII75" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 2.85, 1.23, 3.97)
+
+[node name="ChairII49" parent="." instance=ExtResource("1")]
+transform = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -1.26, 1.23, 4.87)

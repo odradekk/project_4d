@@ -28,16 +28,19 @@ public partial class MathClass : Node
     private const string Question = "小满，你来说说，圆柱的侧面展开是什么形状？";
     private const string MarkPrompt = "记下这处不一样";
 
-    // The entities in section Ⅱ that make each difference, and what she says about it.
+    // The entities in section Ⅱ that make each difference (the chairs are props, named for what they are), and what she says about it.
     private static readonly (string[] Entities, string Line)[] Differences =
     [
         (["clockII"], "挂钟停在另一个时间……这边明明是九点多，那边的钟指着四点二十。"),
-        (["deskII49"], "那边多了一张课桌！数一数……第四十九张。我们班明明只有四十八个人。"),
+        (["deskII49", "ChairII49"], "那边多了一张课桌！数一数……第四十九张。我们班明明只有四十八个人。"),
         (["chimneyII1", "chimneyII2"], "窗外的烟囱，这边是三根，那边只剩两根。")
     ];
 
     /// <summary>Emitted once, after the third difference is found and the notebook page and the remark on the podium are shown.</summary>
     [Signal] public delegate void FinishedEventHandler();
+
+    /// <summary>The school region, which the scenes after this one play in.</summary>
+    public Region3D Region => region;
 
     private readonly Queue<Func<double, bool>> script = new();
     private readonly HashSet<int> found = [];

@@ -1,0 +1,151 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="MatDoor"]
+albedo_color = Color(0.5, 0.35, 0.22, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatBroom"]
+albedo_color = Color(0.7, 0.6, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="DoorMesh"]
+material = SubResource("MatDoor")
+size = Vector3(1, 2.2, 0.06)
+
+[sub_resource type="BoxMesh" id="HandleMesh"]
+material = SubResource("MatBroom")
+size = Vector3(0.04, 1.1, 0.04)
+
+[sub_resource type="BoxMesh" id="HeadMesh"]
+material = SubResource("MatBroom")
+size = Vector3(0.3, 0.05, 0.1)
+
+[sub_resource type="BoxShape3D" id="DoorShape"]
+size = Vector3(1, 2.2, 0.06)
+
+[sub_resource type="BoxShape3D" id="BroomShape"]
+size = Vector3(0.3, 1.1, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoardShape"]
+size = Vector3(4.6, 1.2, 0.04)
+
+[sub_resource type="BoxShape3D" id="RowShape"]
+size = Vector3(7, 0.1, 0.5)
+
+[node name="Fittings" type="Node3D"]
+
+[node name="DoorIn" type="Marker3D" parent="."]
+position = Vector3(-1.26, 0.02, 5)
+
+[node name="DoorOut" type="Marker3D" parent="."]
+position = Vector3(-1.26, 0.02, 7)
+
+[node name="Door" type="StaticBody3D" parent="."]
+position = Vector3(-1.26, 1.1, 5.55)
+script = ExtResource("1")
+Prompt = "锁门"
+
+[node name="Leaf" type="MeshInstance3D" parent="Door"]
+mesh = SubResource("DoorMesh")
+
+[node name="Shape" type="CollisionShape3D" parent="Door"]
+shape = SubResource("DoorShape")
+
+[node name="Broom" type="StaticBody3D" parent="."]
+position = Vector3(-3.3, 0.55, 5.25)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "扫地"
+
+[node name="Handle" type="MeshInstance3D" parent="Broom"]
+mesh = SubResource("HandleMesh")
+
+[node name="Head" type="MeshInstance3D" parent="Broom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("HeadMesh")
+
+[node name="Shape" type="CollisionShape3D" parent="Broom"]
+shape = SubResource("BroomShape")
+
+[node name="Chalkboard" type="StaticBody3D" parent="."]
+position = Vector3(-0.7, 1.6, -5.62)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "擦黑板"
+
+[node name="Shape" type="CollisionShape3D" parent="Chalkboard"]
+shape = SubResource("BoardShape")
+
+[node name="Rows" type="Node3D" parent="."]
+
+[node name="Row0" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, -2.3)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row0"]
+shape = SubResource("RowShape")
+
+[node name="Row1" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, -1.35)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row1"]
+shape = SubResource("RowShape")
+
+[node name="Row2" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, -0.4)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row2"]
+shape = SubResource("RowShape")
+
+[node name="Row3" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, 0.55)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row3"]
+shape = SubResource("RowShape")
+
+[node name="Row4" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, 1.5)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row4"]
+shape = SubResource("RowShape")
+
+[node name="Row5" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, 2.45)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row5"]
+shape = SubResource("RowShape")
+
+[node name="Row6" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, 3.4)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row6"]
+shape = SubResource("RowShape")
+
+[node name="Row7" type="StaticBody3D" parent="Rows"]
+position = Vector3(0, 0.5, 4.35)
+collision_layer = 0
+script = ExtResource("1")
+Prompt = "倒扣这排的椅子"
+
+[node name="Shape" type="CollisionShape3D" parent="Rows/Row7"]
+shape = SubResource("RowShape")

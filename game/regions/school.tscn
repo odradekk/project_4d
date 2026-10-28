@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
@@ -12,6 +12,12 @@
 [ext_resource type="PackedScene" path="res://regions/school/rows_ii.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://regions/school/classmates.tscn" id="11"]
 [ext_resource type="PackedScene" path="res://regions/school/building.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://regions/school/stationery.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://regions/school/windows.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://regions/school/fittings.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://regions/school/chairs_i.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://regions/school/chairs_ii.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://regions/school/operations.tscn" id="18"]
 
 [sub_resource type="Resource" id="Uv0"]
 script = ExtResource("6")
@@ -102,6 +108,8 @@ W = 0.42
 [node name="Fixed" type="Node3D" parent="Sections/Ⅱ"]
 
 [node name="Turnables" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Stationery" parent="Sections/Ⅰ/Turnables" instance=ExtResource("13")]
 
 [node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
 
@@ -245,11 +253,13 @@ FaceUvs = Array[ExtResource("6")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 
 [node name="Devices" type="Node" parent="."]
 
+[node name="Windows" parent="Devices" instance=ExtResource("14")]
+
 [node name="Grazers" type="Node" parent="."]
 
 [node name="Seams" type="Node" parent="."]
 
-[node name="ExpectedPuzzleOperations" type="Node" parent="."]
+[node name="ExpectedPuzzleOperations" parent="." instance=ExtResource("18")]
 
 [node name="Props" type="Node3D" parent="Sections/Ⅰ"]
 
@@ -273,3 +283,12 @@ mesh = SubResource("Box4")
 [node name="Card" type="MeshInstance3D" parent="Sections/Ⅰ/Props/TeachingAid"]
 position = Vector3(0.16, 0.1, 0)
 mesh = SubResource("Box5")
+
+[node name="Fittings" parent="Sections/Ⅰ/Props" instance=ExtResource("15")]
+
+[node name="Chairs" parent="Sections/Ⅰ/Props" instance=ExtResource("16")]
+visible = false
+
+[node name="Props" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Chairs" parent="Sections/Ⅱ/Props" instance=ExtResource("17")]

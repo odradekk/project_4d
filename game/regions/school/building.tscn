@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="Script" path="res://adapter/Building3D.cs" id="1"]
 [ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="2"]
@@ -106,17 +106,40 @@ size = Vector3(2.6, 0.1, 0.8)
 material = SubResource("Mat4")
 size = Vector3(2.6, 0.2, 0.4)
 
+[sub_resource type="BoxMesh" id="Box14"]
+material = SubResource("Mat2")
+size = Vector3(1.84, 3.2, 0.3)
+
+[sub_resource type="BoxMesh" id="Box15"]
+material = SubResource("Mat2")
+size = Vector3(4.36, 3.2, 0.3)
+
+[sub_resource type="BoxMesh" id="Box16"]
+material = SubResource("Mat2")
+size = Vector3(1, 1, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="Mat5"]
+albedo_color = Color(0.7, 0.85, 0.95, 1)
+
+[sub_resource type="BoxMesh" id="Box17"]
+material = SubResource("Mat5")
+size = Vector3(0.04, 0.05, 0.69)
+
+[sub_resource type="BoxMesh" id="Box18"]
+material = SubResource("Mat5")
+size = Vector3(0.04, 1.19, 0.05)
+
 [node name="School" type="Node3D"]
 script = ExtResource("1")
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Floor" type="Node3D" parent="."]
 script = ExtResource("2")
 EntityId = "Floor"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="Floor"]
@@ -130,7 +153,7 @@ FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 script = ExtResource("2")
 EntityId = "Ceiling"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="Ceiling"]
@@ -144,7 +167,7 @@ FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 script = ExtResource("2")
 EntityId = "WallFront"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="WallFront"]
@@ -158,21 +181,35 @@ FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 script = ExtResource("2")
 EntityId = "WallBack"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="WallBack"]
-position = Vector3(0, 1.6, 5.55)
+position = Vector3(-2.68, 1.6, 5.55)
 script = ExtResource("3")
 PartId = "part0"
-mesh = SubResource("Box2")
+mesh = SubResource("Box14")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part1" type="MeshInstance3D" parent="WallBack"]
+position = Vector3(1.42, 1.6, 5.55)
+script = ExtResource("3")
+PartId = "part1"
+mesh = SubResource("Box15")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Part2" type="MeshInstance3D" parent="WallBack"]
+position = Vector3(-1.26, 2.7, 5.55)
+script = ExtResource("3")
+PartId = "part2"
+mesh = SubResource("Box16")
 FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="WallRight" type="Node3D" parent="."]
 script = ExtResource("2")
 EntityId = "WallRight"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="WallRight"]
@@ -186,7 +223,7 @@ FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 script = ExtResource("2")
 EntityId = "WallLeft"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="WallLeft"]
@@ -242,7 +279,7 @@ FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 script = ExtResource("2")
 EntityId = "Blackboard"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.72
 
 [node name="Part0" type="MeshInstance3D" parent="Blackboard"]
@@ -256,7 +293,7 @@ FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubRe
 script = ExtResource("2")
 EntityId = "PodiumBlock"
 BuildingId = "school"
-WMin = -0.3
+WMin = -0.5
 WMax = 0.21
 
 [node name="Part0" type="MeshInstance3D" parent="PodiumBlock"]
@@ -285,4 +322,123 @@ position = Vector3(-1.26, 0.1, -5.5)
 script = ExtResource("3")
 PartId = "part1"
 mesh = SubResource("Box13")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="WindowFrames" type="Node3D" parent="."]
+script = ExtResource("2")
+EntityId = "WindowFrames"
+BuildingId = "school"
+WMin = -0.5
+WMax = 0.72
+
+[node name="Window1Bottom" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 0.93, -3.765)
+script = ExtResource("3")
+PartId = "window1bottom"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window1Top" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 2.07, -3.765)
+script = ExtResource("3")
+PartId = "window1top"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window1Back" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, -4.085)
+script = ExtResource("3")
+PartId = "window1back"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window1Front" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, -3.445)
+script = ExtResource("3")
+PartId = "window1front"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window2Bottom" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 0.93, -1.485)
+script = ExtResource("3")
+PartId = "window2bottom"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window2Top" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 2.07, -1.485)
+script = ExtResource("3")
+PartId = "window2top"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window2Back" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, -1.805)
+script = ExtResource("3")
+PartId = "window2back"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window2Front" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, -1.165)
+script = ExtResource("3")
+PartId = "window2front"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window3Bottom" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 0.93, 0.795)
+script = ExtResource("3")
+PartId = "window3bottom"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window3Top" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 2.07, 0.795)
+script = ExtResource("3")
+PartId = "window3top"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window3Back" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, 0.475)
+script = ExtResource("3")
+PartId = "window3back"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window3Front" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, 1.115)
+script = ExtResource("3")
+PartId = "window3front"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window4Bottom" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 0.93, 3.075)
+script = ExtResource("3")
+PartId = "window4bottom"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window4Top" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 2.07, 3.075)
+script = ExtResource("3")
+PartId = "window4top"
+mesh = SubResource("Box17")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window4Back" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, 2.755)
+script = ExtResource("3")
+PartId = "window4back"
+mesh = SubResource("Box18")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Window4Front" type="MeshInstance3D" parent="WindowFrames"]
+position = Vector3(-3.8, 1.5, 3.395)
+script = ExtResource("3")
+PartId = "window4front"
+mesh = SubResource("Box18")
 FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])

@@ -151,8 +151,10 @@ public partial class SchoolChecks : Node
         Check(first.Contains(teacher) && first.Count(person => person.Posture == Posture.Sitting) == 47,
             "section Ⅰ has the teacher and a class sitting at their desks");
         Check(!region.GetNode("Generated/Ⅱ").GetChildren().OfType<Character3D>().Any(), "section Ⅱ has nobody in it");
-        // The chair stands on the desk upside down in Ⅱ, which makes the desk reach higher than it does in Ⅰ.
-        Check(Bounds("deskII22", "Ⅱ").Max.Y > Bounds("deskI22", "Ⅰ").Max.Y + .4, "in Ⅱ the chairs are on the desks");
+        // The chairs are props: in Ⅱ they stand upside down on all 49 desks, and Ⅰ has none to see.
+        var chairs = region.Props("Ⅱ")!.GetNode("Chairs").GetChildren().OfType<Node3D>().ToArray();
+        Check(chairs.Length == 49 && chairs.All(chair => chair.Transform.Origin.Y > 1), "in Ⅱ the chairs are on the desks");
+        Check(!region.Props("Ⅰ")!.GetNode<Node3D>("Chairs").Visible, "in Ⅰ the chairs are not there, since the class sits on them");
         // The podium is one block in Ⅰ and two steps in Ⅱ, and it is the lens's glowing kind of thing in Ⅱ.
         var front = new Vector3(-1.26f, .15f, -5.1f);
         var back = new Vector3(-1.26f, .15f, -5.5f);
@@ -183,7 +185,7 @@ public partial class SchoolChecks : Node
         (string Entity, Vector3 Target)[] targets =
         [
             ("clockII", Where("clockII")),
-            ("deskII49", DeskTarget),
+            ("ChairII49", DeskTarget),
             ("chimneyII1", Where("chimneyII1")),
             ("chimneyII2", Where("chimneyII2")),
             ("PodiumSteps", new(-.7f, .1f, -4.95f)),

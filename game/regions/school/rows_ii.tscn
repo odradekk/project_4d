@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="PackedScene" path="res://regions/school/desk_ii.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://regions/school/desk_i.tscn" id="1"]
 
 
 [node name="Desks" type="Node3D"]

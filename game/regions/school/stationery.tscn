@@ -1,0 +1,125 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://adapter/TurnableObject3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/TurnableResource.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="4"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("4")
+Axis = 0
+Positive = false
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("4")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("4")
+Axis = 1
+Positive = false
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("4")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("4")
+Axis = 2
+Positive = false
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("4")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="MatEraser"]
+albedo_color = Color(0.95, 0.85, 0.85, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPencil"]
+albedo_color = Color(0.9, 0.7, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="BoxEraser"]
+material = SubResource("MatEraser")
+size = Vector3(0.06, 0.02, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxPencilAlongX"]
+material = SubResource("MatPencil")
+size = Vector3(0.48, 0.02, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxPencilAlongZ"]
+material = SubResource("MatPencil")
+size = Vector3(0.03, 0.02, 0.48)
+
+[sub_resource type="Resource" id="TurnEraser"]
+script = ExtResource("2")
+Holdable = true
+Packable = true
+HorizontalRadius = 0.03
+Hinge = Vector3(-0.01, 0, 0)
+Reach = 0.04
+
+[sub_resource type="Resource" id="TurnPencilAlongX"]
+script = ExtResource("2")
+Holdable = true
+HorizontalRadius = 0.24
+Hinge = Vector3(-0.22, 0, 0)
+Reach = 0.46
+
+[sub_resource type="Resource" id="TurnPencilAlongZ"]
+script = ExtResource("2")
+Holdable = true
+HorizontalRadius = 0.24
+LongAxis = 2
+Hinge = Vector3(0, 0, -0.22)
+Reach = 0.46
+
+[node name="Stationery" type="Node3D"]
+
+[node name="Eraser" type="Node3D" parent="."]
+position = Vector3(-2.35, 0.77, 1.1)
+script = ExtResource("1")
+EntityId = "eraser"
+BuildingId = "school"
+Interaction = SubResource("TurnEraser")
+
+[node name="Body" type="MeshInstance3D" parent="Eraser"]
+script = ExtResource("3")
+PartId = "body"
+mesh = SubResource("BoxEraser")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Mark" type="Label3D" parent="Eraser"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.0105, 0)
+pixel_size = 0.0003
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "橡皮"
+font_size = 90
+
+[node name="PencilDesk" type="Node3D" parent="."]
+position = Vector3(-2.2, 0.77, 0.9)
+script = ExtResource("1")
+EntityId = "pencilDesk"
+BuildingId = "school"
+Interaction = SubResource("TurnPencilAlongX")
+
+[node name="Body" type="MeshInstance3D" parent="PencilDesk"]
+script = ExtResource("3")
+PartId = "body"
+mesh = SubResource("BoxPencilAlongX")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="PencilWindow" type="Node3D" parent="."]
+position = Vector3(-3.72, 0.91, 1.58)
+script = ExtResource("1")
+EntityId = "pencilWindow"
+BuildingId = "school"
+Interaction = SubResource("TurnPencilAlongZ")
+
+[node name="Body" type="MeshInstance3D" parent="PencilWindow"]
+script = ExtResource("3")
+PartId = "body"
+mesh = SubResource("BoxPencilAlongZ")
+FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
