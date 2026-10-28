@@ -12,7 +12,7 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The prologue from scene 1 to scene 8 played through in one run, started as the main scene starts it and without a debug
+/// The prologue from scene 1 to scene 9 played through in one run, started as the main scene starts it and without a debug
 /// entry. Each scene is finished by the quickest moves that its own checks use. What is checked is the way between the scenes:
 /// every scene starts with a checkpoint and with what the scenes before gave it, the scenes of the school share one region,
 /// a region is gone before the next one is loaded, and a scene that is started again starts as it did the first time. Waits for
@@ -57,14 +57,15 @@ public partial class PrologueChecks : Node
             schoolRegion = await PlayDuty(schoolRegion);
             await PlayHomeRoad(schoolRegion);
             await PlayHomeEvening();
-            await PlayCatRoom();
-            await Until(() => ended, 15, "the prologue must end after scene 8");
+            var roomRegion = await PlayCatRoom();
+            await PlayDeepRoom(roomRegion);
+            await Until(() => ended, 15, "the prologue must end after scene 9");
             Check(Player.Hud.UnlockedPages.Order().SequenceEqual([1, 2, 3, 4, 5, 6, 7, 8]), "the notebook has all eight pages at the end");
             RemoveChild(prologue);
             prologue.Free();
             // The audio thread fades a stopped sound out before it lets go of it, which takes time and not frames.
             await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
-            GD.Print("Prologue checks passed: scenes 1 to 8 in a row, with the notebook, the wallet, the cat and a checkpoint at every start, and five scenes started again.");
+            GD.Print("Prologue checks passed: scenes 1 to 9 in a row, with the notebook, the wallet, the cat and a checkpoint at every start, and six scenes started again.");
             GetTree().Quit();
         }
         catch (Exception error)

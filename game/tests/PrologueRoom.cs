@@ -2,7 +2,11 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FourD;
+using Game.Adapter;
+using Game.Characters;
 using Game.Flow;
+using Game.Interaction;
+using Game.Rendering;
 using Godot;
 using static Game.Tests.CharacterFixture;
 using static Game.Tests.TurningFixture;
@@ -10,13 +14,15 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 // Scene 8 as RoomFlowChecks plays it, with the moves that only get the cat to the next stage left out: the flap is opened with the
-// device, and the ball is put over the pit.
+// device, and the ball is put over the pit. Scene 9 plays in the same room: she follows the cat through the seams and stands where
+// she is until the grazer is on her.
 public partial class PrologueChecks
 {
     private const float Floor = .02f;
     private static readonly Vector3 Seam = new(7.1f, Floor, 4.3f);
+    private static readonly Vector3 SeamToDeep = new(6.25f, Floor, 4.3f);
 
-    private async Task PlayCatRoom()
+    private async Task<Region3D> PlayCatRoom()
     {
         await Arrive(8, 1, 2, 3, 4, 8);
         await play.Use(Region);
@@ -68,10 +74,9 @@ public partial class PrologueChecks
         await Until(() => room.Entries(CatRoom.Stage.Chasing) > 0, 15, "the cat must cross on the ball");
 
         // Through the seam to section II and back draws the page about seams.
-        await CrossSeam();
-        Check(Region.CurrentSection == "Ⅱ" && Player.Hud.UnlockedPages.Contains(5), "she crosses into section II");
-        await CrossSeam();
-        Check(Region.CurrentSection == "Ⅰ", "she crosses back");
+        await CrossSeam(Seam, "Ⅱ");
+        await Until(() => Player.Hud.UnlockedPages.Contains(5), 3, "the notebook must have the page about seams");
+        await CrossSeam(Seam, "Ⅰ");
 
         // The nut is stood up in front of the seam, and the yarn is put beyond its ring.
         // The stool, which this run did not use, stands by the desk; it is put where the other checks leave it.
@@ -93,19 +98,68 @@ public partial class PrologueChecks
         Check(world.PlaceEntity(new("wand"), wand with { Position = new(wand.Position.X + 7f - yarn.X, wand.Position.Y, wand.Position.Z + 4.3f - yarn.Z, wand.Position.W) }) is UpdateResult.Updated,
             "the wand is put where the yarn is beyond the ring");
         await Until(() => room.Entries(CatRoom.Stage.Gone) > 0, 30, "the cat must leap through the ring and vanish");
+        return Region;
     }
 
-    private async Task CrossSeam()
+    private async Task PlayDeepRoom(Region3D roomRegion)
     {
-        await Walk(Seam);
-        play.LookAt(Seam, new(7.1f, 1.3f, 3.3f));
+        var pages = new[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+        await Arrive(9, pages);
+        var deep = (DeepRoom)prologue.Scene!;
+        // Scene 8 hosts the room, and scene 9 takes it over: the same region, with her and the cat as scene 8 leaves them.
+        Check(Region == roomRegion && deep.Region == roomRegion && roomRegion.GetParent() is CatRoom, "scene 9 plays in the room that scene 8 loaded");
+        Check(Region.CurrentSection == "Ⅰ" && deep.Now == DeepRoom.Stage.Following && Player.Hud.NotebookAvailable, "she is where scene 8 had her, with the notebook");
+        Check(deep.CatBody.Section == "Ⅲ" && deep.CatBody.Mirrored, "the cat is in section III, a mirror image, as scene 8 leaves it");
+        speed = 1;
+        await play.Use(Region);
+        // The yarn of the wand still stands in the seam where she wants to come out, which would stop her: it is put aside.
+        var wand = new RoomQueries(Region).State("wand").Pose;
+        Check(Region.World!.PlaceEntity(new("wand"), wand with { Position = new(wand.Position.X, wand.Position.Y, wand.Position.Z + 1.5, wand.Position.W) }) is UpdateResult.Updated, "the wand is put aside");
+        await play.Frames(3);
+        await CrossSeam(Seam, "Ⅱ");
+        await CrossSeam(SeamToDeep, "Ⅲ");
+        await Until(() => deep.Entries(DeepRoom.Stage.Arrived) > 0, 3, "the scene must know she has arrived");
+        deep.CatBody.GetNode<Interactable3D>("Pickup").Interact();
+        await Until(() => deep.Entries(DeepRoom.Stage.Panic) > 0, 1, "picking the cat up must start the grazer");
+        // Backspace starts the scene again in a room loaded anew, where the cat sits in section III and she has followed it into section II.
+        await Again(() => Press(Key.Backspace), 9, pages);
+        deep = (DeepRoom)prologue.Scene!;
+        Check(Region != roomRegion && !GodotObject.IsInstanceValid(roomRegion), "the room is loaded anew");
+        await Until(() => Region.CurrentSection == "Ⅱ", 5, "she must have followed the cat into section II");
+        Check(deep.Now == DeepRoom.Stage.Following && deep.CatBody.Section == "Ⅲ" && deep.CatBody.Mirrored && !deep.CatBody.GetNode<Cat>("Cat").Held,
+            "the cat sits in section III, as it did");
+        await play.Use(Region);
+        await CrossSeam(SeamToDeep, "Ⅲ");
+        await Until(() => deep.Entries(DeepRoom.Stage.Arrived) > 0, 3, "the scene must know she has arrived");
+        deep.CatBody.GetNode<Interactable3D>("Pickup").Interact();
+        // She stands where she is. The grazer takes its bites and comes for her, the cat tears loose, and the screen cuts to black.
+        speed = 6;
+        await Until(() => deep.Cut is not null, 250, "the screen must cut to black");
+        speed = 1;
+        await Until(() => deep.Cut!.TitleVisible, 10, "the title must come up");
+        Check(deep.Cut!.TitleText != "", "the title is on the black screen");
+    }
+
+    // She stands at a seam, raises the lens, scrolls to the section she means to go to and clicks.
+    private async Task CrossSeam(Vector3 seam, string target)
+    {
+        await Walk(seam);
+        play.LookAt(seam, seam + new Vector3(.7f, 1, 0));
         Button(MouseButton.Right, true);
         await play.Frames(3);
+        var prism = Region.GetNode<PrismView>("Generated/Prism");
+        for (var scrolls = 0; prism.TargetSection != target; scrolls++)
+        {
+            Check(scrolls < 6, $"the lens must be able to show section {target}; it shows {prism.TargetSection}");
+            Button(scrolls < 3 ? MouseButton.WheelDown : MouseButton.WheelUp, true);
+            await play.Frames(2);
+        }
         Button(MouseButton.Left, true);
-        await play.Frames(10);
+        await play.Frames(3);
         Button(MouseButton.Left, false);
         Button(MouseButton.Right, false);
         await play.Frames(3);
+        Check(Region.CurrentSection == target, $"she crosses into section {target}; she is in {Region.CurrentSection} and the lens shows {prism.TargetSection}");
     }
 
     // Like the walk of TurningFixture, but on the ground plane: she settles a little below the height of the feet that are given.
