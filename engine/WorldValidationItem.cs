@@ -69,7 +69,7 @@ internal sealed partial class WorldValidation
             Error(LoadErrorCode.InvalidNumber, Field(source, "Center"), "Ring center must be finite.", item.Id);
         if (!Box4.AxesOf(ring.Rotation).SelectMany(axis => axis).All(double.IsFinite))
             Error(LoadErrorCode.InvalidNumber, Field(source, "Rotation"), "Ring rotation must be finite.", item.Id);
-        else if (!Rotation(Box4.AxesOf(ring.Rotation)))
+        else if (!IsRotation(Box4.AxesOf(ring.Rotation)))
             Error(LoadErrorCode.InvalidPose, Field(source, "Rotation"), "Ring rotation must be right-handed orthonormal.", item.Id);
         var major = PositiveNumber(ring.MajorRadius, Field(source, "MajorRadius"), "Ring major radius", item.Id);
         var tube = PositiveNumber(ring.TubeRadius, Field(source, "TubeRadius"), "Ring tube radius", item.Id);
