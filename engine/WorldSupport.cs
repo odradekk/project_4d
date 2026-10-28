@@ -5,12 +5,6 @@ public sealed partial class World
     // Supports whose fall distances differ by no more than this count as equally high.
     private const double SupportTie = 1e-9;
 
-    private double time;
-    private long sequence;
-    private readonly List<EventOccurrence> events = [];
-
-    private void Enqueue(SpaceEvent value, double at) => events.Add(new(at, ++sequence, value));
-
     // The solids of one entity that blocks or supports, and the record they are made from: they change only when that
     // record is replaced. The solids are made when they are asked for.
     private sealed record EntitySolids(EntityId Id, object Record, IEnumerable<Solid4> Solids);
@@ -137,64 +131,5 @@ public sealed partial class World
         center[1] -= drop;
         if (Box4.IntersectionPoint(moving with { Center = center }, support) is not { } point) return null;
         return new(drop, new(support.Entity, support.Part, Box4.ToVec4(point), Box4.ToVec4(normal)));
-    }
-
-    /// <summary>Advances time and places unsupported turnables on their highest support.</summary>
-    public StepResult Step(double delta)
-    {
-        if (!double.IsFinite(delta) || delta <= 0 || !double.IsFinite(time + delta))
-            return new StepResult.Rejected(Fail(FailureCode.InvalidInput, "Delta must advance finite time."));
-        var target = time + delta;
-        var rotating = rotations.Values
-            .OrderBy(active => active.Started + active.Plan.Duration)
-            .ThenBy(active => active.Plan.Entity.Value, StringComparer.Ordinal)
-            .ToArray();
-        foreach (var active in rotating) AdvanceRotation(active, target);
-
-        var resting = RestingHeights();
-        foreach (var id in dynamicEntities.Keys.OrderBy(key => key.Value, StringComparer.Ordinal).ToArray())
-        {
-            if (rotations.ContainsKey(id)) continue;
-            var item = dynamicEntities[id];
-            var finalY = resting[id];
-            if (finalY >= item.Pose.Position.Y - RoundingMargin) continue;
-            var startY = item.Pose.Position.Y;
-            dynamicEntities[id] = item with { Pose = item.Pose with { Position = item.Pose.Position with { Y = finalY } } };
-            Enqueue(new EntityFell(id, startY, finalY), target);
-        }
-        time = target;
-        revision++;
-        var occurred = events.OrderBy(occurrence => occurrence.Time).ThenBy(occurrence => occurrence.Sequence).ToArray();
-        events.Clear();
-        return new StepResult.Advanced(time, Array.AsReadOnly(occurred));
-    }
-
-    // Where each turnable settles. One whose fall would cross a reserved rotation sweep stays where it is.
-    private Dictionary<EntityId, double> RestingHeights()
-    {
-        var held = new HashSet<EntityId>();
-        while (true)
-        {
-            var resting = SettledHeights(held);
-            var blocked = dynamicEntities.Keys
-                .Where(id => !held.Contains(id) && !rotations.ContainsKey(id) && FallCrossesReservation(id, resting[id]))
-                .ToArray();
-            if (blocked.Length == 0) return resting;
-            held.UnionWith(blocked);
-        }
-    }
-
-    private bool FallCrossesReservation(EntityId id, double finalY)
-    {
-        var item = dynamicEntities[id];
-        var start = item.Pose.Position;
-        var distance = start.Y - finalY;
-        if (distance <= RoundingMargin) return false;
-        var steps = Math.Max(1, (int)Math.Ceiling(distance / SamplingDistance));
-        return Enumerable.Range(1, steps).Any(step =>
-        {
-            var falling = item.Pose with { Position = start with { Y = start.Y - distance * step / steps } };
-            return IntersectsReservation(DynamicShapes.Solids(item.Definition, falling), id);
-        });
     }
 }
