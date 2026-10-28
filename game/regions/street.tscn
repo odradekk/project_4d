@@ -1,0 +1,128 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="e3"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="e4"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://characters/schoolmate.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://characters/vendor.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://characters/cat.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/street/road.tscn" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/street/building.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/street/kiosk.tscn" id="e11"]
+[ext_resource type="PackedScene" path="res://regions/street/things.tscn" id="e12"]
+[ext_resource type="PackedScene" path="res://regions/street/props.tscn" id="e13"]
+
+
+[node name="Street" type="Node3D"]
+script = ExtResource("e1")
+PrismEnabled = false
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Things" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e12")]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 3.02, -12.3)
+script = ExtResource("e4")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("e5")
+
+[node name="cat" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.75, 0.02, -8)
+script = ExtResource("e4")
+EntityId = "cat"
+PassageRadius = 0.15
+PassageHeight = 0.4
+CanUseSeamsWithoutPrism = true
+CharacterScene = ExtResource("e8")
+
+[node name="bun_vendor" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.02, -4.55)
+script = ExtResource("e4")
+EntityId = "bun_vendor"
+PassageRadius = 0.25
+PassageHeight = 1.7
+DisplayName = "摊主"
+CharacterScene = ExtResource("e7")
+
+[node name="toy_vendor" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 0.02, -4.4)
+script = ExtResource("e4")
+EntityId = "toy_vendor"
+PassageRadius = 0.25
+PassageHeight = 1.7
+DisplayName = "摊主"
+CharacterScene = ExtResource("e7")
+
+[node name="clerk" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.02, -3.6)
+script = ExtResource("e4")
+EntityId = "clerk"
+PassageRadius = 0.25
+PassageHeight = 1.7
+DisplayName = "老板娘"
+CharacterScene = ExtResource("e7")
+
+[node name="rope_a" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.02, 3.7)
+script = ExtResource("e4")
+EntityId = "rope_a"
+PassageRadius = 0.2
+PassageHeight = 1.35
+DisplayName = "孩子"
+CharacterScene = ExtResource("e6")
+
+[node name="rope_b" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 28, 0.02, 7.3)
+script = ExtResource("e4")
+EntityId = "rope_b"
+PassageRadius = 0.2
+PassageHeight = 1.35
+DisplayName = "孩子"
+CharacterScene = ExtResource("e6")
+
+[node name="rope_c" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 28.8, 0.02, 5.5)
+script = ExtResource("e4")
+EntityId = "rope_c"
+PassageRadius = 0.2
+PassageHeight = 1.35
+DisplayName = "孩子"
+CharacterScene = ExtResource("e6")
+
+[node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e13")]
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Street" type="Node3D" parent="Buildings"]
+script = ExtResource("e3")
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="Road" parent="Buildings/Street" instance=ExtResource("e9")]
+
+[node name="Building" parent="Buildings/Street" instance=ExtResource("e10")]
+
+[node name="Kiosk" parent="Buildings/Street" instance=ExtResource("e11")]
+
+[node name="Items" type="Node" parent="."]
+
+[node name="Devices" type="Node" parent="."]
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Seams" type="Node" parent="."]
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]

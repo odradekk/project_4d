@@ -1,0 +1,221 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m_road"]
+albedo_color = Color(0.45, 0.45, 0.47, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m_road")
+size = Vector3(86, 0.2, 28)
+
+[sub_resource type="StandardMaterial3D" id="m_brick2"]
+albedo_color = Color(0.58, 0.5, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m_brick2")
+size = Vector3(2, 6, 28)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m_brick2")
+size = Vector3(86, 7, 4)
+
+[sub_resource type="StandardMaterial3D" id="m_wall"]
+albedo_color = Color(0.7, 0.66, 0.58, 1)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m_wall")
+size = Vector3(60, 4, 11)
+
+[sub_resource type="StandardMaterial3D" id="m_grey"]
+albedo_color = Color(0.5, 0.5, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m_grey")
+size = Vector3(0.2, 5, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="m_red"]
+albedo_color = Color(0.75, 0.15, 0.15, 1)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m_red")
+size = Vector3(0.06, 1, 11.4)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m_grey")
+size = Vector3(0.15, 5, 0.15)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m_grey")
+size = Vector3(0.4, 0.3, 0.5)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m_wall")
+size = Vector3(0.6, 4, 5.5)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m_wall")
+size = Vector3(0.6, 4, 3.5)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m_wall")
+size = Vector3(0.6, 1, 4)
+
+[node name="Road" type="Node3D"]
+
+[node name="Ground" type="Node3D" parent="."]
+position = Vector3(29, -0.1, -2)
+script = ExtResource("e1")
+EntityId = "Ground"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="Ground" instance=ExtResource("e2")]
+mesh = SubResource("b1")
+PartId = "body"
+
+[node name="WestEnd" type="Node3D" parent="."]
+position = Vector3(-13, 3, -2)
+script = ExtResource("e1")
+EntityId = "WestEnd"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="WestEnd" instance=ExtResource("e2")]
+mesh = SubResource("b2")
+PartId = "body"
+
+[node name="EastEnd" type="Node3D" parent="."]
+position = Vector3(71, 3, -2)
+script = ExtResource("e1")
+EntityId = "EastEnd"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="EastEnd" instance=ExtResource("e2")]
+mesh = SubResource("b2")
+PartId = "body"
+
+[node name="SouthRow" type="Node3D" parent="."]
+position = Vector3(29, 3.5, 10)
+script = ExtResource("e1")
+EntityId = "SouthRow"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="SouthRow" instance=ExtResource("e2")]
+mesh = SubResource("b3")
+PartId = "body"
+
+[node name="NorthRow" type="Node3D" parent="."]
+position = Vector3(42, 2, -10.5)
+script = ExtResource("e1")
+EntityId = "NorthRow"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="NorthRow" instance=ExtResource("e2")]
+mesh = SubResource("b4")
+PartId = "body"
+
+[node name="BannerPostNorth" type="Node3D" parent="."]
+position = Vector3(18, 2.5, -4.4)
+script = ExtResource("e1")
+EntityId = "BannerPostNorth"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="BannerPostNorth" instance=ExtResource("e2")]
+mesh = SubResource("b5")
+PartId = "body"
+
+[node name="BannerPostSouth" type="Node3D" parent="."]
+position = Vector3(18, 2.5, 7.2)
+script = ExtResource("e1")
+EntityId = "BannerPostSouth"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="BannerPostSouth" instance=ExtResource("e2")]
+mesh = SubResource("b5")
+PartId = "body"
+
+[node name="Banner" type="Node3D" parent="."]
+position = Vector3(18, 4.4, 1.4)
+script = ExtResource("e1")
+EntityId = "Banner"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="Banner" instance=ExtResource("e2")]
+mesh = SubResource("b6")
+PartId = "body"
+
+[node name="SpeakerPole" type="Node3D" parent="."]
+position = Vector3(14, 2.5, -4.3)
+script = ExtResource("e1")
+EntityId = "SpeakerPole"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="SpeakerPole" instance=ExtResource("e2")]
+mesh = SubResource("b7")
+PartId = "body"
+
+[node name="SpeakerHorn" type="Node3D" parent="."]
+position = Vector3(14, 5, -4)
+script = ExtResource("e1")
+EntityId = "SpeakerHorn"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="SpeakerHorn" instance=ExtResource("e2")]
+mesh = SubResource("b8")
+PartId = "body"
+
+[node name="GateWallNorth" type="Node3D" parent="."]
+position = Vector3(65, 2, -2.25)
+script = ExtResource("e1")
+EntityId = "GateWallNorth"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="GateWallNorth" instance=ExtResource("e2")]
+mesh = SubResource("b9")
+PartId = "body"
+
+[node name="GateWallSouth" type="Node3D" parent="."]
+position = Vector3(65, 2, 6.25)
+script = ExtResource("e1")
+EntityId = "GateWallSouth"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="GateWallSouth" instance=ExtResource("e2")]
+mesh = SubResource("b10")
+PartId = "body"
+
+[node name="GateLintel" type="Node3D" parent="."]
+position = Vector3(65, 3.5, 2.5)
+script = ExtResource("e1")
+EntityId = "GateLintel"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="GateLintel" instance=ExtResource("e2")]
+mesh = SubResource("b11")
+PartId = "body"

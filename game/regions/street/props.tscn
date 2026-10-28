@@ -1,0 +1,155 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="e1"]
+
+[sub_resource type="BoxShape3D" id="s_BunStall"]
+size = Vector3(2, 0.7, 0.5)
+
+[sub_resource type="BoxShape3D" id="s_ToyStall"]
+size = Vector3(2, 0.7, 0.5)
+
+[sub_resource type="BoxShape3D" id="s_SchoolGate"]
+size = Vector3(0.4, 2.2, 3.2)
+
+[sub_resource type="BoxShape3D" id="s_HomeDoor"]
+size = Vector3(1.2, 2, 0.4)
+
+[sub_resource type="BoxShape3D" id="s_IcePop"]
+size = Vector3(0.9, 0.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="s_Soda"]
+size = Vector3(0.9, 0.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="s_Spicy"]
+size = Vector3(0.9, 0.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="s_Stickers"]
+size = Vector3(0.9, 0.6, 0.6)
+
+[sub_resource type="BoxShape3D" id="s_Sausage"]
+size = Vector3(0.9, 0.6, 0.6)
+
+[node name="Props" type="Node3D"]
+
+[node name="BunStall" type="StaticBody3D" parent="."]
+position = Vector3(7, 0.95, -2.85)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="BunStall"]
+shape = SubResource("s_BunStall")
+
+[node name="ToyStall" type="StaticBody3D" parent="."]
+position = Vector3(59, 0.95, -2.85)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="ToyStall"]
+shape = SubResource("s_ToyStall")
+
+[node name="SchoolGate" type="StaticBody3D" parent="."]
+position = Vector3(63.8, 1.1, 2.5)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="SchoolGate"]
+shape = SubResource("s_SchoolGate")
+
+[node name="HomeDoor" type="StaticBody3D" parent="."]
+position = Vector3(0, 4, -13.6)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="HomeDoor"]
+shape = SubResource("s_HomeDoor")
+
+[node name="IcePop" type="StaticBody3D" parent="."]
+position = Vector3(36, 1.35, -2.2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="IcePop"]
+shape = SubResource("s_IcePop")
+
+[node name="Soda" type="StaticBody3D" parent="."]
+position = Vector3(37.1, 1.35, -2.2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="Soda"]
+shape = SubResource("s_Soda")
+
+[node name="Spicy" type="StaticBody3D" parent="."]
+position = Vector3(38.2, 1.35, -2.2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="Spicy"]
+shape = SubResource("s_Spicy")
+
+[node name="Stickers" type="StaticBody3D" parent="."]
+position = Vector3(39.3, 1.35, -2.2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="Stickers"]
+shape = SubResource("s_Stickers")
+
+[node name="Sausage" type="StaticBody3D" parent="."]
+position = Vector3(40.25, 1.35, -2.2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Shape" type="CollisionShape3D" parent="Sausage"]
+shape = SubResource("s_Sausage")
+
+[node name="EmptyCorner" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 1, -13.9)
+
+[node name="Speaker" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 5, -4)
+
+[node name="Bell" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.4, 2)
+
+[node name="GateStart" type="Marker3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 62.5, 0.02, 2.5)
+
+[node name="CatWaits" type="Marker3D" parent="."]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.8, 0.02, -5.9)
+
+[node name="RampMouth" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, -5.6)
+
+[node name="WalkwayFront" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, -5.3)
+
+[node name="BannerText" type="Label3D" parent="."]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 17.96, 4.4, 1.4)
+pixel_size = 0.01
+modulate = Color(1, 0.95, 0.8, 1)
+text = "迎接新千年"
+font_size = 96
+
+[node name="BannerTextBack" type="Label3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 18.04, 4.4, 1.4)
+pixel_size = 0.01
+modulate = Color(1, 0.95, 0.8, 1)
+text = "迎接新千年"
+font_size = 96
+
+[node name="SchoolSign" type="Label3D" parent="."]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 64.65, 3.5, 2.5)
+pixel_size = 0.01
+modulate = Color(1, 0.95, 0.8, 1)
+text = "厂子弟小学"
+font_size = 72

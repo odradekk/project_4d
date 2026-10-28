@@ -1,0 +1,107 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m_orange"]
+albedo_color = Color(0.9, 0.55, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m_orange")
+size = Vector3(0.2, 3.2, 3)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m_orange")
+size = Vector3(5.6, 1, 0.2)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m_orange")
+size = Vector3(5.6, 1.2, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="m_grey"]
+albedo_color = Color(0.5, 0.5, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m_grey")
+size = Vector3(6.4, 0.2, 3.6)
+
+[sub_resource type="StandardMaterial3D" id="m_wood"]
+albedo_color = Color(0.6, 0.45, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m_wood")
+size = Vector3(5.6, 0.08, 0.6)
+
+[node name="Shell" type="Node3D"]
+
+[node name="KioskLeft" type="Node3D" parent="."]
+position = Vector3(35.1, 1.6, -3.5)
+script = ExtResource("e1")
+EntityId = "KioskLeft"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="KioskLeft" instance=ExtResource("e2")]
+mesh = SubResource("b1")
+PartId = "body"
+
+[node name="KioskRight" type="Node3D" parent="."]
+position = Vector3(40.9, 1.6, -3.5)
+script = ExtResource("e1")
+EntityId = "KioskRight"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="KioskRight" instance=ExtResource("e2")]
+mesh = SubResource("b1")
+PartId = "body"
+
+[node name="KioskFront" type="Node3D" parent="."]
+position = Vector3(38, 0.5, -2.1)
+script = ExtResource("e1")
+EntityId = "KioskFront"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="KioskFront" instance=ExtResource("e2")]
+mesh = SubResource("b2")
+PartId = "body"
+
+[node name="KioskHeader" type="Node3D" parent="."]
+position = Vector3(38, 2.6, -2.1)
+script = ExtResource("e1")
+EntityId = "KioskHeader"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="KioskHeader" instance=ExtResource("e2")]
+mesh = SubResource("b3")
+PartId = "body"
+
+[node name="KioskRoof" type="Node3D" parent="."]
+position = Vector3(38, 3.3, -3.4)
+script = ExtResource("e1")
+EntityId = "KioskRoof"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="KioskRoof" instance=ExtResource("e2")]
+mesh = SubResource("b4")
+PartId = "body"
+
+[node name="Counter" type="Node3D" parent="."]
+position = Vector3(38, 1.04, -2.2)
+script = ExtResource("e1")
+EntityId = "Counter"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="body" parent="Counter" instance=ExtResource("e2")]
+mesh = SubResource("b5")
+PartId = "body"
