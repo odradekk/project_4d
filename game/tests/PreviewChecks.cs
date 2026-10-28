@@ -37,12 +37,12 @@ public partial class PreviewChecks : Node
             await play.Load(null, Scene);
             await CheckSweepWaitsForStillness();
             await play.Load(r => AddBlock(r, "LowWall", new(.5f, .2f, 2.7f), new(1.2f, .4f, .1f), -1, .1), Scene);
-            await CheckFoldPlaneWhileMoving();
+            await CheckFoldPlaneWaitsForAStillNut();
             await play.Load(r => r.GetNode("Items/Nut").Free(), Scene);
             await CheckBallHasNoPreview();
             await play.Unload();
             CheckDashes();
-            GD.Print("Preview checks passed: ring preview, ring follows, blocked ring, blocked sweep, still nut, fold plane, ball without preview, dashes.");
+            GD.Print("Preview checks passed: ring preview, ring follows, blocked ring, blocked sweep, still nut, fold plane with the still nut, ball without preview, dashes.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -192,23 +192,25 @@ public partial class PreviewChecks : Node
         Button(MouseButton.Right, false);
     }
 
-    private async Task CheckFoldPlaneWhileMoving()
+    private async Task CheckFoldPlaneWaitsForAStillNut()
     {
         // A low wall .5 m from the nut, between her and it, is the plane that R would flip the nut about, and the flip sweeps
-        // about .5 m deep into W, past the second section; the wall exists only up to W = .1, so it is not in the way. The fold
-        // plane is cheap to make, so it is drawn at once and while she moves, without the sweep. She moves a millimetre at a
-        // time, since the nut is 6 cm wide and she must keep aiming at it.
+        // about .5 m deep into W, past the second section; the wall exists only up to W = .1, so it is not in the way. The flip
+        // of a nut takes tens of milliseconds to plan and cut, so its fold plane is drawn with the sweep once the nut is still,
+        // and not while she moves. She moves a millimetre at a time, since the nut is 6 cm wide and she must keep aiming at it.
         play.LookAt(new(.5f, .02f, 3.5f), new(.5f, .03f, 2.2f));
         await play.Frames(2);
         Button(MouseButton.Right, true);
         await play.Frames(2);
-        Check(PreviewLines("Ⅱ", LensOverlay.Fold).Any() && !SweepShown(), "a nut must show the fold plane of R at once, without its sweep");
+        Check(!PreviewLines("Ⅱ", LensOverlay.Fold).Any() && !SweepShown(), "a nut just aimed at must show neither its fold plane nor its sweep");
         for (var i = 0; i < 30; i++)
         {
             player.Position += new Vector3(0, 0, i % 30 < 15 ? .001f : -.001f);
             await play.Frames(1);
         }
-        Check(PreviewLines("Ⅱ", LensOverlay.Fold).Any() && !SweepShown(), "a nut must show the fold plane of R while she moves, without its sweep");
+        Check(!PreviewLines("Ⅱ", LensOverlay.Fold).Any() && !SweepShown(), "a nut must show neither its fold plane nor its sweep while she moves");
+        await play.Frames(40);
+        Check(PreviewLines("Ⅱ", LensOverlay.Fold).Any() && SweepShown(), "a nut that is still must show its fold plane with its sweep");
         Button(MouseButton.Right, false);
     }
 
