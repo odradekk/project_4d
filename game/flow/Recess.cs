@@ -26,17 +26,18 @@ public partial class Recess : Node
     /// <summary>The school region as scene 3 leaves it. Left empty, the scene loads a fresh one.</summary>
     public Region3D? Region { get; set; }
 
-    private readonly SceneScript script = new();
     private readonly Dictionary<Character3D, Transform3D> desks = [];
+    private SceneScript script = null!;
     private SchoolRoom room = null!;
     private Vector3 board;
     private int leaving;
-    private bool flipped, stood, laid, windowStarted;
+    private bool flipped, stood, laid;
 
     public override void _Ready()
     {
         room = Region is null ? SchoolRoom.Open(this) : SchoolRoom.Of(Region);
         Region = room.Region;
+        script = new(room.Player.Hud);
         // The teacher keeps the checkpoint of scene 3, which must not take her back to that scene's seat when the teacher sees her.
         room.Teacher.GetNode<Teacher>("Teacher").Checkpoint = null;
         room.Region.PrismEnabled = true;
@@ -49,19 +50,19 @@ public partial class Recess : Node
             desks[classmate] = new Transform3D(new Basis(Vector3.Up, classmate.Rotation.Y), classmate.Position);
         }
 
-        Narrate("", "下课铃响了。同学们一窝蜂地跑出了教室。", 3);
+        script.Narrate("", "下课铃响了。同学们一窝蜂地跑出了教室。", 3);
         script.Do(Dismiss);
         script.Wait(3);
-        Say(room.Deskmate, 3, "小满，你不出去玩？");
-        Narrate("小满", "不去。我给你变个魔术。", 2.5);
+        script.Say(room.Deskmate, "小满，你不出去玩？", 3);
+        script.Narrate("小满", "不去。我给你变个魔术。", 2.5);
         script.Do(() => Notice("把棱镜对准桌上的橡皮，按 R 翻面。"));
-        script.Until(() => (flipped && laid) || windowStarted);
+        script.Until(() => flipped && laid);
         script.Do(CueWindow);
-        script.Until(() => windowStarted);
+        script.Until(() => room.State(SchoolRoom.WindowPencil).UprightOrigin is not null);
         script.Do(Bell);
-        script.Until(room.KeepWindowPencilStanding);
+        script.Until(() => room.IsUpright(SchoolRoom.WindowPencil));
         script.Do(SitBack);
-        Narrate("", "小满慌慌张张地坐好，把窗台上那支竖着的铅笔忘在了脑后。", 4.5);
+        script.Narrate("", "小满慌慌张张地坐好，把窗台上那支竖着的铅笔忘在了脑后。", 4.5);
         script.Do(() => EmitSignal(SignalName.Finished));
     }
 
@@ -71,17 +72,9 @@ public partial class Recess : Node
         Observe();
     }
 
-    private void Narrate(string speaker, string line, double seconds)
-    {
-        script.Do(() => room.Player.Hud.Say(speaker, line, seconds));
-        script.Wait(seconds);
-    }
-
-    private void Say(Character3D who, double seconds, string line)
-    {
-        script.Do(() => who.Say(line, seconds));
-        script.Wait(seconds);
-    }
+    // After her hand has moved things this frame: the pencil on the sill is not hers to take away, since it would not come back
+    // from outside the window.
+    public override void _PhysicsProcess(double delta) => room.KeepWindowPencilOnSill();
 
     private void Notice(string text) => room.Player.Hud.ShowNotice(text, 5);
 
@@ -124,14 +117,11 @@ public partial class Recess : Node
             room.Deskmate.Say("又回来了！", 2.5);
             room.Player.Hud.UnlockPage(StandPage);
         }
-        var window = room.State(SchoolRoom.WindowPencil);
-        windowStarted |= window.Rotating || window.UprightOrigin is not null;
     }
 
-    // She is free to go to the window; the pencil lying on the sill is the next one.
+    // She is free to go to the window, which is out of reach of her seat; the pencil lying on the sill is the next one.
     private void CueWindow()
     {
-        if (windowStarted) return;
         room.Player.Seated = false;
         room.Player.Hud.Say("小满", "窗台上还有一支铅笔，再变一支！", 3);
         Notice("走到窗台边，对准铅笔按 F 竖起。");

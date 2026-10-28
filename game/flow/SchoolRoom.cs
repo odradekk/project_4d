@@ -24,27 +24,28 @@ internal sealed class SchoolRoom
     internal const string WindowPencil = "pencilWindow";
     internal static readonly string[] Windows = ["sash1", "sash2", "sash3", "sash4"];
 
-    private const string SectionI = "Ⅰ";
-    private const string SectionII = "Ⅱ";
-    private const uint Solid = 1;
-    // A chair stands .5 behind its desk, and upside down on the desk its seat is .12 behind the desk's middle.
-    private const float ChairShift = .38f;
-    private const double Same = 1e-6;
-
     /// <summary>How many seconds a walk may take.</summary>
     internal const double Patience = 25;
-    // How far from the rail the pencil can have been taken and still count as standing in it.
-    private const double RailReach = .05;
 
-    private readonly Node3D chairsI;
-    private readonly Node3D chairsII;
-    private readonly TurnableObject3D pencil;
-    private bool pencilPlaced;
+    private const string SectionI = "Ⅰ";
+    private const string SectionII = "Ⅱ";
+    private const string PushWindow = "推窗";
+    private const uint Solid = 1;
+    private const int DeskRows = 8;
+    private const int DeskColumns = 6;
+    // A chair stands .5 behind its desk, and upside down on the desk its seat is 1.23 up and .12 behind the desk's middle.
+    private const float ChairBehind = .5f;
+    private const float UpsideDownHeight = 1.23f;
+    private const float UpsideDownBehind = .12f;
+    private const double Same = 1e-6;
+
+    private readonly PackedScene chair = GD.Load<PackedScene>("res://regions/school/chair.tscn");
 
     private SchoolRoom(Region3D region)
     {
         Region = region;
         Player = region.GetNode<FirstPersonPlayer>("Generated/Player");
+        Player.DevicePrompts = Windows.ToDictionary(window => window, _ => PushWindow);
         Prism = region.GetNode<PrismView>("Generated/Prism");
         Teacher = region.Character("teacher");
         Deskmate = region.Character("deskmate");
@@ -52,17 +53,15 @@ internal sealed class SchoolRoom
             .Where(character => character != Teacher && character != Deskmate).ToArray();
         var props = region.Props(SectionI)!;
         var fittings = props.GetNode("Fittings");
-        Door = fittings.GetNode<Interactable3D>("Door");
+        Door = fittings.GetNode<StaticBody3D>("Door");
+        DoorLock = fittings.GetNode<Interactable3D>("DoorLock");
         Broom = fittings.GetNode<Interactable3D>("Broom");
         Chalkboard = fittings.GetNode<Interactable3D>("Chalkboard");
-        Rows = fittings.GetNode("Rows").GetChildren().OfType<Interactable3D>().ToArray();
+        RowBoxes = fittings.GetNode("Rows").GetChildren().OfType<Interactable3D>().ToArray();
         DoorIn = fittings.GetNode<Marker3D>("DoorIn").Position;
         DoorOut = fittings.GetNode<Marker3D>("DoorOut").Position;
         BoardText = props.GetNode<Label3D>("BoardText");
-        chairsI = props.GetNode<Node3D>("Chairs");
-        chairsII = region.Props(SectionII)!.GetNode<Node3D>("Chairs");
         Seat = region.GetNode<Node3D>("Sections/" + SectionI + "/Spawns/Xiaoman").Transform;
-        pencil = region.GetNode<TurnableObject3D>("Sections/" + SectionI + "/Turnables/Stationery/PencilWindow");
     }
 
     internal Region3D Region { get; }
@@ -73,10 +72,15 @@ internal sealed class SchoolRoom
 
     /// <summary>The class apart from the teacher and the desk mate.</summary>
     internal IReadOnlyList<Character3D> Classmates { get; }
-    internal Interactable3D Door { get; }
+    internal StaticBody3D Door { get; }
+
+    /// <summary>What the crosshair finds the shut door by when it is to be locked, in front of the door.</summary>
+    internal Interactable3D DoorLock { get; }
     internal Interactable3D Broom { get; }
     internal Interactable3D Chalkboard { get; }
-    internal IReadOnlyList<Interactable3D> Rows { get; }
+
+    /// <summary>The boxes that the crosshair finds a row of chairs by, front to back.</summary>
+    internal IReadOnlyList<Interactable3D> RowBoxes { get; }
     internal Vector3 DoorIn { get; }
     internal Vector3 DoorOut { get; }
     internal Label3D BoardText { get; }
@@ -113,46 +117,34 @@ internal sealed class SchoolRoom
     /// <summary>Whether a window has been pushed all the way shut. A window starts open, at the low end of its way.</summary>
     internal bool IsShut(string window)
     {
-        var (position, way) = Way(window);
-        return Math.Abs(position - way.Limits.Max) < Same;
-    }
-
-    /// <summary>Whether a window is somewhere between open and shut.</summary>
-    internal bool IsHalfway(string window)
-    {
-        var (position, way) = Way(window);
-        return position > way.Limits.Min + Same && position < way.Limits.Max - Same;
-    }
-
-    private (double Position, DeviceTranslation Way) Way(string window)
-    {
         var state = State(window);
-        return (state.DevicePosition!.Value, (DeviceTranslation)((DeviceDefinition)state.Definition).Motion);
+        var way = (DeviceTranslation)((DeviceDefinition)state.Definition).Motion;
+        return Math.Abs(state.DevicePosition!.Value - way.Limits.Max) < Same;
     }
 
-    /// <summary>Opens the door: nobody is stopped by it, and it cannot be locked.</summary>
+    /// <summary>Opens the door: nobody is stopped by it.</summary>
     internal void OpenDoor()
     {
         Door.Visible = false;
         Door.CollisionLayer = 0;
+        DoorLock.CollisionLayer = 0;
     }
 
-    internal void ShutDoor()
+    /// <summary>Shuts the door, which stops her. The crosshair finds it only when it is to be locked.</summary>
+    internal void ShutDoor(bool lockable = false)
     {
         Door.Visible = true;
         Door.CollisionLayer = Solid;
+        DoorLock.CollisionLayer = lockable ? PhysicsLayers.Pickups : 0;
     }
-
-    /// <summary>Lets the crosshair find the shut door as something to lock, or stops it.</summary>
-    internal void OfferLocking(bool on) => Door.CollisionLayer = on ? Solid | PhysicsLayers.Pickups : Solid;
 
     /// <summary>Lets the crosshair find a prop, or stops it.</summary>
     internal static void Offer(Interactable3D prop, bool on) => prop.CollisionLayer = on ? PhysicsLayers.Pickups : 0;
 
     /// <summary>
     /// Sends a character along a route. <paramref name="done"/> is told whether it got to the end. It is also called, once, when
-    /// the character is given something else to do on the way, so that a scene never waits for a walk that is gone. A walk that a
-    /// body in the way holds up for longer than <see cref="Patience"/> ends at the end of the route.
+    /// the character is given something else to do on the way, so that a scene never waits for a walk that is gone. A walk
+    /// that takes longer than <see cref="Patience"/>, held up by a body in the way, ends at the end of the route.
     /// </summary>
     internal static void Walk(Character3D who, IReadOnlyList<Vector3> route, bool run, Action<bool> done)
     {
@@ -187,70 +179,75 @@ internal sealed class SchoolRoom
         who.Sit();
     }
 
-    /// <summary>Puts the chairs behind the desks of section Ⅰ.</summary>
-    internal void ShowChairs() => chairsI.Visible = true;
+    /// <summary>Puts a character outside the door, out of sight, where nothing of the room can push it.</summary>
+    internal void SendHome(Character3D who)
+    {
+        who.Visible = false;
+        who.PlaceAt(DoorOut, 0);
+    }
+
+    /// <summary>Puts a chair behind every desk of section Ⅰ, on the floor.</summary>
+    internal void PutChairsOnFloor() => Put(SectionI, Desks("deskI").Select(desk =>
+        ($"chairI{desk.Number}", new Transform3D(Basis.Identity, desk.At + new Vector3(0, 0, ChairBehind)))));
 
     /// <summary>Turns the chairs of a row upside down on their desks, which is where section Ⅱ has all of them.</summary>
     internal void UpturnRow(int row)
     {
-        foreach (var chair in chairsI.GetChildren().OfType<Node3D>().Where(chair => chair.Name.ToString().StartsWith($"ChairI{row}")))
-            chair.Transform = chairsII.GetNode<Node3D>("ChairII" + chair.Name.ToString()[6..]).Transform;
+        var half = new Basis(new Vector3(-1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 0, 1));
+        var desks = Desks("deskI").Where(desk => desk.Number.StartsWith(row.ToString())).ToArray();
+        foreach (var desk in desks) Require(Region.RemoveFixed($"chairI{desk.Number}"), $"The chair {desk.Number} of section Ⅰ cannot be taken away.");
+        Put(SectionI, desks.Select(desk => ($"chairI{desk.Number}U", new Transform3D(half, desk.At + new Vector3(0, UpsideDownHeight, UpsideDownBehind)))));
     }
 
-    /// <summary>Puts every chair of section Ⅱ on the floor behind its desk.</summary>
+    /// <summary>Puts every chair of section Ⅱ, which stand on their desks, on the floor behind them.</summary>
     internal void PutChairsOfSectionIIOnFloor()
     {
-        foreach (var chair in chairsII.GetChildren().OfType<Node3D>())
-        {
-            var upside = chair.Transform.Origin;
-            chair.Transform = new Transform3D(Basis.Identity, new Vector3(upside.X, 0, upside.Z + ChairShift));
-        }
+        var desks = Desks("deskII").ToArray();
+        foreach (var desk in desks) Require(Region.RemoveFixed($"chairII{desk.Number}"), $"The chair {desk.Number} of section Ⅱ cannot be taken away.");
+        Put(SectionII, desks.Select(desk => ($"chairII{desk.Number}F", new Transform3D(Basis.Identity, desk.At + new Vector3(0, 0, ChairBehind)))));
     }
 
     /// <summary>
-    /// Keeps the pencil in the window rail standing there. Call it every frame until it is true. The player may have taken the
-    /// pencil elsewhere or never stood it up, in which case it is laid back where it lay and stood up again.
+    /// Puts the pencil in the window rail back where it lay if she has picked it up. Lying, it may leave the sill only in her
+    /// hand, and it would not come back from outside the window.
     /// </summary>
-    internal bool KeepWindowPencilStanding()
+    internal void KeepWindowPencilOnSill()
     {
-        var world = Region.World!;
-        var id = new EntityId(WindowPencil);
         var state = State(WindowPencil);
-        if (state.Rotating) return false;
-        if (state.Holder is not null)
-        {
-            world.ReleaseEntity(id);
-            return false;
-        }
-        var lying = SceneReader.RelativeTransform(pencil, Region);
-        var hinge = lying.Origin + lying.Basis * pencil.Interaction!.Hinge;
-        var sectionW = Region.GetNode<Section3D>("Sections/" + SectionI).W;
-        if (state.UprightOrigin is not null && SlicedAround(hinge, sectionW)) return true;
-        if (!pencilPlaced)
-        {
-            pencilPlaced = true;
-            var flat = SceneReader.PoseOf(lying, sectionW);
-            if (world.PlaceEntity(id, flat) is UpdateResult.Rejected placed) return Fail($"The pencil cannot be put back in the window rail: {placed.Failure.Detail}");
-        }
-        if (world.PlanRotation(new StandUp(new(Actor), id, new(SectionII))) is not RotationPlanResult.Allowed plan)
-            return Fail("The pencil in the window rail cannot stand up.");
-        if (world.StartRotation(plan.Plan) is StartRotationResult.Rejected started)
-            return Fail($"The pencil in the window rail cannot start to stand up: {started.Failure.Detail}");
-        pencilPlaced = false;
-        return false;
+        if (state.Holder is null || state.UprightOrigin is not null) return;
+        var id = new EntityId(WindowPencil);
+        Region.World!.ReleaseEntity(id);
+        if (Region.World.PlaceEntity(id, state.Definition.Pose) is UpdateResult.Rejected rejected)
+            GD.PushError($"The pencil cannot be put back on the sill: {rejected.Failure.Detail}");
     }
 
-    // Whether the pencil has a slice around the point in its section, which is where its plate is when it stands in the rail.
-    private bool SlicedAround(Vector3 point, double sectionW)
+    /// <summary>Stands the pencil in the window rail up if it lies there, as scene 4 leaves it.</summary>
+    internal void StandWindowPencilIfLying()
     {
-        var box = new OccupancyBox(SceneReader.PoseOf(new Transform3D(Basis.Identity, point), sectionW), new(RailReach, RailReach, RailReach, .006));
-        return ((OccupancyResult.Occupancy)Region.World!.QueryOccupancy(box, [])).Hits.Any(hit => hit.Entity.Value == WindowPencil);
+        if (!IsLying(WindowPencil)) return;
+        var world = Region.World!;
+        if (world.PlanRotation(new StandUp(new(Actor), new(WindowPencil), new(SectionII))) is not RotationPlanResult.Allowed plan
+            || world.StartRotation(plan.Plan) is StartRotationResult.Rejected)
+            GD.PushError("The pencil in the window rail cannot stand up.");
     }
 
-    // The scene goes on without the pencil standing; the error tells a check that something is wrong.
-    private static bool Fail(string message)
+    private void Put(string section, IEnumerable<(string Id, Transform3D At)> chairs) =>
+        Require(Region.AddFixed(chair, section, chairs), $"A chair cannot be put in the room of section {section}.");
+
+    // The desks of a section by the number of their row and column, and where each stands on the floor; the extra desk is 49.
+    private IEnumerable<(string Number, Vector3 At)> Desks(string prefix)
     {
-        GD.PushError(message);
-        return true;
+        var numbers = Enumerable.Range(0, DeskRows * DeskColumns).Select(n => $"{n / DeskColumns}{n % DeskColumns}");
+        foreach (var number in prefix == "deskII" ? numbers.Append("49") : numbers)
+        {
+            var position = State(prefix + number).Pose.Position;
+            yield return (number, new((float)position.X, (float)position.Y, (float)position.Z));
+        }
+    }
+
+    // A refusal means that the room is laid out otherwise than the scene expects, which a check of the scene catches by the error.
+    private static void Require(FailureCode? refused, string message)
+    {
+        if (refused is { } code) GD.PushError($"{message} ({code})");
     }
 }

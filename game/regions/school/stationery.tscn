@@ -79,7 +79,7 @@ Reach = 0.46
 [node name="Stationery" type="Node3D"]
 
 [node name="Eraser" type="Node3D" parent="."]
-position = Vector3(-2.35, 0.77, 1.1)
+position = Vector3(-2.45, 0.77, 1.1)
 script = ExtResource("1")
 EntityId = "eraser"
 BuildingId = "school"
@@ -112,7 +112,7 @@ mesh = SubResource("BoxPencilAlongX")
 FaceUvs = Array[ExtResource("4")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="PencilWindow" type="Node3D" parent="."]
-position = Vector3(-3.72, 0.91, 1.58)
+position = Vector3(-3.72, 0.91, -2.98)
 script = ExtResource("1")
 EntityId = "pencilWindow"
 BuildingId = "school"

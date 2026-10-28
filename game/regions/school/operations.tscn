@@ -48,9 +48,9 @@ Device = "sash3"
 Target = 0.69
 ExpectedPosition = 0.69
 
-[sub_resource type="Resource" id="StopWindow3"]
+[sub_resource type="Resource" id="StopWindow1"]
 script = ExtResource("4")
-Device = "sash3"
+Device = "sash1"
 Target = 0.69
 ExpectedPosition = 0.214
 
@@ -72,7 +72,7 @@ Steps = Array[ExtResource("5")]([SubResource("CloseWindow1"), SubResource("Close
 [sub_resource type="Resource" id="StuckOperation"]
 script = ExtResource("2")
 Id = "window-stops-at-a-standing-pencil-and-closes-once-it-lies"
-Steps = Array[ExtResource("5")]([SubResource("StandWindowPencil"), SubResource("StopWindow3"), SubResource("LayWindowPencil"), SubResource("CloseWindow3")])
+Steps = Array[ExtResource("5")]([SubResource("StandWindowPencil"), SubResource("StopWindow1"), SubResource("LayWindowPencil"), SubResource("CloseWindow1")])
 
 [node name="ExpectedPuzzleOperations" type="Node"]
 

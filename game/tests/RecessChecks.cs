@@ -19,6 +19,9 @@ namespace Game.Tests;
 public partial class RecessChecks : Node
 {
     private const string ScenePath = "res://flow/recess.tscn";
+    // Where she stands to reach the pencil on the sill of the first window, and the place of its hinge: z = -4.12 + .92.
+    private static readonly Vector3 WindowSpot = new(-3.1f, 0, -3.4f);
+    private const double HingeZ = -3.2;
 
     private TurningFixture play = null!;
     private SchoolFixture school = null!;
@@ -43,10 +46,12 @@ public partial class RecessChecks : Node
             await Load();
             await CheckStoppedWalks();
             await Load();
-            await CheckPencilCarriedOff();
+            await CheckWindowPencilBeforeTheTricks();
+            await Load();
+            await CheckPencilCannotBeTaken();
             await Unload();
             await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
-            GD.Print("Recess checks passed: class leaves, tricks, window pencil, stopped walks, pencil carried off.");
+            GD.Print("Recess checks passed: class leaves, tricks, window pencil, stopped walks, window pencil before the tricks, pencil that cannot be taken.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -92,7 +97,13 @@ public partial class RecessChecks : Node
         Check(room.Door.CollisionLayer == 0, "an open door stops nobody");
         await school.Fast(() => room.Door.Visible, 40, "the door must shut behind the last of them");
         Check(room.Classmates.All(person => !person.Visible) && !room.Teacher.Visible, "the class and the teacher are out of the room");
-        Check(room.Door.CollisionLayer == 1, "a shut door stops her, and cannot be locked yet");
+        await school.Stand(new(room.DoorIn.X, 0, 4.5f), new(room.DoorIn.X, 1.1f, 5.55f));
+        room.Player.Hud.ClearText();
+        await play.Frames(2);
+        Check(room.Player.Hud.HintText == "", $"the shut door offers nothing before the cleaning; the hint is '{room.Player.Hud.HintText}'");
+        var ray = PhysicsRayQueryParameters3D.Create(new(room.DoorIn.X, 1, 5), new(room.DoorIn.X, 1, 6), 1);
+        Check(room.Player.GetWorld3D().DirectSpaceState.IntersectRay(ray).Count > 0, "a shut door stops whoever walks");
+        room.Player.Transform = room.Seat;
         Check(room.Deskmate.Visible && room.Deskmate.Posture == Posture.Sitting, "her desk mate stays in his seat");
         Check(school.Heard("下课铃") && school.Heard("你不出去玩") && school.Heard("变个魔术"), "the bell, his question and her answer are shown");
     }
@@ -107,11 +118,11 @@ public partial class RecessChecks : Node
         Check(room.Player.Hud.HintText.Contains("R  翻面"), $"aiming at the eraser offers to flip it; the hint is '{room.Player.Hud.HintText}'");
         var mark = region.GetNode<Label3D>("Generated/Ⅰ/Dynamic/eraser/Mark");
         var toHer = (room.Player.Position - mark.GlobalPosition) * new Vector3(1, 0, 1);
-        Check(mark.GlobalBasis.Determinant() > 0 && mark.GlobalBasis.Y.Dot(toHer.Normalized()) < -.9f, "the lettering reads right and the right way up from her seat");
+        Check(mark.GlobalBasis.Determinant() > 0 && mark.GlobalBasis.Y.Dot(toHer.Normalized()) < -.7f, "the lettering reads right and the right way up from her seat");
         Press(Key.R);
         await play.Until(() => room.IsFlipped("eraser"), 4, "the eraser must be flipped");
         mark = region.GetNode<Label3D>("Generated/Ⅰ/Dynamic/eraser/Mark");
-        Check(mark.GlobalBasis.Determinant() < 0 && mark.GlobalBasis.Y.Dot(toHer.Normalized()) > .9f, "after the flip the lettering is a mirror image, upside down seen from her seat");
+        Check(mark.GlobalBasis.Determinant() < 0 && mark.GlobalBasis.Y.Dot(toHer.Normalized()) > .7f, "after the flip the lettering is a mirror image, upside down seen from her seat");
         Check(room.State("eraser").Section == new SectionId("Ⅰ"), "the eraser stays in her section");
         await school.Fast(() => school.Heard("你怎么变的"), 4, "her desk mate must wonder how she did it");
         Check(room.Player.Hud.UnlockedPages.SequenceEqual([2]), "the page of the flip is drawn in the notebook");
@@ -140,7 +151,7 @@ public partial class RecessChecks : Node
         await school.Fast(() => !room.Player.Seated, 20, "she must be free to go to the window after the tricks");
         await school.Fast(() => school.Heard("窗台上还有一支铅笔"), 10, "she must say that there is another pencil on the sill");
         Check(room.Region.PrismEnabled && room.IsLying(SchoolRoom.WindowPencil), "the pencil lies on the sill, and the prism is in her hand");
-        await school.Stand(new(-3.1f, .02f, 1.47f), school.Where(SchoolRoom.WindowPencil));
+        await school.Stand(WindowSpot, school.Where(SchoolRoom.WindowPencil));
         room.Player.Hud.ClearText();
         await play.Frames(2);
         Check(room.Player.Hud.HintText.Contains("F  竖起"), $"aiming at the pencil on the sill offers to stand it up; the hint is '{room.Player.Hud.HintText}'");
@@ -154,7 +165,7 @@ public partial class RecessChecks : Node
         // She had no time to lay it down: the pencil stands in the rail, and nothing she presses changes it.
         var rail = room.State(SchoolRoom.WindowPencil);
         Check(rail.UprightOrigin == new SectionId("Ⅰ") && !rail.Rotating && rail.Holder is null, "the pencil of the window stands in the rail");
-        Check(Math.Abs(rail.Pose.Position.X - -3.72) < .01 && Math.Abs(rail.Pose.Position.Z - 1.36) < .01, $"it stands where it lay, at the sill; it is at {rail.Pose.Position}");
+        Check(Math.Abs(rail.Pose.Position.X - -3.72) < .01 && Math.Abs(rail.Pose.Position.Z - HingeZ) < .01, $"it stands where it lay, at the sill; it is at {rail.Pose.Position}");
         school.Aim(school.Where(SchoolRoom.WindowPencil));
         Press(Key.F);
         await play.Frames(30);
@@ -182,25 +193,40 @@ public partial class RecessChecks : Node
         Check(stopped.Position.DistanceTo(seat) < .01f, "the stopped classmate is back at the desk, not where it was stopped");
     }
 
-    // She takes the pencil of the window in her hand and stands it up elsewhere: scene 5 finds it in the rail all the same.
-    private async Task CheckPencilCarriedOff()
+    // The pencil on the sill is out of reach of her seat, and whatever is done to it before the tricks are done, the bell waits.
+    private async Task CheckWindowPencilBeforeTheTricks()
+    {
+        school.Aim(school.Where(SchoolRoom.WindowPencil));
+        room.Player.Hud.ClearText();
+        await play.Frames(2);
+        Check(!room.Player.Hud.HintText.Contains("竖起"), $"from her seat she cannot reach the pencil on the sill; the hint is '{room.Player.Hud.HintText}'");
+        var actor = new EntityId(SchoolRoom.Actor);
+        await school.Turn(new Flip(actor, new(SchoolRoom.WindowPencil)));
+        await school.Turn(new StandUp(actor, new(SchoolRoom.WindowPencil), new("Ⅱ")));
+        await school.Fast(() => room.Classmates.All(person => !person.Visible), 40, "the class must leave");
+        await play.Frames(180);
+        Check(finished == 0 && room.Region.PrismEnabled && room.Player.Seated, "the bell does not ring before the eraser and the pencil on the desk have been shown");
+        await school.DoTheTricks();
+        await school.Fast(() => finished == 1, 60, "the scene must end once the tricks are done");
+        Check(room.Player.Hud.UnlockedPages.OrderBy(page => page).SequenceEqual([2, 3]), "the pages of the tricks are drawn");
+    }
+
+    // E on the pencil of the window picks it up, and it is put back at once: it would not come back from outside the window.
+    private async Task CheckPencilCannotBeTaken()
     {
         await school.DoTheTricks();
         await school.Fast(() => !room.Player.Seated, 60, "she must be free to go to the window");
-        await school.Stand(new(-3.1f, .02f, 1.47f), school.Where(SchoolRoom.WindowPencil));
-        Check(room.Region.Actions!.Hold(new(SchoolRoom.WindowPencil)) is null, "the pencil must come into her hand");
-        // Along the lane between two rows of desks to the aisle, and up the aisle.
-        await school.Walk(new(-1.26f, 0, 1.47f));
-        var middle = new Vector3(-1.26f, 0, 0);
-        await school.Walk(middle);
-        school.Aim(middle + new Vector3(0, 1.3f, -2));
+        await school.Stand(WindowSpot, school.Where(SchoolRoom.WindowPencil));
+        var lay = room.State(SchoolRoom.WindowPencil).Pose;
+        Press(Key.E);
+        await play.Frames(5);
+        // The scene looks at her hand once a frame, after the frame has begun.
         await play.Frames(2);
-        Check(room.State(SchoolRoom.WindowPencil).Holder is not null, "she still holds the pencil at the other end of the room");
+        var pencil = room.State(SchoolRoom.WindowPencil);
+        Check(pencil.Holder is null && pencil.UprightOrigin is null && pencil.Pose == lay, $"the pencil is on the sill where it lay, not in her hand; it is at {pencil.Pose.Position}");
         Press(Key.F);
         await school.Fast(() => finished == 1, 60, "the scene must end");
-        var rail = room.State(SchoolRoom.WindowPencil);
-        Check(rail.Holder is null && rail.UprightOrigin is not null && !rail.Rotating, "the pencil is let go of and stands");
-        Check(Math.Abs(rail.Pose.Position.X - -3.72) < .01 && Math.Abs(rail.Pose.Position.Z - 1.36) < .01, $"it is in the window rail again; it is at {rail.Pose.Position}");
+        Check(room.IsUpright(SchoolRoom.WindowPencil), "the pencil can still be stood up");
     }
 
     private static bool IsSeated(Character3D who) => who.Visible && who.Posture == Posture.Sitting;

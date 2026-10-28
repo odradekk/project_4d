@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
@@ -15,7 +15,6 @@
 [ext_resource type="PackedScene" path="res://regions/school/stationery.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://regions/school/windows.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://regions/school/fittings.tscn" id="15"]
-[ext_resource type="PackedScene" path="res://regions/school/chairs_i.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://regions/school/chairs_ii.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://regions/school/operations.tscn" id="18"]
 
@@ -286,9 +285,4 @@ mesh = SubResource("Box5")
 
 [node name="Fittings" parent="Sections/Ⅰ/Props" instance=ExtResource("15")]
 
-[node name="Chairs" parent="Sections/Ⅰ/Props" instance=ExtResource("16")]
-visible = false
-
-[node name="Props" type="Node3D" parent="Sections/Ⅱ"]
-
-[node name="Chairs" parent="Sections/Ⅱ/Props" instance=ExtResource("17")]
+[node name="Chairs" parent="Sections/Ⅱ/Fixed" instance=ExtResource("17")]

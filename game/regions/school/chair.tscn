@@ -1,4 +1,35 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="3"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("3")
+Axis = 0
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("3")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("3")
+Axis = 1
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("3")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("3")
+Axis = 2
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("3")
+Axis = 2
+Positive = true
 
 [sub_resource type="StandardMaterial3D" id="Mat"]
 albedo_color = Color(0.3, 0.45, 0.7, 1)
@@ -15,69 +46,47 @@ size = Vector3(0.38, 0.3, 0.04)
 material = SubResource("Mat")
 size = Vector3(0.04, 0.43, 0.04)
 
-[sub_resource type="BoxShape3D" id="SeatShape"]
-size = Vector3(0.38, 0.04, 0.38)
-
-[sub_resource type="BoxShape3D" id="BackShape"]
-size = Vector3(0.38, 0.3, 0.04)
-
-[sub_resource type="BoxShape3D" id="LegShape"]
-size = Vector3(0.04, 0.43, 0.04)
-
 [node name="Chair" type="Node3D"]
+script = ExtResource("1")
 
 [node name="Seat" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-layers = 3
+position = Vector3(0, 0.45, 0)
+script = ExtResource("2")
+PartId = "seat"
 mesh = SubResource("SeatMesh")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="Back" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0.17)
-layers = 3
+position = Vector3(0, 0.62, 0.17)
+script = ExtResource("2")
+PartId = "back"
 mesh = SubResource("BackMesh")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="LegLeftFront" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, -0.15)
-layers = 3
+position = Vector3(-0.17, 0.215, -0.15)
+script = ExtResource("2")
+PartId = "legLeftFront"
 mesh = SubResource("LegMesh")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="LegLeftBack" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, 0.15)
-layers = 3
+position = Vector3(-0.17, 0.215, 0.15)
+script = ExtResource("2")
+PartId = "legLeftBack"
 mesh = SubResource("LegMesh")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="LegRightFront" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, -0.15)
-layers = 3
+position = Vector3(0.17, 0.215, -0.15)
+script = ExtResource("2")
+PartId = "legRightFront"
 mesh = SubResource("LegMesh")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
 
 [node name="LegRightBack" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, 0.15)
-layers = 3
+position = Vector3(0.17, 0.215, 0.15)
+script = ExtResource("2")
+PartId = "legRightBack"
 mesh = SubResource("LegMesh")
-
-[node name="Body" type="StaticBody3D" parent="."]
-
-[node name="SeatShape" type="CollisionShape3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-shape = SubResource("SeatShape")
-
-[node name="BackShape" type="CollisionShape3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0.17)
-shape = SubResource("BackShape")
-
-[node name="LegLeftFrontShape" type="CollisionShape3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, -0.15)
-shape = SubResource("LegShape")
-
-[node name="LegLeftBackShape" type="CollisionShape3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.215, 0.15)
-shape = SubResource("LegShape")
-
-[node name="LegRightFrontShape" type="CollisionShape3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, -0.15)
-shape = SubResource("LegShape")
-
-[node name="LegRightBackShape" type="CollisionShape3D" parent="Body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.215, 0.15)
-shape = SubResource("LegShape")
+FaceUvs = Array[ExtResource("3")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])

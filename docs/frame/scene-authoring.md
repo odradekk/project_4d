@@ -2,7 +2,7 @@
 
 [契约入口](contract.md) · [实体数据](contract-data.md) · [动作](contract-actions.md)
 
-一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝、啃食者，以及玩家和角色的出生点、四维球、隐藏圆环物和放样装置，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。预期操作只读 Id 和 Steps，步骤只有旋转和装置。
+一个区域一个 Godot 场景；楼房元素只摆一次，固定物、可转物和出生点放在所属 Section 下。节点脚本在 `game/adapter/`，只把标注转换成引擎数据，不计算四维几何。本页约定完整格式；已实现 Region、Section、楼房元素、固定物件、可转物件、盒子零件、接缝、啃食者，以及玩家和角色的出生点、四维球、隐藏圆环物和放样装置，其余节点随对应能力实现。TurnableObject3D 和 CreatureSpawn3D 的 `Rotation4` 尚未导出，初始姿态只取 Transform。预期操作目前只读取 Id 和 Steps，步骤只有旋转和装置两种。
 
 ## 节点与导出属性
 
