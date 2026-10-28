@@ -9,12 +9,13 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// The prologue from scene 1 to scene 8, one scene after the other. A scene is added to this node and plays until it emits
+/// The prologue from scene 1 to scene 9, one scene after the other. A scene is added to this node and plays until it emits
 /// Finished and the line it is saying is said. Between two scenes the screen fades to black and the scene before is freed with
-/// its region; the scenes of the school share one region, which stays until the last of them is over. What the scenes pass on
-/// is kept here: the notebook, and the money, which a scene is given as a copy. Backspace starts the scene again from what the
-/// scene before passed on, in a region loaded anew; every scene has a checkpoint at its start that does the same, unless it set
-/// its own. The last scene stays on the screen when it is over.
+/// its region. A scene can play in the region of the scene before, as scenes 4 and 5 do in the school of scene 3 and scene 9 in
+/// the room of scene 8; the scene that loaded the region stays, since the region is its child, until the last of them is over.
+/// What the scenes pass on is kept here: the notebook, and the money, which a scene is given as a copy. Backspace starts the
+/// scene again from what the scene before passed on, in a region loaded anew; every scene has a checkpoint at its start that
+/// does the same, unless it set its own. The last scene, which ends on the title, stays on the screen when it is over.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 public partial class Prologue : Node
@@ -24,7 +25,7 @@ public partial class Prologue : Node
     private readonly ColorRect veil = new() { Color = Colors.Black, MouseFilter = Control.MouseFilterEnum.Ignore };
     private NotebookState notebook = new();
     private CanvasLayer layer = null!;
-    private Region3D? school;
+    private Label hint = null!;
     private TaskCompletionSource<bool>? running;
     private Tween? fade;
 
@@ -48,7 +49,7 @@ public partial class Prologue : Node
         AddChild(layer);
         layer.AddChild(veil);
         veil.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        var hint = new Label { Text = "Backspace  重来本场", Modulate = new Color(1, 1, 1, .7f), MouseFilter = Control.MouseFilterEnum.Ignore };
+        hint = new Label { Text = "Backspace  重来本场", Modulate = new Color(1, 1, 1, .7f), MouseFilter = Control.MouseFilterEnum.Ignore };
         hint.AddThemeFontSizeOverride("font_size", 16);
         hint.AddThemeColorOverride("font_shadow_color", Colors.Black);
         layer.AddChild(hint);
@@ -56,7 +57,7 @@ public partial class Prologue : Node
 
         await Play(_ => new HomeMorning());
         var road = await Play(_ => new SchoolRoad());
-        await Play(region => new MathClass { Region = region }, true);
+        await Play(region => new MathClass { Region = region });
         await Play(region => new Recess { Region = region }, true);
         await Play(region => new Duty { Region = region }, true);
         // The money is a copy, so that starting the scene again gives it the money it started with.
@@ -64,6 +65,9 @@ public partial class Prologue : Node
         // Scene 6 ends with the cat in her arms.
         await Play(_ => new HomeEvening { CarryingCat = true });
         await Play(_ => new CatRoom());
+        await Play(region => new DeepRoom { Region = region }, true);
+        // The title is up: nothing is left to restart.
+        hint.Hide();
         EmitSignal(SignalName.Finished);
     }
 
@@ -76,10 +80,11 @@ public partial class Prologue : Node
     public void Restart() => running?.TrySetResult(false);
 
     /// <summary>
-    /// Plays the scene until it finishes. <paramref name="create"/> makes the scene, given the school region if the scene plays
-    /// in it; the scene before leaves without that region.
+    /// Plays the scene until it finishes. <paramref name="create"/> makes the scene, given the region of the scene before if
+    /// <paramref name="shares"/> says that the scene plays in it, and none otherwise, which is also the case when the scene is
+    /// started again: then it loads a region of its own.
     /// </summary>
-    private async Task<T> Play<T>(Func<Region3D?, T> create, bool inSchool = false) where T : Node
+    private async Task<T> Play<T>(Func<Region3D?, T> create, bool shares = false) where T : Node
     {
         var pages = notebook.Pages.ToArray();
         var available = notebook.Available;
@@ -91,14 +96,13 @@ public partial class Prologue : Node
                 notebook = new NotebookState { Available = available };
                 foreach (var page in pages) notebook.Unlock(page);
             }
-            // A school region is kept for the next school scene, and loaded anew when the scene is started again.
-            await Leave(inSchool && !again ? school : null);
-            if (inSchool && (again || !GodotObject.IsInstanceValid(school))) school = LoadSchool();
-            var next = create(inSchool ? school : null);
+            var region = shares && !again ? Region : null;
+            await Leave(region is null ? null : HolderOf(region));
+            var next = create(region);
             AddChild(next);
             Number = number;
             Scene = next;
-            Region = inSchool ? school! : next.GetNode<Region3D>("Region");
+            Region = region ?? next.GetNode<Region3D>("Region");
             if (!Region.Loaded)
             {
                 // The region draws what is wrong with it, under the veil. The flow stops here.
@@ -122,22 +126,22 @@ public partial class Prologue : Node
         }
     }
 
-    private Region3D LoadSchool()
+    // The child of this node that holds the region: the region itself, or the scene that loaded it.
+    private Node HolderOf(Region3D region)
     {
-        var region = GD.Load<PackedScene>(SchoolRoom.RegionPath).Instantiate<Region3D>();
-        region.Name = "Region";
-        AddChild(region);
-        return region;
+        Node holder = region;
+        while (holder.GetParent() != this) holder = holder.GetParent();
+        return holder;
     }
 
-    // Everything but the veil and the shared region goes. The next region is added after that, since a region that is added while
-    // another one is still in the tree takes that one's world for the viewport's own, and puts the viewport back on it when it leaves.
+    // The screen fades to black and everything but the veil and the node that holds a shared region goes. The next region is added
+    // after that, since a region that is added while another one is still in the tree takes that one's world for the viewport's own,
+    // and puts the viewport back on it when it leaves.
     private async Task Leave(Node? keep)
     {
-        var gone = GetChildren().Where(node => node != layer && node != keep).ToArray();
-        if (gone.Length == 0) return;
+        if (Scene is null) return;
         await ToSignal(Fade(1), Tween.SignalName.Finished);
-        foreach (var node in gone)
+        foreach (var node in GetChildren().Where(node => node != layer && node != keep).ToArray())
         {
             RemoveChild(node);
             node.Free();
