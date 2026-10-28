@@ -4,7 +4,8 @@ public sealed partial class World
 {
     // A turnable object or an item. `Building` is the one it is in now, which is its definition's until it comes out
     // of a backpack in another. `Holder` is whoever holds it in hand or has grabbed its slice, or carries it in a
-    // backpack, where the item is `Packed`: it has no slice and is no obstacle.
+    // backpack, where the item is `Packed`: it has no slice and is no obstacle. A record is replaced and never edited
+    // in place, because pairLandings keeps results while it is the same object (see PairLandings).
     private sealed record Dynamic(
         EntityDefinition Definition, Pose4 Pose, SectionId? Section, SectionId? Origin, BuildingId Building,
         RotationPlan? Upright = null, EntityId? Holder = null, bool Packed = false);

@@ -7,6 +7,12 @@ public sealed partial class World
 
     // Where the solids of one entity land on those of another, kept while neither entity's record is replaced. A
     // settle keeps the pairs it used and drops the rest.
+    //
+    // This rests on the records of StaticEntity, Dynamic and Device being replaced and never edited in place: a record
+    // that is still the same object is taken to have the same solids. An edit in place would leave the old landings
+    // in use. A turnable would then hang in the air until some other write replaced a record, and FindSupport would
+    // return a landing that is out of date. That is why these records hold read-only lists, and why a change to one
+    // builds a new record.
     private sealed record PairLandings(object Moving, object Support, SupportCandidate[] Candidates);
 
     private Dictionary<(EntityId Moving, EntityId Support), PairLandings> pairLandings = [];

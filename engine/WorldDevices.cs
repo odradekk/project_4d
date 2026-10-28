@@ -3,8 +3,9 @@ namespace FourD;
 // Decision note: 2026-10-26-device-translation
 public sealed partial class World
 {
-    // A device, its lofted pieces, and how far along its rotation or track it stands.
-    private sealed record Device(DeviceDefinition Definition, LoftPiece[] Pieces, double Position);
+    // A device, its lofted pieces, and how far along its rotation or track it stands. A record is replaced and never
+    // edited in place, because pairLandings keeps results while it is the same object (see PairLandings).
+    private sealed record Device(DeviceDefinition Definition, IReadOnlyList<LoftPiece> Pieces, double Position);
 
     private readonly Dictionary<EntityId, Device> devices = [];
 

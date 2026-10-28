@@ -8,8 +8,9 @@ internal static class GeometryMath
         Add(Add(Scale(rotation.X, point.X), Scale(rotation.Y, point.Y)), Scale(rotation.Z, point.Z));
 }
 
-// The same closed W segments back slicing and the later support/collision queries.
-internal sealed record StaticEntity(EntityId Id, Pose4 Pose, BoxPart[] Parts, Interval[] Segments, bool ThroughObject)
+// The same closed W segments back slicing and the later support/collision queries. A record is replaced and never
+// edited in place, because World.pairLandings keeps results while it is the same object (see PairLandings).
+internal sealed record StaticEntity(EntityId Id, Pose4 Pose, IReadOnlyList<BoxPart> Parts, IReadOnlyList<Interval> Segments, bool ThroughObject)
 {
     internal SliceGeometry Slice()
     {
