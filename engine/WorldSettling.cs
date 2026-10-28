@@ -5,6 +5,24 @@ public sealed partial class World
     // `Moving` rests on `Support` after falling `Gap` more than `Support` does.
     private sealed record SupportEdge(EntityId Support, EntityId Moving, double Gap);
 
+    // The tables that decide where turnables rest, as they were when a settle left every turnable in place. Their
+    // records are replaced and never edited, so a table whose records are all the same objects as before has not
+    // changed, and no write to them has to be marked.
+    private sealed record SupportInputs(
+        StaticEntity[] Entities, Dictionary<EntityId, Dynamic> Turnables, Dictionary<EntityId, Device> Devices,
+        Dictionary<EntityId, ActiveRotation> Rotations);
+
+    private SupportInputs? settledInputs;
+
+    private bool SupportInputsChanged() => settledInputs is not { } before
+        || before.Entities != entities
+        || !SameRecords(before.Turnables, dynamicEntities)
+        || !SameRecords(before.Devices, devices)
+        || !SameRecords(before.Rotations, rotations);
+
+    private static bool SameRecords<T>(Dictionary<EntityId, T> before, Dictionary<EntityId, T> now) where T : class =>
+        before.Count == now.Count && now.All(entry => before.TryGetValue(entry.Key, out var record) && ReferenceEquals(record, entry.Value));
+
     // The Y at which each turnable comes to rest. One resting on a static box falls until it touches it; one
     // resting on another turnable falls as far as that one does, plus the gap between them.
     private Dictionary<EntityId, double> SettledHeights(IReadOnlySet<EntityId> held)

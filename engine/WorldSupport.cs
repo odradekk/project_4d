@@ -130,7 +130,18 @@ public sealed partial class World
             .ToArray();
         foreach (var active in rotating) AdvanceRotation(active, target);
 
+        if (SupportInputsChanged()) SettleTurnables(target);
+        time = target;
+        revision++;
+        var occurred = events.OrderBy(occurrence => occurrence.Time).ThenBy(occurrence => occurrence.Sequence).ToArray();
+        events.Clear();
+        return new StepResult.Advanced(time, Array.AsReadOnly(occurred));
+    }
+
+    private void SettleTurnables(double target)
+    {
         var resting = RestingHeights();
+        var fell = false;
         foreach (var id in dynamicEntities.Keys.OrderBy(key => key.Value, StringComparer.Ordinal).ToArray())
         {
             if (rotations.ContainsKey(id)) continue;
@@ -140,12 +151,10 @@ public sealed partial class World
             var startY = item.Pose.Position.Y;
             dynamicEntities[id] = item with { Pose = item.Pose with { Position = item.Pose.Position with { Y = finalY } } };
             Enqueue(new EntityFell(id, startY, finalY), target);
+            fell = true;
         }
-        time = target;
-        revision++;
-        var occurred = events.OrderBy(occurrence => occurrence.Time).ThenBy(occurrence => occurrence.Sequence).ToArray();
-        events.Clear();
-        return new StepResult.Advanced(time, Array.AsReadOnly(occurred));
+        // Where a turnable fell to is a new state that has not been settled from yet.
+        settledInputs = fell ? null : new(entities, new(dynamicEntities), new(devices), new(rotations));
     }
 
     // Where each turnable settles. One whose fall would cross a reserved rotation sweep stays where it is.
