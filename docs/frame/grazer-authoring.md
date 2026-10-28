@@ -21,4 +21,4 @@
 
 **测试区域。** `game/regions/grazer_test.tscn`：三个截面，啃食者从 W=11 的深处出发。`game/tests/grazer_demo.tscn`（调试启动 `--start=grazer-demo`）让它沿时间轴逼近，啃掉一扇门和一道缝，再转身朝玩家走来。
 
-**序章的啃食者。** 第 9 场的啃食者在 `game/regions/room/grazer.tscn`，路线在 `game/flow/DeepGrazer.cs`：一条从 W=14 进来、咬断接缝和三处楼房元素的时间轴，之后是每段 3 秒、朝小满当时的位置走的短时间轴，每段从上一段的最后一帧开始。数值和时刻见[家的区域](home-region.md)。
+**序章的啃食者。** 第 9 场的啃食者在 `game/regions/room/grazer.tscn`，路线在 `game/flow/DeepGrazer.cs`：一条从 W=14 进来、咬断接缝和三处楼房元素的时间轴，之后是每段 3 秒、朝小满当时的位置走的短时间轴，每段从上一段的最后一帧开始，用 `timeline.At(timeline.Duration)` 取。数值和时刻见[家的区域](home-region.md)。
