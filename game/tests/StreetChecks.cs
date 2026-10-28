@@ -41,11 +41,12 @@ public partial class StreetChecks : Node
             await CheckCatFollowsFromWaiting();
             await CheckCatFollowsFromTheEndOfTheHall();
             await CheckCatFollowsAfterBeingCarried();
+            await CheckCatFollowsToTheLeftOfTheLanding();
 #if DEBUG
             Check(DebugScenes.Find("school-road") == "res://flow/school_road.tscn" && DebugScenes.Find("home-road") == "res://flow/home_road.tscn",
                 "the debug entries start the two scenes");
 #endif
-            GD.Print("Street checks passed: sounds, walk out, bun, cat stares, school gate, kiosk, door, cat follows up the stair three ways.");
+            GD.Print("Street checks passed: sounds, walk out, bun, cat stares, school gate, kiosk, door, cat follows up the stair four ways.");
             GetTree().Quit();
         }
         catch (Exception error)

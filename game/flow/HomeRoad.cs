@@ -23,8 +23,9 @@ public partial class HomeRoad : Node
     private const float OnRamp = .15f;
     // A cat on the floor this much farther in than the mouth of the ramp is beside the ramp or under it, not in front of it.
     private const float DeepInHall = 1f;
-    // A cat on the floor is in line with the ramp when it is this near the middle of its mouth, across.
-    private const float MouthHalfWidth = .7f;
+    // A cat on the floor is in line with the ramp when it is this near the middle of its mouth, across: far enough from the
+    // rail on its left edge that going straight up does not run it head on into the end of the rail.
+    private const float MouthHalfWidth = .5f;
 
     private static readonly (string Prop, string Name, int Price)[] Goods =
     [
@@ -117,7 +118,8 @@ public partial class HomeRoad : Node
     // The cat goes straight at the player, which from beside the ramp or from deep in the hall would take it under the
     // ramp, where it is too low. So while the player is up the stair and the cat is still on the floor, a cat deep in the
     // hall goes out by the free floor beside the ramp, a cat that is not in line with the ramp goes to its mouth, and one
-    // in line with it goes straight up. The way is chosen again from where the cat is, every frame.
+    // in line with it goes straight up, along the rail if the player is to the left of the ramp. The way is chosen again from
+    // where the cat is, every frame.
     private Vector3 TowardStairs(Vector3 player)
     {
         var cat = coal.GlobalPosition;

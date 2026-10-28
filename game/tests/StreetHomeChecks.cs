@@ -99,6 +99,19 @@ public partial class StreetChecks
         await Unload();
     }
 
+    // She stands on the left half of the landing, away from the line of the ramp, and the cat must not fall off its side on the way.
+    private async Task CheckCatFollowsToTheLeftOfTheLanding()
+    {
+        await StartHome();
+        await WalkTo(Entrance);
+        await ClimbToLanding(-1);
+        await CatIsOnTheLanding();
+        await WalkTo(new Vector3(-.5f, 0, -11.2f));
+        await play.Frames(120);
+        Check(coal.Position.Y > 2.9f, $"the cat stays on the landing beside her; it is at {coal.Position}");
+        await Unload();
+    }
+
     // She picks the cat up and puts it down again before she climbs.
     private async Task CheckCatFollowsAfterBeingCarried()
     {
@@ -137,8 +150,8 @@ public partial class StreetChecks
     }
 
     // From the entrance to the landing as a person goes: in at the door and up the ramp from its foot.
-    private Task ClimbToLanding() =>
-        WalkTo(new Vector3(.75f, 0, -5), new Vector3(.75f, 0, -10), new Vector3(0, 0, -12.5f));
+    private Task ClimbToLanding(float x = 0, float z = -12.5f) =>
+        WalkTo(new Vector3(.75f, 0, -5), new Vector3(.75f, 0, -10), new Vector3(x, 0, z));
 
     private Task CatIsOnTheLanding() =>
         play.Until(() => coal.Position.Y > 2.9f && Apart(coal.Position, player.Position) < 1.6f, 20, "the cat must follow her up the stair");

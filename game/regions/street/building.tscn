@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="e1"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
@@ -38,6 +38,21 @@ albedo_color = Color(0.5, 0.48, 0.44, 1)
 [sub_resource type="BoxMesh" id="b6"]
 material = SubResource("m_floor")
 size = Vector3(3, 0.2, 3.71556)
+
+[sub_resource type="StandardMaterial3D" id="m_grey"]
+albedo_color = Color(0.5, 0.5, 0.52, 1)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m_grey")
+size = Vector3(0.1, 1.6, 0.87689)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m_grey")
+size = Vector3(0.1, 1.6, 0.87689)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m_grey")
+size = Vector3(0.1, 1.6, 0.87689)
 
 [node name="Block" type="Node3D"]
 
@@ -125,3 +140,36 @@ WMax = 0.5
 [node name="body" parent="Landing" instance=ExtResource("e2")]
 mesh = SubResource("b6")
 PartId = "body"
+
+[node name="Rail" type="Node3D" parent="."]
+position = Vector3(0.05, 0, 0)
+script = ExtResource("e1")
+EntityId = "Rail"
+BuildingId = "street"
+WMin = -0.5
+WMax = 0.5
+
+[node name="rail0" parent="Rail" instance=ExtResource("e2")]
+position = Vector3(0, 0.7, -6.42844)
+mesh = SubResource("b7")
+PartId = "rail0"
+
+[node name="rail1" parent="Rail" instance=ExtResource("e2")]
+position = Vector3(0, 1.3, -7.28533)
+mesh = SubResource("b7")
+PartId = "rail1"
+
+[node name="rail2" parent="Rail" instance=ExtResource("e2")]
+position = Vector3(0, 1.9, -8.14222)
+mesh = SubResource("b8")
+PartId = "rail2"
+
+[node name="rail3" parent="Rail" instance=ExtResource("e2")]
+position = Vector3(0, 2.5, -8.99911)
+mesh = SubResource("b9")
+PartId = "rail3"
+
+[node name="rail4" parent="Rail" instance=ExtResource("e2")]
+position = Vector3(0, 3.1, -9.856)
+mesh = SubResource("b9")
+PartId = "rail4"
