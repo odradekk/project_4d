@@ -29,6 +29,9 @@ public partial class FirstPersonPlayer : CharacterBody3D
     /// <summary>What E does while both arms hold something, such as a cat; null when they are free.</summary>
     internal Action? PutDown { get; set; }
 
+    /// <summary>Whether she sits at a desk: she can look around and use her hands, but not walk.</summary>
+    public bool Seated { get; set; }
+
     /// <summary>Whether the hand holds an object.</summary>
     internal bool HoldsItem => actions is { Holding: true };
     public GameHud Hud { get; private set; } = null!;
@@ -165,7 +168,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         Hud.SetHint(HintText());
         if (prism is not null) prism.GetNode<Label>("Controls").Visible = !prism.Raised && Hud.HintText == "" &&
             (!Hud.SubtitleVisible || Hud.SubtitleText == "");
-        var input = pointerCaptured && !Hud.NotebookOpen
+        var input = pointerCaptured && !Hud.NotebookOpen && !Seated
             ? Input.GetVector("move_left", "move_right", "move_forward", "move_back") : Vector2.Zero;
         var direction = Basis * new Vector3(input.X * ScreenSide, 0, input.Y);
         var speed = Input.IsActionPressed("run") ? RunSpeed : WalkSpeed;
