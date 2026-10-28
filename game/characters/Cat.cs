@@ -53,6 +53,12 @@ public partial class Cat : Node
     /// <summary>Whether the player has the cat in the arms.</summary>
     public bool Held { get; private set; }
 
+    /// <summary>
+    /// Whether the player can pick the cat up. A scene that gives the crosshair something else to do on the cat, such as
+    /// feeding it, switches this off.
+    /// </summary>
+    public bool Holdable { get; set; } = true;
+
     public override void _Ready()
     {
         body = GetParent<Character3D>();
@@ -66,7 +72,7 @@ public partial class Cat : Node
     // The pick-up sphere is there for the crosshair only while the arms are free. With a cat or an object in them it is not
     // found, so that E does what the prompt says.
     public override void _PhysicsProcess(double delta) =>
-        pickup.CollisionLayer = body.Player.HoldsItem || body.Player.PutDown is not null ? 0 : pickupLayer;
+        pickup.CollisionLayer = !Holdable || body.Player.HoldsItem || body.Player.PutDown is not null ? 0 : pickupLayer;
 
     /// <summary>Walks to random places within the radius of a point, and rests between them.</summary>
     public void Wander(Vector3 center, float radius)
