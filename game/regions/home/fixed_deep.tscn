@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
@@ -41,6 +41,14 @@ size = Vector3(0.03, 1.1, 1.5)
 [sub_resource type="BoxMesh" id="b6"]
 material = SubResource("m4")
 size = Vector3(16, 9, 0.2)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m4")
+size = Vector3(1.8, 4.2, 0.2)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m4")
+size = Vector3(0.2, 4.2, 1.6)
 
 [node name="Deep" type="Node3D"]
 
@@ -85,7 +93,7 @@ mesh = SubResource("b5")
 PartId = "p1"
 
 [node name="skypanel" type="Node3D" parent="."]
-position = Vector3(5, 0, -0.5)
+position = Vector3(5, 0, 0.2)
 script = ExtResource("e1")
 EntityId = "skypanel"
 
@@ -93,3 +101,17 @@ EntityId = "skypanel"
 position = Vector3(0, 3.5, 0)
 mesh = SubResource("b6")
 PartId = "p1"
+
+[node name="skycorner" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "skycorner"
+
+[node name="p1" parent="skycorner" instance=ExtResource("e2")]
+position = Vector3(9.1, 2.1, 7.8)
+mesh = SubResource("b7")
+PartId = "p1"
+
+[node name="p2" parent="skycorner" instance=ExtResource("e2")]
+position = Vector3(9.8, 2.1, 6.9)
+mesh = SubResource("b8")
+PartId = "p2"
