@@ -25,6 +25,15 @@ internal sealed class RoomQueries(Region3D region)
 
     internal EntityState State(string entity) => ((EntityReadResult.Found)world.ReadEntity(new EntityId(entity))).Entity;
 
+    /// <summary>Where the seam node of that name stands, on the floor.</summary>
+    internal Vector3 SeamAt(string node) => SceneReader.RelativeTransform(region.GetNode<Seam3D>($"Seams/{node}"), region).Origin;
+
+    /// <summary>Whether the entity is still in the world: a building element is gone once a grazer has eaten it.</summary>
+    internal bool Exists(string entity) => world.ReadEntity(new EntityId(entity)) is EntityReadResult.Found;
+
+    /// <summary>Whether a grazer has cut the seam.</summary>
+    internal bool IsSevered(string seam) => world.ReadSeam(new SeamId(seam)) is SeamReadResult.Found { Seam.Severed: true };
+
     /// <summary>Where a device is on its way: its angle for a hinge, its distance for a slide.</summary>
     internal double DevicePosition(string device) => State(device).DevicePosition!.Value;
 

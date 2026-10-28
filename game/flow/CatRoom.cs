@@ -21,10 +21,9 @@ public partial class CatRoom : Node
 {
     public enum Stage { Watching, Entering, Perched, Descending, AtPit, Crossing, Chasing, Leaping, Gone }
 
-    private const string RoomPath = "res://regions/room.tscn";
     // Marks on the cabinet, the pit and the room of section III, for the cat's route; the seams are read from the region.
     private static readonly Vector3 Perch = new(3.85f, 2.4f, 5.78f);
-    private static readonly Vector3 Deep = new(4f, 0, 5.9f);
+    internal static readonly Vector3 Deep = new(4f, 0, 5.9f);
     private const float PitFarZ = 3.7f;
     // Where along the board, as a fraction from the hinge to the foot, the cat comes onto it and waits; and how far above the
     // slice's line it stands.
@@ -80,9 +79,9 @@ public partial class CatRoom : Node
 
     public override void _Ready()
     {
-        home = HomeScene.Open(this, path: RoomPath);
+        home = HomeScene.Open(this, path: HomeScene.RoomPath);
         ask = new RoomQueries(home.Region);
-        seam1 = SeamAt("S1");
+        seam1 = ask.SeamAt("S1");
         // This is the room at night: nothing of the flat's day is to be used. The hoop on the wall is for looking at.
         foreach (var prop in home.Region.Props(HomeScene.Section)!.GetChildren().OfType<Interactable3D>().Where(prop => prop.Name != "Hoop"))
             home.Enable(prop.Name, false);
@@ -153,6 +152,8 @@ public partial class CatRoom : Node
                     ringTimer = RingAttemptSeconds;
                     if (RingIsLuring() && cat.JumpThroughRing("nut", "ring", "wand"))
                     {
+                        // The seam to section III is shut until the cat leaps at it, so that she finds it after the cat has gone.
+                        home.Region.World!.SetSeamOpen(new("s2"), true);
                         // Only a leap that ends on its own without the seam counts as a miss: one that the player breaks off does not.
                         then = LeapMissed;
                         Become(Stage.Leaping, give: false);
@@ -281,8 +282,6 @@ public partial class CatRoom : Node
         catBody.Warp(next);
         return next.DistanceTo(end) < .001f;
     });
-
-    private Vector3 SeamAt(string node) => SceneReader.RelativeTransform(home.Region.GetNode<Seam3D>($"Seams/{node}"), home.Region).Origin;
 
     // A point on the board of section II, a fraction of the way from its hinge to its foot. The slice of the board runs from its
     // highest corner at the hinge to its lowest at the foot, so the middle of its line is read from the bounds.

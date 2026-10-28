@@ -1,0 +1,374 @@
+[gd_scene load_steps=55 format=3]
+
+[ext_resource type="Script" path="res://adapter/Grazer3D.cs" id="g"]
+[ext_resource type="Script" path="res://adapter/MetaballShapeResource.cs" id="shape"]
+[ext_resource type="Script" path="res://adapter/MetaballResource.cs" id="ball"]
+
+[sub_resource type="Resource" id="Shut0"]
+script = ExtResource("ball")
+Id = "lip0"
+Center = PackedFloat64Array(1.5, 0.0, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut1"]
+script = ExtResource("ball")
+Id = "lip1"
+Center = PackedFloat64Array(1.299, 0.75, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut2"]
+script = ExtResource("ball")
+Id = "lip2"
+Center = PackedFloat64Array(0.75, 1.299, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut3"]
+script = ExtResource("ball")
+Id = "lip3"
+Center = PackedFloat64Array(0.0, 1.5, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut4"]
+script = ExtResource("ball")
+Id = "lip4"
+Center = PackedFloat64Array(-0.75, 1.299, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut5"]
+script = ExtResource("ball")
+Id = "lip5"
+Center = PackedFloat64Array(-1.299, 0.75, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut6"]
+script = ExtResource("ball")
+Id = "lip6"
+Center = PackedFloat64Array(-1.5, 0.0, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut7"]
+script = ExtResource("ball")
+Id = "lip7"
+Center = PackedFloat64Array(-1.299, -0.75, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut8"]
+script = ExtResource("ball")
+Id = "lip8"
+Center = PackedFloat64Array(-0.75, -1.299, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut9"]
+script = ExtResource("ball")
+Id = "lip9"
+Center = PackedFloat64Array(-0.0, -1.5, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut10"]
+script = ExtResource("ball")
+Id = "lip10"
+Center = PackedFloat64Array(0.75, -1.299, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut11"]
+script = ExtResource("ball")
+Id = "lip11"
+Center = PackedFloat64Array(1.299, -0.75, 0, 0)
+Radius = 0.675
+Weight = 1
+
+[sub_resource type="Resource" id="Shut12"]
+script = ExtResource("ball")
+Id = "tooth0"
+Center = PackedFloat64Array(0, 1.125, -0.225, 0.0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut13"]
+script = ExtResource("ball")
+Id = "tooth1"
+Center = PackedFloat64Array(0, 0.7955, -0.225, 0.7955)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut14"]
+script = ExtResource("ball")
+Id = "tooth2"
+Center = PackedFloat64Array(0, 0.0, -0.225, 1.125)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut15"]
+script = ExtResource("ball")
+Id = "tooth3"
+Center = PackedFloat64Array(0, -0.7955, -0.225, 0.7955)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut16"]
+script = ExtResource("ball")
+Id = "tooth4"
+Center = PackedFloat64Array(0, -1.125, -0.225, 0.0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut17"]
+script = ExtResource("ball")
+Id = "tooth5"
+Center = PackedFloat64Array(0, -0.7955, -0.225, -0.7955)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut18"]
+script = ExtResource("ball")
+Id = "tooth6"
+Center = PackedFloat64Array(0, -0.0, -0.225, -1.125)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut19"]
+script = ExtResource("ball")
+Id = "tooth7"
+Center = PackedFloat64Array(0, 0.7955, -0.225, -0.7955)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Shut20"]
+script = ExtResource("ball")
+Id = "spine1"
+Center = PackedFloat64Array(0, 0.1261, 1.5, 0.525)
+Radius = 1.575
+Weight = 1
+
+[sub_resource type="Resource" id="Shut21"]
+script = ExtResource("ball")
+Id = "spine2"
+Center = PackedFloat64Array(0, 0.1363, 2.25, 1.05)
+Radius = 1.5
+Weight = 1
+
+[sub_resource type="Resource" id="Shut22"]
+script = ExtResource("ball")
+Id = "spine3"
+Center = PackedFloat64Array(0, 0.0211, 3.0, 1.575)
+Radius = 1.425
+Weight = 1
+
+[sub_resource type="Resource" id="Shut23"]
+script = ExtResource("ball")
+Id = "spine4"
+Center = PackedFloat64Array(0, -0.1136, 3.75, 2.1)
+Radius = 1.35
+Weight = 1
+
+[sub_resource type="Resource" id="Shut24"]
+script = ExtResource("ball")
+Id = "spine5"
+Center = PackedFloat64Array(0, -0.1439, 4.5, 2.625)
+Radius = 1.275
+Weight = 1
+
+[sub_resource type="Resource" id="Open0"]
+script = ExtResource("ball")
+Id = "lip0"
+Center = PackedFloat64Array(2.25, 0.0, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open1"]
+script = ExtResource("ball")
+Id = "lip1"
+Center = PackedFloat64Array(1.9486, 1.125, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open2"]
+script = ExtResource("ball")
+Id = "lip2"
+Center = PackedFloat64Array(1.125, 1.9486, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open3"]
+script = ExtResource("ball")
+Id = "lip3"
+Center = PackedFloat64Array(0.0, 2.25, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open4"]
+script = ExtResource("ball")
+Id = "lip4"
+Center = PackedFloat64Array(-1.125, 1.9486, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open5"]
+script = ExtResource("ball")
+Id = "lip5"
+Center = PackedFloat64Array(-1.9486, 1.125, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open6"]
+script = ExtResource("ball")
+Id = "lip6"
+Center = PackedFloat64Array(-2.25, 0.0, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open7"]
+script = ExtResource("ball")
+Id = "lip7"
+Center = PackedFloat64Array(-1.9486, -1.125, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open8"]
+script = ExtResource("ball")
+Id = "lip8"
+Center = PackedFloat64Array(-1.125, -1.9486, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open9"]
+script = ExtResource("ball")
+Id = "lip9"
+Center = PackedFloat64Array(-0.0, -2.25, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open10"]
+script = ExtResource("ball")
+Id = "lip10"
+Center = PackedFloat64Array(1.125, -1.9486, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open11"]
+script = ExtResource("ball")
+Id = "lip11"
+Center = PackedFloat64Array(1.9486, -1.125, -0.375, 0)
+Radius = 0.9
+Weight = 1
+
+[sub_resource type="Resource" id="Open12"]
+script = ExtResource("ball")
+Id = "tooth0"
+Center = PackedFloat64Array(0, 1.5, -0.6, 0.0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open13"]
+script = ExtResource("ball")
+Id = "tooth1"
+Center = PackedFloat64Array(0, 1.0607, -0.6, 1.0607)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open14"]
+script = ExtResource("ball")
+Id = "tooth2"
+Center = PackedFloat64Array(0, 0.0, -0.6, 1.5)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open15"]
+script = ExtResource("ball")
+Id = "tooth3"
+Center = PackedFloat64Array(0, -1.0607, -0.6, 1.0607)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open16"]
+script = ExtResource("ball")
+Id = "tooth4"
+Center = PackedFloat64Array(0, -1.5, -0.6, 0.0)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open17"]
+script = ExtResource("ball")
+Id = "tooth5"
+Center = PackedFloat64Array(0, -1.0607, -0.6, -1.0607)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open18"]
+script = ExtResource("ball")
+Id = "tooth6"
+Center = PackedFloat64Array(0, -0.0, -0.6, -1.5)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open19"]
+script = ExtResource("ball")
+Id = "tooth7"
+Center = PackedFloat64Array(0, 1.0607, -0.6, -1.0607)
+Radius = 0.45
+Weight = 1
+
+[sub_resource type="Resource" id="Open20"]
+script = ExtResource("ball")
+Id = "spine1"
+Center = PackedFloat64Array(0, 0.1261, 1.5, 0.525)
+Radius = 1.575
+Weight = 1
+
+[sub_resource type="Resource" id="Open21"]
+script = ExtResource("ball")
+Id = "spine2"
+Center = PackedFloat64Array(0, 0.1363, 2.25, 1.05)
+Radius = 1.5
+Weight = 1
+
+[sub_resource type="Resource" id="Open22"]
+script = ExtResource("ball")
+Id = "spine3"
+Center = PackedFloat64Array(0, 0.0211, 3.0, 1.575)
+Radius = 1.425
+Weight = 1
+
+[sub_resource type="Resource" id="Open23"]
+script = ExtResource("ball")
+Id = "spine4"
+Center = PackedFloat64Array(0, -0.1136, 3.75, 2.1)
+Radius = 1.35
+Weight = 1
+
+[sub_resource type="Resource" id="Open24"]
+script = ExtResource("ball")
+Id = "spine5"
+Center = PackedFloat64Array(0, -0.1439, 4.5, 2.625)
+Radius = 1.275
+Weight = 1
+
+[sub_resource type="Resource" id="ShutShape"]
+script = ExtResource("shape")
+Balls = Array[ExtResource("ball")]([SubResource("Shut0"), SubResource("Shut1"), SubResource("Shut2"), SubResource("Shut3"), SubResource("Shut4"), SubResource("Shut5"), SubResource("Shut6"), SubResource("Shut7"), SubResource("Shut8"), SubResource("Shut9"), SubResource("Shut10"), SubResource("Shut11"), SubResource("Shut12"), SubResource("Shut13"), SubResource("Shut14"), SubResource("Shut15"), SubResource("Shut16"), SubResource("Shut17"), SubResource("Shut18"), SubResource("Shut19"), SubResource("Shut20"), SubResource("Shut21"), SubResource("Shut22"), SubResource("Shut23"), SubResource("Shut24")])
+Threshold = 0.25
+
+[sub_resource type="Resource" id="OpenShape"]
+script = ExtResource("shape")
+Balls = Array[ExtResource("ball")]([SubResource("Open0"), SubResource("Open1"), SubResource("Open2"), SubResource("Open3"), SubResource("Open4"), SubResource("Open5"), SubResource("Open6"), SubResource("Open7"), SubResource("Open8"), SubResource("Open9"), SubResource("Open10"), SubResource("Open11"), SubResource("Open12"), SubResource("Open13"), SubResource("Open14"), SubResource("Open15"), SubResource("Open16"), SubResource("Open17"), SubResource("Open18"), SubResource("Open19"), SubResource("Open20"), SubResource("Open21"), SubResource("Open22"), SubResource("Open23"), SubResource("Open24")])
+Threshold = 0.25
+
+[node name="Pieces" type="Node3D"]
+
+[node name="Grazer" type="Node3D" parent="."]
+script = ExtResource("g")
+EntityId = "grazer"
+W = 40.0
+Shape = SubResource("ShutShape")
+OpenShape = SubResource("OpenShape")
