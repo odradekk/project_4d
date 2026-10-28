@@ -12,25 +12,23 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The prologue from scene 1 to scene 8 played through in one run, from the start of the main scene and without a debug
+/// The prologue from scene 1 to scene 8 played through in one run, started as the main scene starts it and without a debug
 /// entry. Each scene is finished by the quickest moves that its own checks use. What is checked is the way between the scenes:
 /// every scene starts with a checkpoint and with what the scenes before gave it, the scenes of the school share one region,
-/// and a region is gone before the next one is loaded. Waits for the scripts of the scenes run at a faster pace. With
-/// -- --real-time they run at the pace of play and the time of every frame is reported by scene; --uncapped also switches vsync off.
+/// a region is gone before the next one is loaded, and a scene that is started again starts as it did the first time. Waits for
+/// the scripts of the scenes run at a faster pace.
 /// </summary>
 public partial class PrologueChecks : Node
 {
     private const float FastSpeed = 8;
 
     private readonly Dictionary<int, (bool Checkpoint, int[] Pages)> starts = [];
-    private readonly Dictionary<int, List<(double Milliseconds, bool Ticked, bool Raised)>> frames = [];
-    private readonly bool realTime = OS.GetCmdlineUserArgs().Contains("--real-time");
     private TurningFixture play = null!;
     private SchoolFixture school = null!;
     private Prologue prologue = null!;
-    private float speed;
-    private long ticks, lastTicks;
-    private ulong lastFrame;
+    private float speed = FastSpeed;
+    private int startCount;
+    private long ticks;
     private bool ended;
 
     private Region3D Region => prologue.Region;
@@ -38,41 +36,26 @@ public partial class PrologueChecks : Node
 
     public override void _PhysicsProcess(double delta) => ticks++;
 
-    public override void _Process(double delta)
-    {
-        var now = Time.GetTicksUsec();
-        if (lastFrame != 0 && Engine.TimeScale == 1 && prologue?.Scene is { } scene && GodotObject.IsInstanceValid(scene))
-        {
-            if (!frames.TryGetValue(prologue.Number, out var times)) frames[prologue.Number] = times = [];
-            times.Add(((now - lastFrame) / 1000.0, ticks != lastTicks, Player.PrismRaised));
-        }
-        lastFrame = now;
-        lastTicks = ticks;
-    }
-
     public override async void _Ready()
     {
         play = new TurningFixture(this);
         school = new SchoolFixture(play);
-        speed = realTime ? 1 : FastSpeed;
-        if (OS.GetCmdlineUserArgs().Contains("--uncapped"))
-        {
-            DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);
-            Engine.MaxFps = 0;
-        }
         try
         {
             prologue = new Prologue();
-            prologue.SceneStarted += number => starts[number] = (
-                prologue.Scene!.GetChildren().OfType<SceneCheckpoint>().Any(), Player.Hud.UnlockedPages.Order().ToArray());
+            prologue.SceneStarted += number =>
+            {
+                startCount++;
+                starts[number] = (prologue.Scene!.GetChildren().OfType<SceneCheckpoint>().Any(), Player.Hud.UnlockedPages.Order().ToArray());
+            };
             prologue.Finished += () => ended = true;
             AddChild(prologue);
             await PlayMorning();
-            var wallet = await PlaySchoolRoad();
+            await PlaySchoolRoad();
             var schoolRegion = await PlayMathClass();
-            await PlayRecess(schoolRegion);
-            await PlayDuty(schoolRegion);
-            await PlayHomeRoad(wallet, schoolRegion);
+            schoolRegion = await PlayRecess(schoolRegion);
+            schoolRegion = await PlayDuty(schoolRegion);
+            await PlayHomeRoad(schoolRegion);
             await PlayHomeEvening();
             await PlayCatRoom();
             await Until(() => ended, 15, "the prologue must end after scene 8");
@@ -81,8 +64,7 @@ public partial class PrologueChecks : Node
             prologue.Free();
             // The audio thread fades a stopped sound out before it lets go of it, which takes time and not frames.
             await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
-            if (realTime) Report();
-            GD.Print("Prologue checks passed: scenes 1 to 8 in a row, with the notebook, the wallet, the cat and a checkpoint at every start.");
+            GD.Print("Prologue checks passed: scenes 1 to 8 in a row, with the notebook, the wallet, the cat and a checkpoint at every start, and five scenes started again.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -98,12 +80,29 @@ public partial class PrologueChecks : Node
         }
     }
 
-    // The scene has started: it has a checkpoint, she holds nothing and carries nothing in the backpack, and the notebook has
-    // the pages that the scenes before drew.
+    // The scene has started.
     private async Task Arrive(int number, params int[] pages)
     {
-        await Until(() => prologue.Number == number, 20, $"scene {number} must start");
+        await Until(() => starts.ContainsKey(number), 20, $"scene {number} must start");
         await play.Frames(3);
+        CheckStart(number, pages);
+    }
+
+    // The scene is started again by what asks for it, and starts as it did the first time.
+    private async Task Again(Action ask, int number, params int[] pages)
+    {
+        var before = startCount;
+        ask();
+        await Until(() => startCount > before, 20, $"scene {number} must start again");
+        await play.Frames(3);
+        CheckStart(number, pages);
+    }
+
+    // The scene has a checkpoint, only its own region is loaded, she holds nothing and carries nothing in the backpack, and the
+    // notebook has the pages that the scenes before drew.
+    private void CheckStart(int number, int[] pages)
+    {
+        Check(prologue.Number == number, $"scene {number} is the one being played");
         Check(prologue.FindChildren("Region", "Region3D", true, false).Count == 1, $"only the region of scene {number} is loaded");
         Check(starts[number].Checkpoint, $"scene {number} starts with a checkpoint");
         Check(starts[number].Pages.SequenceEqual(pages), $"scene {number} starts with the pages [{string.Join(", ", pages)}], not [{string.Join(", ", starts[number].Pages)}]");
@@ -132,19 +131,4 @@ public partial class PrologueChecks : Node
     private Interactable3D Prop(string name) => Region.Props("Ⅰ")!.GetNode<Interactable3D>(name);
 
     private Task Says(string text, double seconds = 6) => Until(() => Player.Hud.SubtitleText.Contains(text), seconds, $"the subtitle must say '{text}'");
-
-    // A frame without a physics tick costs next to nothing when frames are not held back, so the frames with a tick are listed
-    // too, and those with the prism up, when the lens draws the other sections.
-    private void Report()
-    {
-        GD.Print("scene | all frames | frames with a physics tick | with a tick and the prism up (count, median ms, p95 ms, max ms)");
-        foreach (var (number, times) in frames.OrderBy(pair => pair.Key))
-            GD.Print($"{number,5} | {Describe(times)} | {Describe(times.Where(frame => frame.Ticked))} | {Describe(times.Where(frame => frame.Ticked && frame.Raised))}");
-    }
-
-    private static string Describe(IEnumerable<(double Milliseconds, bool Ticked, bool Raised)> frames)
-    {
-        var sorted = frames.Select(frame => frame.Milliseconds).Order().ToArray();
-        return sorted.Length == 0 ? "none" : $"{sorted.Length,6} {sorted[sorted.Length / 2],7:F1} {sorted[(int)(sorted.Length * .95)],7:F1} {sorted[^1],7:F1}";
-    }
 }

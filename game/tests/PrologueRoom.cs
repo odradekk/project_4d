@@ -19,6 +19,7 @@ public partial class PrologueChecks
     private async Task PlayCatRoom()
     {
         await Arrive(8, 1, 2, 3, 4, 8);
+        await play.Use(Region);
         // The cat's leap through the ring has to pass within 15 cm of the seam, and at a faster pace the ticks of the leap are longer than that.
         speed = 1;
         var room = (CatRoom)prologue.Scene!;
@@ -28,21 +29,21 @@ public partial class PrologueChecks
         Check(Player.Hud.NotebookAvailable, "the notebook can be opened in the room");
 
         // The cat leaps into the seam once she looks at it with the prism up.
-        Look(new(4.8f, Floor, 4.9f), new(7.1f, .5f, 4.3f));
+        play.LookAt(new(4.8f, Floor, 4.9f), new(7.1f, .5f, 4.3f));
         Button(MouseButton.Right, true);
         await Until(() => room.Entries(CatRoom.Stage.Perched) > 0, 10, "the cat must leap into the seam");
         Button(MouseButton.Right, false);
 
         // The wand is flipped over the guard, picked up and stood up toward section II, and shaken there.
-        Look(new(5.44f, Floor, 3.3f), new(5.44f, 1.09f, 2.63f));
+        play.LookAt(new(5.44f, Floor, 3.3f), new(5.44f, 1.09f, 2.63f));
         await play.Frames(3);
         Check(actions.Flip() is null, "the wand is flipped over the guard");
         await Until(() => ask.IsResting("wand"), 6, "the wand must come to rest on her side of the guard");
-        Look(new(5.44f, Floor, 3.6f), new(5.44f, .06f, 2.89f));
+        play.LookAt(new(5.44f, Floor, 3.6f), new(5.44f, .06f, 2.89f));
         await play.Frames(3);
         Check(actions.Use() is null && actions.Held == "wand", "she picks the wand up");
         await Walk(new(5f, Floor, 4f));
-        Face(new(5f, Floor, 4f), new(0, 0, -1));
+        play.LookAt(new(5f, Floor, 4f), new(5f, 1.3f + Floor, 3f));
         await play.Frames(10);
         Check(actions.StandOrLay() is null, "the wand is stood up toward section II");
         await Until(() => !ask.State("wand").Rotating, 3, "the stand-up must end");
@@ -77,11 +78,11 @@ public partial class PrologueChecks
         var stool = ask.State("stool").Pose;
         Check(world.PlaceEntity(new("stool"), stool with { Position = new(4.2, stool.Position.Y, 5.4, stool.Position.W) }) is UpdateResult.Updated, "the stool is put by the door");
         await play.Frames(3);
-        Look(new(6.6f, Floor, 3.2f), new(7.2f, .775f, 3.2f));
+        play.LookAt(new(6.6f, Floor, 3.2f), new(7.2f, .775f, 3.2f));
         await play.Frames(3);
         Check(actions.Aimed == "nut" && actions.Use() is null && actions.Held == "nut", $"she picks the nut up; the crosshair is on {actions.Aimed}");
         await Walk(new(7.3f, Floor, 4.3f));
-        Face(Seam, new(-1, 0, 0));
+        play.LookAt(Seam, Seam + new Vector3(-1, 1.3f, 0));
         await play.Frames(20);
         Check(actions.StandOrLay() is null, "the nut is stood up facing into the room");
         await Until(() => !ask.State("nut").Rotating, 3, "the stand-up must end");
@@ -97,7 +98,7 @@ public partial class PrologueChecks
     private async Task CrossSeam()
     {
         await Walk(Seam);
-        Look(Seam, new(7.1f, 1.3f, 3.3f));
+        play.LookAt(Seam, new(7.1f, 1.3f, 3.3f));
         Button(MouseButton.Right, true);
         await play.Frames(3);
         Button(MouseButton.Left, true);
@@ -107,19 +108,7 @@ public partial class PrologueChecks
         await play.Frames(3);
     }
 
-    // Puts her feet at a place with the eyes level, turned toward a point.
-    private void Look(Vector3 feet, Vector3 target)
-    {
-        Player.Position = feet;
-        Player.Velocity = Vector3.Zero;
-        var offset = target - (feet + new Vector3(0, 1.3f, 0));
-        Player.Rotation = new(0, Mathf.Atan2(-offset.X, -offset.Z), 0);
-        Player.Camera.Rotation = new(Mathf.Atan2(offset.Y, new Vector2(offset.X, offset.Z).Length()), 0, 0);
-    }
-
-    private void Face(Vector3 feet, Vector3 direction) => Look(feet, feet + new Vector3(0, 1.3f, 0) + direction);
-
-    // Half a metre per frame, so that what she carries is moved the way a walk moves it.
+    // Like the walk of TurningFixture, but on the ground plane: she settles a little below the height of the feet that are given.
     private async Task Walk(Vector3 feet)
     {
         for (var frames = 0; Flat(Player.Position - feet).Length() > .001f; frames++)
