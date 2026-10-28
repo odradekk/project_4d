@@ -105,12 +105,17 @@ public partial class Duty : Node
         room.Player.Hud.Say("小满", "黑板擦干净了，粉笔灰呛人。", 2.5);
     }
 
-    // One press turns the chairs of a whole row; the script puts them in place, since turning them over is not the lesson.
+    // One press turns the chairs of a whole row; the script puts them in place, since turning them over is not the lesson. A chair
+    // with something on its desk where its seat would go stays on the floor, and the row is not done.
     private void Upturn(int row)
     {
+        if (room.UpturnRow(row).Count > 0)
+        {
+            room.Player.Hud.Say("小满", "桌上有东西，这排的椅子有几把倒扣不上去。", 3.5);
+            return;
+        }
         upturned.Add(row);
         SchoolRoom.Offer(room.RowBoxes[row], false);
-        room.UpturnRow(row);
         if (upturned.Count < room.RowBoxes.Count) return;
         room.Player.Hud.Say("小满", "椅子都倒扣好了。教室空荡荡的，和上午镜片里那一页一模一样。", 4.5);
     }

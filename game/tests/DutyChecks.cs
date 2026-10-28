@@ -21,7 +21,7 @@ public partial class DutyChecks : Node
     private const string Pencil = SchoolRoom.WindowPencil;
     // The window the pencil is in. Its pane has gone .214 m of its way when the pencil's plate stops it.
     private const string Stuck = "sash1";
-    private const double StopsAt = .214;
+    private const double StopsAt = SchoolOperationChecks.StopsAt;
     // Where she stands to push each window: in the lane beside the chairs, and where the middle of its pane is.
     private static readonly float[] LaneZ = [-3.6f, -1.375f, .525f, 3.375f];
     private static readonly float[] PaneZ = [-3.765f, -1.485f, .795f, 3.075f];
@@ -53,10 +53,12 @@ public partial class DutyChecks : Node
             await CheckStalledWindowGoesBack();
             await Load();
             await CheckDeskmateStopped();
+            await Load();
+            await CheckRowWithAThingOnADesk();
             await Unload();
-            CheckExpectedOperations();
+            SchoolOperationChecks.Run(this);
             await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
-            GD.Print("Duty checks passed: start, chores, stuck window, plate in the lens, last window, door, other order, stalled window, deskmate stopped, expected operations.");
+            GD.Print("Duty checks passed: start, chores, stuck window, plate in the lens, last window, door, other order, stalled window, deskmate stopped, row with a thing on a desk, expected operations.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -272,49 +274,32 @@ public partial class DutyChecks : Node
         Check(room.Deskmate.Visible && room.DoorLock.CollisionLayer == 4, "he is still in the room, and the door can be locked");
     }
 
-    // The engine plays the solutions written in the school region when it loads, and reports a step that ends otherwise.
-    private void CheckExpectedOperations()
+    // Something lies where a chair of a row would be put on its desk: that chair stays on the floor, the others go up, and the row
+    // is not done until the thing is taken away.
+    private async Task CheckRowWithAThingOnADesk()
     {
-        var region = GD.Load<PackedScene>("res://regions/school.tscn").Instantiate<Region3D>();
-        AddChild(region);
-        var operation = region.GetNode<ExpectedOperationNode>("ExpectedPuzzleOperations/WindowStuck").Operation!;
-        var stop = (ExpectedDeviceResource)operation.Steps[1];
-        var lay = operation.Steps[2];
-        try
+        await school.Fast(() => room.Broom.CollisionLayer != 0, 40, "the chores must start");
+        var eraser = room.State("eraser");
+        var desk = school.Where("deskI11");
+        var seat = eraser.Pose with { Position = new(desk.X, .77, desk.Z + .12, 0) };
+        Check(room.Region.World!.PlaceEntity(new("eraser"), seat) is UpdateResult.Updated, "the eraser must be put where the seat of a chair would be");
+        var lane = -2.8f + .95f + .5f;
+        await school.Stand(new(-1.26f, 0, lane), new(-.8f, .55f, lane));
+        Press(Key.E);
+        await play.Frames(3);
+        for (var column = 0; column < 6; column++)
         {
-            Check(region.Loaded && new SceneReader(region).Load() is LoadResult.Loaded, $"the school region must load: {region.Diagnostics}");
-            stop.ExpectedPosition = .3;
-            var wrong = new SceneReader(region).Load() as LoadResult.Invalid;
-            stop.ExpectedPosition = StopsAt;
-            Check(wrong is not null && wrong.Errors.Any(error => error.Code == LoadErrorCode.ExpectedOperationFailed && error.StepIndex == 1
-                    && error.Source == new Source("ExpectedPuzzleOperations/WindowStuck", "Operation.Steps[1]")),
-                "a window that stops somewhere else than the operation says is reported at its step");
-
-            // Without laying the pencil down, the last push does not shut the window.
-            operation.Steps.RemoveAt(2);
-            var blocked = new SceneReader(region).Load() as LoadResult.Invalid;
-            operation.Steps.Insert(2, lay);
-            Check(blocked is not null && blocked.Errors.Any(error => error.Code == LoadErrorCode.ExpectedOperationFailed && error.StepIndex == 2),
-                "a window pushed while the pencil still stands does not shut, and the operation says so");
-
-            // A target on a step that takes none, and a step that is not there, are mistakes of the author, reported at the step.
-            var source = new Source("ExpectedPuzzleOperations/WindowStuck", "Operation.Steps[2]");
-            ((ExpectedRotationResource)lay).Target = "Ⅱ";
-            var withTarget = new SceneReader(region).Load() as LoadResult.Invalid;
-            ((ExpectedRotationResource)lay).Target = "";
-            Check(withTarget is not null && withTarget.Errors.Any(error => error.Source == source), "a target on a step that lays a pencil down is reported at the step");
-            operation.Steps.Insert(2, null!);
-            var withGap = new SceneReader(region).Load() as LoadResult.Invalid;
-            operation.Steps.RemoveAt(2);
-            Check(withGap is not null && withGap.Errors.Any(error => error.Source == source), "a step that is missing is reported at its place");
-            Check(new SceneReader(region).Load() is LoadResult.Loaded, "the operations are as they were");
+            var stays = column == 1;
+            Check(Exists($"chairI1{column}") == stays && Exists($"chairI1{column}U") == !stays,
+                $"the chair 1{column} is {(stays ? "still on the floor, since the eraser is in its way" : "upside down on its desk")}");
         }
-        finally
-        {
-            stop.ExpectedPosition = StopsAt;
-            if (operation.Steps.Count == 3) operation.Steps.Insert(2, lay);
-            RemoveChild(region);
-            region.Free();
-        }
+        await school.Fast(() => school.Heard("桌上有东西"), 10, "she must say that something is on a desk");
+        Check(room.RowBoxes[1].CollisionLayer == 4, "the row is not done, and still offers itself");
+
+        // The thing is taken away, and the chair that was left goes up.
+        Check(room.Region.World.PlaceEntity(new("eraser"), eraser.Definition.Pose) is UpdateResult.Updated, "the eraser must be put back");
+        Press(Key.E);
+        await play.Frames(3);
+        Check(!Exists("chairI11") && Exists("chairI11U") && room.RowBoxes[1].CollisionLayer == 0, "the last chair of the row goes up, and the row is done");
     }
 }

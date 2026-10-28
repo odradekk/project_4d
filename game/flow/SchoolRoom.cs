@@ -41,6 +41,10 @@ internal sealed class SchoolRoom
 
     private readonly PackedScene chair = GD.Load<PackedScene>("res://regions/school/chair.tscn");
 
+    // The desks of section Ⅰ, by number, whose chairs are upside down on them. The room remembers it, since a row may be
+    // turned over in two goes.
+    private readonly HashSet<string> upturned = [];
+
     private SchoolRoom(Region3D region)
     {
         Region = region;
@@ -187,37 +191,49 @@ internal sealed class SchoolRoom
     }
 
     /// <summary>Puts a chair behind every desk of section Ⅰ, on the floor.</summary>
-    internal void PutChairsOnFloor() => Put(SectionI, Desks("deskI").Select(desk =>
-        ($"chairI{desk.Number}", new Transform3D(Basis.Identity, desk.At + new Vector3(0, 0, ChairBehind)))));
+    internal void PutChairsOnFloor() => Require(Add(SectionI, Desks("deskI").Select(desk =>
+        ($"chairI{desk.Number}", new Transform3D(Basis.Identity, desk.At + new Vector3(0, 0, ChairBehind))))), "A chair cannot be put on the floor.");
 
-    /// <summary>Turns the chairs of a row upside down on their desks, which is where section Ⅱ has all of them.</summary>
-    internal void UpturnRow(int row)
+    /// <summary>
+    /// Turns the chairs of a row upside down on their desks, which is where section Ⅱ has all of them. A chair goes up before
+    /// its place on the floor is given up, so that one the engine refuses, because something lies where it would stand, stays
+    /// on the floor. Returns the numbers of the desks whose chairs stay.
+    /// </summary>
+    internal IReadOnlyList<string> UpturnRow(int row)
     {
         var half = new Basis(new Vector3(-1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 0, 1));
-        var desks = Desks("deskI").Where(desk => desk.Number.StartsWith(row.ToString())).ToArray();
-        foreach (var desk in desks) Require(Region.RemoveFixed($"chairI{desk.Number}"), $"The chair {desk.Number} of section Ⅰ cannot be taken away.");
-        Put(SectionI, desks.Select(desk => ($"chairI{desk.Number}U", new Transform3D(half, desk.At + new Vector3(0, UpsideDownHeight, UpsideDownBehind)))));
+        var desks = Desks("deskI").Where(desk => desk.Number.StartsWith(row.ToString()) && !upturned.Contains(desk.Number)).ToArray();
+        var refused = Add(SectionI, desks.Select(desk => ($"chairI{desk.Number}U", new Transform3D(half, desk.At + new Vector3(0, UpsideDownHeight, UpsideDownBehind)))));
+        Require(refused.Where(chair => chair.Code != FailureCode.TranslationBlocked).ToArray(), "A chair cannot be turned upside down.");
+        var stays = desks.Where(desk => refused.Any(chair => chair.Id == $"chairI{desk.Number}U")).Select(desk => desk.Number).ToArray();
+        foreach (var desk in desks.Where(desk => !stays.Contains(desk.Number)))
+        {
+            Require(Region.RemoveFixed($"chairI{desk.Number}"), $"The chair {desk.Number} of section Ⅰ cannot be taken away.");
+            upturned.Add(desk.Number);
+        }
+        return stays;
     }
 
     /// <summary>Puts every chair of section Ⅱ, which stand on their desks, on the floor behind them.</summary>
     internal void PutChairsOfSectionIIOnFloor()
     {
         var desks = Desks("deskII").ToArray();
+        Require(Add(SectionII, desks.Select(desk => ($"chairII{desk.Number}F", new Transform3D(Basis.Identity, desk.At + new Vector3(0, 0, ChairBehind))))), "A chair cannot be put on the floor.");
         foreach (var desk in desks) Require(Region.RemoveFixed($"chairII{desk.Number}"), $"The chair {desk.Number} of section Ⅱ cannot be taken away.");
-        Put(SectionII, desks.Select(desk => ($"chairII{desk.Number}F", new Transform3D(Basis.Identity, desk.At + new Vector3(0, 0, ChairBehind)))));
     }
 
     /// <summary>
-    /// Puts the pencil in the window rail back where it lay if she has picked it up. Lying, it may leave the sill only in her
-    /// hand, and it would not come back from outside the window.
+    /// Puts the pencil on the sill back where it lay whenever it has been moved from there while it lies: picked up, or flipped
+    /// across the inner face of the sill into the room, where it would fall to the floor. Taken out of the window it would
+    /// not come back.
     /// </summary>
     internal void KeepWindowPencilOnSill()
     {
         var state = State(WindowPencil);
-        if (state.Holder is null || state.UprightOrigin is not null) return;
+        if (state.Rotating || state.UprightOrigin is not null || (state.Holder is null && state.Pose == state.Definition.Pose)) return;
         var id = new EntityId(WindowPencil);
-        Region.World!.ReleaseEntity(id);
-        if (Region.World.PlaceEntity(id, state.Definition.Pose) is UpdateResult.Rejected rejected)
+        if (state.Holder is not null) Region.World!.ReleaseEntity(id);
+        if (Region.World!.PlaceEntity(id, state.Definition.Pose) is UpdateResult.Rejected rejected)
             GD.PushError($"The pencil cannot be put back on the sill: {rejected.Failure.Detail}");
     }
 
@@ -231,8 +247,8 @@ internal sealed class SchoolRoom
             GD.PushError("The pencil in the window rail cannot stand up.");
     }
 
-    private void Put(string section, IEnumerable<(string Id, Transform3D At)> chairs) =>
-        Require(Region.AddFixed(chair, section, chairs), $"A chair cannot be put in the room of section {section}.");
+    private IReadOnlyList<(string Id, FailureCode Code)> Add(string section, IEnumerable<(string Id, Transform3D At)> chairs) =>
+        Region.AddFixed(chair, section, chairs);
 
     // The desks of a section by the number of their row and column, and where each stands on the floor; the extra desk is 49.
     private IEnumerable<(string Number, Vector3 At)> Desks(string prefix)
@@ -249,5 +265,10 @@ internal sealed class SchoolRoom
     private static void Require(FailureCode? refused, string message)
     {
         if (refused is { } code) GD.PushError($"{message} ({code})");
+    }
+
+    private static void Require(IReadOnlyList<(string Id, FailureCode Code)> refused, string message)
+    {
+        foreach (var (id, code) in refused) GD.PushError($"{message} {id}: {code}");
     }
 }

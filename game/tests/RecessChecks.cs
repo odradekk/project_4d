@@ -218,12 +218,22 @@ public partial class RecessChecks : Node
         await school.Fast(() => !room.Player.Seated, 60, "she must be free to go to the window");
         await school.Stand(WindowSpot, school.Where(SchoolRoom.WindowPencil));
         var lay = room.State(SchoolRoom.WindowPencil).Pose;
+        Check(lay == room.State(SchoolRoom.WindowPencil).Definition.Pose, "the pencil lies where the scene put it, to the last digit");
         Press(Key.E);
         await play.Frames(5);
         // The scene looks at her hand once a frame, after the frame has begun.
         await play.Frames(2);
         var pencil = room.State(SchoolRoom.WindowPencil);
         Check(pencil.Holder is null && pencil.UprightOrigin is null && pencil.Pose == lay, $"the pencil is on the sill where it lay, not in her hand; it is at {pencil.Pose.Position}");
+
+        // R flips it across the inner face of the sill, into the room, where it would fall to the floor; it is put back.
+        Press(Key.R);
+        await play.Until(() => room.State(SchoolRoom.WindowPencil).Rotating, 3, "the flip of the pencil must start");
+        await play.Until(() => !room.State(SchoolRoom.WindowPencil).Rotating, 3, "the flip of the pencil must end");
+        await play.Frames(10);
+        pencil = room.State(SchoolRoom.WindowPencil);
+        Check(pencil.UprightOrigin is null && pencil.Pose == lay && pencil.Handedness == Handedness.Normal,
+            $"the pencil is on the sill where it lay, not flipped into the room; it is at {pencil.Pose.Position} and {pencil.Handedness}");
         Press(Key.F);
         await school.Fast(() => finished == 1, 60, "the scene must end");
         Check(room.IsUpright(SchoolRoom.WindowPencil), "the pencil can still be stood up");

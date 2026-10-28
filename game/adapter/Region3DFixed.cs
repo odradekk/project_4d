@@ -12,30 +12,27 @@ public partial class Region3D
     /// <summary>
     /// Adds fixed objects to a section: the scene's root is a FixedObject3D with BoxPart3D children, and each is placed at its
     /// transform in the region. The engine checks each as it checks a fixed object that was loaded, and refuses one that would
-    /// cut into something; the ones before it stay. Returns null when all are added, otherwise why the engine refused one.
+    /// cut into something; the others are added all the same. Returns the ones that were refused, with why.
     /// </summary>
-    public FailureCode? AddFixed(PackedScene scene, string section, IEnumerable<(string Id, Transform3D At)> placements)
+    public IReadOnlyList<(string Id, FailureCode Code)> AddFixed(PackedScene scene, string section, IEnumerable<(string Id, Transform3D At)> placements)
     {
         var added = new List<EntityId>();
-        FailureCode? refused = null;
+        var refused = new List<(string Id, FailureCode Code)>();
         foreach (var (id, at) in placements)
-        {
-            refused = AddOne(scene, id, section, at);
-            if (refused is not null) break;
-            added.Add(new(id));
-        }
-        // The slices of the whole batch are cut once for each section.
+            if (AddOne(scene, id, section, at) is { } code) refused.Add((id, code));
+            else added.Add(new(id));
+        // A fixed object has slices in the section it stands in only, and the slices of the whole batch are cut at once.
         if (added.Count > 0)
-            foreach (var sectionScene in sectionScenes)
+        {
+            var sectionScene = sectionScenes.Single(candidate => candidate.Id.Value == section);
+            var geometry = (SectionGeometryResult.Geometry)World!.GetSectionGeometry(sectionScene.Id);
+            foreach (var slice in geometry.Entities.Where(slice => added.Contains(slice.Entity)))
             {
-                var geometry = (SectionGeometryResult.Geometry)World!.GetSectionGeometry(sectionScene.Id);
-                foreach (var slice in geometry.Entities.Where(slice => added.Contains(slice.Entity)))
-                {
-                    var node = SliceMesh.Entity(slice, loader!.Materials, sectionScene.MaskIds, new StaticBody3D { Name = "Collision" });
-                    viewports[sectionScene.Id.Value].GetNode("Geometry").AddChild(node);
-                    sectionScene.StaticNodes[slice.Entity] = node;
-                }
+                var node = SliceMesh.Entity(slice, loader!.Materials, sectionScene.MaskIds, new StaticBody3D { Name = "Collision" });
+                viewports[section].GetNode("Geometry").AddChild(node);
+                sectionScene.StaticNodes[slice.Entity] = node;
             }
+        }
         return refused;
     }
 
