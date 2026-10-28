@@ -27,7 +27,7 @@ internal sealed partial class WorldValidation
         for (var i = 0; i < (balls?.Count ?? 0); i++)
         {
             var ball = balls![i];
-            var location = source with { Property = $"{source.Property}.Balls[{i}]" };
+            var location = Field(source, $"Balls[{i}]");
             if (ball is null)
             {
                 Error(LoadErrorCode.InvalidGeometry, location, "Metaball is required.", grazer.Id);

@@ -44,7 +44,9 @@ internal sealed partial class WorldValidation
         ValidateEntities(description, root);
         errors.AddRange(WorldInterference.Check(description, errors));
         ValidateSeams(description, root);
-        Unsupported(description.SharedValues, value => value.Source, root, "SharedValues");
+        if (description.SharedValues is null) Error(LoadErrorCode.InvalidGeometry, root, "SharedValues collection is required.");
+        foreach (var value in description.SharedValues ?? [])
+            Error(LoadErrorCode.UnsupportedDefinition, value is null ? root : value.Source, "SharedValues are not implemented.");
         if (description.ExpectedOperations is null)
             Error(LoadErrorCode.InvalidGeometry, root, "ExpectedOperations collection is required.");
     }
@@ -103,7 +105,8 @@ internal sealed partial class WorldValidation
             Id(entity.Id.Value, entity.Source, entity.Id);
             if (!ids.Add(entity.Id)) Error(LoadErrorCode.DuplicateId, entity.Source, "Duplicate entity ID.", entity.Id);
             var errorsBeforePose = errors.Count;
-            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: entity is not DeviceDefinition && entity is not GrazerDefinition && !DynamicShapes.IsBall(entity));
+            var mayTilt = entity is DeviceDefinition or GrazerDefinition || DynamicShapes.IsBall(entity);
+            Pose(entity.Pose, Field(entity.Source, "Pose"), entity.Id, mustBeFlat: !mayTilt);
             Pose4? validPose = errors.Count == errorsBeforePose ? entity.Pose : null;
             switch (entity)
             {
@@ -201,14 +204,6 @@ internal sealed partial class WorldValidation
         return true;
     }
 
-    private void Unsupported<T>(IReadOnlyList<T>? values, Func<T, Source> source, Source root, string name)
-    {
-        if (values is null) Error(LoadErrorCode.InvalidGeometry, root, $"{name} collection is required.");
-        else
-            foreach (var value in values)
-                Error(LoadErrorCode.UnsupportedDefinition, value is null ? root : source(value), $"{name} are not implemented.");
-    }
-
     private void Id(string? id, Source source, EntityId? entity = null)
     {
         if (string.IsNullOrWhiteSpace(id)) Error(LoadErrorCode.InvalidId, source, "ID must be nonempty.", entity);
@@ -264,15 +259,14 @@ internal sealed partial class WorldValidation
             Error(LoadErrorCode.InvalidGeometry, source, "Solid thickness must exceed sampling distance.", entity);
     }
 
-    // A ball and a device may start with a pose that tilts into W.
-    private void Pose(Pose4 pose, Source source, EntityId entity, bool mustBeFlat = true)
+    private void Pose(Pose4 pose, Source source, EntityId entity, bool mustBeFlat)
     {
         if (!IsFinite(pose))
         {
             Error(LoadErrorCode.InvalidNumber, source, "Pose components must be finite.", entity);
             return;
         }
-        if (!Rotation(Box4.AxesOf(pose.Rotation)) || (mustBeFlat && !IsFlat(pose.Rotation)))
+        if (!IsRotation(Box4.AxesOf(pose.Rotation)) || (mustBeFlat && !IsFlat(pose.Rotation)))
             Error(LoadErrorCode.InvalidPose, source, "Static pose must be right-handed orthonormal and preserve the W axis.", entity);
     }
 
@@ -296,10 +290,10 @@ internal sealed partial class WorldValidation
         && Math.Abs(rotation.W.Y) <= MatrixTolerance
         && Math.Abs(rotation.W.Z) <= MatrixTolerance;
 
-    internal static bool IsValidPose(Pose4 pose) => IsFinite(pose) && Rotation(Box4.AxesOf(pose.Rotation));
+    internal static bool IsValidPose(Pose4 pose) => IsFinite(pose) && IsRotation(Box4.AxesOf(pose.Rotation));
 
     // Whether the axes are orthonormal and form a right-handed basis.
-    internal static bool Rotation(double[][] axes)
+    internal static bool IsRotation(double[][] axes)
     {
         for (var i = 0; i < axes.Length; i++)
             for (var j = 0; j < axes.Length; j++)

@@ -13,7 +13,7 @@ internal sealed partial class WorldValidation
         for (var i = 0; i < shape.Parts.Count; i++)
         {
             var part = shape.Parts[i];
-            var location = source with { Property = $"{source.Property}.Parts[{i}]" };
+            var location = Field(source, $"Parts[{i}]");
             if (part is null)
             {
                 Error(LoadErrorCode.InvalidGeometry, location, "Box part is required.", entity);
@@ -42,7 +42,7 @@ internal sealed partial class WorldValidation
         double[][] axes = [Box4.ToArray(part.Rotation.X), Box4.ToArray(part.Rotation.Y), Box4.ToArray(part.Rotation.Z)];
         if (axes.SelectMany(axis => axis).Any(value => !double.IsFinite(value)))
             Error(LoadErrorCode.InvalidNumber, Field(location, "Rotation"), "Part rotation must be finite.", entity);
-        else if (!Rotation(axes))
+        else if (!IsRotation(axes))
             Error(LoadErrorCode.InvalidPose, Field(location, "Rotation"), "Part rotation must be right-handed orthonormal.", entity);
     }
 
