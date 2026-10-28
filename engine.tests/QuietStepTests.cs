@@ -94,6 +94,18 @@ public class QuietStepTests
     }
 
     [Fact]
+    public void ATurnablePlacedInTheAirFallsAfterAQuietStep()
+    {
+        var world = Quiet(FloorOf(new(-.5, 1)), Crate(.1));
+
+        Assert.IsType<UpdateResult.Updated>(world.PlaceEntity(CrateId, At(0, .6, 0)));
+
+        var fell = Fell(world);
+        Assert.Equal(.6, fell.FromY, 9);
+        Assert.Equal(.1, fell.ToY, 9);
+    }
+
+    [Fact]
     public void AReleasedTurnableInTheAirFallsAfterAQuietStep()
     {
         var world = Quiet(Actor(), FloorOf(new(-.5, 1)), Crate(.1));

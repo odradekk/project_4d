@@ -11,18 +11,21 @@ public sealed partial class World
 
     private void Enqueue(SpaceEvent value, double at) => events.Add(new(at, ++sequence, value));
 
-    private IEnumerable<Solid4> Solids()
+    // The solids of one entity that blocks or supports, and the record they are made from: they change only when that
+    // record is replaced. The solids are made when they are asked for.
+    private sealed record EntitySolids(EntityId Id, object Record, IEnumerable<Solid4> Solids);
+
+    private IEnumerable<EntitySolids> SolidsByEntity()
     {
         foreach (var entity in entities)
-            foreach (var part in entity.Parts)
-                foreach (var segment in entity.Segments)
-                    yield return Box4.From(entity, part, segment);
+            yield return new(entity.Id, entity, entity.Parts.SelectMany(part => entity.Segments.Select(segment => Box4.From(entity, part, segment))));
         foreach (var item in dynamicEntities.Values.Where(item => !item.Packed))
-            foreach (var solid in DynamicShapes.Solids(item.Definition, item.Pose))
-                yield return solid;
-        foreach (var solid in DeviceSolids())
-            yield return solid;
+            yield return new(item.Definition.Id, item, DynamicShapes.Solids(item.Definition, item.Pose));
+        foreach (var device in devices.Values)
+            yield return new(device.Definition.Id, device, Solids(device, device.Position));
     }
+
+    private IEnumerable<Solid4> Solids() => SolidsByEntity().SelectMany(owner => owner.Solids);
 
     /// <summary>Finds the highest actual contact while translating the entity downward.</summary>
     public SupportResult FindSupport(EntityId entity)
@@ -44,13 +47,29 @@ public sealed partial class World
     // A box the entity lands on, and how far the entity falls to reach it.
     private sealed record SupportCandidate(double Drop, SupportContact Contact);
 
-    private IEnumerable<SupportCandidate> SupportCandidates(EntityId entity)
+    private SupportCandidate[] SupportCandidates(EntityId entity) =>
+        SupportCandidates(entity, SolidsByEntity().ToArray(), []);
+
+    // The landing of each pair is taken from `pairLandings` while neither of its records has been replaced; the pairs
+    // used go into `kept`.
+    private SupportCandidate[] SupportCandidates(EntityId entity, EntitySolids[] owners, Dictionary<(EntityId, EntityId), PairLandings> kept)
     {
-        var solids = Solids().ToArray();
-        foreach (var moving in solids.Where(solid => solid.Entity == entity))
-            foreach (var support in solids.Where(solid => solid.Entity != entity))
-                if (Landing(moving, support) is { } candidate)
-                    yield return candidate;
+        if (owners.SingleOrDefault(owner => owner.Id == entity) is not { } moving) return [];
+        var movingSolids = moving.Solids.ToArray();
+        var candidates = new List<SupportCandidate>();
+        foreach (var support in owners.Where(owner => owner.Id != entity))
+        {
+            var key = (entity, support.Id);
+            if (!pairLandings.TryGetValue(key, out var pair) || pair.Moving != moving.Record || pair.Support != support.Record)
+            {
+                var supportSolids = support.Solids.ToArray();
+                var landings = movingSolids.SelectMany(solid => supportSolids.Select(other => Landing(solid, other))).OfType<SupportCandidate>();
+                pair = new(moving.Record, support.Record, [.. landings]);
+            }
+            kept[key] = pair;
+            candidates.AddRange(pair.Candidates);
+        }
+        return [.. candidates];
     }
 
     private static SupportCandidate? Landing(Solid4 moving, Solid4 support) =>

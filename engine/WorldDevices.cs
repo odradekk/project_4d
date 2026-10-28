@@ -35,8 +35,6 @@ public sealed partial class World
         return device.Pieces.Select(piece => Loft4.At(device.Definition.Id, piece, pose));
     }
 
-    private IEnumerable<Loft4> DeviceSolids() => devices.Values.SelectMany(device => Solids(device, device.Position));
-
     private IEnumerable<SliceGeometry> DeviceSlices(double w) => devices.Values.Select(device => Slice(device, w)).OfType<SliceGeometry>();
 
     private static SliceGeometry? Slice(Device device, double w)

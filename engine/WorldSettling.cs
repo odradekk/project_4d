@@ -20,6 +20,12 @@ public sealed partial class World
         || !SameRecords(before.Devices, devices)
         || !SameRecords(before.Rotations, rotations);
 
+    // Where the solids of one entity land on those of another, kept while neither entity's record is replaced. A
+    // settle keeps the pairs it used and drops the rest.
+    private sealed record PairLandings(object Moving, object Support, SupportCandidate[] Candidates);
+
+    private Dictionary<(EntityId Moving, EntityId Support), PairLandings> pairLandings = [];
+
     private static bool SameRecords<T>(Dictionary<EntityId, T> before, Dictionary<EntityId, T> now) where T : class =>
         before.Count == now.Count && now.All(entry => before.TryGetValue(entry.Key, out var record) && ReferenceEquals(record, entry.Value));
 
@@ -28,6 +34,8 @@ public sealed partial class World
     private Dictionary<EntityId, double> SettledHeights(IReadOnlySet<EntityId> held)
     {
         var ids = dynamicEntities.Keys.ToArray();
+        var owners = SolidsByEntity().ToArray();
+        var kept = new Dictionary<(EntityId, EntityId), PairLandings>();
         var startY = ids.ToDictionary(id => id, id => dynamicEntities[id].Pose.Position.Y);
         var drops = ids.ToDictionary(id => id, _ => double.PositiveInfinity);
         var edges = new List<SupportEdge>();
@@ -56,7 +64,7 @@ public sealed partial class World
                 LimitDrop(id, 0);
                 continue;
             }
-            var candidates = SupportCandidates(id).ToArray();
+            var candidates = SupportCandidates(id, owners, kept);
             if (candidates.Length == 0) LimitDrop(id, 0);
             foreach (var candidate in candidates)
             {
@@ -89,6 +97,7 @@ public sealed partial class World
             foreach (var member in group) LimitDrop(member, 0);
         }
         Propagate();
+        pairLandings = kept;
         return ids.ToDictionary(id => id, id => startY[id] - drops[id]);
     }
 }
