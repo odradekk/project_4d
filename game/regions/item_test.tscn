@@ -1,0 +1,497 @@
+[gd_scene load_steps=75 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="3"]
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="4"]
+[ext_resource type="Script" path="res://adapter/BoxPart3D.cs" id="6"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="7"]
+[ext_resource type="Script" path="res://adapter/FaceUvResource.cs" id="8"]
+[ext_resource type="Script" path="res://adapter/TurnableObject3D.cs" id="10"]
+[ext_resource type="Script" path="res://adapter/TurnableResource.cs" id="11"]
+[ext_resource type="Script" path="res://adapter/SphereItem3D.cs" id="13"]
+[ext_resource type="Script" path="res://adapter/HiddenRingItem3D.cs" id="14"]
+[ext_resource type="Script" path="res://adapter/RingResource.cs" id="15"]
+[ext_resource type="Script" path="res://adapter/LoftDevice3D.cs" id="16"]
+[ext_resource type="Script" path="res://adapter/LoftSegmentResource.cs" id="17"]
+[ext_resource type="Script" path="res://adapter/LoftKeyResource.cs" id="18"]
+[ext_resource type="Script" path="res://adapter/ConvexPartResource.cs" id="19"]
+[ext_resource type="Script" path="res://adapter/ConvexFaceResource.cs" id="20"]
+[ext_resource type="Script" path="res://adapter/DeviceRotationResource.cs" id="21"]
+[ext_resource type="Script" path="res://adapter/DeviceTranslationResource.cs" id="22"]
+[ext_resource type="Script" path="res://adapter/IntervalResource.cs" id="23"]
+[ext_resource type="Script" path="res://adapter/Seam3D.cs" id="12"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="9"]
+
+[sub_resource type="Resource" id="Uv0"]
+script = ExtResource("8")
+Axis = 0
+
+[sub_resource type="Resource" id="Uv1"]
+script = ExtResource("8")
+Axis = 0
+Positive = true
+
+[sub_resource type="Resource" id="Uv2"]
+script = ExtResource("8")
+Axis = 1
+
+[sub_resource type="Resource" id="Uv3"]
+script = ExtResource("8")
+Axis = 1
+Positive = true
+
+[sub_resource type="Resource" id="Uv4"]
+script = ExtResource("8")
+Axis = 2
+
+[sub_resource type="Resource" id="Uv5"]
+script = ExtResource("8")
+Axis = 2
+Positive = true
+
+[sub_resource type="StandardMaterial3D" id="MatFloor"]
+albedo_color = Color(0.42, 0.45, 0.49, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatWall"]
+albedo_color = Color(0.7, 0.72, 0.75, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSill"]
+albedo_color = Color(0.75, 0.68, 0.55, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPencil"]
+albedo_color = Color(0.8, 0.65, 0.4, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatNut"]
+albedo_color = Color(0.55, 0.45, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatBall"]
+albedo_color = Color(0.9, 0.45, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatRing"]
+albedo_color = Color(0.45, 0.85, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatFlap"]
+albedo_color = Color(0.7, 0.5, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPlank"]
+albedo_color = Color(0.55, 0.4, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSash"]
+albedo_color = Color(0.55, 0.75, 0.95, 1)
+
+[sub_resource type="BoxMesh" id="BoxFloorNorth"]
+material = SubResource("MatFloor")
+size = Vector3(8, 0.2, 3)
+
+[sub_resource type="BoxMesh" id="BoxFloorSouth"]
+material = SubResource("MatFloor")
+size = Vector3(8, 0.2, 4)
+
+[sub_resource type="BoxMesh" id="BoxFloorWest"]
+material = SubResource("MatFloor")
+size = Vector3(4.5, 0.2, 2)
+
+[sub_resource type="BoxMesh" id="BoxFloorHole"]
+material = SubResource("MatFloor")
+size = Vector3(2, 0.2, 2)
+
+[sub_resource type="BoxMesh" id="BoxFloorEast"]
+material = SubResource("MatFloor")
+size = Vector3(1.5, 0.2, 2)
+
+[sub_resource type="BoxMesh" id="BoxWall"]
+material = SubResource("MatWall")
+size = Vector3(8, 3, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxCeiling"]
+material = SubResource("MatWall")
+size = Vector3(8, 0.2, 9)
+
+[sub_resource type="BoxMesh" id="BoxSill"]
+material = SubResource("MatSill")
+size = Vector3(2, 0.1, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxPencil"]
+material = SubResource("MatPencil")
+size = Vector3(0.48, 0.02, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxNut"]
+material = SubResource("MatNut")
+size = Vector3(0.06, 0.06, 0.06)
+
+[sub_resource type="Resource" id="GapHole"]
+script = ExtResource("23")
+Min = 0.3
+Max = 0.6
+
+[sub_resource type="Resource" id="TurnBall"]
+script = ExtResource("11")
+Holdable = true
+HorizontalRadius = 0.25
+Reach = 0.25
+
+[sub_resource type="Resource" id="TurnNut"]
+script = ExtResource("11")
+Holdable = true
+Packable = true
+HorizontalRadius = 0.03
+Hinge = Vector3(-0.01, 0, 0)
+Reach = 0.04
+
+[sub_resource type="Resource" id="TurnPencil"]
+script = ExtResource("11")
+Holdable = true
+HorizontalRadius = 0.24
+Hinge = Vector3(-0.22, 0, 0)
+Reach = 0.46
+
+[sub_resource type="Resource" id="RingNut"]
+script = ExtResource("15")
+PartId = "ring"
+Center = PackedFloat64Array(0.41, 0.87, 0, 0.2)
+Rotation4 = PackedFloat64Array(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)
+MajorRadius = 0.2
+TubeRadius = 0.05
+Material = SubResource("MatRing")
+
+[sub_resource type="Resource" id="Face0"]
+script = ExtResource("20")
+Vertices = PackedInt32Array(4, 6, 2, 0)
+Uv = SubResource("Uv0")
+
+[sub_resource type="Resource" id="Face1"]
+script = ExtResource("20")
+Vertices = PackedInt32Array(1, 3, 7, 5)
+Uv = SubResource("Uv1")
+
+[sub_resource type="Resource" id="Face2"]
+script = ExtResource("20")
+Vertices = PackedInt32Array(1, 5, 4, 0)
+Uv = SubResource("Uv2")
+
+[sub_resource type="Resource" id="Face3"]
+script = ExtResource("20")
+Vertices = PackedInt32Array(2, 6, 7, 3)
+Uv = SubResource("Uv3")
+
+[sub_resource type="Resource" id="Face4"]
+script = ExtResource("20")
+Vertices = PackedInt32Array(2, 3, 1, 0)
+Uv = SubResource("Uv4")
+
+[sub_resource type="Resource" id="Face5"]
+script = ExtResource("20")
+Vertices = PackedInt32Array(4, 5, 7, 6)
+Uv = SubResource("Uv5")
+
+[sub_resource type="Resource" id="PartFlap"]
+script = ExtResource("19")
+PartId = "flap"
+Vertices = PackedVector3Array(-0.01, 0, -0.3, 0.01, 0, -0.3, -0.01, 0.4, -0.3, 0.01, 0.4, -0.3, -0.01, 0, 0.3, 0.01, 0, 0.3, -0.01, 0.4, 0.3, 0.01, 0.4, 0.3)
+Faces = Array[ExtResource("20")]([SubResource("Face0"), SubResource("Face1"), SubResource("Face2"), SubResource("Face3"), SubResource("Face4"), SubResource("Face5")])
+Material = SubResource("MatFlap")
+
+[sub_resource type="Resource" id="PartPlank"]
+script = ExtResource("19")
+PartId = "plank"
+Vertices = PackedVector3Array(-0.004472135954999581, 0.00894427190999916, -0.1, 0.004472135954999581, -0.00894427190999916, -0.1, 1.9632676842448156, 0.9928141820099069, -0.1, 1.9722119561548146, 0.9749256381899086, -0.1, -0.004472135954999581, 0.00894427190999916, 0.1, 0.004472135954999581, -0.00894427190999916, 0.1, 1.9632676842448156, 0.9928141820099069, 0.1, 1.9722119561548146, 0.9749256381899086, 0.1)
+Faces = Array[ExtResource("20")]([SubResource("Face0"), SubResource("Face1"), SubResource("Face2"), SubResource("Face3"), SubResource("Face4"), SubResource("Face5")])
+Material = SubResource("MatPlank")
+
+[sub_resource type="Resource" id="KeyFlapA"]
+script = ExtResource("18")
+W = -0.2
+Parts = Array[ExtResource("19")]([SubResource("PartFlap")])
+
+[sub_resource type="Resource" id="KeyFlapB"]
+script = ExtResource("18")
+W = 0.21
+Parts = Array[ExtResource("19")]([SubResource("PartFlap")])
+
+[sub_resource type="Resource" id="KeyPlankA"]
+script = ExtResource("18")
+W = 0.21
+Parts = Array[ExtResource("19")]([SubResource("PartPlank")])
+
+[sub_resource type="Resource" id="KeyPlankB"]
+script = ExtResource("18")
+W = 0.62
+Parts = Array[ExtResource("19")]([SubResource("PartPlank")])
+
+[sub_resource type="Resource" id="SegFlap"]
+script = ExtResource("17")
+Keys = Array[ExtResource("18")]([SubResource("KeyFlapA"), SubResource("KeyFlapB")])
+
+[sub_resource type="Resource" id="SegPlank"]
+script = ExtResource("17")
+Keys = Array[ExtResource("18")]([SubResource("KeyPlankA"), SubResource("KeyPlankB")])
+
+[sub_resource type="Resource" id="MotionCabinet"]
+script = ExtResource("21")
+Plane = 0
+Pivot = PackedFloat64Array(0, 0, 0, 0)
+Min = -1.5707963267948966
+Max = 0
+Initial = 0
+
+[sub_resource type="Resource" id="PartPaneA"]
+script = ExtResource("19")
+PartId = "pane"
+Vertices = PackedVector3Array(-1, 0.032, -0.02, -0.6, 0.032, -0.02, -1, 0.9, -0.02, -0.6, 0.9, -0.02, -1, 0.032, 0.02, -0.6, 0.032, 0.02, -1, 0.9, 0.02, -0.6, 0.9, 0.02)
+Faces = Array[ExtResource("20")]([SubResource("Face0"), SubResource("Face1"), SubResource("Face2"), SubResource("Face3"), SubResource("Face4"), SubResource("Face5")])
+Material = SubResource("MatSash")
+
+[sub_resource type="Resource" id="PartPaneB"]
+script = ExtResource("19")
+PartId = "pane"
+Vertices = PackedVector3Array(-1, 0.0036, -0.02, -0.6, 0.0036, -0.02, -1, 0.9, -0.02, -0.6, 0.9, -0.02, -1, 0.0036, 0.02, -0.6, 0.0036, 0.02, -1, 0.9, 0.02, -0.6, 0.9, 0.02)
+Faces = Array[ExtResource("20")]([SubResource("Face0"), SubResource("Face1"), SubResource("Face2"), SubResource("Face3"), SubResource("Face4"), SubResource("Face5")])
+Material = SubResource("MatSash")
+
+[sub_resource type="Resource" id="KeyPaneA"]
+script = ExtResource("18")
+W = -0.2
+Parts = Array[ExtResource("19")]([SubResource("PartPaneA")])
+
+[sub_resource type="Resource" id="KeyPaneB"]
+script = ExtResource("18")
+W = 0.6
+Parts = Array[ExtResource("19")]([SubResource("PartPaneB")])
+
+[sub_resource type="Resource" id="SegPane"]
+script = ExtResource("17")
+Keys = Array[ExtResource("18")]([SubResource("KeyPaneA"), SubResource("KeyPaneB")])
+
+[sub_resource type="Resource" id="MotionSash"]
+script = ExtResource("22")
+Axis = 0
+Min = 0
+Max = 1
+Initial = 0
+
+[node name="ItemTest" type="Node3D"]
+script = ExtResource("1")
+PrismEnabled = true
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Turnables" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Ⅱ" type="Node3D" parent="Sections"]
+script = ExtResource("2")
+SectionId = "Ⅱ"
+W = 0.42
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Turnables" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅱ"]
+
+[node name="Xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(0, 0.02, 3)
+script = ExtResource("7")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("9")
+
+[node name="Pencil" type="Node3D" parent="Sections/Ⅰ/Turnables"]
+position = Vector3(1, 0.91, -3.2)
+script = ExtResource("10")
+EntityId = "pencil"
+BuildingId = "home"
+Interaction = SubResource("TurnPencil")
+
+[node name="Part" type="MeshInstance3D" parent="Sections/Ⅰ/Turnables/Pencil"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxPencil")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Home" type="Node3D" parent="Buildings"]
+script = ExtResource("3")
+BuildingId = "home"
+WMin = -1.0
+WMax = 1.0
+
+[node name="FloorNorth" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, -0.1, -2.5)
+script = ExtResource("4")
+EntityId = "FloorNorth"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/FloorNorth"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloorNorth")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="FloorSouth" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, -0.1, 3)
+script = ExtResource("4")
+EntityId = "FloorSouth"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/FloorSouth"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloorSouth")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="FloorWest" type="Node3D" parent="Buildings/Home"]
+position = Vector3(-1.75, -0.1, 0)
+script = ExtResource("4")
+EntityId = "FloorWest"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/FloorWest"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloorWest")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="FloorHole" type="Node3D" parent="Buildings/Home"]
+position = Vector3(1.5, -0.1, 0)
+script = ExtResource("4")
+EntityId = "FloorHole"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+Gaps = Array[ExtResource("23")]([SubResource("GapHole")])
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/FloorHole"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloorHole")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="FloorEast" type="Node3D" parent="Buildings/Home"]
+position = Vector3(3.25, -0.1, 0)
+script = ExtResource("4")
+EntityId = "FloorEast"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/FloorEast"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxFloorEast")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="NorthWall" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 1.5, -4.1)
+script = ExtResource("4")
+EntityId = "NorthWall"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/NorthWall"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxWall")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Ceiling" type="Node3D" parent="Buildings/Home"]
+position = Vector3(0, 3.1, 0.5)
+script = ExtResource("4")
+EntityId = "Ceiling"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Ceiling"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxCeiling")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Sill" type="Node3D" parent="Buildings/Home"]
+position = Vector3(1, 0.85, -3.2)
+script = ExtResource("4")
+EntityId = "Sill"
+BuildingId = "home"
+WMin = -1
+WMax = 1
+
+[node name="Part" type="MeshInstance3D" parent="Buildings/Home/Sill"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxSill")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Items" type="Node3D" parent="."]
+
+[node name="Ball" type="Node3D" parent="Items"]
+position = Vector3(-1.2, 0.25, 1.8)
+script = ExtResource("13")
+EntityId = "ball"
+BuildingId = "home"
+PartId = "ball"
+W = 0.21
+Radius = 0.25
+Interaction = SubResource("TurnBall")
+Material = SubResource("MatBall")
+
+[node name="Nut" type="Node3D" parent="Items"]
+position = Vector3(0.5, 0.03, 2.2)
+script = ExtResource("14")
+EntityId = "nut"
+BuildingId = "home"
+W = 0
+Interaction = SubResource("TurnNut")
+Ring = SubResource("RingNut")
+
+[node name="Part" type="MeshInstance3D" parent="Items/Nut"]
+script = ExtResource("6")
+PartId = "body"
+mesh = SubResource("BoxNut")
+FaceUvs = Array[ExtResource("8")]([SubResource("Uv0"), SubResource("Uv1"), SubResource("Uv2"), SubResource("Uv3"), SubResource("Uv4"), SubResource("Uv5")])
+
+[node name="Devices" type="Node3D" parent="."]
+
+[node name="Cabinet" type="Node3D" parent="Devices"]
+position = Vector3(-3, 2, -3)
+script = ExtResource("16")
+EntityId = "cabinet"
+W = 0
+Segments = Array[ExtResource("17")]([SubResource("SegFlap"), SubResource("SegPlank")])
+Motion = SubResource("MotionCabinet")
+
+[node name="Window" type="Node3D" parent="Devices"]
+position = Vector3(1, 0.9, -3.2)
+script = ExtResource("16")
+EntityId = "sash"
+W = 0
+Segments = Array[ExtResource("17")]([SubResource("SegPane")])
+Motion = SubResource("MotionSash")
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Seams" type="Node3D" parent="."]
+
+[node name="Needle" type="Node3D" parent="Seams"]
+position = Vector3(-3, 0, 1.5)
+script = ExtResource("12")
+SeamId = "needle"
+Sections = PackedStringArray("Ⅰ", "Ⅱ")
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]

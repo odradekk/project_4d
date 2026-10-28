@@ -76,7 +76,7 @@ public sealed partial class SeamTravel : Node
         if (!prism.Raised || prism.TargetSection is not { } target || Nearest() is not { } seam) return null;
         // She holds the prism up to cross: the lens is raised.
         var result = world.CrossSeam(new(actor, new(seam.Id), new(target), true, Backpack.FreeSlots));
-        if (result is CrossSeamResult.Rejected rejected) return actions.RefuseCrossing(rejected.Failure);
+        if (result is CrossSeamResult.Rejected rejected) return actions.Refuse(rejected.Failure);
         var crossed = (CrossSeamResult.Crossed)result;
         // A mirror seam puts her on the other side of its plane, where the engine says she is.
         var position = State().Pose.Position;
