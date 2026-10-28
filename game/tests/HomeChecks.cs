@@ -16,6 +16,10 @@ namespace Game.Tests;
 public partial class HomeChecks : Node
 {
     private const double Epsilon = .006;
+    // The reaches of the cat's leap, longest first, how far its body goes beyond each end of one, and its radius: see Cat.cs.
+    private static readonly float[] CatReaches = [1.2f, 1f, .8f, .6f];
+    private const float CatBeyond = .12f;
+    private const float CatRadius = .1f;
 
     private HomeScene home = null!;
     private World world = null!;
@@ -24,7 +28,11 @@ public partial class HomeChecks : Node
     {
         try
         {
-            home = HomeScene.Open(this, AddCatToys);
+            home = HomeScene.Open(this, region =>
+            {
+                AddCatToys(region);
+                HideProps(region);
+            });
             world = home.Region.World!;
             await Frames(2);
             CheckSections();
@@ -32,7 +40,8 @@ public partial class HomeChecks : Node
             CheckBuildings();
             CheckFloorHole();
             CheckFreeSpace();
-            GD.Print("Home checks passed: sections, room layout in three sections, buildings, floor hole, free space.");
+            CheckPropsShow();
+            GD.Print("Home checks passed: sections, room layout in three sections, buildings, floor hole, free space, props.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -86,28 +95,44 @@ public partial class HomeChecks : Node
 
     // Around the gap between the desk and the wardrobe nothing stands up to the height of a person: a seam, the hoop of
     // the nut's ring and the cat's run need it, in both sections that the first seam joins. In section II the cat leaps
-    // through the ring from 0.72 m before its plane to 0.72 m after it, whether the ring stands across the gap or along it,
-    // with the plane anywhere from x 6.49 to 6.85, and the leap starts on the floor, not over the hole.
+    // through a ring that stands across the gap as Cat.JumpThroughRing has it: the longest of its reaches whose path, with
+    // the cat's radius and margin beyond each end, is free. The ring's plane may be anywhere from x 6.5 to 6.85, and the
+    // leap starts on the floor, not over the hole.
     private void CheckFreeSpace()
     {
-        const float CatReach = .72f;
-        var spaces = new (string Section, string Name, Vector3 Center, Vector3 Size)[]
-        {
-            ("Ⅰ", "the gap", new(6.55f, .05f + .675f, 4.3f), new(1.9f, 1.35f, .9f)),
-            ("Ⅱ", "the gap", new(6.55f, .05f + .675f, 4.3f), new(1.9f, 1.35f, .9f)),
-            ("Ⅱ", "a leap along the gap", new(6.55f, .02f + .675f, 4.3f), new(.3f, 1.35f, 2 * CatReach)),
-            ("Ⅱ", "a leap across the gap, ring at 6.49", new(6.49f, .02f + .675f, 4.3f), new(2 * CatReach, 1.35f, .9f)),
-            ("Ⅱ", "a leap across the gap, ring at 6.85", new(6.85f, .02f + .675f, 4.3f), new(2 * CatReach, 1.35f, .9f))
-        };
-        foreach (var (section, name, center, size) in spaces)
-        {
-            var pose = SceneReader.PoseOf(new Transform3D(Basis.Identity, center), Geometry(section).W);
-            var box = new OccupancyBox(pose, new(size.X / 2, size.Y / 2, size.Z / 2, Epsilon));
-            Check(world.QueryOccupancy(box, []) is OccupancyResult.Occupancy { Hits.Count: 0 }, $"section {section} keeps {name} free");
-        }
+        Check(IsFree("Ⅰ", new(6.55f, .05f + .675f, 4.3f), new(1.9f, 1.35f, .9f)), "section I keeps the gap between the desk and the wardrobe free");
+        Check(IsFree("Ⅱ", new(6.55f, .05f + .675f, 4.3f), new(1.9f, 1.35f, .9f)), "section II keeps the gap between the desk and the wardrobe free");
+        Check(IsFree("Ⅱ", new(6.55f, .02f + .675f, 4.3f), new(.3f, 1.35f, 2 * (CatReaches[^1] + CatBeyond))),
+            "section II has room for a leap along the gap");
         var part = home.Region.GetNode<BoxPart3D>("Buildings/Home/Shell/FloorPit/p1");
         var holeEdge = part.Position.X + ((BoxMesh)part.Mesh).Size.X / 2;
-        Check(6.49f - CatReach >= holeEdge, "the leap of a ring at 6.49 starts east of the hole");
+        foreach (var plane in new[] { 6.5f, 6.85f })
+        {
+            var reach = CatReaches.FirstOrDefault(reach => IsFree("Ⅱ", new(plane, .02f + .675f, 4.3f), new(2 * (reach + CatBeyond), 1.35f, .9f)));
+            Check(reach > 0, $"the cat can leap through a ring across the gap at x {plane}");
+            Check(plane - reach - CatRadius >= holeEdge, $"the leap through a ring at x {plane} starts east of the hole, not over it");
+        }
+    }
+
+    private bool IsFree(string section, Vector3 center, Vector3 size)
+    {
+        var pose = SceneReader.PoseOf(new Transform3D(Basis.Identity, center), Geometry(section).W);
+        var box = new OccupancyBox(pose, new(size.X / 2, size.Y / 2, size.Z / 2, Epsilon));
+        return world.QueryOccupancy(box, []) is OccupancyResult.Occupancy { Hits.Count: 0 };
+    }
+
+    // The props of the scene may be saved hidden by the editor, which hides those of the sections that PreviewW is not
+    // near. They show again when the region loads.
+    private void CheckPropsShow()
+    {
+        Check(home.Region.Props("Ⅰ")!.IsVisibleInTree(), "the props of section I show");
+        Check(home.Region.Props("Ⅲ")!.IsVisibleInTree() && home.Prop<OmniLight3D>("SkyLight", "Ⅲ").IsVisibleInTree(), "the lights of section III show");
+    }
+
+    private static void HideProps(Region3D region)
+    {
+        foreach (var section in region.GetNode("Sections").GetChildren().OfType<Section3D>())
+            if (section.GetNodeOrNull<Node3D>("Props") is { } props) props.Visible = false;
     }
 
     // A cat toy: 0.48 m long with its hinge 0.02 m in, the longest turnable of the scenes.

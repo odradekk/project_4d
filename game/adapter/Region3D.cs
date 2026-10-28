@@ -19,10 +19,14 @@ public partial class Region3D : Node3D
 {
     private Dictionary<string, double> sectionPositions = new();
     private readonly Dictionary<string, Character3D> characters = [];
+    private readonly Dictionary<string, Node3D> sectionProps = [];
     private Dictionary<string, World3D> worlds = new();
     internal World? World { get; private set; }
     internal PlayerActions? Actions { get; private set; }
     internal SeamTravel? Travel { get; private set; }
+
+    /// <summary>What the section holds under Props in its world, such as its lights and things to use; null when it has none.</summary>
+    public Node3D? Props(string section) => sectionProps.GetValueOrDefault(section);
 
     /// <summary>The character that stands at the spawn with this entity ID.</summary>
     public Character3D Character(string entity) => characters[entity];
@@ -81,6 +85,7 @@ public partial class Region3D : Node3D
         World = null;
         Actions = null;
         characters.Clear();
+        sectionProps.Clear();
         Travel = null;
         Grazers = null;
         sectionPositions.Clear();
@@ -90,9 +95,16 @@ public partial class Region3D : Node3D
         var result = reader.Load();
         var description = reader.Description!;
         foreach (var part in SceneReader.Descendants(this).OfType<BoxPart3D>()) part.Visible = false;
+        var authored = SceneReader.Descendants(this).OfType<Section3D>().ToArray();
+        if (Engine.IsEditorHint())
+        {
+            // Only the Props of the section nearest to PreviewW show, so that the lights of one section do not light another.
+            var nearest = authored.OrderBy(section => Math.Abs(section.W - PreviewW)).FirstOrDefault();
+            foreach (var section in authored)
+                if (section.GetNodeOrNull<Node3D>("Props") is { } props) props.Visible = section == nearest;
+        }
         if (result is LoadResult.Invalid invalid) { Fail(invalid.Errors); return; }
         var world = ((LoadResult.Loaded)result).World;
-        var authored = SceneReader.Descendants(this).OfType<Section3D>().ToArray();
         generated = Engine.IsEditorHint() ? new Node3D { Name = "Generated" } : new Node { Name = "Generated" };
         AddChild(generated);
         if (Engine.IsEditorHint())
@@ -105,10 +117,6 @@ public partial class Region3D : Node3D
             foreach (var (id, labels) in reader.Lettering)
                 foreach (var label in labels) label.Visible = geometry.Entities.Any(slice => slice.Entity == id);
             generated.AddChild(SliceMesh.Build(geometry, reader.Materials, false, []));
-            // Only the Props of the section nearest to PreviewW show, so that the lights of one section do not light another.
-            var nearest = authored.OrderBy(section => Math.Abs(section.W - PreviewW)).FirstOrDefault();
-            foreach (var section in authored)
-                if (section.GetNodeOrNull<Node3D>("Props") is { } props) props.Visible = section == nearest;
             Loaded = true;
             return;
         }
@@ -165,10 +173,13 @@ public partial class Region3D : Node3D
             });
             viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -25, 0), LightEnergy = 0.8f });
             // What a section holds under Props, such as its lights and the things to use in it, belongs to its world.
-            if (authored.Single(node => node.SectionId == section.Id.Value).GetNodeOrNull("Props") is { } props)
+            if (authored.Single(node => node.SectionId == section.Id.Value).GetNodeOrNull<Node3D>("Props") is { } props)
             {
                 props.GetParent().RemoveChild(props);
+                // The editor hides the Props of the sections that PreviewW is not near, and saves that with the scene.
+                props.Visible = true;
                 viewport.AddChild(props);
+                sectionProps.Add(section.Id.Value, props);
             }
             worlds.Add(section.Id.Value, viewport.World3D);
             sectionNodes.Add(section.Id.Value, viewport);

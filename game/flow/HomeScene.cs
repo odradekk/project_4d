@@ -25,7 +25,7 @@ internal sealed class HomeScene
     {
         Region = region;
         Player = region.GetNode<FirstPersonPlayer>("Generated/Player");
-        foreach (var prop in region.GetNode($"Generated/{Section}/Props").GetChildren().OfType<Interactable3D>())
+        foreach (var prop in region.Props(Section)!.GetChildren().OfType<Interactable3D>())
             layers[prop.Name] = prop.CollisionLayer;
         region.GetViewport().AudioListenerEnable3D = true;
     }
@@ -45,7 +45,7 @@ internal sealed class HomeScene
         return new HomeScene(region);
     }
 
-    internal T Prop<T>(string name, string section = Section) where T : Node => Region.GetNode<T>($"Generated/{section}/Props/{name}");
+    internal T Prop<T>(string name, string section = Section) where T : Node => Region.Props(section)!.GetNode<T>(name);
 
     internal Interactable3D Prop(string name) => Prop<Interactable3D>(name);
 

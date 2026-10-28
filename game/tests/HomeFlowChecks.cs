@@ -194,7 +194,7 @@ public partial class HomeFlowChecks : Node
         await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
     }
 
-    private Interactable3D Prop(string name) => scene.GetNode<Interactable3D>($"Region/Generated/Ⅰ/Props/{name}");
+    private Interactable3D Prop(string name) => scene.GetNode<Region3D>("Region").Props("Ⅰ")!.GetNode<Interactable3D>(name);
 
     private SectionSound Sound(string file) => scene.GetNode("Region").GetChildren().OfType<SectionSound>()
         .Single(sound => sound.Stream.ResourcePath.EndsWith($"{file}.wav"));
