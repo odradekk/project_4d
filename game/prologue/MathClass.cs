@@ -191,7 +191,6 @@ public partial class MathClass : Node
 
     private void Finish()
     {
-        teacher.Checkpoint = null;
         teacher.Stop();
         // The last difference takes its notice and its line first.
         Wait(6);

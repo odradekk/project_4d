@@ -354,6 +354,7 @@ public partial class SchoolChecks : Node
         await Find("chimneyII2", Where("chimneyII2"), "3/3", "烟囱");
         await Fast(() => finished == 1, 60, "the scene must finish after the third difference");
         Check(player.Hud.UnlockedPages.Count == 1 && player.Hud.UnlockedPages.Contains(1), "the first notebook page is unlocked");
+        Check(!teacher.Busy, "the teacher stands where she was when the scene is over, and sees nobody");
         Check(said.Any(line => line.Contains("讲台")), "she remarks on the podium");
         Check(!player.Hud.NotebookAvailable && !player.Hud.OpenNotebook(), "the notebook can be opened only from scene seven on");
         Button(MouseButton.Right, false);

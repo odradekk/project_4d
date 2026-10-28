@@ -36,4 +36,4 @@
 
 ## 第 3 场结束时的状态
 
-`MathClass` 发出 `Finished` 时：`Seated` 仍为 true，下一场要自己改回去；老师停在原地，没有检查点；棱镜已经可以用。
+`MathClass` 发出 `Finished` 时：`Seated` 仍为 true，下一场要自己改回去；老师停在原地，不再巡视；棱镜已经可以用。
