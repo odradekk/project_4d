@@ -57,10 +57,9 @@ public partial class HomeEvening : Node
             });
         });
         home.Player.Position = Arrival;
-        home.Light(new(1f, .6f, .4f), .25f, new(1f, .8f, .55f), .3f, new(.12f, .1f, .15f));
-        foreach (var name in new[] { "DeskLamp", "HallLight" }) home.Prop<Light3D>(name).Visible = true;
-        foreach (var name in new[] { "Clock", "Father", "Money", "Backpack", "FrontDoor", "Sink" }) home.Show(name, false);
-        home.Enable("StairDoor", false);
+        // The alarm clock stays on the bedside table, where it is seen from the other sections in scene 9.
+        foreach (var name in new[] { "Father", "Money", "Backpack", "FrontDoor", "Sink" }) home.Show(name, false);
+        foreach (var name in new[] { "Clock", "StairDoor" }) home.Enable(name, false);
         home.Prop("Tv").GetNode<MeshInstance3D>("Screen").MaterialOverride = new StandardMaterial3D
         {
             AlbedoColor = ScreenOn,
@@ -81,6 +80,12 @@ public partial class HomeEvening : Node
         On("Desk", Homework);
         home.Hud.Say("", "爸爸已经去厂里上中班了。", 3);
         home.Hud.Say("", "煤球，小声点。按 N 翻看数学笔记本。", 3.5);
+    }
+
+    public override void _UnhandledInput(InputEvent input)
+    {
+        if (input is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true })
+            home.Hud.ShowNotice("棱镜在书包里，作业还没写呢。", 1.5);
     }
 
     private void FollowPlayer() => cat.Follow(player => HomeRoute.Next(catBody.Position, player));
@@ -127,7 +132,6 @@ public partial class HomeEvening : Node
 
     private void Share()
     {
-        home.Show("Sausage", false);
         Say(2.5, "一半给你，一半给我。");
         catBody.Do(_ =>
         {
@@ -136,15 +140,27 @@ public partial class HomeEvening : Node
             catBody.WalkTo(next, catBody.WalkSpeed);
             return false;
         });
+        // The sausage stays until the cat has eaten: picking the cat up on its way takes the walk away from it, and she
+        // sends it again.
         void Arrived()
         {
-            catBody.ActionFinished -= Arrived;
+            Forget();
+            home.Show("Sausage", false);
             CatFed = true;
             cat.Sit(Dinner + new Vector3(0, 0, -1));
             Say(2.5, "煤球吃得好快。");
-            GetTree().CreateTimer(3).Timeout += FollowPlayer;
+            GetTree().CreateTimer(3).Timeout += () =>
+            {
+                if (!cat.Held) FollowPlayer();
+            };
+        }
+        void Forget()
+        {
+            catBody.ActionFinished -= Arrived;
+            catBody.ActionReplaced -= Forget;
         }
         catBody.ActionFinished += Arrived;
+        catBody.ActionReplaced += Forget;
     }
 
     private void Forecast()

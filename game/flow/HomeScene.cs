@@ -11,8 +11,7 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// The home region as the day's scenes use it. What is authored under a section's Props belongs to that section's
-/// world, so it moves there once the region has loaded; a scene then switches those props on and off.
+/// The home region as the day's scenes use it: the props that a scene switches on and off, and the sounds of the flat.
 /// Decision note: 2026-10-26-prologue-greybox
 /// </summary>
 internal sealed class HomeScene
@@ -21,21 +20,13 @@ internal sealed class HomeScene
     internal const string Section = "Ⅰ";
 
     private readonly Dictionary<string, uint> layers = [];
-    private readonly SubViewport world;
 
     private HomeScene(Region3D region)
     {
         Region = region;
         Player = region.GetNode<FirstPersonPlayer>("Generated/Player");
-        foreach (var section in region.GetNode("Sections").GetChildren().OfType<Section3D>())
-        {
-            var props = section.GetNodeOrNull("Props");
-            if (props is null) continue;
-            section.RemoveChild(props);
-            region.GetNode($"Generated/{section.SectionId}").AddChild(props);
-        }
-        world = region.GetNode<SubViewport>($"Generated/{Section}");
-        foreach (var prop in world.GetNode("Props").GetChildren().OfType<Interactable3D>()) layers[prop.Name] = prop.CollisionLayer;
+        foreach (var prop in region.GetNode($"Generated/{Section}/Props").GetChildren().OfType<Interactable3D>())
+            layers[prop.Name] = prop.CollisionLayer;
         region.GetViewport().AudioListenerEnable3D = true;
     }
 
@@ -68,18 +59,6 @@ internal sealed class HomeScene
         Enable(name, on);
     }
 
-    /// <summary>The placeholder light of the section: the sun through the window, the ambient light and the sky.</summary>
-    internal void Light(Color sun, float sunEnergy, Color ambient, float ambientEnergy, Color sky)
-    {
-        var environment = world.GetChildren().OfType<WorldEnvironment>().First().Environment;
-        environment.AmbientLightColor = ambient;
-        environment.AmbientLightEnergy = ambientEnergy;
-        environment.BackgroundColor = sky;
-        var light = world.GetChildren().OfType<DirectionalLight3D>().First();
-        light.LightColor = sun;
-        light.LightEnergy = sunEnergy;
-    }
-
     /// <summary>A sound from a place in the home section, played again whenever it ends, for as long as <paramref name="wanted"/> says so.</summary>
     internal SectionSound Loop(string file, Vector3 position, float volumeDb, float pitch = 1, Func<bool>? wanted = null)
     {
@@ -94,14 +73,11 @@ internal sealed class HomeScene
         };
         Region.AddChild(sound);
         sound.Configure(Region, Section);
-        void Start()
+        sound.Finished += () =>
         {
-            if (GodotObject.IsInstanceValid(sound) && sound.IsInsideTree() && (wanted?.Invoke() ?? true)) sound.Play();
-        }
-        sound.Finished += Start;
-        // It starts a moment late: a sound that is playing when the game quits at once keeps its stream in the audio server,
-        // which Godot reports as an error.
-        sound.GetTree().CreateTimer(.3).Timeout += Start;
+            if (wanted?.Invoke() ?? true) sound.Play();
+        };
+        sound.Play();
         return sound;
     }
 }

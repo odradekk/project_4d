@@ -342,17 +342,3 @@ Prompt = "写作业"
 
 [node name="Shape" type="CollisionShape3D" parent="Desk"]
 shape = SubResource("s13")
-
-[node name="DeskLamp" type="OmniLight3D" parent="."]
-position = Vector3(7.34, 1, 2.92)
-light_color = Color(1, 0.8, 0.5, 1)
-light_energy = 1.5
-omni_range = 3.5
-visible = false
-
-[node name="HallLight" type="OmniLight3D" parent="."]
-position = Vector3(7, 2.7, 7.5)
-light_color = Color(1, 0.82, 0.6, 1)
-light_energy = 1.2
-omni_range = 7
-visible = false

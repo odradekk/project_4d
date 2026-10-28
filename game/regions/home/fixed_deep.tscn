@@ -1,7 +1,7 @@
 [gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
-[ext_resource type="PackedScene" path="res://regions/home/box_part.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
 
 [sub_resource type="StandardMaterial3D" id="m1"]
 albedo_color = Color(0.52, 0.36, 0.24, 1)

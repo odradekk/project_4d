@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Game.Adapter;
 using Game.Audio;
+using Game.Characters;
 using Game.Debugging;
 using Game.Flow;
 using Game.Interaction;
@@ -50,47 +51,49 @@ public partial class HomeFlowChecks : Node
         var morning = await Start<HomeMorning>("home-morning");
         var finished = false;
         morning.Finished += () => finished = true;
+        var hud = player.Hud;
         var alarm = Sound("alarm");
         Check(morning.AlarmRinging, "the alarm rings at 6:50");
         await Until(() => alarm.Playing && Sound("breathing").Playing, 2, "the alarm must sound and her father must snore");
         Button(MouseButton.Right, true);
         await Frames(2);
-        Check(!player.PrismRaised && player.Hud.HintText.Contains("棱镜"), "the prism cannot be raised at home in the morning");
+        Check(!player.PrismRaised && hud.HintText.Contains("棱镜"), "the prism cannot be raised at home in the morning");
         Button(MouseButton.Right, false);
-        // Every room can be reached from the bedroom, through the doors and around the dining set.
-        await Walk((3.85f, 5f), (3.85f, 6.9f), (8.2f, 6.9f), (9.05f, 7.9f), (9.05f, 9.4f), (9.05f, 8.5f), (4.05f, 8.48f),
-            (4.05f, 9.4f), (4.05f, 8.48f), (3.5f, 7.45f));
-        player.Hud.ClearText();
-        await Use("FrontDoor");
-        Check(!morning.DoorOpen && player.Hud.SubtitleText == "闹钟还在响。", "she does not leave while the alarm rings");
+        Press(Key.N);
+        await Frames(2);
+        Check(!hud.NotebookOpen, "the notebook cannot be opened in the morning");
+        // The bedroom, the living room around the dining set, her father's room, the bathroom and the kitchen can be walked
+        // to, one after the other, through their doors.
+        await Walk((3.85f, 5f), (3.85f, 6.9f), (8.2f, 6.9f), (9.25f, 6.9f), (9.25f, 5.6f), (9.25f, 6.9f), (9.05f, 7.9f), (9.05f, 9.4f),
+            (9.05f, 8.5f), (4.05f, 8.48f), (4.05f, 9.4f), (4.05f, 8.48f), (3.5f, 7.45f));
+        await Refused("闹钟还在响。");
         await Use("Clock");
         Check(!morning.AlarmRinging && !alarm.Playing, "the alarm stops");
-        player.Hud.ClearText();
+        await Refused("牙还没刷。");
+        hud.ClearText();
         await Use("Father");
-        Check(player.Hud.SubtitleText.Contains("爸爸睡得很沉"), "her father is asleep");
-        player.Hud.ClearText();
+        Check(hud.SubtitleText.Contains("爸爸睡得很沉"), "her father is asleep");
+        await Use("Sink");
+        Check(morning.TeethBrushed, "she brushes her teeth in front of the mirror");
+        await Refused("早饭钱还在桌上。");
+        await Use("Money");
+        Check(morning.MoneyTaken && !Prop("Money").Visible, "she takes the two yuan");
+        await Refused("书包还在凳子上。");
+        await Use("Backpack");
+        Check(morning.HasBackpack && morning.Missing is null && !morning.NoteWritten, "the note is hers to answer, not a step before the bag is");
+        hud.ClearText();
         await Use("Note");
         var paper = Prop("Note").GetNode<Node3D>("Paper");
         Check(morning.NoteWritten && Mathf.Abs(paper.Rotation.X - Mathf.Pi) < .01f, "E turns the note over");
         Check(paper.GetNode<Label3D>("Back").Visible && paper.GetNode<Label3D>("Back").Text == "爸，我上学去了。"
             && !paper.GetNode<Label3D>("Front").Visible, "she writes the answer on the back");
         Check(Heard("爸，我上学去了。", 10), "the written line is shown");
-        await Use("Money");
-        Check(morning.MoneyTaken && !Prop("Money").Visible, "she takes the two yuan");
-        await Use("Sink");
-        Check(morning.TeethBrushed, "she brushes her teeth in front of the mirror");
-        Check(morning.Missing == "书包还在凳子上。", "the bag is what is left");
-        player.Hud.ClearText();
-        await Use("FrontDoor");
-        Check(!morning.DoorOpen && player.Hud.SubtitleText == "书包还在凳子上。", "she does not leave without the bag");
-        await Use("Backpack");
-        Check(morning.HasBackpack && morning.Missing is null, "she takes the bag and is ready");
         await Use("FrontDoor");
         Check(morning.DoorOpen && Prop("FrontDoor").CollisionLayer == 0, "the door opens");
         await Walk((3.5f, 7.45f), (1.9f, 7.45f), (1.9f, 9.7f));
         Check(!finished, "she is still in the flat's corridor until she goes down");
         await Use("StairDoor");
-        Check(finished, "going down the stairs ends the scene");
+        Check(finished && Prop("StairDoor").CollisionLayer == 0, "going down the stairs ends the scene, once");
         await End();
     }
 
@@ -107,8 +110,13 @@ public partial class HomeFlowChecks : Node
         Press(Key.N);
         await Frames(2);
         Check(!hud.NotebookOpen, "N closes the notebook");
-        foreach (var name in new[] { "Clock", "Father", "Money", "Backpack", "FrontDoor", "Sink" })
+        Button(MouseButton.Right, true);
+        await Frames(2);
+        Check(!player.PrismRaised && hud.HintText.Contains("棱镜"), "the prism cannot be raised at home in the evening either");
+        Button(MouseButton.Right, false);
+        foreach (var name in new[] { "Father", "Money", "Backpack", "FrontDoor", "Sink" })
             Check(!Prop(name).Visible && Prop(name).CollisionLayer == 0, $"{name} belongs to the morning");
+        Check(Prop("Clock").Visible && Prop("Clock").CollisionLayer == 0, "the alarm clock stays on the bedside table and cannot be used");
         await Walk((1.9f, 7.45f), (3.6f, 7.45f), (3.85f, 6.9f), (5.8f, 6.9f));
         hud.ClearText();
         await Use("Note");
@@ -119,19 +127,31 @@ public partial class HomeFlowChecks : Node
         hud.ClearText();
         await Use("Tv");
         Check(evening.ForecastHeard && Heard("电视：明天白天，晴转多云，偏南风二到三级。", 10), "the weather forecast is on");
-        await Walk((8.2f, 6.9f), (3.85f, 6.9f), (3.85f, 5.2f), (6.5f, 3.3f));
         hud.ClearText();
-        await Use("Desk");
+        Prop("Desk").Interact();
         Check(!evening.HomeworkDone && hud.SubtitleText == "先把饭热上吧。", "the homework waits for the meal");
-        await Walk((3.85f, 5.2f), (3.85f, 6.9f), (4.05f, 8.48f), (4.05f, 9.4f));
+        await Walk((8.2f, 8.48f), (5.8f, 8.48f), (4.05f, 8.48f), (4.05f, 9.4f));
         await Use("Stove");
         Check(!evening.Heated, "the meal takes a while to heat");
         await Until(() => evening.Heated, 6, "the meal must be hot");
         Check(Prop("Stove").GetNode<Node3D>("Steam").Visible && !Prop("Stove").GetNode<Node3D>("Flame").Visible, "the pot steams and the fire is off");
+        hud.ClearText();
+        Prop("Desk").Interact();
+        Check(!evening.HomeworkDone && hud.SubtitleText == "煤球还没吃呢。", "the homework waits for the cat");
         await Walk((4.05f, 8.48f), (6.15f, 8.48f));
         await Use("Sausage");
-        Check(!Prop("Sausage").Visible, "she breaks the sausage");
+        // She picks the cat up on its way to its half and puts it down: the sausage is still there, and she sends it again.
+        await Frames(20);
+        var pickup = evening.CatBody.GetNode<Interactable3D>("Pickup");
+        pickup.Interact();
+        await Frames(20);
+        Check(evening.CatBody.GetNode<Cat>("Cat").Held && !evening.CatFed, "the cat is in her arms before it has eaten");
+        player.PutDown?.Invoke();
+        await Frames(20);
+        Check(!evening.CatFed && Prop("Sausage").Visible, "the sausage stays while the cat has not eaten");
+        await Use("Sausage");
         await Until(() => evening.CatFed, 20, $"the cat must come for its half; it stands at {evening.CatBody.Position}, the player at {player.Position}");
+        Check(!Prop("Sausage").Visible, "the sausage is gone once it is eaten");
         Check(evening.CatBody.Section == "Ⅰ" && Flat(evening.CatBody.Position - new Vector3(5.8f, 0, 8.5f)).Length() < .6f,
             "the cat eats at the dining table");
         await Walk((4.05f, 8.48f), (3.85f, 6.9f), (3.85f, 5.2f), (6.5f, 3.3f));
@@ -146,6 +166,14 @@ public partial class HomeFlowChecks : Node
         await End();
     }
 
+    /// <summary>Presses E on the door, which she opens only when nothing is left to do, and checks what she says.</summary>
+    private async Task Refused(string line)
+    {
+        player.Hud.ClearText();
+        await Use("FrontDoor");
+        Check(player.Hud.SubtitleText == line && Prop("FrontDoor").Visible, $"she does not leave yet and says \"{line}\"");
+    }
+
     // Starts the scene as the debug entry of the given name does.
     private async Task<T> Start<T>(string entry) where T : Node
     {
@@ -158,11 +186,12 @@ public partial class HomeFlowChecks : Node
         return (T)scene;
     }
 
+    // The audio thread fades a stopped sound out before it lets go of it, which takes time and not frames.
     private async Task End()
     {
         RemoveChild(scene);
         scene.Free();
-        await Frames(2);
+        await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
     }
 
     private Interactable3D Prop(string name) => scene.GetNode<Interactable3D>($"Region/Generated/Ⅰ/Props/{name}");
@@ -202,7 +231,7 @@ public partial class HomeFlowChecks : Node
         await Frames(1);
     }
 
-    /// <summary>Finds the prop with the crosshair, as close as she stands, and presses E.</summary>
+    /// <summary>Finds the prop with the crosshair, as close as she stands, and presses E. When it cannot be found from where she stands, she is moved beside it.</summary>
     private async Task Use(string name)
     {
         await Aim(Prop(name));

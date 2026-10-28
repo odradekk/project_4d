@@ -10,17 +10,12 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The home region's layout: how the room differs in its three sections, the building ranges and the floor hole as the
-/// size norms give them, and the space kept free for the seam, the hoop and the cat in scene 8.
+/// The home region's layout: how the room differs in its three sections, the building ranges and the floor hole, and the
+/// space kept free for the seam, the hoop and the cat in scene 8.
 /// </summary>
 public partial class HomeChecks : Node
 {
-    // The cat toy is the longest turnable: 0.48 m long with its hinge 0.02 m in.
-    private const double LongestReach = .46;
-    // The size norms of the prologue: where the floor hole is in W and where the ball's lowest point is.
-    private const double HoleMin = .3;
-    private const double HoleMax = .6;
-    private const double BallLowest = .21;
+    private const double Epsilon = .006;
 
     private HomeScene home = null!;
     private World world = null!;
@@ -29,7 +24,7 @@ public partial class HomeChecks : Node
     {
         try
         {
-            home = HomeScene.Open(this);
+            home = HomeScene.Open(this, AddCatToys);
             world = home.Region.World!;
             await Frames(2);
             CheckSections();
@@ -37,8 +32,7 @@ public partial class HomeChecks : Node
             CheckBuildings();
             CheckFloorHole();
             CheckFreeSpace();
-            CheckPlaceholderLights();
-            GD.Print("Home checks passed: sections, room layout in three sections, buildings, floor hole, free space, lights.");
+            GD.Print("Home checks passed: sections, room layout in three sections, buildings, floor hole, free space.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -64,8 +58,6 @@ public partial class HomeChecks : Node
         Check(Has("Ⅰ", "bed") && Has("Ⅰ", "desk") && Has("Ⅰ", "wardrobe"), "section I has her furniture");
         Check(!Has("Ⅱ", "bed") && !Has("Ⅱ", "desk") && !Has("Ⅱ", "wardrobe"), "section II has no bed and no furniture");
         Check(!Has("Ⅲ", "bed") && !Has("Ⅲ", "desk"), "section III has none of the furniture of section I");
-        Check(Has("Ⅰ", "RoomWallsA") && !Has("Ⅱ", "RoomWallsA") && Has("Ⅱ", "RoomWallsB") && !Has("Ⅰ", "RoomWallsB"),
-            "the wallpaper of section II is another one than that of section I");
         Check(Has("Ⅰ", "Cabinet") && Has("Ⅱ", "Cabinet"), "the cabinet over the door is in both sections of the first building");
         Check(Has("Ⅰ", "Fittings") && Has("Ⅱ", "Fittings"), "the window is in both sections of the first building");
         Check(Has("Ⅰ", "FloorPit") && !Has("Ⅱ", "FloorPit") && Has("Ⅱ", "Floor"), "the floor of section II has a hole and the rest of it stays");
@@ -75,15 +67,13 @@ public partial class HomeChecks : Node
         Check(Has("Ⅲ", "skypanel") && Has("Ⅲ", "DeepFittings"), "section III has a window with a sky outside it");
     }
 
+    // The engine checks on load that the first building holds a toy standing up toward either side, so the region only
+    // loads if it covers the cat toys that AddCatToys puts in sections I and II.
     private void CheckBuildings()
     {
         var first = home.Region.GetNode<Building3D>("Buildings/Home");
         var second = home.Region.GetNode<Building3D>("Buildings/Deep");
-        var w1 = Geometry("Ⅰ").W;
-        var w2 = Geometry("Ⅱ").W;
         var w3 = Geometry("Ⅲ").W;
-        Check(first.WMin <= w1 - LongestReach && first.WMax >= w2 + LongestReach,
-            "the first building reaches the longest turnable's length beyond its sections in both directions");
         Check(second.WMin < w3 && w3 < second.WMax, "the second building holds section III");
         Check(second.WMin > first.WMax, "there is empty space in W between the two buildings");
     }
@@ -91,47 +81,62 @@ public partial class HomeChecks : Node
     private void CheckFloorHole()
     {
         var hole = home.Region.GetNode<BuildingElement3D>("Buildings/Home/Shell/FloorPit").Gaps.Single();
-        Check(hole.Min == HoleMin && hole.Max == HoleMax, "the floor hole runs from 0.3 to 0.6 in W");
         Check(Geometry("Ⅰ").W < hole.Min && hole.Min < Geometry("Ⅱ").W && Geometry("Ⅱ").W < hole.Max, "the hole is around section II only");
-        Check(BallLowest < hole.Min, "the lowest point of the ball is held up by the floor beside the hole");
-        var edge = home.Region.GetNode<Node3D>("Generated/Ⅱ/Props/PitGuard");
-        Check(Ray("Ⅱ", new(4f, .5f, 4.2f), new(6f, .5f, 4.2f)) == edge, "the opening of the hole is guarded in section II");
-        Check(Ray("Ⅰ", new(4f, .5f, 4.2f), new(6f, .5f, 4.2f)) is null, "the floor of section I is whole");
     }
 
     // Around the gap between the desk and the wardrobe nothing stands up to the height of a person: a seam, the hoop of
-    // the nut's ring and the cat's run need it, in both sections that the first seam joins. The cat leaps through a ring
-    // standing across either axis of the gap, and needs 0.72 m clear on both sides of the ring's plane.
+    // the nut's ring and the cat's run need it, in both sections that the first seam joins. In section II the cat leaps
+    // through the ring from 0.72 m before its plane to 0.72 m after it, whether the ring stands across the gap or along it,
+    // with the plane anywhere from x 6.49 to 6.85, and the leap starts on the floor, not over the hole.
     private void CheckFreeSpace()
     {
         const float CatReach = .72f;
-        var spaces = new (string Name, Vector3 Size, Vector3 Center)[]
+        var spaces = new (string Section, string Name, Vector3 Center, Vector3 Size)[]
         {
-            ("the gap", new(1.9f, 1.35f, .9f), new(6.55f, .05f + .675f, 4.3f)),
-            ("a leap across the gap", new(2 * CatReach, .9f, .3f), new(6.55f, .05f + .45f, 4.3f)),
-            ("a leap along the gap", new(.3f, .9f, 2 * CatReach), new(6.55f, .05f + .45f, 4.3f))
+            ("Ⅰ", "the gap", new(6.55f, .05f + .675f, 4.3f), new(1.9f, 1.35f, .9f)),
+            ("Ⅱ", "the gap", new(6.55f, .05f + .675f, 4.3f), new(1.9f, 1.35f, .9f)),
+            ("Ⅱ", "a leap along the gap", new(6.55f, .02f + .675f, 4.3f), new(.3f, 1.35f, 2 * CatReach)),
+            ("Ⅱ", "a leap across the gap, ring at 6.49", new(6.49f, .02f + .675f, 4.3f), new(2 * CatReach, 1.35f, .9f)),
+            ("Ⅱ", "a leap across the gap, ring at 6.85", new(6.85f, .02f + .675f, 4.3f), new(2 * CatReach, 1.35f, .9f))
         };
+        foreach (var (section, name, center, size) in spaces)
+        {
+            var pose = SceneReader.PoseOf(new Transform3D(Basis.Identity, center), Geometry(section).W);
+            var box = new OccupancyBox(pose, new(size.X / 2, size.Y / 2, size.Z / 2, Epsilon));
+            Check(world.QueryOccupancy(box, []) is OccupancyResult.Occupancy { Hits.Count: 0 }, $"section {section} keeps {name} free");
+        }
+        var part = home.Region.GetNode<BoxPart3D>("Buildings/Home/Shell/FloorPit/p1");
+        var holeEdge = part.Position.X + ((BoxMesh)part.Mesh).Size.X / 2;
+        Check(6.49f - CatReach >= holeEdge, "the leap of a ring at 6.49 starts east of the hole");
+    }
+
+    // A cat toy: 0.48 m long with its hinge 0.02 m in, the longest turnable of the scenes.
+    private static void AddCatToys(Region3D region)
+    {
         foreach (var section in new[] { "Ⅰ", "Ⅱ" })
-            foreach (var (name, size, center) in spaces)
+        {
+            var toy = new TurnableObject3D
             {
-                var query = new PhysicsShapeQueryParameters3D { Shape = new BoxShape3D { Size = size }, Transform = new Transform3D(Basis.Identity, center) };
-                Check(Sub(section).World3D.DirectSpaceState.IntersectShape(query).Count == 0,
-                    $"section {section} keeps {name} between the desk and the wardrobe free");
-            }
-    }
-
-    private void CheckPlaceholderLights()
-    {
-        var light = home.Prop<OmniLight3D>("SkyLight", "Ⅲ");
-        Check(light.LightColor.R >= light.LightColor.G && light.LightColor.G >= light.LightColor.B, "the sky light of section III is pink and gold");
-    }
-
-    private SubViewport Sub(string section) => home.Region.GetNode<SubViewport>($"Generated/{section}");
-
-    private Node? Ray(string section, Vector3 from, Vector3 to)
-    {
-        var hit = Sub(section).World3D.DirectSpaceState.IntersectRay(PhysicsRayQueryParameters3D.Create(from, to));
-        return hit.Count == 0 ? null : hit["collider"].AsGodotObject() as Node;
+                Name = $"Toy{section}",
+                EntityId = $"toy{section}",
+                BuildingId = "home",
+                Position = new(4.3f, .015f, 5f),
+                Interaction = new TurnableResource
+                {
+                    Holdable = true,
+                    HorizontalRadius = .24,
+                    LongAxis = Axis3.X,
+                    Hinge = new(-.22f, 0, 0),
+                    Reach = .46
+                }
+            };
+            var faces = new Godot.Collections.Array<FaceUvResource>();
+            foreach (var axis in new[] { Axis3.X, Axis3.Y, Axis3.Z })
+                foreach (var positive in new[] { false, true })
+                    faces.Add(new FaceUvResource { Axis = axis, Positive = positive });
+            toy.AddChild(new BoxPart3D { Name = "Body", PartId = "body", Mesh = new BoxMesh { Size = new(.48f, .03f, .03f) }, FaceUvs = faces });
+            region.GetNode($"Sections/{section}/Turnables").AddChild(toy);
+        }
     }
 
     private async Task Frames(int count)

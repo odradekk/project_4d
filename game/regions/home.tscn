@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -11,9 +11,6 @@
 [ext_resource type="Script" path="res://adapter/Building3D.cs" id="e9"]
 [ext_resource type="PackedScene" path="res://regions/home/shell.tscn" id="e10"]
 [ext_resource type="PackedScene" path="res://regions/home/shell_deep.tscn" id="e11"]
-
-[sub_resource type="BoxShape3D" id="s1"]
-size = Vector3(1.1, 1.4, 0.55)
 
 [node name="Home" type="Node3D"]
 script = ExtResource("e1")
@@ -53,14 +50,6 @@ W = 0.42
 [node name="Fixed" type="Node3D" parent="Sections/Ⅱ"]
 
 [node name="Turnables" type="Node3D" parent="Sections/Ⅱ"]
-
-[node name="Props" type="Node3D" parent="Sections/Ⅱ"]
-
-[node name="PitGuard" type="StaticBody3D" parent="Sections/Ⅱ/Props"]
-position = Vector3(4.95, 0.4, 4.225)
-
-[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅱ/Props/PitGuard"]
-shape = SubResource("s1")
 
 [node name="Ⅲ" type="Node3D" parent="Sections"]
 script = ExtResource("e2")

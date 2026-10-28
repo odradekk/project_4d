@@ -23,31 +23,29 @@ public partial class HomeMorning : Node
     public bool HasBackpack { get; private set; }
     public bool DoorOpen { get; private set; }
 
-    /// <summary>What still keeps her from leaving, in her own words; null when she is ready.</summary>
+    /// <summary>What still keeps her from leaving, in her own words; null when she is ready. The note is her own to answer.</summary>
     public string? Missing =>
         AlarmRinging ? "闹钟还在响。"
         : !TeethBrushed ? "牙还没刷。"
         : !MoneyTaken ? "早饭钱还在桌上。"
-        : !NoteWritten ? "字条还没回。"
         : !HasBackpack ? "书包还在凳子上。"
         : null;
 
     public override void _Ready()
     {
         home = HomeScene.Open(this, region => region.PrismEnabled = false);
-        home.Light(new(.85f, .92f, 1f), 1f, new(.8f, .88f, 1f), .6f, new(.75f, .82f, .9f));
         foreach (var name in new[] { "HairClip", "Sausage" }) home.Show(name, false);
         foreach (var name in new[] { "Stove", "Tv", "Desk" }) home.Enable(name, false);
         alarm = home.Loop("alarm", home.Prop("Clock").Position, 0, wanted: () => AlarmRinging);
         home.Loop("breathing", home.Prop("Father").Position, -8, .5f);
         On("Clock", TurnOffAlarm);
-        On("Father", () => Say(3, "爸爸睡得很沉。他天亮了才下的夜班。", "轻一点，别吵醒他。"));
+        On("Father", () => Say(3, "爸爸睡得很沉。他凌晨才下班回来。", "轻一点，别吵醒他。"));
         On("Note", WriteBack);
         On("Money", TakeMoney);
         On("Sink", BrushTeeth);
         On("Backpack", TakeBackpack);
         On("FrontDoor", OpenDoor);
-        On("StairDoor", () => EmitSignal(SignalName.Finished));
+        On("StairDoor", GoDown);
         home.Hud.Say("", "6:50。闹钟响了。", 3);
     }
 
@@ -107,6 +105,12 @@ public partial class HomeMorning : Node
         HasBackpack = true;
         home.Show("Backpack", false);
         Say(3.5, "文具盒里，是昨天在铁道边捡到的那个……");
+    }
+
+    private void GoDown()
+    {
+        home.Enable("StairDoor", false);
+        EmitSignal(SignalName.Finished);
     }
 
     private void OpenDoor()
