@@ -66,11 +66,8 @@ internal sealed class DynamicSlices(World world, IReadOnlyList<SectionScene> sce
         if (changed.Count == 0) return;
         Version++;
         foreach (var scene in scenes)
-        {
-            var geometry = (SectionGeometryResult.Geometry)world.GetSectionGeometry(scene.Id);
             foreach (var state in changed)
-                Rebuild(scene, state, geometry.Entities.FirstOrDefault(slice => slice.Entity == state.Id));
-        }
+                Rebuild(scene, state, (world.GetSliceGeometry(state.Id, scene.Id) as SliceGeometryResult.Geometry)?.Slice);
     }
 
     private void Rebuild(SectionScene scene, EntityState state, SliceGeometry? slice)
