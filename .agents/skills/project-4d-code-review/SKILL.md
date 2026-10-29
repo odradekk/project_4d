@@ -45,13 +45,7 @@ description: 按本仓库写下的规则和以往出过的错，审查 project_4
 
 决策笔记按 ID 查找：`git ls-files '*<ID>.md'`。
 
-现行的文档就是规则。描述目标设计的文档，已实现的部分是规则；还没实现的部分只约束改动新写的代码，文档和现有代码之间已知的差距不算问题。还没实现的有：存档（`Capture`、`Restore`）、共享值（`SetSharedValue`、`Region3D.SharedValues`）、`[Tool]` 的 W 选择器、被啃几何的烘焙、PS1 渲染管线，以及预期操作页里还没有资源的设置和步骤（`SeamOverride`、`SharedValueOverride`、`ExpectedMove`、`ExpectedAdvance`）。
-
-下面这些行已经过时，不算规则，在报告里也不当作问题：
-
-- 框架目录第 16、18 行写着公共契约「待批准」；契约已于 2026-10-27 批准（公共契约第 5 行）。
-- 跨截面规则与尺寸规范表里的「原型状态」列，写的是归档原型，不是现在的代码。
-- 序章文档的「做 demo 需要的系统」和「demo 范围建议」，写的是归档原型和旧的实现顺序；九场现在都已实现。
+现行的文档就是规则。描述目标设计的文档，已实现的部分是规则；还没实现的部分只约束改动新写的代码，文档和现有代码之间已知的差距不算问题。还没实现的有：存档（`Capture`、`Restore`）、共享量（`SetSharedValue`、`Region3D.SharedValues`）、`[Tool]` 的 W 选择器、被啃几何的烘焙、PS1 渲染管线，以及预期操作页里还没有资源的设置和步骤（`SeamOverride`、`SharedValueOverride`、`ExpectedMove`、`ExpectedAdvance`）。
 
 ## 自动运行的检查
 
