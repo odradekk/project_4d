@@ -59,7 +59,12 @@ internal sealed record Box4(EntityId Entity, PartId Part, double[] Center, doubl
     internal override double Radius(double[] axis) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Dot(Axes[i], axis)));
 
     // Radius along a coordinate axis, without building the axis vector.
-    internal override double Extent(int coordinate) => Enumerable.Range(0, 4).Sum(i => Half[i] * Math.Abs(Axes[i][coordinate]));
+    internal override double Extent(int coordinate)
+    {
+        var extent = 0d;
+        for (var i = 0; i < 4; i++) extent += Half[i] * Math.Abs(Axes[i][coordinate]);
+        return extent;
+    }
 
     internal override double Reach(double[] pivot, double[] axis) => Enumerable.Range(0, 16).Max(mask =>
     {
