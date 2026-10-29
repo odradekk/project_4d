@@ -61,7 +61,7 @@ description: 按本仓库写下的规则和以往出过的错，审查 project_4
 
 - 提交信息里的 AI 署名：`echo "HEAD $(git rev-parse HEAD) refs/heads/main $(git rev-parse origin/main)" | python .agents/scripts/strip_attribution.py --pre-push`，检查还不在 `origin/main` 上的提交。
 - 决策笔记：`python <decision-notes skill 的目录>/scripts/verify_notes.py .agents/notes --base $(git merge-base HEAD origin/main)`。
-- 场景与导入资源：运行 `AGENTS.md` Agent workflow 表格对应的 Godot `--scene` 和 `--import` 检查。Godot 路径在表格下面；退出码为 0 但输出含 `ERROR:` 仍算失败。仓库没有 `.gitattributes`，Windows 上 `--import` 会改写 `.import` 文件的换行。如果 `.import` 文件只有换行变了（`git diff --ignore-cr-at-eol` 看不到差别），用 `git restore` 还原，不提交，也不算问题。来源：用户，2026-10-29。
+- 场景与导入资源：运行 `AGENTS.md` Agent workflow 表格对应的 Godot `--scene` 和 `--import` 检查。Godot 路径在表格下面；退出码为 0 但输出含 `ERROR:` 仍算失败。
 
 钩子仍需每个 clone 自己连接。没有 PR 或 CI 结果时，按 `pre-push-checks` 补齐受改动影响的本地检查，并说明尚无远端结果。
 
