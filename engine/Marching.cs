@@ -4,7 +4,7 @@ namespace FourD;
 // into six tetrahedra. Rings that tilt into W and metaball bodies are meshed this way (docs/frame/contract-views.md),
 // each on a grid of its own.
 internal sealed class Marching(
-    PartId part, double[] values, Func<int, double[]> position, Func<int, int, double[]> cut, SliceBuffer buffer)
+    PartId part, double[] values, Func<int, Point3> position, Func<int, int, Point3> cut, SliceBuffer buffer)
 {
     // The six tetrahedra of a cube, each running along one of its diagonals from corner 0 to corner 7.
     // Corner i has bit 0 for x, bit 1 for y and bit 2 for z.
@@ -19,7 +19,7 @@ internal sealed class Marching(
     // region to one outside it. Tetrahedra that share an edge each ask for its cut, so a `cut` that is costly to
     // compute should remember its points.
     internal static void Surface(
-        PartId part, int[] counts, double[] values, Func<int, double[]> position, Func<int, int, double[]> cut, SliceBuffer buffer)
+        PartId part, int[] counts, double[] values, Func<int, Point3> position, Func<int, int, Point3> cut, SliceBuffer buffer)
     {
         var marching = new Marching(part, values, position, cut, buffer);
         var cornerOffsets = Enumerable.Range(0, 8)
@@ -62,8 +62,8 @@ internal sealed class Marching(
                 Triangle(inside[0], cut(inside[0], outside[0]), cut(inside[1], outside[0]), cut(inside[2], outside[0]));
                 break;
             default:
-                double[] p = cut(inside[0], outside[0]), q = cut(inside[0], outside[1]);
-                double[] r = cut(inside[1], outside[1]), s = cut(inside[1], outside[0]);
+                Point3 p = cut(inside[0], outside[0]), q = cut(inside[0], outside[1]);
+                Point3 r = cut(inside[1], outside[1]), s = cut(inside[1], outside[0]);
                 Triangle(inside[0], p, q, r);
                 Triangle(inside[0], p, r, s);
                 break;
@@ -71,6 +71,6 @@ internal sealed class Marching(
     }
 
     // The surface faces away from the corner inside it.
-    private void Triangle(int insideCorner, double[] a, double[] b, double[] c) =>
+    private void Triangle(int insideCorner, Point3 a, Point3 b, Point3 c) =>
         buffer.AddFacingAwayFrom(part, a, b, c, position(insideCorner));
 }
