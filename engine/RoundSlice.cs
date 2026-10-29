@@ -180,7 +180,17 @@ internal static class RoundSlice
             for (var j = 0; j < count; j++)
                 values[i, j] = Field(round, w, Position(i, j));
 
+        // Each edge is cut once, though both squares beside it ask.
+        var cuts = new Dictionary<((int, int), (int, int)), Point3>();
+        Point3 Cut((int I, int J) inside, (int I, int J) outside)
+        {
+            if (!cuts.TryGetValue((inside, outside), out var point))
+                cuts[(inside, outside)] = point = OnSurface(round, w, Position(inside.I, inside.J), Position(outside.I, outside.J));
+            return point;
+        }
+
         var segments = new List<Polyline>();
+        var crossings = new Point3?[4];
         for (var i = 0; i < count - 1; i++)
             for (var j = 0; j < count - 1; j++)
             {
@@ -189,16 +199,18 @@ internal static class RoundSlice
                 // The corners of the square in order around it, and the point where the surface crosses the edge
                 // that leaves each, if it does.
                 (int I, int J)[] corners = [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)];
-                var crossings = Enumerable.Range(0, 4).Select(edge =>
+                var crossed = 0;
+                for (var edge = 0; edge < 4; edge++)
                 {
                     var next = (edge + 1) % 4;
-                    if (inside[edge] == inside[next]) return (Point3?)null;
-                    var (from, to) = inside[edge] ? (corners[edge], corners[next]) : (corners[next], corners[edge]);
-                    return OnSurface(round, w, Position(from.I, from.J), Position(to.I, to.J));
-                }).ToArray();
-                var crossed = crossings.OfType<Point3>().ToArray();
-                if (crossed.Length == 2) segments.Add(Segment(crossed[0], crossed[1]));
-                else if (crossed.Length == 4)
+                    crossings[edge] = inside[edge] == inside[next] ? null
+                        : inside[edge] ? Cut(corners[edge], corners[next]) : Cut(corners[next], corners[edge]);
+                    if (crossings[edge] is not null) crossed++;
+                }
+                if (crossed == 2)
+                    segments.Add(Segment(crossings[Array.FindIndex(crossings, point => point is not null)]!.Value,
+                        crossings[Array.FindLastIndex(crossings, point => point is not null)]!.Value));
+                else if (crossed == 4)
                 {
                     // The surface passes the square in two places: around the corners that lie on the other side
                     // of the surface from the middle of the square.
