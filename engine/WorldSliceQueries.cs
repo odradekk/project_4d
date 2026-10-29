@@ -3,6 +3,18 @@ namespace FourD;
 public sealed partial class World
 {
     /// <summary>
+    /// Returns the entity's slice in the section, the same as the section's geometry holds for it, without cutting the
+    /// rest of the section. Empty when the entity has no slice there; Rejected(UnknownId) for an unknown entity or section.
+    /// </summary>
+    public SliceGeometryResult GetSliceGeometry(EntityId entity, SectionId section)
+    {
+        var target = sections.FirstOrDefault(candidate => candidate.Id == section);
+        if (target is null || ReadEntity(entity) is EntityReadResult.Missing)
+            return new SliceGeometryResult.Rejected(Fail(FailureCode.UnknownId, "Unknown entity or section.", entity));
+        return SliceOf(entity, target.W) is { } slice ? new SliceGeometryResult.Geometry(slice) : new SliceGeometryResult.Empty();
+    }
+
+    /// <summary>
     /// Returns the world XYZ bounds of the entity's slice in the section, or of only one part of it. Empty when
     /// the entity, or the part, has no slice there; Rejected(UnknownId) for an unknown entity, section or part.
     /// </summary>
