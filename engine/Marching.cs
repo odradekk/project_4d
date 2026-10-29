@@ -4,7 +4,7 @@ namespace FourD;
 // into six tetrahedra. Rings that tilt into W and metaball bodies are meshed this way (docs/frame/contract-views.md),
 // each on a grid of its own.
 internal sealed class Marching(
-    PartId part, double[] values, Func<int, double[]> position, Func<int, int, double[]> cut, SliceBuffer buffer)
+    PartId part, double[] values, Func<int, Point3> position, Func<int, int, Point3> cut, SliceBuffer buffer)
 {
     // The six tetrahedra of a cube, each running along one of its diagonals from corner 0 to corner 7.
     // Corner i has bit 0 for x, bit 1 for y and bit 2 for z.
@@ -19,12 +19,21 @@ internal sealed class Marching(
     // region to one outside it. Tetrahedra that share an edge each ask for its cut, so a `cut` that is costly to
     // compute should remember its points.
     internal static void Surface(
-        PartId part, int[] counts, double[] values, Func<int, double[]> position, Func<int, int, double[]> cut, SliceBuffer buffer)
+        PartId part, int[] counts, double[] values, Func<int, Point3> position, Func<int, int, Point3> cut, SliceBuffer buffer)
     {
         var marching = new Marching(part, values, position, cut, buffer);
         var cornerOffsets = Enumerable.Range(0, 8)
             .Select(i => (i & 1) * counts[1] * counts[2] + (i >> 1 & 1) * counts[2] + (i >> 2 & 1))
             .ToArray();
+        (int, int, int, int) Corners(int corner, int[] tetrahedron) =>
+        (
+            corner + cornerOffsets[tetrahedron[0]], corner + cornerOffsets[tetrahedron[1]],
+            corner + cornerOffsets[tetrahedron[2]], corner + cornerOffsets[tetrahedron[3]]
+        );
+
+        // The cubes the surface passes through, and their triangles counted first, so that the buffer grows only once.
+        var crossed = new List<int>();
+        var triangles = 0;
         for (var x = 0; x < counts[0] - 1; x++)
             for (var y = 0; y < counts[1] - 1; y++)
                 for (var z = 0; z < counts[2] - 1; z++)
@@ -34,16 +43,27 @@ internal sealed class Marching(
                     foreach (var offset in cornerOffsets)
                         if (values[corner + offset] > 0) inside++;
                     if (inside == 0 || inside == cornerOffsets.Length) continue;
-                    foreach (var tetrahedron in Tetrahedra)
-                        marching.Tetrahedron(
-                            corner + cornerOffsets[tetrahedron[0]], corner + cornerOffsets[tetrahedron[1]],
-                            corner + cornerOffsets[tetrahedron[2]], corner + cornerOffsets[tetrahedron[3]]);
+                    crossed.Add(corner);
+                    foreach (var tetrahedron in Tetrahedra) triangles += marching.Triangles(Corners(corner, tetrahedron));
                 }
+        buffer.Reserve(triangles);
+        foreach (var corner in crossed)
+            foreach (var tetrahedron in Tetrahedra) marching.Tetrahedron(Corners(corner, tetrahedron));
+    }
+
+    // How many triangles the surface cuts from the tetrahedron: one when a single corner lies on one side of it, two
+    // when two do. Triangles without area are counted too, though they are left out.
+    private int Triangles((int, int, int, int) tetrahedron)
+    {
+        var (a, b, c, d) = tetrahedron;
+        var inside = (values[a] > 0 ? 1 : 0) + (values[b] > 0 ? 1 : 0) + (values[c] > 0 ? 1 : 0) + (values[d] > 0 ? 1 : 0);
+        return inside switch { 0 or 4 => 0, 2 => 2, _ => 1 };
     }
 
     // Adds the triangles where the surface, on the edges between corners inside and outside, cuts the tetrahedron.
-    private void Tetrahedron(int a, int b, int c, int d)
+    private void Tetrahedron((int, int, int, int) tetrahedron)
     {
+        var (a, b, c, d) = tetrahedron;
         Span<int> corners = [a, b, c, d];
         Span<int> inside = stackalloc int[4];
         Span<int> outside = stackalloc int[4];
@@ -62,8 +82,8 @@ internal sealed class Marching(
                 Triangle(inside[0], cut(inside[0], outside[0]), cut(inside[1], outside[0]), cut(inside[2], outside[0]));
                 break;
             default:
-                double[] p = cut(inside[0], outside[0]), q = cut(inside[0], outside[1]);
-                double[] r = cut(inside[1], outside[1]), s = cut(inside[1], outside[0]);
+                Point3 p = cut(inside[0], outside[0]), q = cut(inside[0], outside[1]);
+                Point3 r = cut(inside[1], outside[1]), s = cut(inside[1], outside[0]);
                 Triangle(inside[0], p, q, r);
                 Triangle(inside[0], p, r, s);
                 break;
@@ -71,6 +91,6 @@ internal sealed class Marching(
     }
 
     // The surface faces away from the corner inside it.
-    private void Triangle(int insideCorner, double[] a, double[] b, double[] c) =>
+    private void Triangle(int insideCorner, Point3 a, Point3 b, Point3 c) =>
         buffer.AddFacingAwayFrom(part, a, b, c, position(insideCorner));
 }

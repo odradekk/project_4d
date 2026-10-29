@@ -43,14 +43,13 @@ internal static class RoundSlice
         return gap >= round.Tube - World.RoundingMargin ? 0 : Math.Sqrt(round.Tube * round.Tube - gap * gap);
     }
 
-    // How far a point of the section lies within the tube: positive inside the slice, negative outside.
-    private static Func<double[], double> FieldAt(Round4 round, double w) =>
-        point => round.Tube - round.CoreDistance(point[0], point[1], point[2], w);
+    // How far a point of the section at w lies within the tube: positive inside the slice, negative outside.
+    private static double Field(Round4 round, double w, Point3 point) => round.Tube - round.CoreDistance(point.X, point.Y, point.Z, w);
 
     private static void Ball(Round4 ball, double radius, SliceBuffer buffer)
     {
         // The vertices of the surface; the last meridian is the first again.
-        var points = new double[Parallels + 1, Meridians + 1][];
+        var points = new Point3[Parallels + 1, Meridians + 1];
         for (var parallel = 0; parallel <= Parallels; parallel++)
             for (var meridian = 0; meridian <= Meridians; meridian++)
             {
@@ -58,20 +57,19 @@ internal static class RoundSlice
                 var longitude = 2 * Math.PI * (meridian % Meridians) / Meridians;
                 // The poles are exact, so the triangles that meet there have no area and are left out.
                 var around = parallel == 0 || parallel == Parallels ? 0 : radius * Math.Cos(latitude);
-                points[parallel, meridian] =
-                [
+                points[parallel, meridian] = new(
                     ball.Center[0] + around * Math.Cos(longitude),
                     ball.Center[1] + radius * Math.Sin(latitude),
-                    ball.Center[2] + around * Math.Sin(longitude)
-                ];
+                    ball.Center[2] + around * Math.Sin(longitude));
             }
 
-        void Triangle(double[] a, double[] b, double[] c) => buffer.AddFacingAwayFrom(ball.Part, a, b, c, ball.Center);
+        var center = new Point3(ball.Center[0], ball.Center[1], ball.Center[2]);
+        void Triangle(Point3 a, Point3 b, Point3 c) => buffer.AddFacingAwayFrom(ball.Part, a, b, c, center);
         for (var parallel = 0; parallel < Parallels; parallel++)
             for (var meridian = 0; meridian < Meridians; meridian++)
             {
-                double[] a = points[parallel, meridian], b = points[parallel, meridian + 1];
-                double[] c = points[parallel + 1, meridian + 1], d = points[parallel + 1, meridian];
+                Point3 a = points[parallel, meridian], b = points[parallel, meridian + 1];
+                Point3 c = points[parallel + 1, meridian + 1], d = points[parallel + 1, meridian];
                 Triangle(a, b, c);
                 Triangle(a, c, d);
             }
@@ -81,7 +79,7 @@ internal static class RoundSlice
     private static void FlatRing(Round4 ring, double radius, SliceBuffer buffer)
     {
         var normal = Box4.Cross3(ring.U, ring.V);
-        var points = new double[CircleSegments + 1, TubeSegments + 1][];
+        var points = new Point3[CircleSegments + 1, TubeSegments + 1];
         for (var i = 0; i <= CircleSegments; i++)
             for (var j = 0; j <= TubeSegments; j++)
             {
@@ -89,17 +87,17 @@ internal static class RoundSlice
                 // Out from the ring's axis, and along the normal of its plane.
                 var distance = ring.Major + radius * Math.Cos(turn);
                 var height = radius * Math.Sin(turn);
-                points[i, j] = Enumerable.Range(0, 3)
-                    .Select(k => ring.Center[k] + distance * (Math.Cos(angle) * ring.U[k] + Math.Sin(angle) * ring.V[k]) + height * normal[k])
-                    .ToArray();
+                double Along(int k) => ring.Center[k] + distance * (Math.Cos(angle) * ring.U[k] + Math.Sin(angle) * ring.V[k]) + height * normal[k];
+                points[i, j] = new(Along(0), Along(1), Along(2));
             }
 
         for (var i = 0; i < CircleSegments; i++)
         {
-            var middle = ring.CorePoint(2 * Math.PI * (i + .5) / CircleSegments);
+            var core = ring.CorePoint(2 * Math.PI * (i + .5) / CircleSegments);
+            var middle = new Point3(core[0], core[1], core[2]);
             for (var j = 0; j < TubeSegments; j++)
             {
-                double[] a = points[i, j], b = points[i + 1, j], c = points[i + 1, j + 1], d = points[i, j + 1];
+                Point3 a = points[i, j], b = points[i + 1, j], c = points[i + 1, j + 1], d = points[i, j + 1];
                 buffer.AddFacingAwayFrom(ring.Part, a, b, c, middle);
                 buffer.AddFacingAwayFrom(ring.Part, a, c, d, middle);
             }
@@ -114,23 +112,21 @@ internal static class RoundSlice
             .ToArray();
         var cell = Math.Max(Math.Min(CellSize, radius / 2), 2 * half.Max() / MaxCells);
         var counts = half.Select(extent => (int)Math.Ceiling(2 * extent / cell) + 1).ToArray();
-        var field = FieldAt(ring, w);
 
         // Node (x, y, z) of the grid has the index (x * counts[1] + y) * counts[2] + z.
-        double[] Position(int node) =>
-        [
+        Point3 Position(int node) => new(
             ring.Center[0] - half[0] + node / (counts[1] * counts[2]) * cell,
             ring.Center[1] - half[1] + node / counts[2] % counts[1] * cell,
-            ring.Center[2] - half[2] + node % counts[2] * cell
-        ];
-        var values = Enumerable.Range(0, counts[0] * counts[1] * counts[2]).Select(node => field(Position(node))).ToArray();
+            ring.Center[2] - half[2] + node % counts[2] * cell);
+        var values = new double[counts[0] * counts[1] * counts[2]];
+        for (var node = 0; node < values.Length; node++) values[node] = Field(ring, w, Position(node));
 
         // Each edge is cut once, however many tetrahedra share it.
-        var cuts = new Dictionary<(int, int), double[]>();
-        double[] Cut(int inside, int outside)
+        var cuts = new Dictionary<(int, int), Point3>();
+        Point3 Cut(int inside, int outside)
         {
             if (!cuts.TryGetValue((inside, outside), out var point))
-                cuts[(inside, outside)] = point = OnSurface(Position(inside), Position(outside), field);
+                cuts[(inside, outside)] = point = OnSurface(ring, w, Position(inside), Position(outside));
             return point;
         }
 
@@ -138,19 +134,17 @@ internal static class RoundSlice
     }
 
     // The point of the edge from a point inside to one outside where the field is zero, by halving the edge.
-    private static double[] OnSurface(double[] inside, double[] outside, Func<double[], double> field)
+    private static Point3 OnSurface(Round4 round, double w, Point3 inside, Point3 outside)
     {
-        double[] Along(double t) =>
-        [
-            inside[0] + t * (outside[0] - inside[0]),
-            inside[1] + t * (outside[1] - inside[1]),
-            inside[2] + t * (outside[2] - inside[2])
-        ];
+        Point3 Along(double t) => new(
+            inside.X + t * (outside.X - inside.X),
+            inside.Y + t * (outside.Y - inside.Y),
+            inside.Z + t * (outside.Z - inside.Z));
         double low = 0, high = 1;
         for (var step = 0; step < SurfaceSteps; step++)
         {
             var middle = (low + high) / 2;
-            if (field(Along(middle)) > 0) low = middle;
+            if (Field(round, w, Along(middle)) > 0) low = middle;
             else high = middle;
         }
         return Along((low + high) / 2);
@@ -173,23 +167,30 @@ internal static class RoundSlice
         var half = round.Major + radius;
         var cell = Math.Max(Math.Min(CellSize, radius / 2), 2 * half / MaxCells);
         var count = (int)Math.Ceiling(2 * half / cell) + 1;
-        var field = FieldAt(round, w);
-        double[] Position(double i, double j)
+        Point3 Position(double i, double j)
         {
             double along = i * cell - half, aside = j * cell - half;
-            return
-            [
+            return new(
                 round.Center[0] + along * first[0] + aside * second[0],
                 round.Center[1] + along * first[1] + aside * second[1],
-                round.Center[2] + along * first[2] + aside * second[2]
-            ];
+                round.Center[2] + along * first[2] + aside * second[2]);
         }
         var values = new double[count, count];
         for (var i = 0; i < count; i++)
             for (var j = 0; j < count; j++)
-                values[i, j] = field(Position(i, j));
+                values[i, j] = Field(round, w, Position(i, j));
+
+        // Each edge is cut once, though both squares beside it ask.
+        var cuts = new Dictionary<((int, int), (int, int)), Point3>();
+        Point3 Cut((int I, int J) inside, (int I, int J) outside)
+        {
+            if (!cuts.TryGetValue((inside, outside), out var point))
+                cuts[(inside, outside)] = point = OnSurface(round, w, Position(inside.I, inside.J), Position(outside.I, outside.J));
+            return point;
+        }
 
         var segments = new List<Polyline>();
+        var crossings = new Point3?[4];
         for (var i = 0; i < count - 1; i++)
             for (var j = 0; j < count - 1; j++)
             {
@@ -198,27 +199,29 @@ internal static class RoundSlice
                 // The corners of the square in order around it, and the point where the surface crosses the edge
                 // that leaves each, if it does.
                 (int I, int J)[] corners = [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)];
-                var crossings = Enumerable.Range(0, 4).Select(edge =>
+                var crossed = 0;
+                for (var edge = 0; edge < 4; edge++)
                 {
                     var next = (edge + 1) % 4;
-                    if (inside[edge] == inside[next]) return null;
-                    var (from, to) = inside[edge] ? (corners[edge], corners[next]) : (corners[next], corners[edge]);
-                    return OnSurface(Position(from.I, from.J), Position(to.I, to.J), field);
-                }).ToArray();
-                var crossed = crossings.OfType<double[]>().ToArray();
-                if (crossed.Length == 2) segments.Add(Segment(crossed[0], crossed[1]));
-                else if (crossed.Length == 4)
+                    crossings[edge] = inside[edge] == inside[next] ? null
+                        : inside[edge] ? Cut(corners[edge], corners[next]) : Cut(corners[next], corners[edge]);
+                    if (crossings[edge] is not null) crossed++;
+                }
+                if (crossed == 2)
+                    segments.Add(Segment(crossings[Array.FindIndex(crossings, point => point is not null)]!.Value,
+                        crossings[Array.FindLastIndex(crossings, point => point is not null)]!.Value));
+                else if (crossed == 4)
                 {
                     // The surface passes the square in two places: around the corners that lie on the other side
                     // of the surface from the middle of the square.
-                    var middleInside = field(Position(i + .5, j + .5)) > 0;
+                    var middleInside = Field(round, w, Position(i + .5, j + .5)) > 0;
                     for (var corner = 0; corner < 4; corner++)
-                        if (inside[corner] != middleInside) segments.Add(Segment(crossings[(corner + 3) % 4]!, crossings[corner]!));
+                        if (inside[corner] != middleInside) segments.Add(Segment(crossings[(corner + 3) % 4]!.Value, crossings[corner]!.Value));
                 }
             }
         return Array.AsReadOnly(segments.ToArray());
 
-        static Polyline Segment(double[] start, double[] end) => new(Array.AsReadOnly([.. start, .. end]), false);
+        static Polyline Segment(Point3 start, Point3 end) => new(Array.AsReadOnly([start.X, start.Y, start.Z, end.X, end.Y, end.Z]), false);
     }
 
     // The unit normal of the circle's plane as seen in XYZ, or up when that plane is seen edge-on or there is no circle.

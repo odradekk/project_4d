@@ -19,6 +19,13 @@ public abstract record SectionGeometryResult
 }
 public SectionGeometryResult GetSectionGeometry(SectionId section);
 public SectionGeometryResult GetGeometryAtW(double w);
+public abstract record SliceGeometryResult
+{
+    public sealed record Geometry(SliceGeometry Slice) : SliceGeometryResult;
+    public sealed record Empty : SliceGeometryResult;
+    public sealed record Rejected(Failure Failure) : SliceGeometryResult;
+}
+public SliceGeometryResult GetSliceGeometry(EntityId entity, SectionId section);
 public sealed record Polyline(IReadOnlyList<double> Positions, bool Closed);
 public sealed record PreviewSample(double Progress,
     IReadOnlyList<Polyline> Contours, bool Blocked);
@@ -35,6 +42,8 @@ public PreviewResult GetHiddenStructurePreview(RotationPlan plan, SectionId sect
 ```
 
 GetGeometryAtW 接受任意有限 W，供 `[Tool]` 查看夹层；本轮只支持 W=常量的 Section，不扩展任意四维超平面。输出含有体积的切片，按 EntityId 排序；每件的三角形按稳定零件号分组。相切为点/线/面、没有三维内部的退化交集不输出可碰撞实体；`HasSlice` 使用同一规则。普通平放物输出原盒子三维几何；旋转途中和竖起后由四维交集计算。背包物和已移除元素不输出；三维生物由 Godot 渲染，不在切片网格内。
+
+GetSliceGeometry 只切一件实体，结果与 GetSectionGeometry 在同一 Section 里这件实体的那一项相同。这件实体在该 Section 没有体积切片时（包括背包物和三维生物）返回 Empty，未知实体或 Section 返回 UnknownId。宿主只要几件实体的切片时用它，不用为此切整个截面。
 
 几何是无索引三角形表：每三个顶点一个三角形。若顶点数 N，N%3=0；Positions 和 Normals 都是 3N 个 double，依次 xyz；Uvs 为 2N 个 double，依次 uv；Parts 为 N 个 PartId，同一三角形三个值相同。不使用 `float[]`、共享缓存或内部面/边对象。坐标和法线均位于世界 XYZ，适配层生成节点用单位变换，避免再次乘实体变换。ThroughObject 表示该实体的当前四维形体跨出一个普通 ±ε 层，供镜片发光描边；它不是“当前恰有两个可玩切片”的计数。
 

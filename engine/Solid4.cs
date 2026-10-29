@@ -26,6 +26,10 @@ internal abstract record Solid4(EntityId Entity, PartId Part, double[] Center)
 
     // Cheap rejection on the axis-aligned bounds: false as soon as, on some coordinate axis, they overlap by no more
     // than the contact tolerance. Surfaces that merely touch count as not overlapping.
-    internal bool BoundsMayOverlap(Solid4 other) =>
-        Enumerable.Range(0, 4).All(i => Math.Abs(Center[i] - other.Center[i]) < Extent(i) + other.Extent(i) - World.ContactTolerance);
+    internal bool BoundsMayOverlap(Solid4 other)
+    {
+        for (var i = 0; i < 4; i++)
+            if (Math.Abs(Center[i] - other.Center[i]) >= Extent(i) + other.Extent(i) - World.ContactTolerance) return false;
+        return true;
+    }
 }

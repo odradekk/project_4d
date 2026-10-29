@@ -1,5 +1,11 @@
 namespace FourD;
 
+public abstract record SliceGeometryResult
+{
+    public sealed record Geometry(SliceGeometry Slice) : SliceGeometryResult;
+    public sealed record Empty : SliceGeometryResult;
+    public sealed record Rejected(Failure Failure) : SliceGeometryResult;
+}
 public abstract record SliceBoundsResult
 {
     public sealed record Bounds(Vec3 Min, Vec3 Max) : SliceBoundsResult;

@@ -155,14 +155,12 @@ public sealed partial class GrazerChoreography : Node
         foreach (var node in drawn) node.Free();
         drawn.Clear();
         foreach (var scene in scenes.Where(scene => sections.Contains(scene.Id)))
-        {
-            var geometry = (SectionGeometryResult.Geometry)world.GetSectionGeometry(scene.Id);
-            foreach (var slice in geometry.Entities.Where(slice => bodies.ContainsKey(slice.Entity)))
-            {
-                var node = SliceMesh.Entity(slice, materials, scene.MaskIds, null);
-                scene.Dynamic.AddChild(node);
-                drawn.Add(node);
-            }
-        }
+            foreach (var grazer in bodies.Keys)
+                if (world.GetSliceGeometry(grazer, scene.Id) is SliceGeometryResult.Geometry geometry)
+                {
+                    var node = SliceMesh.Entity(geometry.Slice, materials, scene.MaskIds, null);
+                    scene.Dynamic.AddChild(node);
+                    drawn.Add(node);
+                }
     }
 }

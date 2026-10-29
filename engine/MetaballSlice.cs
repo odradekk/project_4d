@@ -76,22 +76,20 @@ internal static class MetaballSlice
                 (first[1] + node / counts[2] % counts[1]) * cell,
                 (first[2] + node % counts[2]) * cell
             );
-            double[] Position(int node)
+            Point3 Position(int node)
             {
                 var (x, y, z) = Place(node);
-                return [pose.Position.X + x, pose.Position.Y + y, pose.Position.Z + z];
+                return new(pose.Position.X + x, pose.Position.Y + y, pose.Position.Z + z);
             }
-            double[] Cut(int inside, int outside)
+            Point3 Cut(int inside, int outside)
             {
                 var (x0, y0, z0) = Place(inside);
                 var (x1, y1, z1) = Place(outside);
                 var fraction = values[inside] / (values[inside] - values[outside]);
-                return
-                [
+                return new(
                     pose.Position.X + (x0 + fraction * (x1 - x0)),
                     pose.Position.Y + (y0 + fraction * (y1 - y0)),
-                    pose.Position.Z + (z0 + fraction * (z1 - z0))
-                ];
+                    pose.Position.Z + (z0 + fraction * (z1 - z0)));
             }
             Marching.Surface(BodyPart, counts, values, Position, Cut, buffer);
         }
