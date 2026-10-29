@@ -20,6 +20,15 @@ internal sealed class SliceBuffer
         Parts.AddRange(other.Parts);
     }
 
+    // Makes room for this many more triangles at once, so that a large slice is not copied as it grows.
+    internal void Reserve(int triangles)
+    {
+        Positions.EnsureCapacity(Positions.Count + 9 * triangles);
+        Normals.EnsureCapacity(Normals.Count + 9 * triangles);
+        Uvs.EnsureCapacity(Uvs.Count + 6 * triangles);
+        Parts.EnsureCapacity(Parts.Count + 3 * triangles);
+    }
+
     internal SliceGeometry ToSlice(EntityId entity, bool through) =>
         new(entity, Positions.AsReadOnly(), Normals.AsReadOnly(), Uvs.AsReadOnly(), Parts.AsReadOnly(), through);
 
