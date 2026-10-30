@@ -37,7 +37,7 @@
 
 ## 道具和灯光
 
-- 玩家按 E 用的东西是 `Interactable3D`，灯光是 `OmniLight3D`，都放在所属 Section 下的 `Props` 里。`Props` 里放普通 Godot 节点；适配层的节点放进去照样会被读成四维数据。区域载入后适配层把 `Props` 移进该截面自己的世界，用 `Region3D.Props(截面)` 取；所有区域通用。编辑器里只显示最接近 `PreviewW` 的截面的 `Props`，隐藏的状态会存进场景，载入时适配层把它们重新显示。
+- 玩家按 E 用的东西是 `Interactable3D`，灯光是 `OmniLight3D`，都放在所属 Section 下的 `Props` 里。`Props` 里放普通 Godot 节点；适配层的节点放进去照样会被读成四维数据。区域载入后适配层把 `Props` 移进该截面自己的世界，用 `Region3D.Props(截面)` 取；所有区域通用。`Props` 里有 `WorldEnvironment` 时，截面用它，不用适配层默认的环境。编辑器里只显示最接近 `PreviewW` 的截面的 `Props`，隐藏的状态会存进场景，载入时适配层把它们重新显示。
 - `Interactable3D` 在第 3 层（`collision_layer = 4`，`PhysicsLayers.Pickups`）：准星看得到，玩家和角色撞不到。要挡路的前门同时在第 1、3 层（`collision_layer = 5`）。
 - `home/props.tscn` 里还留着原来第 1、7 场的道具（闹钟、字条、书包、前门等），第 8 场的 `CatRoom` 让准星找不到它们，只留呼啦圈 `Hoop`。第 1、7 场现在用的道具、灯光和角色的路径点见[新的家区域](compound-region.md)「道具和灯光」。
 
