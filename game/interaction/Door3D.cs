@@ -6,7 +6,8 @@ namespace Game.Interaction;
 /// A door that E opens and shuts. Its leaf, the <see cref="Interactable3D"/> child named Leaf, turns about this node's
 /// origin, the hinge. Shut or ajar, the leaf stops the player, and ajar it leaves her room to pass beside it; open, it
 /// lets her through. E on an open or ajar door shuts it. Like the school room's door, it is a plain body that the engine
-/// does not know of, so seams, the prism and the cat cannot see it (docs/frame/compound-region.md).
+/// does not know of: bodies, the cat's included, collide with a shut or ajar leaf, but seams, the prism and engine-side
+/// checks such as the cat's jump test miss it (docs/frame/compound-region.md).
 /// </summary>
 [GlobalClass]
 public partial class Door3D : Node3D
