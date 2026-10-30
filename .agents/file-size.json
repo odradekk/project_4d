@@ -16,7 +16,9 @@
     "**/*.svg",
     "archives/**"
   ],
-  "exceptions": {},
+  "exceptions": {
+    "prototypes/home-layout/index.html": "throwaway prototype kept only on this branch as the source of the home scene coordinates; never merged"
+  },
   "baseline": {
     "docs/gameplay.md": 9343,
     "docs/prologue.md": 5422
