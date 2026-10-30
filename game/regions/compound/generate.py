@@ -141,6 +141,9 @@ def stair(f):
     # The ground floor's landing runs under the flights too, so that she can walk out from under them.
     box(boxes, -CW, SX if f else E - EXT / 2, -SLAB, 0, zB, zS, 'slab')
     if f > 0: wall_boxes(boxes, hall_west)  # on the ground floor this side is the open way out
+    else:  # under the middle of the fourth tread of the westward flight; beyond it she would be wedged under the turn
+        x = SX + RUN - 3.5 * GO
+        box(boxes, x - INT / 2, x + INT / 2, 0, S / 2 + 4 * RISE - 0.3, SC + 0.06, zS - EXT / 2, 'wall')
     wall_boxes(boxes, hall_east)
     if f < FLOORS - 1:
         for i in range(1, STEPS):
