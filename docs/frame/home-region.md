@@ -2,7 +2,7 @@
 
 [场景标注](scene-authoring.md) · [装置搭法](device-authoring.md) · [角色搭法](character-authoring.md)
 
-`game/regions/home.tscn` 是序章第 1、7 场（日常）用的区域；第 8、9 场（小满的房间）用继承它的 `game/regions/room.tscn`，格式见[场景标注](scene-authoring.md)。楼房元素、固定物件和道具分成 `game/regions/home/` 下的几个子场景，每个文件都在大小限制以内；盒子零件的模板是 `game/regions/box_part.tscn`。本页不是契约，只写第 8、9 场要遵守的限制，以及它们各自放的东西；具体坐标以场景为准，编辑器里调整过就以调整后的为准。
+`game/regions/home.tscn` 是旧的家区域，第 8、9 场（小满的房间）用继承它的 `game/regions/room.tscn`，格式见[场景标注](scene-authoring.md)。第 1、7 场（日常）已经搬进[新的家区域](compound-region.md)，`home.tscn` 本身不再被哪一场直接载入。楼房元素、固定物件和道具分成 `game/regions/home/` 下的几个子场景，每个文件都在大小限制以内；盒子零件的模板是 `game/regions/box_part.tscn`。本页不是契约，只写第 8、9 场要遵守的限制，以及它们各自放的东西；具体坐标以场景为准，编辑器里调整过就以调整后的为准。
 
 坐标：x 向东，z 向南，y 向上，单位米。
 
@@ -39,12 +39,11 @@
 
 - 玩家按 E 用的东西是 `Interactable3D`，灯光是 `OmniLight3D`，都放在所属 Section 下的 `Props` 里。`Props` 里放普通 Godot 节点；适配层的节点放进去照样会被读成四维数据。区域载入后适配层把 `Props` 移进该截面自己的世界，用 `Region3D.Props(截面)` 取；所有区域通用。编辑器里只显示最接近 `PreviewW` 的截面的 `Props`，隐藏的状态会存进场景，载入时适配层把它们重新显示。
 - `Interactable3D` 在第 3 层（`collision_layer = 4`，`PhysicsLayers.Pickups`）：准星看得到，玩家和角色撞不到。要挡路的前门同时在第 1、3 层（`collision_layer = 5`）。
-- 第 1、7 场是 `HomeMorning`、`HomeEvening`（`game/flow/`），做完时发 `Finished` 信号。两场都关掉棱镜，用适配层的默认光照。调试入口是 `-- --start=home-morning` 和 `-- --start=home-evening`。
-- 角色在客厅、厨房、卫生间和小满房间之间走，要经过各自的门，路径点见 `game/flow/HomeRoute.cs`。
+- `home/props.tscn` 里还留着原来第 1、7 场的道具（闹钟、字条、书包、前门等），第 8 场的 `CatRoom` 让准星找不到它们，只留呼啦圈 `Hoop`。第 1、7 场现在用的道具、灯光和角色的路径点见[新的家区域](compound-region.md)「道具和灯光」。
 
 ## 第 8 场放的东西
 
-`game/regions/room.tscn` 继承 `home.tscn`，加上第 8 场的物件；第 1、7 场仍用 `home.tscn`，所以日常段落里没有这些东西，第 9 场接着用 `room.tscn`。物件分在 `game/regions/room/` 的子场景里：`turnables.tscn`、`items.tscn`、`cabinet.tscn`、`fittings.tscn` 和预期操作 `operations.tscn`。场景脚本是 `game/flow/CatRoom.cs`，调试入口是 `-- --start=cat-room`。
+`game/regions/room.tscn` 继承 `home.tscn`，加上第 8 场的物件，第 9 场接着用 `room.tscn`。物件分在 `game/regions/room/` 的子场景里：`turnables.tscn`、`items.tscn`、`cabinet.tscn`、`fittings.tscn` 和预期操作 `operations.tscn`。场景脚本是 `game/flow/CatRoom.cs`，调试入口是 `-- --start=cat-room`。
 
 | 东西 | 位置和数值 |
 |---|---|
