@@ -69,7 +69,7 @@ furniture = [  # id, x, z, height
 COLORS = {
     'wall': (0.94, 0.937, 0.918, 1), 'floor': (0.702, 0.675, 0.631, 1), 'tile': (0.784, 0.804, 0.816, 1),
     'slab': (0.851, 0.843, 0.82, 1), 'stair': (0.812, 0.792, 0.753, 1), 'rail': (0.478, 0.502, 0.533, 1),
-    'bars': (0.478, 0.502, 0.533, 0.35), 'front': (0.541, 0.231, 0.18, 1), 'ground': (0.655, 0.678, 0.624, 1),
+    'panel': (0.478, 0.502, 0.533, 0.35), 'front': (0.541, 0.231, 0.18, 1), 'ground': (0.655, 0.678, 0.624, 1),
     'furn': (0.561, 0.639, 0.722, 1),
 }
 
@@ -120,9 +120,9 @@ def half_slabs():
     return boxes + mirror(boxes, zB)
 
 
-# A railing: a handrail over a see-through infill of bars, which stops the player too.
+# A railing: a handrail over a see-through panel, which stops the player too.
 def rail(boxes, along, at, a, b, h=1.1):
-    for y0, y1, m in ((0, h - 0.06, 'bars'), (h - 0.06, h, 'rail')):
+    for y0, y1, m in ((0, h - 0.06, 'panel'), (h - 0.06, h, 'rail')):
         if along == 'z': box(boxes, at - 0.03, at + 0.03, y0, y1, a, b, m)
         else: box(boxes, a, b, y0, y1, at - 0.03, at + 0.03, m)
 
@@ -204,8 +204,8 @@ def scene(entities, script='BuildingElement3D', root='Shell'):
 def slope(name, xa, ya, xb, yb, z0, z1):
     thickness, dx, dy = 0.1, xb - xa, yb - ya
     length = math.hypot(dx, dy)
-    angle = math.atan2(dy, abs(dx)) * math.copysign(1, dx)
-    nx, ny = -dy / length * math.copysign(1, dx), abs(dx) / length  # the surface's upward normal
+    angle = math.atan(dy / dx)
+    nx, ny = -math.sin(angle), math.cos(angle)  # the surface's upward normal
     centre = ((xa + xb) / 2 - nx * thickness / 2, (ya + yb) / 2 - ny * thickness / 2, (z0 + z1) / 2)
     return name, (round(length, 6), thickness, round(z1 - z0, 6)), centre, angle
 
