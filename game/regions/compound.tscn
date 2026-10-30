@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=46 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -9,6 +9,127 @@
 [ext_resource type="PackedScene" path="res://regions/compound/site.tscn" id="e8"]
 [ext_resource type="PackedScene" path="res://regions/compound/poplars.tscn" id="e9"]
 [ext_resource type="PackedScene" path="res://regions/compound/buildings.tscn" id="e10"]
+[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="e11"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.8, 0.2, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.25, 0.3, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.97, 0.97, 0.9, 1)
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.4, 0.65, 0.4, 1)
+
+[sub_resource type="StandardMaterial3D" id="m5"]
+albedo_color = Color(0.2, 0.35, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="m6"]
+albedo_color = Color(0.75, 0.8, 0.85, 1)
+
+[sub_resource type="StandardMaterial3D" id="m7"]
+albedo_color = Color(0.95, 0.5, 0.7, 1)
+
+[sub_resource type="StandardMaterial3D" id="m8"]
+albedo_color = Color(0.55, 0.57, 0.6, 1)
+
+[sub_resource type="StandardMaterial3D" id="m9"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+
+[sub_resource type="StandardMaterial3D" id="m10"]
+albedo_color = Color(1, 0.55, 0.15, 1)
+shading_mode = 0
+emission_enabled = true
+emission = Color(1, 0.5, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="m11"]
+albedo_color = Color(0.75, 0.3, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="m12"]
+albedo_color = Color(0.15, 0.15, 0.18, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(0.12, 0.1, 0.06)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(0.9, 0.4, 1.6)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m3")
+size = Vector3(0.22, 0.006, 0.15)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m4")
+size = Vector3(0.1, 0.004, 0.06)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m5")
+size = Vector3(0.14, 0.36, 0.3)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m6")
+size = Vector3(0.02, 0.5, 0.4)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m7")
+size = Vector3(0.06, 0.012, 0.025)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m8")
+size = Vector3(0.3, 0.16, 0.3)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m9")
+size = Vector3(0.14, 0.14, 0.14)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m10")
+size = Vector3(0.22, 0.03, 0.22)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m11")
+size = Vector3(0.16, 0.035, 0.035)
+
+[sub_resource type="BoxMesh" id="b12"]
+material = SubResource("m12")
+size = Vector3(0.02, 0.44, 0.6)
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(0.2, 0.16, 0.14)
+
+[sub_resource type="BoxShape3D" id="s2"]
+size = Vector3(1, 0.5, 1.6)
+
+[sub_resource type="BoxShape3D" id="s3"]
+size = Vector3(0.3, 0.06, 0.2)
+
+[sub_resource type="BoxShape3D" id="s4"]
+size = Vector3(0.14, 0.05, 0.1)
+
+[sub_resource type="BoxShape3D" id="s5"]
+size = Vector3(0.5, 1.15, 0.5)
+
+[sub_resource type="BoxShape3D" id="s6"]
+size = Vector3(0.22, 0.42, 0.38)
+
+[sub_resource type="BoxShape3D" id="s7"]
+size = Vector3(0.12, 0.06, 0.08)
+
+[sub_resource type="BoxShape3D" id="s8"]
+size = Vector3(1, 0.3, 0.4)
+
+[sub_resource type="BoxShape3D" id="s9"]
+size = Vector3(0.2, 0.07, 0.08)
+
+[sub_resource type="BoxShape3D" id="s10"]
+size = Vector3(0.65, 1.15, 1.3)
+
+[sub_resource type="BoxShape3D" id="s11"]
+size = Vector3(0.6, 0.38, 0.9)
 
 [node name="Compound" type="Node3D"]
 script = ExtResource("e1")
@@ -38,6 +159,200 @@ EntityId = "xiaoman"
 CharacterScene = ExtResource("e5")
 
 [node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e7")]
+
+[node name="Clock" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(7.43, 4.02, 5.95)
+rotation = Vector3(0, 1.5708, 0)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "关闹钟"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Clock"]
+shape = SubResource("s1")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Clock"]
+layers = 3
+position = Vector3(0, -0.02, 0)
+mesh = SubResource("b1")
+
+[node name="Father" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(7.13, 3.9, 1.5)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "看爸爸"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Father"]
+shape = SubResource("s2")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Father"]
+layers = 3
+position = Vector3(0, -0.05, 0)
+mesh = SubResource("b2")
+
+[node name="Note" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(4.75, 3.68, 2)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "看字条"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Note"]
+shape = SubResource("s3")
+
+[node name="Paper" type="Node3D" parent="Sections/Ⅰ/Props/Note"]
+position = Vector3(0, -0.025, 0)
+
+[node name="Sheet" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Note/Paper"]
+layers = 3
+mesh = SubResource("b3")
+
+[node name="Front" type="Label3D" parent="Sections/Ⅰ/Props/Note/Paper"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.004, 0)
+layers = 3
+pixel_size = 0.0008
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "满满：饭钱放桌上了，\n放学早点回来。——爸"
+font_size = 22
+
+[node name="Back" type="Label3D" parent="Sections/Ⅰ/Props/Note/Paper"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -0.004, 0)
+visible = false
+layers = 3
+pixel_size = 0.0008
+modulate = Color(0.1, 0.1, 0.1, 1)
+text = "爸，我上学去了。"
+font_size = 22
+
+[node name="Money" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(5.2, 3.68, 1.85)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "拿早饭钱"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Money"]
+shape = SubResource("s4")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Money"]
+layers = 3
+position = Vector3(0, -0.025, 0)
+mesh = SubResource("b4")
+
+[node name="Sink" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(2.95, 4.575, 6.25)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "刷牙"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Sink"]
+shape = SubResource("s5")
+
+[node name="Mirror" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Sink"]
+layers = 3
+position = Vector3(0.23, 0.35, 0)
+mesh = SubResource("b6")
+
+[node name="Backpack" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(6.755, 3.86, 6.4)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "背书包"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Backpack"]
+shape = SubResource("s6")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Backpack"]
+layers = 3
+position = Vector3(0, -0.03, 0)
+mesh = SubResource("b5")
+
+[node name="HairClip" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(5.05, 3.68, 2.15)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "拿发卡"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/HairClip"]
+shape = SubResource("s7")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/HairClip"]
+layers = 3
+position = Vector3(0, -0.024, 0)
+mesh = SubResource("b7")
+
+[node name="Stove" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(0.42, 4.18, 1.6)
+rotation = Vector3(0, 1.5708, 0)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "热饭"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Stove"]
+shape = SubResource("s8")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Stove"]
+layers = 3
+position = Vector3(0, -0.02, 0)
+mesh = SubResource("b8")
+
+[node name="Steam" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Stove"]
+visible = false
+layers = 3
+position = Vector3(0, 0.22, 0)
+mesh = SubResource("b9")
+
+[node name="Flame" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Stove"]
+visible = false
+layers = 3
+position = Vector3(0, -0.09, 0)
+mesh = SubResource("b10")
+
+[node name="Sausage" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(5.4, 3.69, 2.1)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "分火腿肠"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Sausage"]
+shape = SubResource("s9")
+
+[node name="Visual" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Sausage"]
+layers = 3
+position = Vector3(0, -0.02, 0)
+mesh = SubResource("b11")
+
+[node name="Tv" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(5, 3.775, 3.66)
+rotation = Vector3(0, -1.5708, 0)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "看电视"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Tv"]
+shape = SubResource("s10")
+
+[node name="Screen" type="MeshInstance3D" parent="Sections/Ⅰ/Props/Tv"]
+layers = 3
+position = Vector3(-0.185, 0.225, 0)
+mesh = SubResource("b12")
+
+[node name="Desk" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(7.43, 4.11, 6.5)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e11")
+Prompt = "写作业"
+
+[node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Desk"]
+shape = SubResource("s11")
 
 [node name="Buildings" parent="." instance=ExtResource("e10")]
 

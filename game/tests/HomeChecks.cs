@@ -10,11 +10,21 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The home region's layout: how the room differs in its three sections, the building ranges and the floor hole, and the
-/// space kept free for the seam, the hoop and the cat in scene 8.
+/// The home regions. In the compound of scenes 1 and 7, each prop rests on the furniture of its room. In the old home,
+/// whose room scenes 8 and 9 still use: how the room differs in its three sections, the building ranges and the floor
+/// hole, and the space kept free for the seam, the hoop and the cat in scene 8.
+/// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class HomeChecks : Node
 {
+    private const string OldHome = "res://regions/home.tscn";
+    // Each prop of scenes 1 and 7 and the furniture under it, which puts it in its room.
+    private static readonly (string Prop, string Furniture)[] Resting =
+    [
+        ("Clock", "desk"), ("Backpack", "stool"), ("Desk", "desk"), ("Father", "father_bed"), ("Tv", "tv_stand"),
+        ("Note", "tea_table"), ("Money", "tea_table"), ("HairClip", "tea_table"), ("Sausage", "tea_table"),
+        ("Sink", "basin"), ("Stove", "stove"),
+    ];
     private const double Epsilon = .006;
     // The reaches of the cat's leap, longest first, how far its body goes beyond each end of one, and its radius: see Cat.cs.
     private static readonly float[] CatReaches = [1.2f, 1f, .8f, .6f];
@@ -28,11 +38,18 @@ public partial class HomeChecks : Node
     {
         try
         {
+            home = HomeScene.Open(this);
+            world = home.Region.World!;
+            await Frames(2);
+            CheckPropsRest();
+            RemoveChild(home.Region);
+            home.Region.Free();
+
             home = HomeScene.Open(this, region =>
             {
                 AddCatToys(region);
                 HideProps(region);
-            });
+            }, OldHome);
             world = home.Region.World!;
             await Frames(2);
             CheckSections();
@@ -41,7 +58,7 @@ public partial class HomeChecks : Node
             CheckFloorHole();
             CheckFreeSpace();
             CheckPropsShow();
-            GD.Print("Home checks passed: sections, room layout in three sections, buildings, floor hole, free space, props.");
+            GD.Print("Home checks passed: the compound's props on their furniture; the old home's sections, room layout in three sections, buildings, floor hole, free space, props.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -55,6 +72,18 @@ public partial class HomeChecks : Node
         (SectionGeometryResult.Geometry)world.GetSectionGeometry(new(section));
 
     private bool Has(string section, string entity) => Geometry(section).Entities.Any(slice => slice.Entity.Value == entity);
+
+    // A thin column from the middle of the prop 0.6 m down, as the engine sees section I, meets the furniture it rests on.
+    private void CheckPropsRest()
+    {
+        foreach (var (name, furniture) in Resting)
+        {
+            var column = new OccupancyBox(SceneReader.PoseOf(new Transform3D(Basis.Identity, home.Prop(name).GlobalPosition - new Vector3(0, .3f, 0)),
+                Geometry(HomeScene.Section).W), new(.01, .3, .01, Epsilon));
+            var hits = ((OccupancyResult.Occupancy)world.QueryOccupancy(column, [])).Hits.Select(hit => hit.Entity.Value).ToArray();
+            Check(hits.Contains(furniture), $"{name} rests on the {furniture}; under it are {string.Join(", ", hits)}");
+        }
+    }
 
     private void CheckSections()
     {

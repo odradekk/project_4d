@@ -1,18 +1,27 @@
 using System;
 using Game.Audio;
+using Game.Interaction;
 using Godot;
 
 namespace Game.Flow;
 
 /// <summary>
-/// Scene 1, the morning at home: the alarm, her father asleep, the note and the two yuan on the table, brushing her
-/// teeth, the school bag, and out of the door. The prism stays in the pencil case until school.
+/// Scene 1, the morning at home: the alarm, her father asleep in the living room, the note and the two yuan on the tea
+/// table, brushing her teeth, the school bag, out of the front door and down the stairs. The prism stays in the pencil case
+/// until school.
 /// Decision note: 2026-10-26-prologue-greybox
+/// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class HomeMorning : Node
 {
+    // She wakes beside her bed, facing it.
+    private static readonly Vector3 Wake = new(5f, HomeScene.Floor + .02f, 4.8f);
+    // Lower than the flat's floor by half a riser: only the flight down from the second storey takes her there.
+    private const float Downstairs = HomeScene.Floor - .06f;
+
     private HomeScene home = null!;
     private SectionSound alarm = null!;
+    private bool finished;
 
     [Signal] public delegate void FinishedEventHandler();
 
@@ -21,7 +30,6 @@ public partial class HomeMorning : Node
     public bool MoneyTaken { get; private set; }
     public bool TeethBrushed { get; private set; }
     public bool HasBackpack { get; private set; }
-    public bool DoorOpen { get; private set; }
 
     /// <summary>What still keeps her from leaving, in her own words; null when she is ready. The note is her own to answer.</summary>
     public string? Missing =>
@@ -33,7 +41,9 @@ public partial class HomeMorning : Node
 
     public override void _Ready()
     {
-        home = HomeScene.Open(this, region => region.PrismEnabled = false);
+        home = HomeScene.Open(this);
+        home.Player.Position = Wake;
+        home.Player.Rotation = new(0, -Mathf.Pi / 2, 0);
         foreach (var name in new[] { "HairClip", "Sausage" }) home.Show(name, false);
         foreach (var name in new[] { "Stove", "Tv", "Desk" }) home.Enable(name, false);
         alarm = home.Loop("alarm", home.Prop("Clock").Position, 0, wanted: () => AlarmRinging);
@@ -44,9 +54,21 @@ public partial class HomeMorning : Node
         On("Money", TakeMoney);
         On("Sink", BrushTeeth);
         On("Backpack", TakeBackpack);
-        On("FrontDoor", OpenDoor);
-        On("StairDoor", GoDown);
+        var door = home.Door("FrontDoor");
+        door.Locked = () => Missing is not null;
+        door.GetNode<Interactable3D>("Leaf").Interacted += () =>
+        {
+            if (Missing is { } reason) Say(2.5, reason);
+            else if (door.State == Door3D.DoorState.Open) Say(2, "我走啦。");
+        };
         home.Hud.Say("", "6:50。闹钟响了。", 3);
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        if (finished || home.Player.GlobalPosition.Y > Downstairs) return;
+        finished = true;
+        EmitSignal(SignalName.Finished);
     }
 
     public override void _UnhandledInput(InputEvent input)
@@ -105,23 +127,5 @@ public partial class HomeMorning : Node
         HasBackpack = true;
         home.Show("Backpack", false);
         Say(3.5, "文具盒里，是昨天在铁道边捡到的那个……");
-    }
-
-    private void GoDown()
-    {
-        home.Enable("StairDoor", false);
-        EmitSignal(SignalName.Finished);
-    }
-
-    private void OpenDoor()
-    {
-        if (Missing is { } reason)
-        {
-            Say(2.5, reason);
-            return;
-        }
-        DoorOpen = true;
-        home.Show("FrontDoor", false);
-        Say(2, "我走啦。");
     }
 }
