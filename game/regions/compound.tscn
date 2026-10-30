@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=3]
+[gd_scene load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://regions/compound/poplars.tscn" id="e9"]
 [ext_resource type="PackedScene" path="res://regions/compound/buildings.tscn" id="e10"]
 [ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="e11"]
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e12"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e13"]
 
 [sub_resource type="StandardMaterial3D" id="m1"]
 albedo_color = Color(0.8, 0.2, 0.2, 1)
@@ -98,6 +100,10 @@ size = Vector3(0.16, 0.035, 0.035)
 material = SubResource("m12")
 size = Vector3(0.02, 0.44, 0.6)
 
+[sub_resource type="BoxMesh" id="b13"]
+material = SubResource("m12")
+size = Vector3(0.65, 0.5, 0.35)
+
 [sub_resource type="BoxShape3D" id="s1"]
 size = Vector3(0.2, 0.16, 0.14)
 
@@ -145,6 +151,16 @@ W = 0
 [node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
 
 [node name="Furniture" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e6")]
+
+[node name="tv" type="Node3D" parent="Sections/Ⅰ/Fixed"]
+position = Vector3(5, 3.8, 3.725)
+script = ExtResource("e12")
+EntityId = "tv"
+
+[node name="p1" parent="Sections/Ⅰ/Fixed/tv" instance=ExtResource("e13")]
+position = Vector3(0, 0.25, 0)
+mesh = SubResource("b13")
+PartId = "p1"
 
 [node name="Site" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e8")]
 
@@ -286,7 +302,7 @@ position = Vector3(0, -0.024, 0)
 mesh = SubResource("b7")
 
 [node name="Stove" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
-position = Vector3(0.42, 4.18, 1.6)
+position = Vector3(0.42, 4.1, 1.6)
 rotation = Vector3(0, 1.5708, 0)
 collision_layer = 4
 collision_mask = 0
@@ -329,7 +345,7 @@ position = Vector3(0, -0.02, 0)
 mesh = SubResource("b11")
 
 [node name="Tv" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
-position = Vector3(5, 3.775, 3.66)
+position = Vector3(5, 3.795, 3.725)
 rotation = Vector3(0, -1.5708, 0)
 collision_layer = 4
 collision_mask = 0
@@ -345,7 +361,7 @@ position = Vector3(-0.185, 0.225, 0)
 mesh = SubResource("b12")
 
 [node name="Desk" type="StaticBody3D" parent="Sections/Ⅰ/Props"]
-position = Vector3(7.43, 4.11, 6.5)
+position = Vector3(7.43, 4.14, 6.5)
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("e11")

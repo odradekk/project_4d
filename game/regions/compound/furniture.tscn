@@ -166,12 +166,12 @@ position = Vector3(0, 0.025, 0)
 mesh = SubResource("b11")
 PartId = "p1"
 
-[node name="stool" type="Node3D" parent="."]
+[node name="bag_stool" type="Node3D" parent="."]
 position = Vector3(6.755, 3.2, 6.4)
 script = ExtResource("e1")
-EntityId = "stool"
+EntityId = "bag_stool"
 
-[node name="p1" parent="stool" instance=ExtResource("e2")]
+[node name="p1" parent="bag_stool" instance=ExtResource("e2")]
 position = Vector3(0, 0.225, 0)
 mesh = SubResource("b12")
 PartId = "p1"

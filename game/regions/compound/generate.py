@@ -83,7 +83,7 @@ furniture = [  # id, x, z, height
     ('father_bed', (6.53, 7.73), (0.5, 2.5), 0.45), ('tv_stand', (4.4, 5.6), (3.49, 3.94), 0.6),
     ('bed', (5.73, 7.73), (4.06, 5.56), 0.45), ('desk', (7.13, 7.73), (5.8, 7.0), 0.75),
     ('wardrobe', (3.31, 3.91), (5.6, 7.1), 2.0), ('basin', (2.71, 3.19), (6.0, 6.5), 0.8),
-    ('squat_toilet', (1.95, 2.45), (6.6, 7.1), 0.05), ('stool', (6.58, 6.93), (6.2, 6.6), 0.45),  # stool: not in the prototype; scene 1's bag is on it
+    ('squat_toilet', (1.95, 2.45), (6.6, 7.1), 0.05), ('bag_stool', (6.58, 6.93), (6.2, 6.6), 0.45),  # not in the prototype; scene 1's bag is on it
 ]
 # front_open: the front door is a doorway, as Xiaoman's is, instead of a shut leaf
 def wall_boxes(boxes, w, front_open=False):
