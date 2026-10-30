@@ -17,3 +17,4 @@ position = Vector3(0, 1.3, 0)
 current = true
 cull_mask = 1
 near = 0.03
+far = 12000.0
