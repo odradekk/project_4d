@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://regions/compound/floor2_south.tscn" id="e14"]
 [ext_resource type="PackedScene" path="res://regions/compound/stair.tscn" id="e15"]
 [ext_resource type="PackedScene" path="res://regions/compound/roof.tscn" id="e16"]
+[ext_resource type="PackedScene" path="res://regions/compound/ground.tscn" id="e17"]
 
 [node name="Compound" type="Node3D"]
 script = ExtResource("e1")
@@ -67,6 +68,8 @@ WMax = 0.5
 [node name="Stair" parent="Buildings/Home" instance=ExtResource("e15")]
 
 [node name="Roof" parent="Buildings/Home" instance=ExtResource("e16")]
+
+[node name="Ground" parent="Buildings/Home" instance=ExtResource("e17")]
 
 [node name="Items" type="Node" parent="."]
 

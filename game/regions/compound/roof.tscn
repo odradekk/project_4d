@@ -1,13 +1,10 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="e1"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
 
 [sub_resource type="StandardMaterial3D" id="m1"]
 albedo_color = Color(0.851, 0.843, 0.82, 1)
-
-[sub_resource type="StandardMaterial3D" id="m2"]
-albedo_color = Color(0.655, 0.678, 0.624, 1)
 
 [sub_resource type="BoxMesh" id="b1"]
 material = SubResource("m1")
@@ -24,10 +21,6 @@ size = Vector3(3.64, 0.2, 1.7)
 [sub_resource type="BoxMesh" id="b4"]
 material = SubResource("m1")
 size = Vector3(9.69, 0.2, 4.25)
-
-[sub_resource type="BoxMesh" id="b5"]
-material = SubResource("m2")
-size = Vector3(24, 0.2, 49.05)
 
 [node name="Shell" type="Node3D"]
 
@@ -102,15 +95,3 @@ PartId = "p12"
 position = Vector3(3.125, 9.5, 18.525)
 mesh = SubResource("b4")
 PartId = "p13"
-
-[node name="Ground" type="Node3D" parent="."]
-script = ExtResource("e1")
-EntityId = "Ground"
-BuildingId = "home"
-WMin = -0.5
-WMax = 0.5
-
-[node name="p1" parent="Ground" instance=ExtResource("e2")]
-position = Vector3(4, -0.3, 18.525)
-mesh = SubResource("b5")
-PartId = "p1"
