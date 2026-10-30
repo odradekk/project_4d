@@ -20,6 +20,8 @@ public partial class City3D : Node3D
         Sleeper = 0x7a6c5cff, Glass = 0x7f8b96ff, Trunk = 0x8a8478ff, Crown = 0x5d7a4aff;
     private static readonly Color Sky = new(0xd4d8ddff), Loess = new(0xa89a84ff);
     private const double X0 = -1300, X1 = 1350, Z0 = -500, Z1 = 700;  // along the valley past the fog, across it to the mountains' foot
+    // These copy generate.py's layout, so change them with it: FX and FZ from FENCE_*, Cross from CROSS_ROAD, (57, 105)
+    // from WALK, x 78 and 84 from SIDEWALK, x 91 from MAIN_ROAD; the node's y in compound.tscn is GROUND.
     private const double FX = 27, FZ = 92.5;  // the compound's centre
     // Carriageways (z) of the streets north and south of the compound and opposite the gate, and of the road to the gate.
     private static readonly (double, double) R2 = (-31, -22), R3 = (205, 214), E1 = (89, 98), Cross = (90, 97);
@@ -63,7 +65,7 @@ public partial class City3D : Node3D
 
     private void Streets()
     {
-        // The main road, 三块板: motor lanes, green belts, bicycle lanes and sidewalks, cut where streets cross; the
+        // The main road: motor lanes, green belts, bicycle lanes and sidewalks, cut where streets cross; the
         // compound's site has the stretch of sidewalk she walks on, from z 57 to 105.
         Run(78, 84, .1, Walk, [WestCross[0], (57, 105), WestCross[2]]);
         Run(84, 89, .02, Bike, [R2, Cross, R3]);
