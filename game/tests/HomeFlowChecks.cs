@@ -176,7 +176,8 @@ public partial class HomeFlowChecks : Node
 
     // The cat walks straight from each waypoint of HomeRoute to the next. Between every two of the entrance hall, the
     // living room, the kitchen, her room and the bathroom, no wall, door or furniture stands on those lines. Toward her on
-    // the balcony it walks as clear a way and stops in the living room.
+    // the balcony it walks as clear a way and stops in the living room. Put down on the balcony, in line with its door or
+    // not, it walks a clear way back in.
     private void CheckCatRoutes()
     {
         var floor = HomeScene.Floor;
@@ -185,18 +186,28 @@ public partial class HomeFlowChecks : Node
         foreach (var from in places)
             foreach (var goal in places.Where(place => place != from).Append(balcony))
             {
-                var at = from;
-                for (var leg = 0; at != goal; leg++)
-                {
-                    Check(leg < 5, $"the route from {from} must reach {goal}");
-                    var next = HomeRoute.Next(at, goal);
-                    if (next == at) break;
-                    for (var step = 0f; step <= 1; step += .02f)
-                        Check(CatFits(at.Lerp(next, step)), $"the cat's way from {from} to {goal} is clear between {at} and {next}");
-                    at = next;
-                }
+                var at = Route(from, goal);
                 Check(goal != balcony || at.X < 7.6f && at.Z < 4, $"toward the balcony the cat stops in the living room; it stops at {at}");
             }
+        foreach (var from in new Vector3[] { new(8.3f, floor, 3.42f), new(8.9f, floor, 1f), new(8.5f, floor, 2.2f) })
+            foreach (var goal in new[] { places[2], places[3] })
+                Route(from, goal);
+    }
+
+    // Follows HomeRoute from one point toward another, each leg clear, until it gets there or stays; returns where it ends.
+    private Vector3 Route(Vector3 from, Vector3 goal)
+    {
+        var at = from;
+        for (var leg = 0; at != goal; leg++)
+        {
+            Check(leg < 8, $"the route from {from} must reach {goal}");
+            var next = HomeRoute.Next(at, goal);
+            if (next == at) break;
+            for (var step = 0f; step <= 1; step += .02f)
+                Check(CatFits(at.Lerp(next, step)), $"the cat's way from {from} to {goal} is clear between {at} and {next}");
+            at = next;
+        }
+        return at;
     }
 
     private bool CatFits(Vector3 spot) => player.GetWorld3D().DirectSpaceState.IntersectShape(new PhysicsShapeQueryParameters3D

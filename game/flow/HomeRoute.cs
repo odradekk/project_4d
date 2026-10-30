@@ -8,6 +8,7 @@ namespace Game.Flow;
 /// Every doorway of the flat leads into the hallway. The entrance hall runs on into the hallway without a wall between,
 /// but counts as a room with that opening as its doorway, so that no way from it cuts across the bathroom's corner.
 /// Nothing walks onto the balcony, off the living room: a goal there is taken as the spot in front of the balcony door.
+/// A cat put down on the balcony walks in line with the balcony door first, then through it to that spot.
 /// Nothing is routed outside the flat either, since the front door stays shut while the cat is in.
 /// Decision note: 2026-10-26-prologue-greybox
 /// Decision note: 2026-10-29-home-scene-layout
@@ -25,11 +26,15 @@ internal static class HomeRoute
     private static readonly Doorway Hall = new(new(.9f, Y, 5.9f), new(.9f, Y, 5f), false);
     // In the living room before the balcony door, clear of the television stand on the way from the living-room door.
     private static readonly Vector3 BalconyFront = new(7.3f, Y, 3f);
+    // On the balcony in line with its door, where a cat put down there starts its way back in.
+    private static readonly Vector3 BalconyDoor = new(8.3f, Y, 3.42f);
 
     /// <summary>The point to walk to now, from <paramref name="from"/> toward <paramref name="goal"/>.</summary>
     internal static Vector3 Next(Vector3 from, Vector3 goal)
     {
-        if (goal.X > 7.85f && goal.Z < 4f) goal = BalconyFront;
+        if (OnBalcony(from))
+            return OnBalcony(goal) ? goal : new Vector2(from.X - BalconyDoor.X, from.Z - BalconyDoor.Z).Length() < .3f ? BalconyFront : BalconyDoor;
+        if (OnBalcony(goal)) goal = BalconyFront;
         var start = DoorwayOf(from);
         var end = DoorwayOf(goal);
         if (start == end) return goal;
@@ -37,6 +42,8 @@ internal static class HomeRoute
         var entering = end!.Value;
         return Lined(from, entering.Outside, entering) ? entering.Inside : entering.Outside;
     }
+
+    private static bool OnBalcony(Vector3 point) => point.X > 7.85f && point.Z < 4f;
 
     // The doorway of the room a point is in, by the walls' middle lines; null in the hallway.
     private static Doorway? DoorwayOf(Vector3 point)
