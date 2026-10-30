@@ -47,6 +47,7 @@ public partial class CompoundChecks : Node
 
             // She stops short of the point, on the top treads, where the wall below is too low to hold her.
             await WalkTo((Landing, UpWest), (1.85f, UpWest));
+            Check(feet.X > 1.5f && feet.X < 1.62f, $"she stands on the top treads, where only the railing holds her; she is at {feet}");
             await Push((feet.X, 16.5f));
             Check(feet.Z > BetweenFlights && feet.Y > 6, $"the railing between the flights stops her at the top of the stair; she is at {feet}");
 
