@@ -1,0 +1,51 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="e0"]
+[ext_resource type="PackedScene" path="res://regions/compound/flat.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor1_north.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/compound/north.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/compound/south.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/compound/stair.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://regions/compound/roof.tscn" id="e6"]
+
+[node name="Building" type="Node3D"]
+script = ExtResource("e0")
+BuildingId = "home"
+WMin = -0.5
+WMax = 0.5
+
+[node name="Flat" parent="." instance=ExtResource("e1")]
+
+[node name="Floor1North" parent="." instance=ExtResource("e2")]
+
+[node name="Floor0North" parent="." instance=ExtResource("e3")]
+
+[node name="North" parent="Floor0North"]
+EntityId = "Floor0North"
+
+[node name="Floor0South" parent="." instance=ExtResource("e4")]
+
+[node name="South" parent="Floor0South"]
+EntityId = "Floor0South"
+
+[node name="Floor1South" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 3.2, 0)
+
+[node name="South" parent="Floor1South"]
+EntityId = "Floor1South"
+
+[node name="Floor2North" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 6.4, 0)
+
+[node name="North" parent="Floor2North"]
+EntityId = "Floor2North"
+
+[node name="Floor2South" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 6.4, 0)
+
+[node name="South" parent="Floor2South"]
+EntityId = "Floor2South"
+
+[node name="Stair" parent="." instance=ExtResource("e5")]
+
+[node name="Roof" parent="." instance=ExtResource("e6")]

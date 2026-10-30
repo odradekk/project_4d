@@ -1,0 +1,599 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/compound/poplar.tscn" id="e1"]
+
+[node name="Poplars" type="Node3D"]
+
+[node name="Poplar1" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, -8)
+
+[node name="Poplar" parent="Poplar1"]
+EntityId = "poplar_1"
+
+[node name="Poplar2" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, -3)
+
+[node name="Poplar" parent="Poplar2"]
+EntityId = "poplar_2"
+
+[node name="Poplar3" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 2)
+
+[node name="Poplar" parent="Poplar3"]
+EntityId = "poplar_3"
+
+[node name="Poplar4" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 7)
+
+[node name="Poplar" parent="Poplar4"]
+EntityId = "poplar_4"
+
+[node name="Poplar5" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 12)
+
+[node name="Poplar" parent="Poplar5"]
+EntityId = "poplar_5"
+
+[node name="Poplar6" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 17)
+
+[node name="Poplar" parent="Poplar6"]
+EntityId = "poplar_6"
+
+[node name="Poplar7" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 22)
+
+[node name="Poplar" parent="Poplar7"]
+EntityId = "poplar_7"
+
+[node name="Poplar8" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 27)
+
+[node name="Poplar" parent="Poplar8"]
+EntityId = "poplar_8"
+
+[node name="Poplar9" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 32)
+
+[node name="Poplar" parent="Poplar9"]
+EntityId = "poplar_9"
+
+[node name="Poplar10" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 37)
+
+[node name="Poplar" parent="Poplar10"]
+EntityId = "poplar_10"
+
+[node name="Poplar11" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 42)
+
+[node name="Poplar" parent="Poplar11"]
+EntityId = "poplar_11"
+
+[node name="Poplar12" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 47)
+
+[node name="Poplar" parent="Poplar12"]
+EntityId = "poplar_12"
+
+[node name="Poplar13" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 52)
+
+[node name="Poplar" parent="Poplar13"]
+EntityId = "poplar_13"
+
+[node name="Poplar14" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 57)
+
+[node name="Poplar" parent="Poplar14"]
+EntityId = "poplar_14"
+
+[node name="Poplar15" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 62)
+
+[node name="Poplar" parent="Poplar15"]
+EntityId = "poplar_15"
+
+[node name="Poplar16" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 67)
+
+[node name="Poplar" parent="Poplar16"]
+EntityId = "poplar_16"
+
+[node name="Poplar17" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 72)
+
+[node name="Poplar" parent="Poplar17"]
+EntityId = "poplar_17"
+
+[node name="Poplar18" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 77)
+
+[node name="Poplar" parent="Poplar18"]
+EntityId = "poplar_18"
+
+[node name="Poplar19" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 82)
+
+[node name="Poplar" parent="Poplar19"]
+EntityId = "poplar_19"
+
+[node name="Poplar20" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 87)
+
+[node name="Poplar" parent="Poplar20"]
+EntityId = "poplar_20"
+
+[node name="Poplar21" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 92)
+
+[node name="Poplar" parent="Poplar21"]
+EntityId = "poplar_21"
+
+[node name="Poplar22" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 97)
+
+[node name="Poplar" parent="Poplar22"]
+EntityId = "poplar_22"
+
+[node name="Poplar23" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 102)
+
+[node name="Poplar" parent="Poplar23"]
+EntityId = "poplar_23"
+
+[node name="Poplar24" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 107)
+
+[node name="Poplar" parent="Poplar24"]
+EntityId = "poplar_24"
+
+[node name="Poplar25" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 112)
+
+[node name="Poplar" parent="Poplar25"]
+EntityId = "poplar_25"
+
+[node name="Poplar26" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 117)
+
+[node name="Poplar" parent="Poplar26"]
+EntityId = "poplar_26"
+
+[node name="Poplar27" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 122)
+
+[node name="Poplar" parent="Poplar27"]
+EntityId = "poplar_27"
+
+[node name="Poplar28" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 127)
+
+[node name="Poplar" parent="Poplar28"]
+EntityId = "poplar_28"
+
+[node name="Poplar29" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 132)
+
+[node name="Poplar" parent="Poplar29"]
+EntityId = "poplar_29"
+
+[node name="Poplar30" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 137)
+
+[node name="Poplar" parent="Poplar30"]
+EntityId = "poplar_30"
+
+[node name="Poplar31" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 142)
+
+[node name="Poplar" parent="Poplar31"]
+EntityId = "poplar_31"
+
+[node name="Poplar32" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 147)
+
+[node name="Poplar" parent="Poplar32"]
+EntityId = "poplar_32"
+
+[node name="Poplar33" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 152)
+
+[node name="Poplar" parent="Poplar33"]
+EntityId = "poplar_33"
+
+[node name="Poplar34" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 157)
+
+[node name="Poplar" parent="Poplar34"]
+EntityId = "poplar_34"
+
+[node name="Poplar35" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 162)
+
+[node name="Poplar" parent="Poplar35"]
+EntityId = "poplar_35"
+
+[node name="Poplar36" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 167)
+
+[node name="Poplar" parent="Poplar36"]
+EntityId = "poplar_36"
+
+[node name="Poplar37" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 172)
+
+[node name="Poplar" parent="Poplar37"]
+EntityId = "poplar_37"
+
+[node name="Poplar38" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 177)
+
+[node name="Poplar" parent="Poplar38"]
+EntityId = "poplar_38"
+
+[node name="Poplar39" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 182)
+
+[node name="Poplar" parent="Poplar39"]
+EntityId = "poplar_39"
+
+[node name="Poplar40" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 187)
+
+[node name="Poplar" parent="Poplar40"]
+EntityId = "poplar_40"
+
+[node name="Poplar41" parent="." instance=ExtResource("e1")]
+position = Vector3(-20.5, 0, 192)
+
+[node name="Poplar" parent="Poplar41"]
+EntityId = "poplar_41"
+
+[node name="Poplar42" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, -8)
+
+[node name="Poplar" parent="Poplar42"]
+EntityId = "poplar_42"
+
+[node name="Poplar43" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, -3)
+
+[node name="Poplar" parent="Poplar43"]
+EntityId = "poplar_43"
+
+[node name="Poplar44" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 2)
+
+[node name="Poplar" parent="Poplar44"]
+EntityId = "poplar_44"
+
+[node name="Poplar45" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 7)
+
+[node name="Poplar" parent="Poplar45"]
+EntityId = "poplar_45"
+
+[node name="Poplar46" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 12)
+
+[node name="Poplar" parent="Poplar46"]
+EntityId = "poplar_46"
+
+[node name="Poplar47" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 22)
+
+[node name="Poplar" parent="Poplar47"]
+EntityId = "poplar_47"
+
+[node name="Poplar48" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 27)
+
+[node name="Poplar" parent="Poplar48"]
+EntityId = "poplar_48"
+
+[node name="Poplar49" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 32)
+
+[node name="Poplar" parent="Poplar49"]
+EntityId = "poplar_49"
+
+[node name="Poplar50" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 37)
+
+[node name="Poplar" parent="Poplar50"]
+EntityId = "poplar_50"
+
+[node name="Poplar51" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 42)
+
+[node name="Poplar" parent="Poplar51"]
+EntityId = "poplar_51"
+
+[node name="Poplar52" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 47)
+
+[node name="Poplar" parent="Poplar52"]
+EntityId = "poplar_52"
+
+[node name="Poplar53" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 52)
+
+[node name="Poplar" parent="Poplar53"]
+EntityId = "poplar_53"
+
+[node name="Poplar54" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 57)
+
+[node name="Poplar" parent="Poplar54"]
+EntityId = "poplar_54"
+
+[node name="Poplar55" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 67)
+
+[node name="Poplar" parent="Poplar55"]
+EntityId = "poplar_55"
+
+[node name="Poplar56" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 72)
+
+[node name="Poplar" parent="Poplar56"]
+EntityId = "poplar_56"
+
+[node name="Poplar57" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 77)
+
+[node name="Poplar" parent="Poplar57"]
+EntityId = "poplar_57"
+
+[node name="Poplar58" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 82)
+
+[node name="Poplar" parent="Poplar58"]
+EntityId = "poplar_58"
+
+[node name="Poplar59" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 102)
+
+[node name="Poplar" parent="Poplar59"]
+EntityId = "poplar_59"
+
+[node name="Poplar60" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 107)
+
+[node name="Poplar" parent="Poplar60"]
+EntityId = "poplar_60"
+
+[node name="Poplar61" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 112)
+
+[node name="Poplar" parent="Poplar61"]
+EntityId = "poplar_61"
+
+[node name="Poplar62" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 117)
+
+[node name="Poplar" parent="Poplar62"]
+EntityId = "poplar_62"
+
+[node name="Poplar63" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 127)
+
+[node name="Poplar" parent="Poplar63"]
+EntityId = "poplar_63"
+
+[node name="Poplar64" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 132)
+
+[node name="Poplar" parent="Poplar64"]
+EntityId = "poplar_64"
+
+[node name="Poplar65" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 137)
+
+[node name="Poplar" parent="Poplar65"]
+EntityId = "poplar_65"
+
+[node name="Poplar66" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 142)
+
+[node name="Poplar" parent="Poplar66"]
+EntityId = "poplar_66"
+
+[node name="Poplar67" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 147)
+
+[node name="Poplar" parent="Poplar67"]
+EntityId = "poplar_67"
+
+[node name="Poplar68" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 152)
+
+[node name="Poplar" parent="Poplar68"]
+EntityId = "poplar_68"
+
+[node name="Poplar69" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 157)
+
+[node name="Poplar" parent="Poplar69"]
+EntityId = "poplar_69"
+
+[node name="Poplar70" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 162)
+
+[node name="Poplar" parent="Poplar70"]
+EntityId = "poplar_70"
+
+[node name="Poplar71" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 172)
+
+[node name="Poplar" parent="Poplar71"]
+EntityId = "poplar_71"
+
+[node name="Poplar72" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 177)
+
+[node name="Poplar" parent="Poplar72"]
+EntityId = "poplar_72"
+
+[node name="Poplar73" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 182)
+
+[node name="Poplar" parent="Poplar73"]
+EntityId = "poplar_73"
+
+[node name="Poplar74" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 187)
+
+[node name="Poplar" parent="Poplar74"]
+EntityId = "poplar_74"
+
+[node name="Poplar75" parent="." instance=ExtResource("e1")]
+position = Vector3(-8.5, 0, 192)
+
+[node name="Poplar" parent="Poplar75"]
+EntityId = "poplar_75"
+
+[node name="Poplar76" parent="." instance=ExtResource("e1")]
+position = Vector3(-6, 0, 88.5)
+
+[node name="Poplar" parent="Poplar76"]
+EntityId = "poplar_76"
+
+[node name="Poplar77" parent="." instance=ExtResource("e1")]
+position = Vector3(-1, 0, 88.5)
+
+[node name="Poplar" parent="Poplar77"]
+EntityId = "poplar_77"
+
+[node name="Poplar78" parent="." instance=ExtResource("e1")]
+position = Vector3(4, 0, 88.5)
+
+[node name="Poplar" parent="Poplar78"]
+EntityId = "poplar_78"
+
+[node name="Poplar79" parent="." instance=ExtResource("e1")]
+position = Vector3(9, 0, 88.5)
+
+[node name="Poplar" parent="Poplar79"]
+EntityId = "poplar_79"
+
+[node name="Poplar80" parent="." instance=ExtResource("e1")]
+position = Vector3(24, 0, 88.5)
+
+[node name="Poplar" parent="Poplar80"]
+EntityId = "poplar_80"
+
+[node name="Poplar81" parent="." instance=ExtResource("e1")]
+position = Vector3(29, 0, 88.5)
+
+[node name="Poplar" parent="Poplar81"]
+EntityId = "poplar_81"
+
+[node name="Poplar82" parent="." instance=ExtResource("e1")]
+position = Vector3(44, 0, 88.5)
+
+[node name="Poplar" parent="Poplar82"]
+EntityId = "poplar_82"
+
+[node name="Poplar83" parent="." instance=ExtResource("e1")]
+position = Vector3(49, 0, 88.5)
+
+[node name="Poplar" parent="Poplar83"]
+EntityId = "poplar_83"
+
+[node name="Poplar84" parent="." instance=ExtResource("e1")]
+position = Vector3(54, 0, 88.5)
+
+[node name="Poplar" parent="Poplar84"]
+EntityId = "poplar_84"
+
+[node name="Poplar85" parent="." instance=ExtResource("e1")]
+position = Vector3(64, 0, 88.5)
+
+[node name="Poplar" parent="Poplar85"]
+EntityId = "poplar_85"
+
+[node name="Poplar86" parent="." instance=ExtResource("e1")]
+position = Vector3(69, 0, 88.5)
+
+[node name="Poplar" parent="Poplar86"]
+EntityId = "poplar_86"
+
+[node name="Poplar87" parent="." instance=ExtResource("e1")]
+position = Vector3(74, 0, 88.5)
+
+[node name="Poplar" parent="Poplar87"]
+EntityId = "poplar_87"
+
+[node name="Poplar88" parent="." instance=ExtResource("e1")]
+position = Vector3(-6, 0, 98.5)
+
+[node name="Poplar" parent="Poplar88"]
+EntityId = "poplar_88"
+
+[node name="Poplar89" parent="." instance=ExtResource("e1")]
+position = Vector3(-1, 0, 98.5)
+
+[node name="Poplar" parent="Poplar89"]
+EntityId = "poplar_89"
+
+[node name="Poplar90" parent="." instance=ExtResource("e1")]
+position = Vector3(4, 0, 98.5)
+
+[node name="Poplar" parent="Poplar90"]
+EntityId = "poplar_90"
+
+[node name="Poplar91" parent="." instance=ExtResource("e1")]
+position = Vector3(9, 0, 98.5)
+
+[node name="Poplar" parent="Poplar91"]
+EntityId = "poplar_91"
+
+[node name="Poplar92" parent="." instance=ExtResource("e1")]
+position = Vector3(24, 0, 98.5)
+
+[node name="Poplar" parent="Poplar92"]
+EntityId = "poplar_92"
+
+[node name="Poplar93" parent="." instance=ExtResource("e1")]
+position = Vector3(29, 0, 98.5)
+
+[node name="Poplar" parent="Poplar93"]
+EntityId = "poplar_93"
+
+[node name="Poplar94" parent="." instance=ExtResource("e1")]
+position = Vector3(44, 0, 98.5)
+
+[node name="Poplar" parent="Poplar94"]
+EntityId = "poplar_94"
+
+[node name="Poplar95" parent="." instance=ExtResource("e1")]
+position = Vector3(49, 0, 98.5)
+
+[node name="Poplar" parent="Poplar95"]
+EntityId = "poplar_95"
+
+[node name="Poplar96" parent="." instance=ExtResource("e1")]
+position = Vector3(54, 0, 98.5)
+
+[node name="Poplar" parent="Poplar96"]
+EntityId = "poplar_96"
+
+[node name="Poplar97" parent="." instance=ExtResource("e1")]
+position = Vector3(64, 0, 98.5)
+
+[node name="Poplar" parent="Poplar97"]
+EntityId = "poplar_97"
+
+[node name="Poplar98" parent="." instance=ExtResource("e1")]
+position = Vector3(69, 0, 98.5)
+
+[node name="Poplar" parent="Poplar98"]
+EntityId = "poplar_98"
+
+[node name="Poplar99" parent="." instance=ExtResource("e1")]
+position = Vector3(74, 0, 98.5)
+
+[node name="Poplar" parent="Poplar99"]
+EntityId = "poplar_99"
