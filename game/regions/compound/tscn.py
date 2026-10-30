@@ -54,15 +54,47 @@ def slope(name, along, a0, y0, a1, y1, c0, c1):
     return name, (round(c1 - c0, 6), thickness, length), (c, y, a), (-angle, 0, 0)
 
 
-# The shape resources and nodes of slopes, as StaticBody3D children of the scene's root.
-def bodies(slopes):
+# A collision-only box, such as a wall that cannot be seen: its name, size, centre and rotation.
+def solid(name, x0, x1, y0, y1, z0, z1):
+    return name, (round(x1 - x0, 6), round(y1 - y0, 6), round(z1 - z0, 6)), ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), (0, 0, 0)
+
+
+# The shape resources and nodes of slopes and solids, as StaticBody3D children of the scene's root.
+def bodies(items):
     shapes, nodes = {}, []
-    for name, size, centre, rotation in slopes:
+    for name, size, centre, rotation in items:
         sid = shapes.setdefault(size, f"s{len(shapes) + 1}")
-        nodes.append(f'[node name="{name}Slope" type="StaticBody3D" parent="."]\nposition = {vec(*centre)}\n'
+        nodes.append(f'[node name="{name}" type="StaticBody3D" parent="."]\nposition = {vec(*centre)}\n'
                      f'rotation = {vec(*rotation)}\ncollision_mask = 0\n')
-        nodes.append(f'[node name="Shape" type="CollisionShape3D" parent="{name}Slope"]\nshape = SubResource("{sid}")\n')
+        nodes.append(f'[node name="Shape" type="CollisionShape3D" parent="{name}"]\nshape = SubResource("{sid}")\n')
     return [f'[sub_resource type="BoxShape3D" id="{sid}"]\nsize = {vec(*size)}\n' for size, sid in shapes.items()], nodes
+
+
+# Doors as the player meets them. leaves: (name, hinge, yaw, size, swing, state) for each Door3D, whose leaf of that size
+# runs along its local x from the hinge when shut; shut: (name, centre, size) for each shut leaf that a building element
+# holds, before which an Interactable3D, a little thicker, says the line.
+def doors(leaves, shut, line):
+    shapes, meshes, nodes = {}, {}, []
+    for name, hinge, yaw, size, swing, state in leaves:
+        sid, mid = shapes.setdefault(size, f"s{len(shapes) + 1}"), meshes.setdefault(size, f"b{len(meshes) + 1}")
+        centre = vec(size[0] / 2, size[1] / 2, 0)
+        nodes.append(f'[node name="{name}" type="Node3D" parent="."]\nposition = {vec(*hinge)}\n'
+                     + (f'rotation = {vec(0, yaw, 0)}\n' if yaw else '') + f'script = ExtResource("e1")\nState = {state}\nSwing = {fmt(swing)}\n')
+        nodes.append(f'[node name="Leaf" type="StaticBody3D" parent="{name}"]\ncollision_mask = 0\nscript = ExtResource("e2")\n')
+        nodes.append(f'[node name="Shape" type="CollisionShape3D" parent="{name}/Leaf"]\nposition = {centre}\nshape = SubResource("{sid}")\n')
+        nodes.append(f'[node name="Visual" type="MeshInstance3D" parent="{name}/Leaf"]\nlayers = 3\nposition = {centre}\nmesh = SubResource("{mid}")\n')
+    for name, centre, size in shut:
+        sid = shapes.setdefault(size, f"s{len(shapes) + 1}")
+        nodes.append(f'[node name="{name}" type="StaticBody3D" parent="."]\nposition = {vec(*centre)}\ncollision_layer = 4\ncollision_mask = 0\n'
+                     f'script = ExtResource("e2")\nPrompt = "开门"\nLine = "{line}"\n')
+        nodes.append(f'[node name="Shape" type="CollisionShape3D" parent="{name}"]\nshape = SubResource("{sid}")\n')
+    head = [f'[gd_scene load_steps={3 + bool(meshes) + len(shapes) + len(meshes)} format=3]\n',
+            '[ext_resource type="Script" path="res://interaction/Door3D.cs" id="e1"]\n'
+            '[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="e2"]\n']
+    if meshes: head.append(f'[sub_resource type="StandardMaterial3D" id="m1"]\nalbedo_color = Color({", ".join(fmt(c) for c in COLORS["front"])})\n')
+    head += [f'[sub_resource type="BoxShape3D" id="{sid}"]\nsize = {vec(*size)}\n' for size, sid in shapes.items()]
+    head += [f'[sub_resource type="BoxMesh" id="{mid}"]\nmaterial = SubResource("m1")\nsize = {vec(*size)}\n' for size, mid in meshes.items()]
+    return '\n'.join(head + ['[node name="Doors" type="Node3D"]\n'] + nodes)
 
 
 # A scene whose root holds instances: (name, scene, position, overrides), where each override is (node, properties) for
