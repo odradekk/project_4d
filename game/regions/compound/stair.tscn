@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="e1"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
@@ -21,7 +21,7 @@ albedo_color = Color(0.478, 0.502, 0.533, 1)
 
 [sub_resource type="BoxMesh" id="b1"]
 material = SubResource("m1")
-size = Vector3(3.11, 0.2, 4.25)
+size = Vector3(9.45, 0.2, 4.25)
 
 [sub_resource type="BoxMesh" id="b2"]
 material = SubResource("m2")
@@ -48,26 +48,30 @@ material = SubResource("m2")
 size = Vector3(4.94, 3.2, 0.12)
 
 [sub_resource type="BoxMesh" id="b8"]
-material = SubResource("m2")
-size = Vector3(0.24, 3.2, 1.52)
+material = SubResource("m1")
+size = Vector3(3.11, 0.2, 4.25)
 
 [sub_resource type="BoxMesh" id="b9"]
 material = SubResource("m2")
-size = Vector3(0.24, 0.9, 1.45)
+size = Vector3(0.24, 3.2, 1.52)
 
 [sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m2")
+size = Vector3(0.24, 0.9, 1.45)
+
+[sub_resource type="BoxMesh" id="b11"]
 material = SubResource("m4")
 size = Vector3(0.06, 1.04, 2.005)
 
-[sub_resource type="BoxMesh" id="b11"]
+[sub_resource type="BoxMesh" id="b12"]
 material = SubResource("m5")
 size = Vector3(0.06, 0.06, 2.005)
 
-[sub_resource type="BoxMesh" id="b12"]
+[sub_resource type="BoxMesh" id="b13"]
 material = SubResource("m4")
 size = Vector3(4.94, 1.04, 0.06)
 
-[sub_resource type="BoxMesh" id="b13"]
+[sub_resource type="BoxMesh" id="b14"]
 material = SubResource("m5")
 size = Vector3(4.94, 0.06, 0.06)
 
@@ -81,7 +85,7 @@ WMin = -0.5
 WMax = 0.5
 
 [node name="p1" parent="Floor0Stair" instance=ExtResource("e2")]
-position = Vector3(-0.165, -0.1, 18.525)
+position = Vector3(3.005, -0.1, 18.525)
 mesh = SubResource("b1")
 PartId = "p1"
 
@@ -254,27 +258,27 @@ WMax = 0.5
 
 [node name="p1" parent="Floor1Stair" instance=ExtResource("e2")]
 position = Vector3(-0.165, 3.1, 18.525)
-mesh = SubResource("b1")
+mesh = SubResource("b8")
 PartId = "p1"
 
 [node name="p2" parent="Floor1Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 4.8, 17.04)
-mesh = SubResource("b8")
+mesh = SubResource("b9")
 PartId = "p2"
 
 [node name="p3" parent="Floor1Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 3.65, 18.525)
-mesh = SubResource("b9")
+mesh = SubResource("b10")
 PartId = "p3"
 
 [node name="p4" parent="Floor1Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 5.95, 18.525)
-mesh = SubResource("b9")
+mesh = SubResource("b10")
 PartId = "p4"
 
 [node name="p5" parent="Floor1Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 4.8, 20.01)
-mesh = SubResource("b8")
+mesh = SubResource("b9")
 PartId = "p5"
 
 [node name="p6" parent="Floor1Stair" instance=ExtResource("e2")]
@@ -446,27 +450,27 @@ WMax = 0.5
 
 [node name="p1" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(-0.165, 6.3, 18.525)
-mesh = SubResource("b1")
+mesh = SubResource("b8")
 PartId = "p1"
 
 [node name="p2" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 8, 17.04)
-mesh = SubResource("b8")
+mesh = SubResource("b9")
 PartId = "p2"
 
 [node name="p3" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 6.85, 18.525)
-mesh = SubResource("b9")
+mesh = SubResource("b10")
 PartId = "p3"
 
 [node name="p4" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 9.15, 18.525)
-mesh = SubResource("b9")
+mesh = SubResource("b10")
 PartId = "p4"
 
 [node name="p5" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(-1.72, 8, 20.01)
-mesh = SubResource("b8")
+mesh = SubResource("b9")
 PartId = "p5"
 
 [node name="p6" parent="Floor2Stair" instance=ExtResource("e2")]
@@ -491,20 +495,20 @@ PartId = "p9"
 
 [node name="p10" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(1.39, 6.92, 17.5225)
-mesh = SubResource("b10")
+mesh = SubResource("b11")
 PartId = "p10"
 
 [node name="p11" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(1.39, 7.47, 17.5225)
-mesh = SubResource("b11")
+mesh = SubResource("b12")
 PartId = "p11"
 
 [node name="p12" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(3.86, 6.92, 18.525)
-mesh = SubResource("b12")
+mesh = SubResource("b13")
 PartId = "p12"
 
 [node name="p13" parent="Floor2Stair" instance=ExtResource("e2")]
 position = Vector3(3.86, 7.47, 18.525)
-mesh = SubResource("b13")
+mesh = SubResource("b14")
 PartId = "p13"

@@ -19,7 +19,7 @@ public partial class CompoundChecks : Node
     // The middles of the flights that go up eastward and westward, the stair hall's landing at each floor, and the landing
     // at the turn; the flights run between x 1.39 and 6.33.
     private const float UpEast = 17.5f, UpWest = 19.55f, Landing = .8f, Turn = 7f;
-    private const float CorridorRail = -1.72f, StairwellRail = 1.39f, NeighborDoor = 9.05f;
+    private const float CorridorRail = -1.72f, StairwellRail = 1.39f, BetweenFlights = 18.525f, NeighborDoor = 9.05f;
 
     private TurningFixture play = null!;
     private Vector3 feet => play.Player.Position;
@@ -45,16 +45,23 @@ public partial class CompoundChecks : Node
             await Push((3, UpEast));
             Check(feet.X < StairwellRail && OnFloor(2), $"the railing at the top of the stair stops her; she is at {feet}");
 
-            await WalkTo((Landing, UpWest), (Turn, UpWest), (Turn, UpEast), (Landing, UpEast));
+            await WalkTo((Landing, UpWest), (1.6f, UpWest));
+            await Push((1.6f, 16.5f));
+            Check(feet.Z > BetweenFlights && feet.Y > 2 * Storey - .5f, $"the wall and the railing between the flights stop her at the top of the stair; she is at {feet}");
+
+            await WalkTo((Turn, UpWest), (Turn, UpEast), (Landing, UpEast));
             Check(OnFloor(1), $"she walks down to the second floor; she is at {feet}");
             await WalkTo((Landing, UpWest), (Turn, UpWest), (Turn, UpEast), (Landing, UpEast));
             Check(OnFloor(0), $"she walks down to the ground floor; she is at {feet}");
+            await WalkTo((Landing, UpWest), (5, UpWest));
+            Check(OnFloor(0), $"the floor goes on under the stair; she is at {feet}");
+            await WalkTo((Landing, UpWest));
             await WalkTo((-3, 18.5f));
             Check(feet.X < CorridorRail && Mathf.Abs(feet.Y + .2f) < .05f, $"she walks out of the west side of the stair hall onto the ground; she is at {feet}");
 #if DEBUG
             Check(DebugScenes.Find("compound") == "res://regions/compound.tscn", "the debug entry starts the compound region");
 #endif
-            GD.Print("Compound checks passed: entrance hall, neighbor's door, corridor railing, up the stair, top railing, down and out.");
+            GD.Print("Compound checks passed: entrance hall, neighbor's door, corridor railing, up the stair, top railings, down, under the stair and out.");
             GetTree().Quit();
         }
         catch (Exception error)
