@@ -51,6 +51,7 @@ position = Vector3(0.26, 3.21, 7.35)
 script = ExtResource("e1")
 State = 0
 Swing = 90
+AjarSwing = 61.341252
 
 [node name="Leaf" type="StaticBody3D" parent="FrontDoor"]
 collision_mask = 0
@@ -71,6 +72,7 @@ rotation = Vector3(0, 1.570796, 0)
 script = ExtResource("e1")
 State = 1
 Swing = -90
+AjarSwing = -67.322597
 
 [node name="Leaf" type="StaticBody3D" parent="BalconyDoor"]
 collision_mask = 0
@@ -90,6 +92,7 @@ position = Vector3(0.61, 3.21, 4)
 script = ExtResource("e1")
 State = 1
 Swing = 90
+AjarSwing = 69.747753
 
 [node name="Leaf" type="StaticBody3D" parent="KitchenDoor"]
 collision_mask = 0
@@ -109,6 +112,7 @@ position = Vector3(2.16, 3.21, 4)
 script = ExtResource("e1")
 State = 2
 Swing = 90
+AjarSwing = 65.136712
 
 [node name="Leaf" type="StaticBody3D" parent="LivingRoomDoor"]
 collision_mask = 0
@@ -129,6 +133,7 @@ rotation = Vector3(0, -1.570796, 0)
 script = ExtResource("e1")
 State = 1
 Swing = 90
+AjarSwing = 65.136712
 
 [node name="Leaf" type="StaticBody3D" parent="RoomDoor"]
 collision_mask = 0
@@ -148,6 +153,7 @@ position = Vector3(2.21, 3.21, 5.5)
 script = ExtResource("e1")
 State = 1
 Swing = -90
+AjarSwing = -75.522488
 
 [node name="Leaf" type="StaticBody3D" parent="BathroomDoor"]
 collision_mask = 0

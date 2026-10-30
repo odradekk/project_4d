@@ -1,4 +1,5 @@
-"""The text of the Godot scenes that generate.py writes: entities made of boxes, collision-only slopes, and scenes of instances."""
+"""The text of the Godot scenes that generate.py writes: entities made of boxes, collision-only slopes, doors, and scenes of
+instances; and the boxes themselves."""
 import math
 
 COLORS = {
@@ -7,8 +8,17 @@ COLORS = {
     'panel': (0.478, 0.502, 0.533, 0.35), 'front': (0.541, 0.231, 0.18, 1), 'ground': (0.655, 0.678, 0.624, 1),
     'furn': (0.561, 0.639, 0.722, 1), 'road': (0.612, 0.608, 0.588, 1), 'walk': (0.722, 0.706, 0.671, 1),
     'fence': (0.247, 0.373, 0.282, 1), 'fence_panel': (0.247, 0.373, 0.282, 0.35), 'trunk': (0.541, 0.518, 0.471, 1),
-    'crown': (0.365, 0.478, 0.29, 1), 'sign': (0.435, 0.659, 0.878, 1),
+    'crown': (0.365, 0.478, 0.29, 1), 'sign': (0.435, 0.659, 0.878, 1), 'unseen': (0, 0, 0, 0),
 }
+
+
+# A box is (x0, x1, y0, y1, z0, z1, material).
+def box(boxes, x0, x1, y0, y1, z0, z1, m):
+    if x1 - x0 > 1e-3 and y1 - y0 > 1e-3 and z1 - z0 > 1e-3: boxes.append((x0, x1, y0, y1, z0, z1, m))
+
+
+def mirror(boxes, about): return [(x0, x1, y0, y1, about - z1, about - z0, m) for x0, x1, y0, y1, z0, z1, m in boxes]
+def lift(boxes, dy): return [(x0, x1, y0 + dy, y1 + dy, z0, z1, m) for x0, x1, y0, y1, z0, z1, m in boxes]
 
 
 def fmt(v):
@@ -54,15 +64,10 @@ def slope(name, along, a0, y0, a1, y1, c0, c1):
     return name, (round(c1 - c0, 6), thickness, length), (c, y, a), (-angle, 0, 0)
 
 
-# A collision-only box, such as a wall that cannot be seen: its name, size, centre and rotation.
-def solid(name, x0, x1, y0, y1, z0, z1):
-    return name, (round(x1 - x0, 6), round(y1 - y0, 6), round(z1 - z0, 6)), ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), (0, 0, 0)
-
-
-# The shape resources and nodes of slopes and solids, as StaticBody3D children of the scene's root.
-def bodies(items):
+# The shape resources and nodes of slopes, as StaticBody3D children of the scene's root.
+def bodies(slopes):
     shapes, nodes = {}, []
-    for name, size, centre, rotation in items:
+    for name, size, centre, rotation in slopes:
         sid = shapes.setdefault(size, f"s{len(shapes) + 1}")
         nodes.append(f'[node name="{name}" type="StaticBody3D" parent="."]\nposition = {vec(*centre)}\n'
                      f'rotation = {vec(*rotation)}\ncollision_mask = 0\n')
@@ -70,16 +75,16 @@ def bodies(items):
     return [f'[sub_resource type="BoxShape3D" id="{sid}"]\nsize = {vec(*size)}\n' for size, sid in shapes.items()], nodes
 
 
-# Doors as the player meets them. leaves: (name, hinge, yaw, size, swing, state) for each Door3D, whose leaf of that size
+# Doors as the player meets them. leaves: (name, hinge, yaw, size, swing, ajar, state) for each Door3D, whose leaf of that size
 # runs along its local x from the hinge when shut; shut: (name, centre, size) for each shut leaf that a building element
 # holds, before which an Interactable3D, a little thicker, says the line.
 def doors(leaves, shut, line):
     shapes, meshes, nodes = {}, {}, []
-    for name, hinge, yaw, size, swing, state in leaves:
+    for name, hinge, yaw, size, swing, ajar, state in leaves:
         sid, mid = shapes.setdefault(size, f"s{len(shapes) + 1}"), meshes.setdefault(size, f"b{len(meshes) + 1}")
         centre = vec(size[0] / 2, size[1] / 2, 0)
         nodes.append(f'[node name="{name}" type="Node3D" parent="."]\nposition = {vec(*hinge)}\n'
-                     + (f'rotation = {vec(0, yaw, 0)}\n' if yaw else '') + f'script = ExtResource("e1")\nState = {state}\nSwing = {fmt(swing)}\n')
+                     + (f'rotation = {vec(0, yaw, 0)}\n' if yaw else '') + f'script = ExtResource("e1")\nState = {state}\nSwing = {fmt(swing)}\nAjarSwing = {fmt(ajar)}\n')
         nodes.append(f'[node name="Leaf" type="StaticBody3D" parent="{name}"]\ncollision_mask = 0\nscript = ExtResource("e2")\n')
         nodes.append(f'[node name="Shape" type="CollisionShape3D" parent="{name}/Leaf"]\nposition = {centre}\nshape = SubResource("{sid}")\n')
         nodes.append(f'[node name="Visual" type="MeshInstance3D" parent="{name}/Leaf"]\nlayers = 3\nposition = {centre}\nmesh = SubResource("{mid}")\n')

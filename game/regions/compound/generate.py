@@ -8,7 +8,7 @@ Decision note: 2026-10-29-home-scene-layout
 import math
 from pathlib import Path
 
-from tscn import bodies, doors, packed, scene, slope, solid
+from tscn import bodies, box, doors, lift, mirror, packed, scene, slope
 
 H, SLAB = 3.0, 0.2  # room height and floor slab
 S = H + SLAB  # storey
@@ -42,6 +42,7 @@ def lane(x): return (x - CW - 5, x - CW - 2)  # x of the path along the west sid
 
 SHUT, OPEN, AJAR = 0, 1, 2  # a door's state at the start, as Door3D.DoorState
 NOT_OURS = '爸爸说过不能随便敲别人家的门。'  # what she says at another flat's front door
+GAP = 0.5  # the room beside an ajar leaf: her 0.4 m and 5 cm on each side
 
 
 # leaf: for Xiaoman's doors that open, (name, the end of the hole its hinge is at, 0 or 1, the side of the wall it opens to,
@@ -84,15 +85,6 @@ furniture = [  # id, x, z, height
     ('wardrobe', (3.31, 3.91), (5.6, 7.1), 2.0), ('basin', (2.71, 3.19), (6.0, 6.5), 0.8),
     ('squat_toilet', (1.95, 2.45), (6.6, 7.1), 0.05),
 ]
-# A box is (x0, x1, y0, y1, z0, z1, material).
-def box(boxes, x0, x1, y0, y1, z0, z1, m):
-    if x1 - x0 > 1e-3 and y1 - y0 > 1e-3 and z1 - z0 > 1e-3: boxes.append((x0, x1, y0, y1, z0, z1, m))
-
-
-def mirror(boxes, about): return [(x0, x1, y0, y1, about - z1, about - z0, m) for x0, x1, y0, y1, z0, z1, m in boxes]
-def lift(boxes, dy): return [(x0, x1, y0 + dy, y1 + dy, z0, z1, m) for x0, x1, y0, y1, z0, z1, m in boxes]
-
-
 # front_open: the front door is a doorway, as Xiaoman's is, instead of a shut leaf
 def wall_boxes(boxes, w, front_open=False):
     e = w['t'] / 2
@@ -201,9 +193,13 @@ def home_leaves():
             run = 1 if end == 0 else -1  # the way the shut leaf runs from its hinge
             a, y = (hole['a'], hole['b'])[end] + 0.01 * run, HOME * S + 0.01
             size = (round(hole['b'] - hole['a'] - 0.02, 6), DOOR_H - 0.02, 0.04)
+            # Ajar, the leaf's face is GAP from the far side of the hole: 1 cm of the hole's 2 cm spare is behind the hinge.
+            ajar = math.degrees(math.acos(1 - (GAP + 0.01) / size[0]))
             # Door3D turns the leaf toward its local -z, which the yaw points to -z (along x) or to +x (along z) when run is 1.
-            if w['along'] == 'x': leaves.append((name, (a, y, w['at']), 0 if run > 0 else math.pi, size, -90 * side * run, state))
-            else: leaves.append((name, (w['at'], y, a), -math.pi / 2 * run, size, 90 * side * run, state))
+            along_x = w['along'] == 'x'
+            sign = side * run * (-1 if along_x else 1)
+            hinge, yaw = ((a, y, w['at']), 0 if run > 0 else math.pi) if along_x else ((w['at'], y, a), -math.pi / 2 * run)
+            leaves.append((name, hinge, yaw, size, 90 * sign, ajar * sign, state))
     return leaves
 
 
@@ -232,7 +228,7 @@ CURB = 0.1  # the sidewalk's height over the ground
 
 # Section I's ground, roads, paths, fence and gate, poplars, and the sidewalk outside the gate with the bus stop and kiosk.
 def site():
-    g, ground, roads, paths, fence, sidewalk, bus, kiosk = GROUND, [], [], [], [], [], [], []
+    g, ground, roads, paths, fence, sidewalk, edge, bus, kiosk = GROUND, [], [], [], [], [], [], [], []
     box(ground, -40, 120, g - 0.2, g, -40, 240, 'ground')
 
     def pave(boxes, x0, x1, z0, z1): box(boxes, x0, x1, g - 0.02, g + 0.004, z0, z1, 'road')  # as the rooms' floors
@@ -253,6 +249,9 @@ def site():
     # Only the stretch she may walk on; the rest of the street belongs to the city.
     for z0, z1 in ((WALK[0], CROSS_ROAD[0]), (CROSS_ROAD[1], WALK[1])):
         box(sidewalk, *SIDEWALK, g, g + CURB, z0, z1, 'walk')
+    # Unseen walls that keep her on it: along its edge by the bicycle lane, and across both of its ends.
+    box(edge, SIDEWALK[1], SIDEWALK[1] + 0.1, g, g + 3, *WALK, 'unseen')
+    for z in (WALK[0] - 0.1, WALK[1]): box(edge, SIDEWALK[0], SIDEWALK[1] + 0.1, g, g + 3, z, z + 0.1, 'unseen')
     x, z = BUS_X, BUS_Z
     box(bus, x, x + 0.1, g, g + 2.5, z, z + 8, 'wall')  # back wall
     box(bus, x, x + 2.6, g + 2.5, g + 2.65, z, z + 8, 'slab')  # roof
@@ -271,7 +270,7 @@ def site():
              + row('z', WEST_ROAD[1] + 2.5, FENCE_Z0 + 4, FENCE_Z1 - 4, path_gaps + [(CROSS_ROAD[0] - 4, CROSS_ROAD[1] + 4)])
              + row('x', CROSS_ROAD[0] - 1.5, WEST_ROAD[1] + 5, FENCE_X1 - 4, lane_gaps)
              + row('x', CROSS_ROAD[1] + 1.5, WEST_ROAD[1] + 5, FENCE_X1 - 4, lane_gaps))
-    parts = dict(ground=ground, roads=roads, paths=paths, fence=fence, sidewalk=sidewalk, bus_stop=bus, kiosk=kiosk)
+    parts = dict(ground=ground, roads=roads, paths=paths, fence=fence, sidewalk=sidewalk, sidewalk_edge=edge, bus_stop=bus, kiosk=kiosk)
     return scene([(eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"'}) for eid, boxes in parts.items()], 'FixedObject3D', 'Site'), trees
 
 
@@ -323,13 +322,8 @@ def main():
     names = {(col, row): 'Home' if (col, row) == (0, 0) else f'Building_{col}_{row}' for col, row, _, _ in grid}
     files['buildings.tscn'] = packed('Buildings', [(names[c, r], f'buildings/building_{c}_{r}.tscn', (x, 0, z), [])
                                                    for c, r, x, z in grid])
-    # The walls that keep her on the sidewalk: along its edge by the bicycle lane, and across both of its ends.
-    x0, x1 = SIDEWALK[0], SIDEWALK[1] + 0.1
     subs, nodes = bodies([slope('SidewalkNorthSlope', 'z', CROSS_ROAD[0], GROUND + CURB, CROSS_ROAD[0] + 0.6, GROUND, *SIDEWALK),
-                          slope('SidewalkSouthSlope', 'z', CROSS_ROAD[1] - 0.6, GROUND, CROSS_ROAD[1], GROUND + CURB, *SIDEWALK),
-                          solid('SidewalkEdge', SIDEWALK[1], x1, GROUND, GROUND + 3, *WALK),
-                          solid('SidewalkNorthEnd', x0, x1, GROUND, GROUND + 3, WALK[0] - 0.1, WALK[0]),
-                          solid('SidewalkSouthEnd', x0, x1, GROUND, GROUND + 3, WALK[1], WALK[1] + 0.1)])
+                          slope('SidewalkSouthSlope', 'z', CROSS_ROAD[1] - 0.6, GROUND, CROSS_ROAD[1], GROUND + CURB, *SIDEWALK)])
     entries = [(names[c, r], 'slopes.tscn', (x, 0, z), []) for c, r, x, z in grid]
     entries += [(f'{names[c, r]}Doors', 'home_doors.tscn' if (c, r) == (0, 0) else 'doors.tscn', (x, 0, z), []) for c, r, x, z in grid]
     files['props.tscn'] = packed('Props', entries, subs=subs, nodes=nodes)

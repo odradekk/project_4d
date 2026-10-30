@@ -7,51 +7,80 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The doors of the compound and the edge of the sidewalk: each of Xiaoman's doors opens and shuts with E and stops her only
-/// while shut; another flat's front door stays shut on E, and she says why; the sidewalk's invisible walls keep her off the
-/// bicycle lane and from walking on past either end.
+/// The doors of the compound and the edge of the sidewalk: each of Xiaoman's doors opens to its own side of the wall and
+/// shuts with E; shut it stops her, open it lets her through, and ajar it stands solid and leaves her room to pass beside
+/// it. Another flat's front door stays shut on E, and she says why; the sidewalk's unseen walls keep her off the bicycle
+/// lane and from walking on past either end.
 /// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class CompoundChecks
 {
     private const string NotOurs = "小满：爸爸说过不能随便敲别人家的门。";
 
-    // Each of Xiaoman's doors: the middle of its hole, whether its wall runs along x, the side of the wall it opens to, and
-    // its state at the start. The bathroom's is checked a little west of its middle, clear of the basin.
-    private static readonly (string Name, float X, float Z, bool AlongX, int Side, Door3D.DoorState Start)[] HomeDoors =
+    // Each of Xiaoman's doors: whether its wall runs along x, the side of the wall it opens to, and its state at the start.
+    private static readonly (string Name, bool AlongX, int Side, Door3D.DoorState Start)[] HomeDoors =
     [
-        ("FrontDoor", .75f, 7.35f, true, -1, Shut), ("KitchenDoor", 1, 4, true, -1, Open),
-        ("LivingRoomDoor", 2.6f, 4, true, -1, Ajar), ("RoomDoor", 3.25f, 4.6f, false, 1, Open),
-        ("BathroomDoor", 2.5f, 5.5f, true, 1, Open), ("BalconyDoor", 7.85f, 3.425f, false, 1, Open),
+        ("FrontDoor", true, -1, Shut), ("KitchenDoor", true, -1, Open), ("LivingRoomDoor", true, -1, Ajar),
+        ("RoomDoor", false, 1, Open), ("BathroomDoor", true, 1, Open), ("BalconyDoor", false, 1, Open),
     ];
 
-    // Ends with every door open.
+    // Every door is also made ajar, as a scene may start it. Ends with every door open.
     private async Task CheckHomeDoors()
     {
-        foreach (var (name, x, z, alongX, side, start) in HomeDoors)
+        foreach (var (name, alongX, side, start) in HomeDoors)
         {
             var door = play.Region.Props("Ⅰ")!.GetNode<Door3D>($"HomeDoors/{name}");
-            var middle = new Vector3(x, Storey, z);
-            var across = alongX ? new Vector3(0, 0, side * .7f) : new Vector3(side * .7f, 0, 0);
-            var (inside, outside) = (middle + across, middle - across);
+            var leaf = door.GetNode<Interactable3D>("Leaf");
+            var width = ((BoxShape3D)leaf.GetNode<CollisionShape3D>("Shape").Shape).Size.X;
+            // The shut leaf runs from the hinge along the door's x, 1 cm short of the hole at each end.
+            var hinge = door.GlobalPosition with { Y = Storey };
+            var into = (alongX ? Vector3.Back : Vector3.Right) * side;
+            var middle = hinge + door.GlobalBasis.X * (width / 2);
+            var gap = hinge + door.GlobalBasis.X * (width + .01f - .25f);  // a quarter metre inside the far side of the hole
+            var outside = middle - into * .7f;
             Check(door.State == start, $"{name} starts {start}; it is {door.State}");
             if (start != Shut)
             {
-                Check(await Crosses(inside, outside), $"{name}, {start}, lets her through; she is at {feet}");
-                await Use(door, inside, Shut);
+                Check(await Through(start == Ajar ? gap : middle, into), $"{name}, {start}, lets her through; she is at {feet}");
+                await Use(door, outside, Shut);
             }
-            Check(!await Crosses(inside, outside), $"{name}, shut, stops her; she is at {feet}");
-            await Use(door, inside, Open);
-            Check(await Crosses(inside, outside), $"{name}, opened, lets her through; she is at {feet}");
+            door.State = Ajar;
+            await play.Frames(1);
+            Check(Stops(leaf) && Opens(leaf, hinge, into), $"{name}, ajar, stands solid on its side of the wall");
+            Check(await Through(gap, into), $"{name}, ajar, leaves her room to pass beside it; she is at {feet}");
+            await Use(door, outside, Shut);
+            Check(!await Through(middle, into), $"{name}, shut, stops her; she is at {feet}");
+            await Use(door, outside, Open);
+            Check(Opens(leaf, hinge, into), $"{name} opens to its side of the wall");
+            Check(await Through(middle, into), $"{name}, opened, lets her through; she is at {feet}");
         }
     }
 
-    // Pushes from one side of a doorway toward the other, and tells whether she got past its middle.
-    private async Task<bool> Crosses(Vector3 from, Vector3 to)
+    // Pushes from 0.7 m before a point of a doorway toward 0.7 m past it, and tells whether she got through: past the wall
+    // by more than her radius.
+    private async Task<bool> Through(Vector3 at, Vector3 into)
     {
+        var (from, to) = (at - into * .7f, at + into * .7f);
         play.LookAt(from, to + Vector3.Up * 1.3f);
         await Push((to.X, to.Z));
-        return feet.DistanceTo(to) < feet.DistanceTo(from);
+        return (feet - at).Dot(into) > .2f;
+    }
+
+    private static bool Opens(Interactable3D leaf, Vector3 hinge, Vector3 into) =>
+        (leaf.GetNode<Node3D>("Shape").GlobalPosition - hinge).Dot(into) > .1f;
+
+    // Whether the leaf is a body that stops the player.
+    private static bool Stops(Interactable3D leaf)
+    {
+        var query = new PhysicsShapeQueryParameters3D
+        {
+            Shape = new SphereShape3D { Radius = .05f },
+            Transform = new Transform3D(Basis.Identity, leaf.GetNode<Node3D>("Shape").GlobalPosition),
+            CollisionMask = PhysicsLayers.World
+        };
+        foreach (var hit in leaf.GetWorld3D().DirectSpaceState.IntersectShape(query))
+            if (hit["collider"].AsGodotObject() == leaf) return true;
+        return false;
     }
 
     private async Task Use(Door3D door, Vector3 at, Door3D.DoorState then)

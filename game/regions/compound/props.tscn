@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://regions/compound/slopes.tscn" id="e1"]
 [ext_resource type="PackedScene" path="res://regions/compound/home_doors.tscn" id="e2"]
@@ -6,12 +6,6 @@
 
 [sub_resource type="BoxShape3D" id="s1"]
 size = Vector3(6, 0.1, 0.608276)
-
-[sub_resource type="BoxShape3D" id="s2"]
-size = Vector3(0.1, 3, 48)
-
-[sub_resource type="BoxShape3D" id="s3"]
-size = Vector3(6.1, 3, 0.1)
 
 [node name="Props" type="Node3D"]
 
@@ -124,27 +118,3 @@ collision_mask = 0
 
 [node name="Shape" type="CollisionShape3D" parent="SidewalkSouthSlope"]
 shape = SubResource("s1")
-
-[node name="SidewalkEdge" type="StaticBody3D" parent="."]
-position = Vector3(84.05, 1.3, 81)
-rotation = Vector3(0, 0, 0)
-collision_mask = 0
-
-[node name="Shape" type="CollisionShape3D" parent="SidewalkEdge"]
-shape = SubResource("s2")
-
-[node name="SidewalkNorthEnd" type="StaticBody3D" parent="."]
-position = Vector3(81.05, 1.3, 56.95)
-rotation = Vector3(0, 0, 0)
-collision_mask = 0
-
-[node name="Shape" type="CollisionShape3D" parent="SidewalkNorthEnd"]
-shape = SubResource("s3")
-
-[node name="SidewalkSouthEnd" type="StaticBody3D" parent="."]
-position = Vector3(81.05, 1.3, 105.05)
-rotation = Vector3(0, 0, 0)
-collision_mask = 0
-
-[node name="Shape" type="CollisionShape3D" parent="SidewalkSouthEnd"]
-shape = SubResource("s3")

@@ -3,6 +3,9 @@ namespace Game;
 /// <summary>The physics layers that more than one part of the game agrees on, as the bit values the scenes give them.</summary>
 internal static class PhysicsLayers
 {
+    /// <summary>What stops the player: the bodies of the engine's geometry, and the props that stand in her way.</summary>
+    internal const uint World = 1;
+
     /// <summary>The bodies of characters: nothing that walks collides with them, and the crosshair looks through them.</summary>
     internal const uint Characters = 2;
 
