@@ -187,11 +187,12 @@ public partial class HomeFlowChecks : Node
             foreach (var goal in places.Where(place => place != from).Append(balcony))
             {
                 var at = Route(from, goal);
-                Check(goal != balcony || at.X < 7.6f && at.Z < 4, $"toward the balcony the cat stops in the living room; it stops at {at}");
+                Check(goal == balcony ? at.X < 7.6f && at.Z < 4 : at == goal,
+                    goal == balcony ? $"toward the balcony the cat stops in the living room; it stops at {at}" : $"the cat gets from {from} to {goal}; it stops at {at}");
             }
         foreach (var from in new Vector3[] { new(8.3f, floor, 3.42f), new(8.9f, floor, 1f), new(8.5f, floor, 2.2f) })
             foreach (var goal in new[] { places[2], places[3] })
-                Route(from, goal);
+                Check(Route(from, goal) == goal, $"the cat gets back in from {from} to {goal}");
     }
 
     // Follows HomeRoute from one point toward another, each leg clear, until it gets there or stays; returns where it ends.

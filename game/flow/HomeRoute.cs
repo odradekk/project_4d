@@ -33,7 +33,7 @@ internal static class HomeRoute
     internal static Vector3 Next(Vector3 from, Vector3 goal)
     {
         if (OnBalcony(from))
-            return OnBalcony(goal) ? goal : new Vector2(from.X - BalconyDoor.X, from.Z - BalconyDoor.Z).Length() < .3f ? BalconyFront : BalconyDoor;
+            return OnBalcony(goal) ? goal : new Vector2(from.X - BalconyDoor.X, from.Z - BalconyDoor.Z).Length() < .15f ? BalconyFront : BalconyDoor;
         if (OnBalcony(goal)) goal = BalconyFront;
         var start = DoorwayOf(from);
         var end = DoorwayOf(goal);
