@@ -22,6 +22,8 @@ internal sealed class HomeScene
     internal const string RoomPath = "res://regions/room.tscn";
     internal const string Section = "Ⅰ";
     /// <summary>The height of the flat's floor in the compound, on the second storey.</summary>
+    // The same value as HOME * S in regions/compound/generate.py. HomeMorning ends scene 1 when she is lower than this, so
+    // nothing she can reach on the second storey but the flight down may lie lower than 3.14 m.
     internal const float Floor = 3.2f;
 
     private readonly Dictionary<string, uint> layers = [];
