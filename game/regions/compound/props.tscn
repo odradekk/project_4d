@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(5.555394, 0.1, 1.945)
+
+[sub_resource type="BoxShape3D" id="s2"]
+size = Vector3(0.776209, 0.1, 4.25)
+
+[node name="Props" type="Node3D"]
+
+[node name="Floor0UpRamp" type="StaticBody3D" parent="."]
+position = Vector3(3.6844, 0.752119, 17.4925)
+rotation = Vector3(0, 0, 0.292146)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Floor0UpRamp"]
+shape = SubResource("s1")
+
+[node name="Floor0TurnRamp" type="StaticBody3D" parent="."]
+position = Vector3(4.0356, 2.352119, 19.5575)
+rotation = Vector3(0, 0, -0.292146)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Floor0TurnRamp"]
+shape = SubResource("s1")
+
+[node name="Floor1UpRamp" type="StaticBody3D" parent="."]
+position = Vector3(3.6844, 3.952119, 17.4925)
+rotation = Vector3(0, 0, 0.292146)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Floor1UpRamp"]
+shape = SubResource("s1")
+
+[node name="Floor1TurnRamp" type="StaticBody3D" parent="."]
+position = Vector3(4.0356, 5.552119, 19.5575)
+rotation = Vector3(0, 0, -0.292146)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Floor1TurnRamp"]
+shape = SubResource("s1")
+
+[node name="ExitRamp" type="StaticBody3D" parent="."]
+position = Vector3(-2.082117, -0.148312, 18.525)
+rotation = Vector3(0, 0, 0.260602)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="ExitRamp"]
+shape = SubResource("s2")

@@ -1,0 +1,79 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="e3"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="e4"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://regions/compound/furniture.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://regions/compound/props.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://regions/compound/flat.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor0_north.tscn" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor0_south.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor1_north.tscn" id="e11"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor1_south.tscn" id="e12"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor2_north.tscn" id="e13"]
+[ext_resource type="PackedScene" path="res://regions/compound/floor2_south.tscn" id="e14"]
+[ext_resource type="PackedScene" path="res://regions/compound/stair.tscn" id="e15"]
+[ext_resource type="PackedScene" path="res://regions/compound/roof.tscn" id="e16"]
+
+[node name="Compound" type="Node3D"]
+script = ExtResource("e1")
+PrismEnabled = false
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Furniture" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e6")]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(0.75, 3.22, 6.7)
+script = ExtResource("e4")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("e5")
+
+[node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e7")]
+
+[node name="Buildings" type="Node3D" parent="."]
+
+[node name="Home" type="Node3D" parent="Buildings"]
+script = ExtResource("e3")
+BuildingId = "home"
+WMin = -0.5
+WMax = 0.5
+
+[node name="Flat" parent="Buildings/Home" instance=ExtResource("e8")]
+
+[node name="Floor0North" parent="Buildings/Home" instance=ExtResource("e9")]
+
+[node name="Floor0South" parent="Buildings/Home" instance=ExtResource("e10")]
+
+[node name="Floor1North" parent="Buildings/Home" instance=ExtResource("e11")]
+
+[node name="Floor1South" parent="Buildings/Home" instance=ExtResource("e12")]
+
+[node name="Floor2North" parent="Buildings/Home" instance=ExtResource("e13")]
+
+[node name="Floor2South" parent="Buildings/Home" instance=ExtResource("e14")]
+
+[node name="Stair" parent="Buildings/Home" instance=ExtResource("e15")]
+
+[node name="Roof" parent="Buildings/Home" instance=ExtResource("e16")]
+
+[node name="Items" type="Node" parent="."]
+
+[node name="Devices" type="Node" parent="."]
+
+[node name="Grazers" type="Node" parent="."]
+
+[node name="Seams" type="Node" parent="."]
+
+[node name="ExpectedPuzzleOperations" type="Node" parent="."]
