@@ -6,8 +6,9 @@ namespace Game.Flow;
 /// Where a character walks next on its way through the flat. Characters have no path finding and walk straight at their
 /// goal, so a goal in another room is reached through the doorways: out of the room it is in, then into the room it wants.
 /// Every doorway of the flat leads into the hallway. The entrance hall runs on into the hallway without a wall between,
-/// but counts as a room with that opening as its doorway, so that no way from it cuts across the bathroom's corner. The
-/// balcony, off the living room, is left out.
+/// but counts as a room with that opening as its doorway, so that no way from it cuts across the bathroom's corner.
+/// Nothing walks onto the balcony, off the living room: a goal there is taken as the spot in front of the balcony door.
+/// Nothing is routed outside the flat either, since the front door stays shut while the cat is in.
 /// Decision note: 2026-10-26-prologue-greybox
 /// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
@@ -18,14 +19,17 @@ internal static class HomeRoute
 
     private const float Y = HomeScene.Floor;
     private static readonly Doorway Kitchen = new(new(1f, Y, 3.5f), new(1f, Y, 4.5f), false);
-    private static readonly Doorway Living = new(new(2.6f, Y, 3.5f), new(2.6f, Y, 4.5f), false);
+    private static readonly Doorway Living = new(new(2.6f, Y, 3.3f), new(2.6f, Y, 4.5f), false);
     private static readonly Doorway Room = new(new(3.75f, Y, 4.6f), new(2.75f, Y, 4.6f), true);
     private static readonly Doorway Bath = new(new(2.55f, Y, 5.95f), new(2.55f, Y, 5f), false);
     private static readonly Doorway Hall = new(new(.9f, Y, 5.9f), new(.9f, Y, 5f), false);
+    // In the living room before the balcony door, clear of the television stand on the way from the living-room door.
+    private static readonly Vector3 BalconyFront = new(7.3f, Y, 3f);
 
     /// <summary>The point to walk to now, from <paramref name="from"/> toward <paramref name="goal"/>.</summary>
     internal static Vector3 Next(Vector3 from, Vector3 goal)
     {
+        if (goal.X > 7.85f && goal.Z < 4f) goal = BalconyFront;
         var start = DoorwayOf(from);
         var end = DoorwayOf(goal);
         if (start == end) return goal;
@@ -34,8 +38,7 @@ internal static class HomeRoute
         return Lined(from, entering.Outside, entering) ? entering.Inside : entering.Outside;
     }
 
-    // The doorway of the room a point is in, by the walls' middle lines; null in the hallway. Outside the front door counts
-    // as the entrance hall.
+    // The doorway of the room a point is in, by the walls' middle lines; null in the hallway.
     private static Doorway? DoorwayOf(Vector3 point)
     {
         if (point.Z < 4f) return point.X < 1.8f ? Kitchen : Living;

@@ -87,6 +87,9 @@ public partial class HomeEvening : Node
         On("Sausage", Share);
         On("Tv", Forecast);
         On("Desk", Homework);
+        // She stays in for the evening, and HomeRoute leads nowhere outside the flat.
+        home.Door("FrontDoor").Locked = () => true;
+        On("HomeDoors/FrontDoor/Leaf", () => Say(2.5, "天黑了，不出去了。"));
         home.Hud.Say("", "爸爸已经去厂里上中班了。", 3);
         home.Hud.Say("", "煤球，小声点。按 N 翻看数学笔记本。", 3.5);
     }

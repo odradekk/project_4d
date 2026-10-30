@@ -124,6 +124,7 @@ public partial class HomeFlowChecks : Node
         foreach (var name in new[] { "Father", "Money", "Backpack", "Sink" })
             Check(!Prop(name).Visible && Prop(name).CollisionLayer == 0, $"{name} belongs to the morning");
         Check(Prop("Clock").Visible && Prop("Clock").CollisionLayer == 0, "the alarm clock stays on the desk and cannot be used");
+        await Refused("天黑了，不出去了。");
         await Walk((.75f, 5f), (2.6f, 4.5f), (2.6f, 3.3f), (4.75f, 2.6f));
         hud.ClearText();
         await Use("Note");
@@ -174,23 +175,27 @@ public partial class HomeFlowChecks : Node
     }
 
     // The cat walks straight from each waypoint of HomeRoute to the next. Between every two of the entrance hall, the
-    // living room, the kitchen, her room and the bathroom, no wall, door or furniture stands on those lines.
+    // living room, the kitchen, her room and the bathroom, no wall, door or furniture stands on those lines. Toward her on
+    // the balcony it walks as clear a way and stops in the living room.
     private void CheckCatRoutes()
     {
         var floor = HomeScene.Floor;
         Vector3[] places = [new(.75f, floor, 6.1f), new(5.4f, floor, 2.75f), new(1f, floor, 2f), new(4.8f, floor, 6f), new(2.4f, floor, 6.3f)];
+        var balcony = new Vector3(8.5f, floor, 2f);
         foreach (var from in places)
-            foreach (var goal in places.Where(place => place != from))
+            foreach (var goal in places.Where(place => place != from).Append(balcony))
             {
                 var at = from;
                 for (var leg = 0; at != goal; leg++)
                 {
                     Check(leg < 5, $"the route from {from} must reach {goal}");
                     var next = HomeRoute.Next(at, goal);
+                    if (next == at) break;
                     for (var step = 0f; step <= 1; step += .02f)
                         Check(CatFits(at.Lerp(next, step)), $"the cat's way from {from} to {goal} is clear between {at} and {next}");
                     at = next;
                 }
+                Check(goal != balcony || at.X < 7.6f && at.Z < 4, $"toward the balcony the cat stops in the living room; it stops at {at}");
             }
     }
 
@@ -201,7 +206,7 @@ public partial class HomeFlowChecks : Node
         CollisionMask = PhysicsLayers.World
     }, 1).Count == 0;
 
-    /// <summary>Presses E on the front door, which she opens only when nothing is left to do, and checks what she says.</summary>
+    /// <summary>Presses E on the front door, which stays shut while she may not leave, and checks what she says.</summary>
     private async Task Refused(string line)
     {
         player.Hud.ClearText();
