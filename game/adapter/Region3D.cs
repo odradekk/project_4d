@@ -170,7 +170,9 @@ public partial class Region3D : Node3D
                 scene.MaskIds, notStatic, scene.StaticNodes));
             viewport.AddChild(scene.Dynamic);
             viewport.AddChild(scene.Overlay);
-            viewport.AddChild(new WorldEnvironment
+            var props = authored.Single(node => node.SectionId == section.Id.Value).GetNodeOrNull<Node3D>("Props");
+            // A section whose Props hold a WorldEnvironment, such as one with fog, has that one instead of this.
+            if (props?.GetChildren().OfType<WorldEnvironment>().Any() != true) viewport.AddChild(new WorldEnvironment
             {
                 Environment = new Godot.Environment
                 {
@@ -183,7 +185,7 @@ public partial class Region3D : Node3D
             });
             viewport.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -25, 0), LightEnergy = 0.8f });
             // What a section holds under Props, such as its lights and the things to use in it, belongs to its world.
-            if (authored.Single(node => node.SectionId == section.Id.Value).GetNodeOrNull<Node3D>("Props") is { } props)
+            if (props is not null)
             {
                 props.GetParent().RemoveChild(props);
                 // The editor hides the Props of the sections that PreviewW is not near, and saves that with the scene.

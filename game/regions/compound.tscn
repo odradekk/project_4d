@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="e11"]
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e12"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e13"]
+[ext_resource type="Script" path="res://regions/compound/City3D.cs" id="e14"]
 
 [sub_resource type="StandardMaterial3D" id="m1"]
 albedo_color = Color(0.8, 0.2, 0.2, 1)
@@ -136,6 +137,19 @@ size = Vector3(0.65, 1.15, 1.3)
 
 [sub_resource type="BoxShape3D" id="s11"]
 size = Vector3(0.6, 0.38, 0.9)
+
+[sub_resource type="Environment" id="env1"]
+background_mode = 1
+background_color = Color(0.831, 0.847, 0.867, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.65
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.831, 0.847, 0.867, 1)
+fog_density = 1.0
+fog_depth_begin = 40.0
+fog_depth_end = 900.0
 
 [node name="Compound" type="Node3D"]
 script = ExtResource("e1")
@@ -369,6 +383,13 @@ Prompt = "写作业"
 
 [node name="Shape" type="CollisionShape3D" parent="Sections/Ⅰ/Props/Desk"]
 shape = SubResource("s11")
+
+[node name="Environment" type="WorldEnvironment" parent="Sections/Ⅰ/Props"]
+environment = SubResource("env1")
+
+[node name="City" type="Node3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(0, -0.2, 0)
+script = ExtResource("e14")
 
 [node name="Buildings" parent="." instance=ExtResource("e10")]
 
