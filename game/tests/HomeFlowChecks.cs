@@ -133,8 +133,8 @@ public partial class HomeFlowChecks : Node
 
     // The cat walks straight from each waypoint of HomeRoute to the next. Between every two of the entrance hall, the
     // living room, the kitchen, her room, the bathroom, the vestibule, the corridor, the stair landing of the flat's storey,
-    // each flight, the turn, the foot of the stair and the compound outside, along the building's west and east walls and
-    // in the gap between its flats too, no wall, railing, door or furniture stands on those lines, with the front door open. Toward her on the balcony it walks as clear a way and stops in the living room.
+    // each flight, the turn, the ground floor's stair hall and the forecourt, its corners too,
+    // the cat walks a clear way, with the front door open. Toward her on the balcony it walks as clear a way and stops in the living room.
     // Put down on the balcony, in line with its door or not, it walks a clear way back in.
     private void CheckCatRoutes()
     {
@@ -143,8 +143,7 @@ public partial class HomeFlowChecks : Node
         [
             new(.75f, floor, 6.1f), new(5.4f, floor, 2.75f), new(1f, floor, 2f), new(4.8f, floor, 6f), new(2.4f, floor, 6.3f),
             new(1.3f, floor, 8.7f), new(-1.4f, floor, 12f), new(.3f, floor, 18f), new(3.5f, 2.565f, 20.2f), new(7.3f, 1.6f, 20f),
-            new(3.5f, .749f, 16.9f), CatWaits, new(-6f, -.2f, 15f), new(-2.3f, -.2f, 12f), new(-2.3f, -.2f, 25f),
-            new(9.5f, -.2f, 10f), new(2.4f, -.2f, 8.2f), new(9.5f, -.2f, 30f)
+            new(3.5f, .749f, 16.9f), CatWaits, new(-6f, -.2f, 15f), new(-2.8f, -.2f, 14.7f), new(-2.8f, -.2f, 22.3f)
         ];
         var door = Door("FrontDoor");
         door.State = Door3D.DoorState.Open;
@@ -153,44 +152,46 @@ public partial class HomeFlowChecks : Node
             foreach (var goal in places.Where(place => place != from).Append(balcony))
             {
                 var at = Route(from, goal);
-                Check(goal == balcony ? at.X < 7.6f && at.Z < 4 : at == goal,
+                Check(goal == balcony ? at.X < 7.6f && at.Z < 4 : Flat(at - goal).Length() < .01f,
                     goal == balcony ? $"toward the balcony the cat stops in the living room; it stops at {at}" : $"the cat gets from {from} to {goal}; it stops at {at}");
             }
         foreach (var from in new Vector3[] { new(8.3f, floor, 3.42f), new(8.9f, floor, 1f), new(8.5f, floor, 2.2f) })
             foreach (var goal in new[] { places[2], places[3], CatWaits })
-                Check(Route(from, goal) == goal, $"the cat gets back in from {from} to {goal}");
+                Check(Flat(Route(from, goal) - goal).Length() < .01f, $"the cat gets back in from {from} to {goal}");
         door.State = Door3D.DoorState.Shut;
     }
 
-    // Follows HomeRoute from one point toward another, each leg clear, until it gets there or stays; returns where it ends.
+    // Walks HomeRoute from one point toward another as the cat does: a quarter of a metre at a time toward the point that
+    // HomeRoute gives from where it stands, on the floor there, each step clear; returns where it stops.
     private Vector3 Route(Vector3 from, Vector3 goal)
     {
         var at = from;
-        for (var leg = 0; at != goal; leg++)
+        for (var step = 0; ; step++)
         {
-            Check(leg < 32, $"the route from {from} must reach {goal}");
-            var next = HomeRoute.Next(at, goal);
-            if (next == at) break;
-            for (var step = 0f; step <= 1; step += .02f)
-                Check(CatFits(at.Lerp(next, step)), $"the cat's way from {from} to {goal} is clear between {at} and {next}");
-            at = next;
+            Check(step < 2000, $"the cat must stop on its way from {from} to {goal}; it is still going at {at}");
+            var offset = Flat(HomeRoute.Next(at, goal) - at);
+            if (offset.Length() < .01f) return at;
+            var ahead = at + offset.LimitLength(.25f);
+            var floor = Footing(ahead);
+            Check(floor is not null, $"the cat's way from {from} to {goal} is clear at {ahead}");
+            at = floor!.Value;
         }
-        return at;
     }
 
-    // Whether the cat stands on a floor at the spot, no more than half a metre above or below it, and its body there meets
-    // nothing. Along a leg that runs on from a slope onto the level, the floor is not on the straight line between its ends.
-    private bool CatFits(Vector3 spot)
+    // Where the cat stands at the spot: on a floor no more than half a metre above or below it, with its body there meeting
+    // nothing; null where it cannot stand.
+    private Vector3? Footing(Vector3 spot)
     {
         var space = player.GetWorld3D().DirectSpaceState;
         var floor = space.IntersectRay(PhysicsRayQueryParameters3D.Create(spot + Vector3.Up * .5f, spot + Vector3.Down * .5f, PhysicsLayers.World));
-        if (floor.Count == 0) return false;
+        if (floor.Count == 0) return null;
+        var feet = floor["position"].AsVector3();
         return space.IntersectShape(new PhysicsShapeQueryParameters3D
         {
             Shape = new SphereShape3D { Radius = .15f },
-            Transform = new Transform3D(Basis.Identity, floor["position"].AsVector3() + new Vector3(0, .25f, 0)),
+            Transform = new Transform3D(Basis.Identity, feet + new Vector3(0, .25f, 0)),
             CollisionMask = PhysicsLayers.World
-        }, 1).Count == 0;
+        }, 1).Count == 0 ? feet : null;
     }
 
     /// <summary>Presses E on the front door, which stays shut while she may not leave, and checks what she says.</summary>

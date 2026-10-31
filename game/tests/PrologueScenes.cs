@@ -124,7 +124,7 @@ public partial class PrologueChecks
         Player.Position = new(-2f, .02f, 18.5f);
         await Says("爸不让养猫");
         Prop("HomeDoors/FrontDoor/Leaf").Interact();
-        Player.Position = new(4.6f, HomeScene.Floor + .02f, 2.9f);
+        Player.Position = new(6.2f, HomeScene.Floor + .02f, 3f);
         await Until(() => evening.Indoors, 60, $"the cat must follow her in; it is at {evening.CatBody.Position}");
         foreach (var name in new[] { "Note", "HairClip", "Tv", "Stove" }) Prop(name).Interact();
         await Until(() => evening.Heated, 6, "the meal must be hot");
