@@ -11,8 +11,12 @@ namespace Game.Flow;
 /// is taken as the spot in front of the balcony door. A cat put down on the balcony walks in line with the balcony door
 /// first, then through it to that spot.
 /// Out of the flat the way is one line of stretches, each walked straight: the shared vestibule, the open corridor, the
-/// stair landing of the flat's storey, the flight down to the turn, the turn, the flight down to the ground floor, and the
-/// ground floor with the compound outside. Between each two the way passes a doorway as the flat's doorways are passed.
+/// stair landing of the flat's storey, the flight down to the turn, the turn, the flight down to the ground floor, the
+/// ground floor's stair hall and corridor, and the compound outside. Between each two the way passes a doorway as the
+/// flat's doorways are passed; the last is the open west side of the stair hall, in line with the middle of the slope
+/// out, so that a cat coming along the building's west wall does not run into the slope's side.
+/// The stretches cover her building's north half only, up to her storey: every point higher than her storey's floor less
+/// 0.3 m counts as on her storey, the corridor of the south half and the floor above included.
 /// Decision note: 2026-10-29-home-scene-layout
 /// Decision note: 2026-10-31-bus-commute
 /// </summary>
@@ -39,8 +43,8 @@ internal static class HomeRoute
     // edge at x 1.39. Each rises half a storey over 5.32 m.
     private const float Landing = Y / 2, Turn = 6.33f, Middle = 18.525f, Rise = Landing / 5.32f;
     private const float GroundFoot = 1.01f, TurnFoot = 6.71f, StoreyEdge = 1.39f;
-    // The flat's front wall, the vestibule's south wall and the stair hall's north wall.
-    private const float FrontWall = 7.35f, Vestibule = 9.05f, StairHall = 16.4f;
+    // The flat's front wall, the vestibule's south wall, the stair hall's north and south walls, and the corridor's railing.
+    private const float FrontWall = 7.35f, Vestibule = 9.05f, StairHall = 16.4f, HallEnd = 20.65f, Railing = -1.72f;
 
     // The doorways along the way out, the first between the flat and the vestibule; each joins the stretch of its number to
     // the next. Up the stair the cat keeps to the middle of each flight.
@@ -52,7 +56,8 @@ internal static class HomeRoute
         new(new(.9f, Y, 19.55f), OnFlight(1.9f, 19.55f), true),  // the top of the flight down
         new(OnFlight(5.9f, 19.55f), new(7f, Landing, 19.55f), true),  // its foot at the turn
         new(new(7f, Landing, 17.5f), OnFlight(5.9f, 17.5f), true),  // the top of the flight to the ground floor
-        new(OnFlight(1.6f, 17.5f), new(.5f, 0, 17.5f), true)  // its foot
+        new(OnFlight(1.6f, 17.5f), new(.5f, 0, 17.5f), true),  // its foot
+        new(new(-1f, 0, 17.5f), new(-3.2f, -.2f, 17.5f), true)  // the way out, past the slope's foot
     ];
 
     /// <summary>The point to walk to now, from <paramref name="from"/> toward <paramref name="goal"/>.</summary>
@@ -90,7 +95,7 @@ internal static class HomeRoute
 
     // Which stretch of the way a point is on, by its height and the walls' middle lines: 0 in the flat, 1 in the vestibule,
     // 2 on the corridor, 3 on the stair landing of the flat's storey, 4 on the flight down from it, 5 at the turn, 6 on the
-    // flight down to the ground floor, and 7 on the ground floor or outside.
+    // flight down to the ground floor, 7 in the ground floor's stair hall or on its corridor, and 8 outside.
     private static int Stretch(Vector3 point)
     {
         if (point.Y > Y - .3f)
@@ -100,7 +105,8 @@ internal static class HomeRoute
             return point.X >= StoreyEdge && point.Z > Middle ? 4 : 3;
         }
         if (point.Y > Landing - .3f) return point.X >= Turn ? 5 : point.Z > Middle ? 4 : 6;
-        return point.X is >= GroundFoot and < Turn && point.Z is > StairHall and < Middle ? 6 : 7;
+        if (point.X is >= GroundFoot and < Turn && point.Z is > StairHall and < Middle) return 6;
+        return point.X > Railing && point.Z is > 0 and < HallEnd ? 7 : 8;
     }
 
     // A point on the slope over a flight: north of the wall between them on the one from the ground floor, south of it on the

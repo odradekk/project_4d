@@ -133,7 +133,7 @@ public partial class HomeFlowChecks : Node
 
     // The cat walks straight from each waypoint of HomeRoute to the next. Between every two of the entrance hall, the
     // living room, the kitchen, her room, the bathroom, the vestibule, the corridor, the stair landing of the flat's storey,
-    // each flight, the turn, the foot of the stair and the compound outside, no wall, railing, door or furniture stands on
+    // each flight, the turn, the foot of the stair and the compound outside, along the building's west wall too, no wall, railing, door or furniture stands on
     // those lines, with the front door open. Toward her on the balcony it walks as clear a way and stops in the living room.
     // Put down on the balcony, in line with its door or not, it walks a clear way back in.
     private void CheckCatRoutes()
@@ -143,7 +143,7 @@ public partial class HomeFlowChecks : Node
         [
             new(.75f, floor, 6.1f), new(5.4f, floor, 2.75f), new(1f, floor, 2f), new(4.8f, floor, 6f), new(2.4f, floor, 6.3f),
             new(1.3f, floor, 8.7f), new(-1.4f, floor, 12f), new(.3f, floor, 18f), new(3.5f, 2.565f, 20.2f), new(7.3f, 1.6f, 20f),
-            new(3.5f, .749f, 16.9f), CatWaits, new(-6f, -.2f, 15f)
+            new(3.5f, .749f, 16.9f), CatWaits, new(-6f, -.2f, 15f), new(-2.3f, -.2f, 12f), new(-2.3f, -.2f, 25f)
         ];
         var door = Door("FrontDoor");
         door.State = Door3D.DoorState.Open;
