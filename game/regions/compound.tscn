@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=52 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e12"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e13"]
 [ext_resource type="Script" path="res://regions/compound/City3D.cs" id="e14"]
+[ext_resource type="Script" path="res://regions/compound/Bus3D.cs" id="e15"]
 
 [sub_resource type="StandardMaterial3D" id="m1"]
 albedo_color = Color(0.8, 0.2, 0.2, 1)
@@ -390,6 +391,10 @@ environment = SubResource("env1")
 [node name="City" type="Node3D" parent="Sections/Ⅰ/Props"]
 position = Vector3(0, -0.2, 0)
 script = ExtResource("e14")
+
+[node name="Bus" type="Node3D" parent="Sections/Ⅰ/Props"]
+position = Vector3(0, -0.18, 0)
+script = ExtResource("e15")
 
 [node name="Buildings" parent="." instance=ExtResource("e10")]
 
