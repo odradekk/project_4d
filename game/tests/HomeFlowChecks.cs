@@ -101,6 +101,12 @@ public partial class HomeFlowChecks : Node
         pickup.Interact();
         await Frames(20);
         Check(evening.CatBody.GetNode<Cat>("Cat").Held && !evening.CatFed, "the cat is in her arms before it has eaten");
+        // While she only watches, the hint line lists no key, whatever is in her arms or under the crosshair.
+        Check(hud.HintText.StartsWith("E"), $"with the cat in her arms the hint line lists a key; it is \"{hud.HintText}\"");
+        player.Watching = true;
+        await Frames(2);
+        Check(hud.HintText == "", $"while she only watches the hint line is empty; it is \"{hud.HintText}\"");
+        player.Watching = false;
         player.PutDown?.Invoke();
         await Frames(20);
         Check(!evening.CatFed && Prop("Sausage").Visible, "the sausage stays while the cat has not eaten");

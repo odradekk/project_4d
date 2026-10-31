@@ -240,9 +240,10 @@ public partial class FirstPersonPlayer : CharacterBody3D
     }
 
     // The prompt of what the crosshair is on if it can be used, else the keys that act on a seam at her feet and on what is
-    // held or aimed at.
+    // held or aimed at; nothing while she only watches.
     private string HintText()
     {
+        if (watching) return "";
         if (target is not null) return $"E  {target.Prompt}";
         if (markedEntity is not null) return $"E  {LensMarks[markedEntity]}";
         var keys = new List<string>();
