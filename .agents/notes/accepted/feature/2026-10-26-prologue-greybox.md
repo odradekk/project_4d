@@ -1,6 +1,7 @@
 # 序章白模实现
 
 Status: accepted
+Superseded in part by: 2026-10-31-bus-commute — 上学路和小卖部作为单独的区域（第 2、6 场）
 
 ## Problem
 
