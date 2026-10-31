@@ -67,7 +67,8 @@ public partial class HomeFlowChecks
     }
 
     // Home through the gate and the compound to the stair hall, where the cat sits and does not stir while she is 3.5 m off;
-    // within 3 m it gets up and she whispers to it. It follows her up the first flight; she carries it to the turn and puts
+    // within 3 m it gets up and she whispers to it. When she walks off beyond the forecourt, it goes back and waits, and
+    // follows her again when she comes back. It follows her up the first flight; she carries it to the turn and puts
     // it down there, and it follows her again up the second flight and along the corridor; the front door opens for her,
     // and once she and the cat are in, it shuts and stays locked. The cat is in within 60 s of getting up.
     private async Task CheckCatUpstairs(HomeEvening evening)
@@ -83,9 +84,20 @@ public partial class HomeFlowChecks
         Check(cat.Posture == Posture.Sitting && !cat.Busy && hud.SubtitleText != Whisper, "3.5 m from the cat it stays sitting, and she says nothing to it");
         await Walk((-3.8f, 18.5f));
         await Until(() => hud.SubtitleText == Whisper, 1, "she must whisper to the cat once she is within 3 m");
-        var called = Engine.GetPhysicsFrames();
         await Frames(30);
         Check(cat.Busy && cat.Posture == Posture.Standing, "the cat gets up and follows her");
+        // Off beyond the forecourt she is out of the cat's way: it goes back to its place and waits; back within reach, it
+        // follows her again, and she does not whisper again.
+        await Walk((-9f, 18.5f));
+        await Until(() => cat.Posture == Posture.Sitting && Flat(cat.Position - CatWaits).Length() < .3f, 15,
+            $"the cat must go back to the stair and wait; it is at {cat.Position}");
+        await Frames(60);
+        Check(cat.Posture == Posture.Sitting && Flat(cat.Position - CatWaits).Length() < .3f, "the cat waits at the stair while she is away");
+        hud.ClearText();
+        await Walk((-3.8f, 18.5f));
+        await Frames(30);
+        Check(cat.Busy && cat.Posture == Posture.Standing && hud.SubtitleText != Whisper, "back within reach, the cat follows her again, without the whisper");
+        var called = Engine.GetPhysicsFrames();
         Check(!evening.Indoors && !Door("FrontDoor").Locked(), "the front door is not locked while she is out");
         await Walk((-1.5f, 17.5f), (.5f, 17.5f), (6.9f, 17.5f));
         cat.GetNode<Interactable3D>("Pickup").Interact();

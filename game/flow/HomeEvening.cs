@@ -24,7 +24,8 @@ public partial class HomeEvening : Node
     // off there facing south to the gate.
     private static readonly Vector3 Stop = new(83.4f, -.08f, 69.7f);
     // The cat sits at the mouth of the ground-floor stair hall, facing out to the west, and follows her once she comes
-    // within CatReach of it on its floor; put down on the way home, it follows again in the same way.
+    // within CatReach of it on its floor; put down on the way home, it follows again in the same way. It follows her only
+    // as far as HomeRoute leads: when she goes beyond the forecourt, it goes back to its place and waits there again.
     private static readonly Vector3 CatWaits = new(-1f, .02f, 18.5f), Outside = new(-5f, 0, 18.5f);
     private const float CatReach = 3;
     // The front door swings shut behind her once she and the cat are in and this far from its hinge.
@@ -42,7 +43,7 @@ public partial class HomeEvening : Node
     private Cat cat = null!;
     private Bus3D bus = null!;
     private Door3D frontDoor = null!;
-    private bool catCalled, homeworkStarted;
+    private bool catCalled, catGoingBack, homeworkStarted;
 
     [Signal] public delegate void FinishedEventHandler();
 
@@ -117,8 +118,17 @@ public partial class HomeEvening : Node
     {
         var feet = home.Player.Position;
         var at = catBody.Position;
-        if (!Indoors && !cat.Held && !catBody.Busy && Flat(feet - at) < CatReach && Mathf.Abs(feet.Y - at.Y) < 1)
+        var near = Flat(feet - at) < CatReach && Mathf.Abs(feet.Y - at.Y) < 1;
+        // Beyond the way it knows, she is out of the cat's reach however near.
+        var away = !HomeRoute.Covers(feet) && HomeRoute.Covers(at);
+        if (Indoors || cat.Held) { }
+        else if (away)
         {
+            if (catCalled && !catGoingBack) GoBack();
+        }
+        else if (near && (!catBody.Busy || catGoingBack))
+        {
+            catGoingBack = false;
             FollowPlayer();
             if (!catCalled) home.Hud.Say("小满", "爸不让养猫，你可别出声啊。", 3.5);
             catCalled = true;
@@ -156,6 +166,20 @@ public partial class HomeEvening : Node
             player.Watching = false;
             SetProcessUnhandledInput(true);
         }));
+    }
+
+    // Back to the stair hall's mouth, where it sits and waits for her again.
+    private void GoBack()
+    {
+        catGoingBack = true;
+        catBody.Do(_ =>
+        {
+            var next = HomeRoute.Next(catBody.Position, CatWaits);
+            if (!catBody.WalkTo(next, catBody.WalkSpeed) || next != CatWaits) return false;
+            catGoingBack = false;
+            cat.Sit(Outside);
+            return true;
+        });
     }
 
     private static float Flat(Vector3 offset) => new Vector2(offset.X, offset.Z).Length();
