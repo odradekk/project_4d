@@ -1,12 +1,13 @@
-"""Writes the building scenes of the compound region next to this file: python game/regions/compound/generate.py
+"""Writes the scenes of the compound region next to this file, all but compound.tscn: python game/regions/compound/generate.py
 
 The layout is the greybox prototype's (branch prototype/home-layout, prototypes/home-layout/index.html), in metres with x
 east, z south and y up; walls are placed by their centrelines. The origin is where the flat's north wall meets its
 kitchen's west wall, and y = 0 is the ground floor. Hand edits to the scenes are lost when this runs again.
 Decision note: 2026-10-29-home-scene-layout
 """
-import math
 from pathlib import Path
+
+from tscn import bodies, packed, scene, slope
 
 H, SLAB = 3.0, 0.2  # room height and floor slab
 S = H + SLAB  # storey
@@ -26,6 +27,15 @@ GO = 0.38
 RUN = (STEPS - 1) * GO
 SX = E - EXT / 2 - 1.4 - RUN  # the flights start here; 1.4 m landing at the turn
 GROUND = -SLAB  # the ground outside, under the ground floor's slab
+
+# The compound: 16 identical buildings, ours at (0, 0) in the north-west corner. A building's x and z are its origin's.
+COLS, ROWS = (0, 21, 42, 63), (0, 45, 105, 150)
+WEST_ROAD, CROSS_ROAD = (-18, -11), (90, 97)  # x of the road along the west side; z of the road to the gate
+FENCE_X0, FENCE_X1, FENCE_Z0, FENCE_Z1 = -24, 78, -12, 197  # the gate is in the east fence, across the road to the gate
+MAIN_ROAD = 91  # x where the main road's motor lanes start, outside the gate
+SIDEWALK = (78, 84)  # x of the sidewalk outside the gate
+BUS_X, BUS_Z = 80.5, CROSS_ROAD[0] - 23  # the bus shelter's back corner; it is open toward the street
+def lane(x): return (x - CW - 5, x - CW - 2)  # x of the path along the west side of the column of buildings at x
 
 
 def door(a, b, front=False): return dict(a=a, b=b, lo=0, hi=DOOR_H, front=front)
@@ -66,14 +76,6 @@ furniture = [  # id, x, z, height
     ('wardrobe', (3.31, 3.91), (5.6, 7.1), 2.0), ('basin', (2.71, 3.19), (6.0, 6.5), 0.8),
     ('squat_toilet', (1.95, 2.45), (6.6, 7.1), 0.05),
 ]
-COLORS = {
-    'wall': (0.94, 0.937, 0.918, 1), 'floor': (0.702, 0.675, 0.631, 1), 'tile': (0.784, 0.804, 0.816, 1),
-    'slab': (0.851, 0.843, 0.82, 1), 'stair': (0.812, 0.792, 0.753, 1), 'rail': (0.478, 0.502, 0.533, 1),
-    'panel': (0.478, 0.502, 0.533, 0.35), 'front': (0.541, 0.231, 0.18, 1), 'ground': (0.655, 0.678, 0.624, 1),
-    'furn': (0.561, 0.639, 0.722, 1),
-}
-
-
 # A box is (x0, x1, y0, y1, z0, z1, material).
 def box(boxes, x0, x1, y0, y1, z0, z1, m):
     if x1 - x0 > 1e-3 and y1 - y0 > 1e-3 and z1 - z0 > 1e-3: boxes.append((x0, x1, y0, y1, z0, z1, m))
@@ -121,8 +123,8 @@ def half_slabs():
 
 
 # A railing: a handrail over a see-through panel, which stops the player too.
-def rail(boxes, along, at, a, b, h=1.1):
-    for y0, y1, m in ((0, h - 0.06, 'panel'), (h - 0.06, h, 'rail')):
+def rail(boxes, along, at, a, b, h=1.1, panel='panel', top='rail', y=0):
+    for y0, y1, m in ((y, y + h - 0.06, panel), (y + h - 0.06, y + h, top)):
         if along == 'z': box(boxes, at - 0.03, at + 0.03, y0, y1, a, b, m)
         else: box(boxes, a, b, y0, y1, at - 0.03, at + 0.03, m)
 
@@ -164,70 +166,20 @@ def roof():
     return lift(half_slabs() + mirror(half_slabs(), LEN) + boxes, FLOORS * S)
 
 
-def fmt(v):
-    s = f"{v:.6f}".rstrip('0').rstrip('.')
-    return '0' if s in ('-0', '') else s
-
-
-def vec(*v): return f"Vector3({', '.join(fmt(c) for c in v)})"
-
-
 def element(eid, boxes):
     return eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"', 'BuildingId': '"home"', 'WMin': '-0.5', 'WMax': '0.5'}
 
 
-# entities: (name, origin, boxes, properties), with one BoxPart3D per box placed relative to the entity's origin
-def scene(entities, script='BuildingElement3D', root='Shell'):
-    materials, meshes, nodes = {}, {}, []
-    for name, origin, boxes, properties in entities:
-        nodes.append(f'[node name="{name}" type="Node3D" parent="."]\n' + (f'position = {vec(*origin)}\n' if any(origin) else '')
-                     + 'script = ExtResource("e1")\n' + ''.join(f'{k} = {v}\n' for k, v in properties.items()))
-        for i, (x0, x1, y0, y1, z0, z1, m) in enumerate(boxes, 1):
-            materials.setdefault(m, f"m{len(materials) + 1}")
-            mesh = meshes.setdefault((round(x1 - x0, 6), round(y1 - y0, 6), round(z1 - z0, 6), m), f"b{len(meshes) + 1}")
-            centre = ((x0 + x1) / 2 - origin[0], (y0 + y1) / 2 - origin[1], (z0 + z1) / 2 - origin[2])
-            nodes.append(f'[node name="p{i}" parent="{name}" instance=ExtResource("e2")]\n'
-                         f'position = {vec(*centre)}\nmesh = SubResource("{mesh}")\nPartId = "p{i}"\n')
-    head = [f'[gd_scene load_steps={3 + len(materials) + len(meshes)} format=3]\n',
-            f'[ext_resource type="Script" path="res://adapter/{script}.cs" id="e1"]\n'
-            '[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]\n']
-    for m, mid in materials.items():
-        color = COLORS[m]
-        head.append(f'[sub_resource type="StandardMaterial3D" id="{mid}"]\nalbedo_color = Color({", ".join(fmt(c) for c in color)})\n'
-                    + ('transparency = 1\n' if color[3] < 1 else ''))
-    for (sx, sy, sz, m), mid in meshes.items():
-        head.append(f'[sub_resource type="BoxMesh" id="{mid}"]\nmaterial = SubResource("{materials[m]}")\nsize = {vec(sx, sy, sz)}\n')
-    return '\n'.join(head + [f'[node name="{root}" type="Node3D"]\n'] + nodes)
-
-
-# A collision-only slope from (xa, ya) to (xb, yb) whose top is the walking surface: the player has no step-up.
-def slope(name, xa, ya, xb, yb, z0, z1):
-    thickness, dx, dy = 0.1, xb - xa, yb - ya
-    length = math.hypot(dx, dy)
-    angle = math.atan(dy / dx)
-    nx, ny = -math.sin(angle), math.cos(angle)  # the surface's upward normal
-    centre = ((xa + xb) / 2 - nx * thickness / 2, (ya + yb) / 2 - ny * thickness / 2, (z0 + z1) / 2)
-    return name, (round(length, 6), thickness, round(z1 - z0, 6)), centre, angle
-
-
 # Slopes over each flight, through the front edges of its treads, and one over the step out of the ground floor.
-def props():
+def stair_slopes():
     slopes = []
     for f in range(FLOORS - 1):
         y = f * S
-        slopes.append(slope(f'Floor{f}Up', SX - GO, y, SX + RUN, y + S / 2, zB + EXT / 2, SC - 0.06))
-        slopes.append(slope(f'Floor{f}Turn', SX + RUN + GO, y + S / 2, SX, y + S, SC + 0.06, zS - EXT / 2))
-    slopes.append(slope('Exit', -CW - 0.75, GROUND, -CW, 0, zB, zS))
-    shapes = {}
-    for _, size, _, _ in slopes: shapes.setdefault(size, f"s{len(shapes) + 1}")
-    out = [f'[gd_scene load_steps={1 + len(shapes)} format=3]\n']
-    out += [f'[sub_resource type="BoxShape3D" id="{sid}"]\nsize = {vec(*size)}\n' for size, sid in shapes.items()]
-    out.append('[node name="Props" type="Node3D"]\n')
-    for name, size, centre, angle in slopes:
-        out.append(f'[node name="{name}Slope" type="StaticBody3D" parent="."]\nposition = {vec(*centre)}\n'
-                   f'rotation = {vec(0, 0, angle)}\ncollision_mask = 0\n')
-        out.append(f'[node name="Shape" type="CollisionShape3D" parent="{name}Slope"]\nshape = SubResource("{shapes[size]}")\n')
-    return '\n'.join(out)
+        slopes.append(slope(f'Floor{f}Up', 'x', SX - GO, y, SX + RUN, y + S / 2, zB + EXT / 2, SC - 0.06))
+        slopes.append(slope(f'Floor{f}Turn', 'x', SX + RUN + GO, y + S / 2, SX, y + S, SC + 0.06, zS - EXT / 2))
+    slopes.append(slope('Exit', 'x', -CW - 0.75, GROUND, -CW, 0, zB, zS))
+    subs, nodes = bodies(slopes)
+    return packed('Slopes', [], subs=subs, nodes=nodes)
 
 
 def furniture_scene():
@@ -238,20 +190,107 @@ def furniture_scene():
     return scene(entities, 'FixedObject3D', 'Furniture')
 
 
-def main():
-    files = {'flat.tscn': scene([element('Flat', lift(flat(True), HOME * S))])}
+CURB = 0.1  # the sidewalk's height over the ground
+
+
+# Section I's ground, roads, paths, fence and gate, poplars, and the sidewalk outside the gate with the bus stop and kiosk.
+def site():
+    g, ground, roads, paths, fence, sidewalk, bus, kiosk = GROUND, [], [], [], [], [], [], []
+    box(ground, -40, 120, g - 0.2, g, -40, 240, 'ground')
+
+    def pave(boxes, x0, x1, z0, z1): box(boxes, x0, x1, g - 0.02, g + 0.004, z0, z1, 'road')  # as the rooms' floors
+    pave(roads, *WEST_ROAD, FENCE_Z0 + 2, FENCE_Z1 - 2)
+    pave(roads, WEST_ROAD[1], MAIN_ROAD, *CROSS_ROAD)
+    # Every stair hall's exit reaches a road: in the first column straight west, in the others onto the lane to their
+    # west, which runs to the road to the gate.
+    for x in COLS:
+        for z in ROWS: pave(paths, lane(x)[1] if x else WEST_ROAD[1], x - CW, z + SC - 1.5, z + SC + 1.5)
+    for x in COLS[1:]:
+        pave(paths, *lane(x), ROWS[0], CROSS_ROAD[0])
+        pave(paths, *lane(x), CROSS_ROAD[1], ROWS[-1] + LEN)
+    for along, at, a, b in (('x', FENCE_Z0, FENCE_X0, FENCE_X1), ('x', FENCE_Z1, FENCE_X0, FENCE_X1),
+                            ('z', FENCE_X0, FENCE_Z0, FENCE_Z1), ('z', FENCE_X1, FENCE_Z0, CROSS_ROAD[0] - 0.6),
+                            ('z', FENCE_X1, CROSS_ROAD[1] + 0.6, FENCE_Z1)):
+        rail(fence, along, at, a, b, 1.8, 'fence_panel', 'fence', g)
+    for z in (CROSS_ROAD[0] - 0.6, CROSS_ROAD[1]): box(fence, FENCE_X1 - 0.3, FENCE_X1 + 0.3, g, g + 2.6, z, z + 0.6, 'wall')
+    # Only the stretch she may walk on; the rest of the street belongs to the city.
+    for z0, z1 in ((BUS_Z - 10, CROSS_ROAD[0]), (CROSS_ROAD[1], CROSS_ROAD[1] + 8)):
+        box(sidewalk, *SIDEWALK, g, g + CURB, z0, z1, 'walk')
+    x, z = BUS_X, BUS_Z
+    box(bus, x, x + 0.1, g, g + 2.5, z, z + 8, 'wall')  # back wall
+    box(bus, x, x + 2.6, g + 2.5, g + 2.65, z, z + 8, 'slab')  # roof
+    for pz in (z, z + 7.9): box(bus, x + 2.5, x + 2.6, g, g + 2.5, pz, pz + 0.1, 'rail')
+    box(bus, x + 0.1, x + 0.5, g, g + 0.45, z + 1, z + 7, 'furn')  # bench
+    box(bus, x + 3.2, x + 3.28, g, g + 3.0, z - 1, z - 0.92, 'rail')  # sign pole
+    box(bus, x + 3.0, x + 3.5, g + 2.3, g + 3.0, z - 1.02, z - 0.9, 'sign')
+    box(kiosk, x - 0.1, x + 1.9, g, g + 2.5, z - 7, z - 5, 'front')
+    box(kiosk, x - 0.3, x + 2.1, g + 2.5, g + 2.7, z - 7.2, z - 4.8, 'slab')
+
+    def row(along, at, a, b, gaps=()):  # a tree every 5 m, except where a path meets the road
+        return [(at, p) if along == 'z' else (p, at) for p in range(a, b + 1, 5) if not any(s < p < e for s, e in gaps)]
+    path_gaps = [(z + SC - 3, z + SC + 3) for z in ROWS]
+    lane_gaps = [(lane(x)[0] - 1.8, lane(x)[1] + 1.8) for x in COLS[1:]]
+    trees = (row('z', WEST_ROAD[0] - 2.5, FENCE_Z0 + 4, FENCE_Z1 - 4)
+             + row('z', WEST_ROAD[1] + 2.5, FENCE_Z0 + 4, FENCE_Z1 - 4, path_gaps + [(CROSS_ROAD[0] - 4, CROSS_ROAD[1] + 4)])
+             + row('x', CROSS_ROAD[0] - 1.5, WEST_ROAD[1] + 5, FENCE_X1 - 4, lane_gaps)
+             + row('x', CROSS_ROAD[1] + 1.5, WEST_ROAD[1] + 5, FENCE_X1 - 4, lane_gaps))
+    parts = dict(ground=ground, roads=roads, paths=paths, fence=fence, sidewalk=sidewalk, bus_stop=bus, kiosk=kiosk)
+    return scene([(eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"'}) for eid, boxes in parts.items()], 'FixedObject3D', 'Site'), trees
+
+
+# Boxes for the prototype's poplar: a trunk 5 m tall, and a cone 13 m tall and 1.7 m in radius.
+def poplar():
+    boxes = []
+    box(boxes, -0.15, 0.15, GROUND, GROUND + 5, -0.15, 0.15, 'trunk')
+    box(boxes, -1.2, 1.2, GROUND + 4, GROUND + 17, -1.2, 1.2, 'crown')
+    return scene([('Poplar', (0, 0, 0), boxes, {'EntityId': '"poplar"'})], 'FixedObject3D')
+
+
+# A building of the compound: the shared scenes of its floors, its stair and its roof, with ids of its own. Ours has
+# Xiaoman's flat on the second floor, with its front door open.
+def building(col, row):
+    home = (col, row) == (0, 0)
+    bid, tag = ('home', '') if home else (f'building_{col}_{row}', f'_{col}_{row}')
+
+    def ids(node, eid):
+        return node, ([('EntityId', f'"{eid}"')] if eid != node else []) + ([] if home else [('BuildingId', f'"{bid}"')])
+    entries = [('Flat', 'flat.tscn', (0, 0, 0), []), ('Floor1North', 'floor1_north.tscn', (0, 0, 0), [])] if home else []
     for f in range(FLOORS):
-        north = half_rest() if f == HOME else flat(False) + half_rest()
-        files[f'floor{f}_north.tscn'] = scene([element(f'Floor{f}North', lift(north, f * S))])
-        files[f'floor{f}_south.tscn'] = scene([element(f'Floor{f}South', lift(mirror(flat(False) + half_rest(), LEN), f * S))])
-    files['stair.tscn'] = scene([element(f'Floor{f}Stair', lift(stair(f), f * S)) for f in range(FLOORS)])
-    files['roof.tscn'] = scene([element('Roof', roof())])
-    # Temporary: a patch of ground around the building until the compound is built.
-    files['ground.tscn'] = scene([element('Ground', [(-8, 16, GROUND - 0.2, GROUND, -6, LEN + 6, 'ground')])])
-    files['furniture.tscn'] = furniture_scene()
-    files['props.tscn'] = props()
+        for half in ('North', 'South'):
+            if not (home and f == HOME and half == 'North'):
+                entries.append((f'Floor{f}{half}', f'{half.lower()}.tscn', (0, f * S, 0), [ids(half, f'Floor{f}{half}{tag}')]))
+    entries.append(('Stair', 'stair.tscn', (0, 0, 0), [ids(f'Floor{f}Stair', f'Floor{f}Stair{tag}') for f in range(FLOORS)]))
+    entries.append(('Roof', 'roof.tscn', (0, 0, 0), [ids('Roof', f'Roof{tag}')]))
+    return packed('Building', entries, 'Building3D', [('BuildingId', f'"{bid}"'), ('WMin', '-0.5'), ('WMax', '0.5')])
+
+
+def main():
+    files = {
+        'flat.tscn': scene([element('Flat', lift(flat(True), HOME * S))]),
+        'floor1_north.tscn': scene([element('Floor1North', lift(half_rest(), HOME * S))]),
+        'north.tscn': scene([element('North', flat(False) + half_rest())]),
+        'south.tscn': scene([element('South', mirror(flat(False) + half_rest(), LEN))]),
+        'stair.tscn': scene([element(f'Floor{f}Stair', lift(stair(f), f * S)) for f in range(FLOORS)]),
+        'roof.tscn': scene([element('Roof', roof())]),
+        'furniture.tscn': furniture_scene(),
+        'poplar.tscn': poplar(),
+        'slopes.tscn': stair_slopes(),
+    }
+    files['site.tscn'], trees = site()
+    files['poplars.tscn'] = packed('Poplars', [(f'Poplar{i}', 'poplar.tscn', (x, 0, z), [('Poplar', [('EntityId', f'"poplar_{i}"')])])
+                                               for i, (x, z) in enumerate(trees, 1)])
+    grid = [(col, row, COLS[col], ROWS[row]) for col in range(len(COLS)) for row in range(len(ROWS))]
+    for col, row, _, _ in grid: files[f'buildings/building_{col}_{row}.tscn'] = building(col, row)
+    names = {(col, row): 'Home' if (col, row) == (0, 0) else f'Building_{col}_{row}' for col, row, _, _ in grid}
+    files['buildings.tscn'] = packed('Buildings', [(names[c, r], f'buildings/building_{c}_{r}.tscn', (x, 0, z), [])
+                                                   for c, r, x, z in grid])
+    subs, nodes = bodies([slope('SidewalkNorth', 'z', CROSS_ROAD[0], GROUND + CURB, CROSS_ROAD[0] + 0.6, GROUND, *SIDEWALK),
+                          slope('SidewalkSouth', 'z', CROSS_ROAD[1] - 0.6, GROUND, CROSS_ROAD[1], GROUND + CURB, *SIDEWALK)])
+    files['props.tscn'] = packed('Props', [(names[c, r], 'slopes.tscn', (x, 0, z), []) for c, r, x, z in grid],
+                                 subs=subs, nodes=nodes)
     here = Path(__file__).parent
-    for name, text in files.items(): (here / name).write_text(text, encoding='utf-8', newline='\n')
+    (here / 'buildings').mkdir(exist_ok=True)
+    for path, text in files.items(): (here / path).write_text(text, encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':

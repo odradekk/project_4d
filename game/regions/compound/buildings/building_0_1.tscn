@@ -1,0 +1,73 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://adapter/Building3D.cs" id="e0"]
+[ext_resource type="PackedScene" path="res://regions/compound/north.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/compound/south.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/compound/stair.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/compound/roof.tscn" id="e4"]
+
+[node name="Building" type="Node3D"]
+script = ExtResource("e0")
+BuildingId = "building_0_1"
+WMin = -0.5
+WMax = 0.5
+
+[node name="Floor0North" parent="." instance=ExtResource("e1")]
+
+[node name="North" parent="Floor0North"]
+EntityId = "Floor0North_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor0South" parent="." instance=ExtResource("e2")]
+
+[node name="South" parent="Floor0South"]
+EntityId = "Floor0South_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor1North" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 3.2, 0)
+
+[node name="North" parent="Floor1North"]
+EntityId = "Floor1North_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor1South" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 3.2, 0)
+
+[node name="South" parent="Floor1South"]
+EntityId = "Floor1South_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor2North" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 6.4, 0)
+
+[node name="North" parent="Floor2North"]
+EntityId = "Floor2North_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor2South" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 6.4, 0)
+
+[node name="South" parent="Floor2South"]
+EntityId = "Floor2South_0_1"
+BuildingId = "building_0_1"
+
+[node name="Stair" parent="." instance=ExtResource("e3")]
+
+[node name="Floor0Stair" parent="Stair"]
+EntityId = "Floor0Stair_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor1Stair" parent="Stair"]
+EntityId = "Floor1Stair_0_1"
+BuildingId = "building_0_1"
+
+[node name="Floor2Stair" parent="Stair"]
+EntityId = "Floor2Stair_0_1"
+BuildingId = "building_0_1"
+
+[node name="Roof" parent="." instance=ExtResource("e4")]
+
+[node name="Roof" parent="Roof"]
+EntityId = "Roof_0_1"
+BuildingId = "building_0_1"

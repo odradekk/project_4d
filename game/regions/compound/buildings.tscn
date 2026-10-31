@@ -1,0 +1,67 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_0_0.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_0_1.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_0_2.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_0_3.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_1_0.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_1_1.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_1_2.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_1_3.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_2_0.tscn" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_2_1.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_2_2.tscn" id="e11"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_2_3.tscn" id="e12"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_3_0.tscn" id="e13"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_3_1.tscn" id="e14"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_3_2.tscn" id="e15"]
+[ext_resource type="PackedScene" path="res://regions/compound/buildings/building_3_3.tscn" id="e16"]
+
+[node name="Buildings" type="Node3D"]
+
+[node name="Home" parent="." instance=ExtResource("e1")]
+
+[node name="Building_0_1" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 0, 45)
+
+[node name="Building_0_2" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 0, 105)
+
+[node name="Building_0_3" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 0, 150)
+
+[node name="Building_1_0" parent="." instance=ExtResource("e5")]
+position = Vector3(21, 0, 0)
+
+[node name="Building_1_1" parent="." instance=ExtResource("e6")]
+position = Vector3(21, 0, 45)
+
+[node name="Building_1_2" parent="." instance=ExtResource("e7")]
+position = Vector3(21, 0, 105)
+
+[node name="Building_1_3" parent="." instance=ExtResource("e8")]
+position = Vector3(21, 0, 150)
+
+[node name="Building_2_0" parent="." instance=ExtResource("e9")]
+position = Vector3(42, 0, 0)
+
+[node name="Building_2_1" parent="." instance=ExtResource("e10")]
+position = Vector3(42, 0, 45)
+
+[node name="Building_2_2" parent="." instance=ExtResource("e11")]
+position = Vector3(42, 0, 105)
+
+[node name="Building_2_3" parent="." instance=ExtResource("e12")]
+position = Vector3(42, 0, 150)
+
+[node name="Building_3_0" parent="." instance=ExtResource("e13")]
+position = Vector3(63, 0, 0)
+
+[node name="Building_3_1" parent="." instance=ExtResource("e14")]
+position = Vector3(63, 0, 45)
+
+[node name="Building_3_2" parent="." instance=ExtResource("e15")]
+position = Vector3(63, 0, 105)
+
+[node name="Building_3_3" parent="." instance=ExtResource("e16")]
+position = Vector3(63, 0, 150)

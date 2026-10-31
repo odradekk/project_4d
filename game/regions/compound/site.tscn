@@ -1,0 +1,412 @@
+[gd_scene load_steps=40 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.655, 0.678, 0.624, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.612, 0.608, 0.588, 1)
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.247, 0.373, 0.282, 0.35)
+transparency = 1
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.247, 0.373, 0.282, 1)
+
+[sub_resource type="StandardMaterial3D" id="m5"]
+albedo_color = Color(0.94, 0.937, 0.918, 1)
+
+[sub_resource type="StandardMaterial3D" id="m6"]
+albedo_color = Color(0.722, 0.706, 0.671, 1)
+
+[sub_resource type="StandardMaterial3D" id="m7"]
+albedo_color = Color(0.851, 0.843, 0.82, 1)
+
+[sub_resource type="StandardMaterial3D" id="m8"]
+albedo_color = Color(0.478, 0.502, 0.533, 1)
+
+[sub_resource type="StandardMaterial3D" id="m9"]
+albedo_color = Color(0.561, 0.639, 0.722, 1)
+
+[sub_resource type="StandardMaterial3D" id="m10"]
+albedo_color = Color(0.435, 0.659, 0.878, 1)
+
+[sub_resource type="StandardMaterial3D" id="m11"]
+albedo_color = Color(0.541, 0.231, 0.18, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(160, 0.2, 280)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(7, 0.024, 205)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m2")
+size = Vector3(102, 0.024, 7)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m2")
+size = Vector3(9.28, 0.024, 3)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m2")
+size = Vector3(2, 0.024, 3)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m2")
+size = Vector3(3, 0.024, 90)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m2")
+size = Vector3(3, 0.024, 90.05)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m3")
+size = Vector3(102, 1.74, 0.06)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m4")
+size = Vector3(102, 0.06, 0.06)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m3")
+size = Vector3(0.06, 1.74, 209)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m4")
+size = Vector3(0.06, 0.06, 209)
+
+[sub_resource type="BoxMesh" id="b12"]
+material = SubResource("m3")
+size = Vector3(0.06, 1.74, 101.4)
+
+[sub_resource type="BoxMesh" id="b13"]
+material = SubResource("m4")
+size = Vector3(0.06, 0.06, 101.4)
+
+[sub_resource type="BoxMesh" id="b14"]
+material = SubResource("m3")
+size = Vector3(0.06, 1.74, 99.4)
+
+[sub_resource type="BoxMesh" id="b15"]
+material = SubResource("m4")
+size = Vector3(0.06, 0.06, 99.4)
+
+[sub_resource type="BoxMesh" id="b16"]
+material = SubResource("m5")
+size = Vector3(0.6, 2.6, 0.6)
+
+[sub_resource type="BoxMesh" id="b17"]
+material = SubResource("m6")
+size = Vector3(6, 0.1, 33)
+
+[sub_resource type="BoxMesh" id="b18"]
+material = SubResource("m6")
+size = Vector3(6, 0.1, 8)
+
+[sub_resource type="BoxMesh" id="b19"]
+material = SubResource("m5")
+size = Vector3(0.1, 2.5, 8)
+
+[sub_resource type="BoxMesh" id="b20"]
+material = SubResource("m7")
+size = Vector3(2.6, 0.15, 8)
+
+[sub_resource type="BoxMesh" id="b21"]
+material = SubResource("m8")
+size = Vector3(0.1, 2.5, 0.1)
+
+[sub_resource type="BoxMesh" id="b22"]
+material = SubResource("m9")
+size = Vector3(0.4, 0.45, 6)
+
+[sub_resource type="BoxMesh" id="b23"]
+material = SubResource("m8")
+size = Vector3(0.08, 3, 0.08)
+
+[sub_resource type="BoxMesh" id="b24"]
+material = SubResource("m10")
+size = Vector3(0.5, 0.7, 0.12)
+
+[sub_resource type="BoxMesh" id="b25"]
+material = SubResource("m11")
+size = Vector3(2, 2.5, 2)
+
+[sub_resource type="BoxMesh" id="b26"]
+material = SubResource("m7")
+size = Vector3(2.4, 0.2, 2.4)
+
+[node name="Site" type="Node3D"]
+
+[node name="ground" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "ground"
+
+[node name="p1" parent="ground" instance=ExtResource("e2")]
+position = Vector3(40, -0.3, 100)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="roads" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "roads"
+
+[node name="p1" parent="roads" instance=ExtResource("e2")]
+position = Vector3(-14.5, -0.208, 92.5)
+mesh = SubResource("b2")
+PartId = "p1"
+
+[node name="p2" parent="roads" instance=ExtResource("e2")]
+position = Vector3(40, -0.208, 93.5)
+mesh = SubResource("b3")
+PartId = "p2"
+
+[node name="paths" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "paths"
+
+[node name="p1" parent="paths" instance=ExtResource("e2")]
+position = Vector3(-6.36, -0.208, 18.525)
+mesh = SubResource("b4")
+PartId = "p1"
+
+[node name="p2" parent="paths" instance=ExtResource("e2")]
+position = Vector3(-6.36, -0.208, 63.525)
+mesh = SubResource("b4")
+PartId = "p2"
+
+[node name="p3" parent="paths" instance=ExtResource("e2")]
+position = Vector3(-6.36, -0.208, 123.525)
+mesh = SubResource("b4")
+PartId = "p3"
+
+[node name="p4" parent="paths" instance=ExtResource("e2")]
+position = Vector3(-6.36, -0.208, 168.525)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="paths" instance=ExtResource("e2")]
+position = Vector3(18.28, -0.208, 18.525)
+mesh = SubResource("b5")
+PartId = "p5"
+
+[node name="p6" parent="paths" instance=ExtResource("e2")]
+position = Vector3(18.28, -0.208, 63.525)
+mesh = SubResource("b5")
+PartId = "p6"
+
+[node name="p7" parent="paths" instance=ExtResource("e2")]
+position = Vector3(18.28, -0.208, 123.525)
+mesh = SubResource("b5")
+PartId = "p7"
+
+[node name="p8" parent="paths" instance=ExtResource("e2")]
+position = Vector3(18.28, -0.208, 168.525)
+mesh = SubResource("b5")
+PartId = "p8"
+
+[node name="p9" parent="paths" instance=ExtResource("e2")]
+position = Vector3(39.28, -0.208, 18.525)
+mesh = SubResource("b5")
+PartId = "p9"
+
+[node name="p10" parent="paths" instance=ExtResource("e2")]
+position = Vector3(39.28, -0.208, 63.525)
+mesh = SubResource("b5")
+PartId = "p10"
+
+[node name="p11" parent="paths" instance=ExtResource("e2")]
+position = Vector3(39.28, -0.208, 123.525)
+mesh = SubResource("b5")
+PartId = "p11"
+
+[node name="p12" parent="paths" instance=ExtResource("e2")]
+position = Vector3(39.28, -0.208, 168.525)
+mesh = SubResource("b5")
+PartId = "p12"
+
+[node name="p13" parent="paths" instance=ExtResource("e2")]
+position = Vector3(60.28, -0.208, 18.525)
+mesh = SubResource("b5")
+PartId = "p13"
+
+[node name="p14" parent="paths" instance=ExtResource("e2")]
+position = Vector3(60.28, -0.208, 63.525)
+mesh = SubResource("b5")
+PartId = "p14"
+
+[node name="p15" parent="paths" instance=ExtResource("e2")]
+position = Vector3(60.28, -0.208, 123.525)
+mesh = SubResource("b5")
+PartId = "p15"
+
+[node name="p16" parent="paths" instance=ExtResource("e2")]
+position = Vector3(60.28, -0.208, 168.525)
+mesh = SubResource("b5")
+PartId = "p16"
+
+[node name="p17" parent="paths" instance=ExtResource("e2")]
+position = Vector3(15.78, -0.208, 45)
+mesh = SubResource("b6")
+PartId = "p17"
+
+[node name="p18" parent="paths" instance=ExtResource("e2")]
+position = Vector3(15.78, -0.208, 142.025)
+mesh = SubResource("b7")
+PartId = "p18"
+
+[node name="p19" parent="paths" instance=ExtResource("e2")]
+position = Vector3(36.78, -0.208, 45)
+mesh = SubResource("b6")
+PartId = "p19"
+
+[node name="p20" parent="paths" instance=ExtResource("e2")]
+position = Vector3(36.78, -0.208, 142.025)
+mesh = SubResource("b7")
+PartId = "p20"
+
+[node name="p21" parent="paths" instance=ExtResource("e2")]
+position = Vector3(57.78, -0.208, 45)
+mesh = SubResource("b6")
+PartId = "p21"
+
+[node name="p22" parent="paths" instance=ExtResource("e2")]
+position = Vector3(57.78, -0.208, 142.025)
+mesh = SubResource("b7")
+PartId = "p22"
+
+[node name="fence" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "fence"
+
+[node name="p1" parent="fence" instance=ExtResource("e2")]
+position = Vector3(27, 0.67, -12)
+mesh = SubResource("b8")
+PartId = "p1"
+
+[node name="p2" parent="fence" instance=ExtResource("e2")]
+position = Vector3(27, 1.57, -12)
+mesh = SubResource("b9")
+PartId = "p2"
+
+[node name="p3" parent="fence" instance=ExtResource("e2")]
+position = Vector3(27, 0.67, 197)
+mesh = SubResource("b8")
+PartId = "p3"
+
+[node name="p4" parent="fence" instance=ExtResource("e2")]
+position = Vector3(27, 1.57, 197)
+mesh = SubResource("b9")
+PartId = "p4"
+
+[node name="p5" parent="fence" instance=ExtResource("e2")]
+position = Vector3(-24, 0.67, 92.5)
+mesh = SubResource("b10")
+PartId = "p5"
+
+[node name="p6" parent="fence" instance=ExtResource("e2")]
+position = Vector3(-24, 1.57, 92.5)
+mesh = SubResource("b11")
+PartId = "p6"
+
+[node name="p7" parent="fence" instance=ExtResource("e2")]
+position = Vector3(78, 0.67, 38.7)
+mesh = SubResource("b12")
+PartId = "p7"
+
+[node name="p8" parent="fence" instance=ExtResource("e2")]
+position = Vector3(78, 1.57, 38.7)
+mesh = SubResource("b13")
+PartId = "p8"
+
+[node name="p9" parent="fence" instance=ExtResource("e2")]
+position = Vector3(78, 0.67, 147.3)
+mesh = SubResource("b14")
+PartId = "p9"
+
+[node name="p10" parent="fence" instance=ExtResource("e2")]
+position = Vector3(78, 1.57, 147.3)
+mesh = SubResource("b15")
+PartId = "p10"
+
+[node name="p11" parent="fence" instance=ExtResource("e2")]
+position = Vector3(78, 1.1, 89.7)
+mesh = SubResource("b16")
+PartId = "p11"
+
+[node name="p12" parent="fence" instance=ExtResource("e2")]
+position = Vector3(78, 1.1, 97.3)
+mesh = SubResource("b16")
+PartId = "p12"
+
+[node name="sidewalk" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "sidewalk"
+
+[node name="p1" parent="sidewalk" instance=ExtResource("e2")]
+position = Vector3(81, -0.15, 73.5)
+mesh = SubResource("b17")
+PartId = "p1"
+
+[node name="p2" parent="sidewalk" instance=ExtResource("e2")]
+position = Vector3(81, -0.15, 101)
+mesh = SubResource("b18")
+PartId = "p2"
+
+[node name="bus_stop" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "bus_stop"
+
+[node name="p1" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(80.55, 1.05, 71)
+mesh = SubResource("b19")
+PartId = "p1"
+
+[node name="p2" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(81.8, 2.375, 71)
+mesh = SubResource("b20")
+PartId = "p2"
+
+[node name="p3" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(83.05, 1.05, 67.05)
+mesh = SubResource("b21")
+PartId = "p3"
+
+[node name="p4" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(83.05, 1.05, 74.95)
+mesh = SubResource("b21")
+PartId = "p4"
+
+[node name="p5" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(80.8, 0.025, 71)
+mesh = SubResource("b22")
+PartId = "p5"
+
+[node name="p6" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(83.74, 1.3, 66.04)
+mesh = SubResource("b23")
+PartId = "p6"
+
+[node name="p7" parent="bus_stop" instance=ExtResource("e2")]
+position = Vector3(83.75, 2.45, 66.04)
+mesh = SubResource("b24")
+PartId = "p7"
+
+[node name="kiosk" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "kiosk"
+
+[node name="p1" parent="kiosk" instance=ExtResource("e2")]
+position = Vector3(81.4, 1.05, 61)
+mesh = SubResource("b25")
+PartId = "p1"
+
+[node name="p2" parent="kiosk" instance=ExtResource("e2")]
+position = Vector3(81.4, 2.4, 61)
+mesh = SubResource("b26")
+PartId = "p2"
