@@ -24,11 +24,13 @@ public partial class HomeEvening : Node
     // off there facing south to the gate.
     private static readonly Vector3 Stop = new(83.4f, -.08f, 69.7f);
     // The cat sits at the mouth of the ground-floor stair hall, facing out to the west, and follows her once she comes
-    // within CatReach of it on its floor.
+    // within CatReach of it on its floor; put down on the way home, it follows again in the same way.
     private static readonly Vector3 CatWaits = new(-1f, .02f, 18.5f), Outside = new(-5f, 0, 18.5f);
     private const float CatReach = 3;
     // The front door swings shut behind her once she and the cat are in and this far from its hinge.
     private const float SwingClear = 1.4f;
+    // Off the bus she watches it shut its doors and pull away this long before she can move.
+    private const double PullAwaySeconds = 3;
     // On the floor between the tea table and the television.
     private static readonly Vector3 Dinner = new(5.4f, HomeScene.Floor, 2.75f);
     // The cat stops this close to its spot, since she may be standing on it.
@@ -115,11 +117,11 @@ public partial class HomeEvening : Node
     {
         var feet = home.Player.Position;
         var at = catBody.Position;
-        if (!catCalled && Flat(feet - at) < CatReach && Mathf.Abs(feet.Y - at.Y) < 1)
+        if (!Indoors && !cat.Held && !catBody.Busy && Flat(feet - at) < CatReach && Mathf.Abs(feet.Y - at.Y) < 1)
         {
-            catCalled = true;
             FollowPlayer();
-            home.Hud.Say("小满", "爸不让养猫，你可别出声啊。", 3.5);
+            if (!catCalled) home.Hud.Say("小满", "爸不让养猫，你可别出声啊。", 3.5);
+            catCalled = true;
         }
         if (!Indoors && HomeRoute.InFlat(feet) && HomeRoute.InFlat(at) && Flat(feet - frontDoor.Position) > SwingClear && Flat(at - frontDoor.Position) > SwingClear)
         {
@@ -136,15 +138,24 @@ public partial class HomeEvening : Node
             home.Hud.ShowNotice("棱镜在书包里，作业还没写呢。", 1.5);
     }
 
-    // Off the bus onto the sidewalk where she stands, facing the gate; the bus shuts its doors and drives off.
+    // Off the bus onto the sidewalk where she stands, facing the gate; she only watches while the bus shuts its doors and
+    // pulls away.
     private void GetOff()
     {
         var player = home.Player;
         bus.Unseat();
         player.Seated = false;
+        player.Watching = true;
         player.Rotation = new(0, Mathf.Pi, 0);
-        SetProcessUnhandledInput(true);
         bus.Depart();
+        // A tween, not a timer, so that it goes with the scene if the scene is started again meanwhile.
+        var pullAway = CreateTween();
+        pullAway.TweenInterval(PullAwaySeconds);
+        pullAway.TweenCallback(Callable.From(() =>
+        {
+            player.Watching = false;
+            SetProcessUnhandledInput(true);
+        }));
     }
 
     private static float Flat(Vector3 offset) => new Vector2(offset.X, offset.Z).Length();

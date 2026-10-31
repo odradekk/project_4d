@@ -18,7 +18,8 @@ public partial class HomeFlowChecks
     private static readonly Vector3 CatWaits = new(-1f, .02f, 18.5f);
 
     // She rides in seated, only watching; once the bus stands with its doors open, E on the door gets her off onto the
-    // sidewalk in front of the stop, and the bus shuts its doors and drives off out of sight.
+    // sidewalk in front of the stop, where she only watches while the bus shuts its doors and pulls away, and it drives off
+    // out of sight.
     private async Task CheckRideHome()
     {
         var bus = scene.GetNode<Region3D>("Region").Props("Ⅰ")!.GetNode<Bus3D>("Bus");
@@ -43,10 +44,18 @@ public partial class HomeFlowChecks
         Check(player.Hud.HintText == "E  下车", "her view stays on the door");
         Press(Key.E);
         await Frames(2);
-        Check(bus.State == Bus3D.BusState.Closing && !player.Watching, $"E on the door gets her off and the doors close; the bus is {bus.State}");
+        Check(bus.State == Bus3D.BusState.Closing && player.Watching, $"E on the door gets her off, and she watches the doors close; the bus is {bus.State}");
         Check(eyes.GlobalPosition.X is > 78 and < 84 && Flat(eyes.GlobalPosition - new Vector3(83.4f, 0, 69.7f)).Length() < .1f,
             $"she stands on the sidewalk in front of the stop; her view is at {eyes.GlobalPosition}");
         Check(Mathf.Abs(eyes.Rotation.X) < .01f, "she looks ahead, not where the seat looked");
+        var off = player.Position;
+        Input.ActionPress("move_forward");
+        await Frames(150);
+        Check(player.Position.IsEqualApprox(off) && player.Watching, $"while the bus pulls away she cannot move; she is at {player.Position}");
+        await Until(() => !player.Watching, 1, "she must be free to go once the bus has pulled away");
+        await Frames(20);
+        Input.ActionRelease("move_forward");
+        Check(Flat(player.Position - off).Length() > .3f, $"then she walks; she is at {player.Position}");
         Input.ParseInputEvent(new InputEventMouseMotion { Relative = new(0, 4), ScreenRelative = new(0, 4) });
         await Frames(2);
         Check(Mathf.Abs(eyes.Rotation.X) < .05f, $"the mouse turns her view on from ahead, not from where it turned on the seat; she looks {eyes.Rotation.X} rad down");
@@ -58,8 +67,9 @@ public partial class HomeFlowChecks
     }
 
     // Home through the gate and the compound to the stair hall, where the cat sits and does not stir while she is 3.5 m off;
-    // within 3 m it gets up and she whispers to it. It follows her up both flights and along the corridor; the front door
-    // opens for her, and once she and the cat are in, it shuts and stays locked. The cat is in within 60 s of getting up.
+    // within 3 m it gets up and she whispers to it. It follows her up the first flight; she carries it to the turn and puts
+    // it down there, and it follows her again up the second flight and along the corridor; the front door opens for her,
+    // and once she and the cat are in, it shuts and stays locked. The cat is in within 60 s of getting up.
     private async Task CheckCatUpstairs(HomeEvening evening)
     {
         var cat = evening.CatBody;
@@ -77,7 +87,13 @@ public partial class HomeFlowChecks
         await Frames(30);
         Check(cat.Busy && cat.Posture == Posture.Standing, "the cat gets up and follows her");
         Check(!evening.Indoors && !Door("FrontDoor").Locked(), "the front door is not locked while she is out");
-        await Walk((-1.5f, 17.5f), (.5f, 17.5f), (6.9f, 17.5f), (6.9f, 19.55f), (.8f, 19.55f), (-.9f, 18.5f), (-.9f, 8.2f), (.75f, 8.2f));
+        await Walk((-1.5f, 17.5f), (.5f, 17.5f), (6.9f, 17.5f));
+        cat.GetNode<Interactable3D>("Pickup").Interact();
+        await Walk((6.9f, 19.55f));
+        player.PutDown?.Invoke();
+        await Frames(30);
+        Check(!cat.GetNode<Cat>("Cat").Held && cat.Position.Y is > 1.4f and < 1.8f, $"she puts the cat down at the turn; it is at {cat.Position}");
+        await Walk((.8f, 19.55f), (-.9f, 18.5f), (-.9f, 8.2f), (.75f, 8.2f));
         hud.ClearText();
         await Use(FrontDoor);
         Check(Door("FrontDoor").State == Door3D.DoorState.Open && hud.SubtitleText == "", "the front door opens for her as she comes home");

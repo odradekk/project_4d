@@ -120,7 +120,7 @@ public partial class PrologueChecks
         Check(Player.Watching && bus.State == Bus3D.BusState.Arriving, "she is on the bus again");
         await Until(() => bus.State == Bus3D.BusState.Waiting, 60, "the bus must stop and open its doors");
         bus.GetChildren().OfType<Interactable3D>().First().Interact();
-        Check(!Player.Watching && bus.State == Bus3D.BusState.Closing, "she gets off and the bus shuts its doors");
+        Check(Player.Watching && bus.State == Bus3D.BusState.Closing, "she gets off and watches the bus shut its doors");
         Player.Position = new(-2f, .02f, 18.5f);
         await Says("爸不让养猫");
         Prop("HomeDoors/FrontDoor/Leaf").Interact();
