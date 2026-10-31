@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://regions/compound/slopes.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/compound/home_doors.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/compound/doors.tscn" id="e3"]
 
 [sub_resource type="BoxShape3D" id="s1"]
 size = Vector3(6, 0.1, 0.608276)
@@ -52,6 +54,53 @@ position = Vector3(63, 0, 45)
 position = Vector3(63, 0, 105)
 
 [node name="Building_3_3" parent="." instance=ExtResource("e1")]
+position = Vector3(63, 0, 150)
+
+[node name="HomeDoors" parent="." instance=ExtResource("e2")]
+
+[node name="Building_0_1Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 0, 45)
+
+[node name="Building_0_2Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 0, 105)
+
+[node name="Building_0_3Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 0, 150)
+
+[node name="Building_1_0Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(21, 0, 0)
+
+[node name="Building_1_1Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(21, 0, 45)
+
+[node name="Building_1_2Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(21, 0, 105)
+
+[node name="Building_1_3Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(21, 0, 150)
+
+[node name="Building_2_0Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(42, 0, 0)
+
+[node name="Building_2_1Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(42, 0, 45)
+
+[node name="Building_2_2Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(42, 0, 105)
+
+[node name="Building_2_3Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(42, 0, 150)
+
+[node name="Building_3_0Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(63, 0, 0)
+
+[node name="Building_3_1Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(63, 0, 45)
+
+[node name="Building_3_2Doors" parent="." instance=ExtResource("e3")]
+position = Vector3(63, 0, 105)
+
+[node name="Building_3_3Doors" parent="." instance=ExtResource("e3")]
 position = Vector3(63, 0, 150)
 
 [node name="SidewalkNorthSlope" type="StaticBody3D" parent="."]

@@ -1,0 +1,141 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://interaction/Door3D.cs" id="e1"]
+[ext_resource type="Script" path="res://interaction/Interactable3D.cs" id="e2"]
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(1, 2, 0.1)
+
+[node name="Doors" type="Node3D"]
+
+[node name="Floor0North1" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 1, 7.35)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor0North1"]
+shape = SubResource("s1")
+
+[node name="Floor0North2" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 1, 9.05)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor0North2"]
+shape = SubResource("s1")
+
+[node name="Floor0South1" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 1, 29.7)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor0South1"]
+shape = SubResource("s1")
+
+[node name="Floor0South2" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 1, 28)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor0South2"]
+shape = SubResource("s1")
+
+[node name="Floor1North1" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 4.2, 7.35)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor1North1"]
+shape = SubResource("s1")
+
+[node name="Floor1North2" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 4.2, 9.05)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor1North2"]
+shape = SubResource("s1")
+
+[node name="Floor1South1" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 4.2, 29.7)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor1South1"]
+shape = SubResource("s1")
+
+[node name="Floor1South2" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 4.2, 28)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor1South2"]
+shape = SubResource("s1")
+
+[node name="Floor2North1" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 7.4, 7.35)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2North1"]
+shape = SubResource("s1")
+
+[node name="Floor2North2" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 7.4, 9.05)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2North2"]
+shape = SubResource("s1")
+
+[node name="Floor2South1" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 7.4, 29.7)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2South1"]
+shape = SubResource("s1")
+
+[node name="Floor2South2" type="StaticBody3D" parent="."]
+position = Vector3(0.75, 7.4, 28)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e2")
+Prompt = "开门"
+Line = "爸爸说过不能随便敲别人家的门。"
+
+[node name="Shape" type="CollisionShape3D" parent="Floor2South2"]
+shape = SubResource("s1")

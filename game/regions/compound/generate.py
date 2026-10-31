@@ -5,9 +5,10 @@ east, z south and y up; walls are placed by their centrelines. The origin is whe
 kitchen's west wall, and y = 0 is the ground floor. Hand edits to the scenes are lost when this runs again.
 Decision note: 2026-10-29-home-scene-layout
 """
+import math
 from pathlib import Path
 
-from tscn import bodies, packed, scene, slope
+from tscn import bodies, box, doors, lift, mirror, packed, scene, slope
 
 H, SLAB = 3.0, 0.2  # room height and floor slab
 S = H + SLAB  # storey
@@ -35,11 +36,19 @@ FENCE_X0, FENCE_X1, FENCE_Z0, FENCE_Z1 = -24, 78, -12, 197  # the gate is in the
 MAIN_ROAD = 91  # x where the main road's motor lanes start, outside the gate
 SIDEWALK = (78, 84)  # x of the sidewalk outside the gate
 BUS_X, BUS_Z = 80.5, CROSS_ROAD[0] - 23  # the bus shelter's back corner; it is open toward the street
+WALK = (BUS_Z - 10, CROSS_ROAD[1] + 8)  # z of the stretch of sidewalk she may walk on, from north of the bus stop
 def lane(x): return (x - CW - 5, x - CW - 2)  # x of the path along the west side of the column of buildings at x
 
 
-def door(a, b, front=False): return dict(a=a, b=b, lo=0, hi=DOOR_H, front=front)
-def win(a, b, lo=0.9, hi=2.3): return dict(a=a, b=b, lo=lo, hi=hi, front=False)
+SHUT, OPEN, AJAR = 0, 1, 2  # a door's state at the start, as Door3D.DoorState
+NOT_OURS = '爸爸说过不能随便敲别人家的门。'  # what she says at another flat's front door
+GAP = 0.5  # the room beside an ajar leaf: her 0.4 m and 5 cm on each side
+
+
+# leaf: for Xiaoman's doors that open, (name, the end of the hole its hinge is at, 0 or 1, the side of the wall it opens to,
+# -1 or 1 on the other axis, and its state at the start)
+def door(a, b, front=False, leaf=None): return dict(a=a, b=b, lo=0, hi=DOOR_H, front=front, leaf=leaf)
+def win(a, b, lo=0.9, hi=2.3): return dict(a=a, b=b, lo=lo, hi=hi, front=False, leaf=None)
 def balcony_win(a, b): return win(a, b, 1.0, 2.6)  # over a parapet
 def wall(along, at, span, t, holes=(), h=H): return dict(along=along, at=at, span=span, t=t, holes=holes, h=h)
 
@@ -48,17 +57,17 @@ def wall(along, at, span, t, holes=(), h=H): return dict(along=along, at=at, spa
 walls = [
     wall('x', 0, (0, E), EXT),
     wall('z', 0, (0, D), EXT, [win(0.9, 2.5)]),
-    wall('x', D, (0, E), EXT, [door(0.25, 1.25, front=True)]),
-    wall('z', E, (0, D), EXT, [win(0.3, 2.7), door(3.0, 3.85), win(5.1, 6.9)]),
+    wall('x', D, (0, E), EXT, [door(0.25, 1.25, True, ('FrontDoor', 0, -1, SHUT))]),
+    wall('z', E, (0, D), EXT, [win(0.3, 2.7), door(3.0, 3.85, leaf=('BalconyDoor', 1, 1, OPEN)), win(5.1, 6.9)]),
     wall('x', 0, (E, B), EXT, [balcony_win(E + 0.15, B - 0.15)]),
     wall('z', B, (0, 4.0), EXT, [balcony_win(0.15, 3.85)]),
     wall('x', 4.0, (E, B), EXT, [balcony_win(E + 0.15, B - 0.15)]),
     wall('z', 1.8, (0, 4.0), INT),
-    wall('x', 4.0, (0, 1.8), INT, [door(0.6, 1.4)]),
-    wall('x', 4.0, (1.8, E), INT, [door(2.15, 3.05)]),
-    wall('z', 3.25, (4.0, D), INT, [door(4.15, 5.05)]),
+    wall('x', 4.0, (0, 1.8), INT, [door(0.6, 1.4, leaf=('KitchenDoor', 0, -1, OPEN))]),
+    wall('x', 4.0, (1.8, E), INT, [door(2.15, 3.05, leaf=('LivingRoomDoor', 0, -1, AJAR))]),
+    wall('z', 3.25, (4.0, D), INT, [door(4.15, 5.05, leaf=('RoomDoor', 0, 1, OPEN))]),
     wall('z', 1.8, (5.5, D), INT),
-    wall('x', 5.5, (1.8, 3.25), INT, [door(2.2, 2.9)]),
+    wall('x', 5.5, (1.8, 3.25), INT, [door(2.2, 2.9, leaf=('BathroomDoor', 0, 1, OPEN))]),
 ]
 vestibule = [wall('z', 0, (D, D + V), EXT, [door(D + 0.4, D + 1.3)]), wall('z', 1.8, (D, D + V), EXT)]
 hall_west = wall('z', -CW, (zB, zS), EXT, [win(zB + 1.4, zS - 1.4)], S)
@@ -76,15 +85,6 @@ furniture = [  # id, x, z, height
     ('wardrobe', (3.31, 3.91), (5.6, 7.1), 2.0), ('basin', (2.71, 3.19), (6.0, 6.5), 0.8),
     ('squat_toilet', (1.95, 2.45), (6.6, 7.1), 0.05),
 ]
-# A box is (x0, x1, y0, y1, z0, z1, material).
-def box(boxes, x0, x1, y0, y1, z0, z1, m):
-    if x1 - x0 > 1e-3 and y1 - y0 > 1e-3 and z1 - z0 > 1e-3: boxes.append((x0, x1, y0, y1, z0, z1, m))
-
-
-def mirror(boxes, about): return [(x0, x1, y0, y1, about - z1, about - z0, m) for x0, x1, y0, y1, z0, z1, m in boxes]
-def lift(boxes, dy): return [(x0, x1, y0 + dy, y1 + dy, z0, z1, m) for x0, x1, y0, y1, z0, z1, m in boxes]
-
-
 # front_open: the front door is a doorway, as Xiaoman's is, instead of a shut leaf
 def wall_boxes(boxes, w, front_open=False):
     e = w['t'] / 2
@@ -175,11 +175,44 @@ def stair_slopes():
     slopes = []
     for f in range(FLOORS - 1):
         y = f * S
-        slopes.append(slope(f'Floor{f}Up', 'x', SX - GO, y, SX + RUN, y + S / 2, zB + EXT / 2, SC - 0.06))
-        slopes.append(slope(f'Floor{f}Turn', 'x', SX + RUN + GO, y + S / 2, SX, y + S, SC + 0.06, zS - EXT / 2))
-    slopes.append(slope('Exit', 'x', -CW - 0.75, GROUND, -CW, 0, zB, zS))
+        slopes.append(slope(f'Floor{f}UpSlope', 'x', SX - GO, y, SX + RUN, y + S / 2, zB + EXT / 2, SC - 0.06))
+        slopes.append(slope(f'Floor{f}TurnSlope', 'x', SX + RUN + GO, y + S / 2, SX, y + S, SC + 0.06, zS - EXT / 2))
+    slopes.append(slope('ExitSlope', 'x', -CW - 0.75, GROUND, -CW, 0, zB, zS))
     subs, nodes = bodies(slopes)
     return packed('Slopes', [], subs=subs, nodes=nodes)
+
+
+# Xiaoman's doors that open, each turning into the room it leads to, or into the flat. A leaf is 1 cm short of the hole
+# at each side and of the floor and the lintel.
+def home_leaves():
+    leaves = []
+    for w in walls:
+        for hole in w['holes']:
+            if hole['leaf'] is None: continue
+            name, end, side, state = hole['leaf']
+            run = 1 if end == 0 else -1  # the way the shut leaf runs from its hinge
+            a, y = (hole['a'], hole['b'])[end] + 0.01 * run, HOME * S + 0.01
+            size = (round(hole['b'] - hole['a'] - 0.02, 6), DOOR_H - 0.02, 0.04)
+            # Ajar, the leaf's face is GAP from the far side of the hole: 1 cm of the hole's 2 cm spare is behind the hinge.
+            ajar = math.degrees(math.acos(1 - (GAP + 0.01) / size[0]))
+            # Door3D turns the leaf toward its local -z, which the yaw points to -z (along x) or to +x (along z) when run is 1.
+            along_x = w['along'] == 'x'
+            sign = side * run * (-1 if along_x else 1)
+            hinge, yaw = ((a, y, w['at']), 0 if run > 0 else math.pi) if along_x else ((w['at'], y, a), -math.pi / 2 * run)
+            leaves.append((name, hinge, yaw, size, 90 * sign, ajar * sign, state))
+    return leaves
+
+
+# The shut front doors of a building's flats, all but Xiaoman's in ours, where the walls of north.tscn and south.tscn have them.
+def shut_doors(home):
+    front = next(hole for w in walls for hole in w['holes'] if hole['front'])
+    x, width, shut = (front['a'] + front['b']) / 2, front['b'] - front['a'], []
+    for f in range(FLOORS):
+        for half, zs in (('North', (D, zB - D)), ('South', (LEN - D, LEN - zB + D))):
+            for i, z in enumerate(zs, 1):
+                if not (home and f == HOME and half == 'North' and i == 1):
+                    shut.append((f'Floor{f}{half}{i}', (x, f * S + DOOR_H / 2, z), (width, DOOR_H, 0.1)))
+    return shut
 
 
 def furniture_scene():
@@ -195,7 +228,7 @@ CURB = 0.1  # the sidewalk's height over the ground
 
 # Section I's ground, roads, paths, fence and gate, poplars, and the sidewalk outside the gate with the bus stop and kiosk.
 def site():
-    g, ground, roads, paths, fence, sidewalk, bus, kiosk = GROUND, [], [], [], [], [], [], []
+    g, ground, roads, paths, fence, sidewalk, edge, bus, kiosk = GROUND, [], [], [], [], [], [], [], []
     box(ground, -40, 120, g - 0.2, g, -40, 240, 'ground')
 
     def pave(boxes, x0, x1, z0, z1): box(boxes, x0, x1, g - 0.02, g + 0.004, z0, z1, 'road')  # as the rooms' floors
@@ -214,8 +247,11 @@ def site():
         rail(fence, along, at, a, b, 1.8, 'fence_panel', 'fence', g)
     for z in (CROSS_ROAD[0] - 0.6, CROSS_ROAD[1]): box(fence, FENCE_X1 - 0.3, FENCE_X1 + 0.3, g, g + 2.6, z, z + 0.6, 'wall')
     # Only the stretch she may walk on; the rest of the street belongs to the city.
-    for z0, z1 in ((BUS_Z - 10, CROSS_ROAD[0]), (CROSS_ROAD[1], CROSS_ROAD[1] + 8)):
+    for z0, z1 in ((WALK[0], CROSS_ROAD[0]), (CROSS_ROAD[1], WALK[1])):
         box(sidewalk, *SIDEWALK, g, g + CURB, z0, z1, 'walk')
+    # Unseen walls that keep her on it: along its edge by the bicycle lane, and across both of its ends.
+    box(edge, SIDEWALK[1], SIDEWALK[1] + 0.1, g, g + 3, *WALK, 'unseen')
+    for z in (WALK[0] - 0.1, WALK[1]): box(edge, SIDEWALK[0], SIDEWALK[1] + 0.1, g, g + 3, z, z + 0.1, 'unseen')
     x, z = BUS_X, BUS_Z
     box(bus, x, x + 0.1, g, g + 2.5, z, z + 8, 'wall')  # back wall
     box(bus, x, x + 2.6, g + 2.5, g + 2.65, z, z + 8, 'slab')  # roof
@@ -234,7 +270,7 @@ def site():
              + row('z', WEST_ROAD[1] + 2.5, FENCE_Z0 + 4, FENCE_Z1 - 4, path_gaps + [(CROSS_ROAD[0] - 4, CROSS_ROAD[1] + 4)])
              + row('x', CROSS_ROAD[0] - 1.5, WEST_ROAD[1] + 5, FENCE_X1 - 4, lane_gaps)
              + row('x', CROSS_ROAD[1] + 1.5, WEST_ROAD[1] + 5, FENCE_X1 - 4, lane_gaps))
-    parts = dict(ground=ground, roads=roads, paths=paths, fence=fence, sidewalk=sidewalk, bus_stop=bus, kiosk=kiosk)
+    parts = dict(ground=ground, roads=roads, paths=paths, fence=fence, sidewalk=sidewalk, sidewalk_edge=edge, bus_stop=bus, kiosk=kiosk)
     return scene([(eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"'}) for eid, boxes in parts.items()], 'FixedObject3D', 'Site'), trees
 
 
@@ -275,6 +311,8 @@ def main():
         'furniture.tscn': furniture_scene(),
         'poplar.tscn': poplar(),
         'slopes.tscn': stair_slopes(),
+        'doors.tscn': doors([], shut_doors(False), NOT_OURS),
+        'home_doors.tscn': doors(home_leaves(), shut_doors(True), NOT_OURS),
     }
     files['site.tscn'], trees = site()
     files['poplars.tscn'] = packed('Poplars', [(f'Poplar{i}', 'poplar.tscn', (x, 0, z), [('Poplar', [('EntityId', f'"poplar_{i}"')])])
@@ -284,10 +322,11 @@ def main():
     names = {(col, row): 'Home' if (col, row) == (0, 0) else f'Building_{col}_{row}' for col, row, _, _ in grid}
     files['buildings.tscn'] = packed('Buildings', [(names[c, r], f'buildings/building_{c}_{r}.tscn', (x, 0, z), [])
                                                    for c, r, x, z in grid])
-    subs, nodes = bodies([slope('SidewalkNorth', 'z', CROSS_ROAD[0], GROUND + CURB, CROSS_ROAD[0] + 0.6, GROUND, *SIDEWALK),
-                          slope('SidewalkSouth', 'z', CROSS_ROAD[1] - 0.6, GROUND, CROSS_ROAD[1], GROUND + CURB, *SIDEWALK)])
-    files['props.tscn'] = packed('Props', [(names[c, r], 'slopes.tscn', (x, 0, z), []) for c, r, x, z in grid],
-                                 subs=subs, nodes=nodes)
+    subs, nodes = bodies([slope('SidewalkNorthSlope', 'z', CROSS_ROAD[0], GROUND + CURB, CROSS_ROAD[0] + 0.6, GROUND, *SIDEWALK),
+                          slope('SidewalkSouthSlope', 'z', CROSS_ROAD[1] - 0.6, GROUND, CROSS_ROAD[1], GROUND + CURB, *SIDEWALK)])
+    entries = [(names[c, r], 'slopes.tscn', (x, 0, z), []) for c, r, x, z in grid]
+    entries += [(f'{names[c, r]}Doors', 'home_doors.tscn' if (c, r) == (0, 0) else 'doors.tscn', (x, 0, z), []) for c, r, x, z in grid]
+    files['props.tscn'] = packed('Props', entries, subs=subs, nodes=nodes)
     here = Path(__file__).parent
     (here / 'buildings').mkdir(exist_ok=True)
     for path, text in files.items(): (here / path).write_text(text, encoding='utf-8', newline='\n')

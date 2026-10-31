@@ -107,7 +107,9 @@ public partial class FirstPersonPlayer : CharacterBody3D
             }
             if (key.Keycode == Key.E && pointerCaptured && GodotObject.IsInstanceValid(target))
             {
-                target!.Interact();
+                var line = target!.Line;
+                target.Interact();
+                if (line != "") Say(line);
                 GetViewport().SetInputAsHandled();
                 return;
             }

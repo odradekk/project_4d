@@ -11,7 +11,7 @@ namespace Game.Tests;
 /// The compound region, walked with the movement keys: from the flat's entrance hall through the shared vestibule, the open
 /// corridor and the stair to the top floor, then down and out of the ground floor, along the roads and out of the gate to
 /// the bus stop; and from its path into every other building and back out, along its path or lane to the road to the gate. The railings, the
-/// fence and the shut front doors stop her.
+/// fence and the shut front doors stop her. <c>CompoundChecksDoors.cs</c> has the doors and the edge of the sidewalk.
 /// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class CompoundChecks : Node
@@ -38,8 +38,11 @@ public partial class CompoundChecks : Node
         {
             await play.Load(scene: "res://regions/compound.tscn");
             Check(Apart(feet, new(.75f, 0, 6.7f)) < .05f && OnFloor(1), $"she starts in the entrance hall of the flat on the second floor; she is at {feet}");
+            await CheckHomeDoors();
+            play.LookAt(new(.75f, Storey, 6.7f), new(.75f, Storey + 1.3f, 8.2f));
 
             await WalkTo((.75f, 8.2f));
+            await Knock(new(.75f, Storey + 1, NeighborDoor));
             await Push((.75f, 10));
             Check(feet.Z < NeighborDoor, $"the neighbor's front door is shut; she is at {feet}");
             await WalkTo((-.9f, 8.2f));
@@ -84,6 +87,7 @@ public partial class CompoundChecks : Node
             await WalkTo((76, 91), (76, CrossRoad), (81, CrossRoad), (82, 80), (82, 71));
             Check(feet.X > 80.6f && feet.X < 83 && feet.Z > 67 && feet.Z < 75 && Mathf.Abs(feet.Y + .1f) < .05f,
                 $"she walks out of the gate and along the sidewalk into the bus shelter; she is at {feet}");
+            await CheckSidewalkEdge();
 
             foreach (var x in Cols)
                 foreach (var z in Rows)
@@ -104,13 +108,14 @@ public partial class CompoundChecks : Node
             // The building east of ours has, where Xiaoman's flat is in ours, a flat like all the others.
             play.LookAt(new(21 - 3, Ground, Exit), new(21 + Landing, 1.3f, Exit));
             await WalkTo((21 + Landing, Exit), (21 + Landing, UpEast), (21 + Turn, UpEast), (21 + Turn, UpWest), (21 + Landing, UpWest), (21 - .9f, Exit), (21 - .9f, 8.2f), (21 + .75f, 8.2f));
+            await Knock(new(21 + .75f, Storey + 1, FlatDoor));
             await Push((21 + .75f, 5));
             Check(feet.Z > FlatDoor && OnFloor(1), $"in the next building the front door on the second floor is shut; she is at {feet}");
             Engine.TimeScale = 1;
 #if DEBUG
             Check(DebugScenes.Find("compound") == "res://regions/compound.tscn", "the debug entry starts the compound region");
 #endif
-            GD.Print("Compound checks passed: entrance hall, neighbor's door, corridor railing, up the stair, top railings, down, under the stair and out; fences, gate, bus stop, every building's way in and to the gate, the next building's shut door.");
+            GD.Print("Compound checks passed: entrance hall, Xiaoman's doors, neighbor's door and line, corridor railing, up the stair, top railings, down, under the stair and out; fences, gate, bus stop, sidewalk edge, every building's way in and to the gate, the next building's shut door and line.");
             GetTree().Quit();
         }
         catch (Exception error)
