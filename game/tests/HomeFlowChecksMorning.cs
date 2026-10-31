@@ -86,12 +86,26 @@ public partial class HomeFlowChecks
         await Walk((.75f, 6.8f), (.75f, 8.2f), (-.9f, 8.2f), (-.9f, 18.5f), (.8f, 19.55f));
         await Frames(60);
         Check(player.Hud.SubtitleText != Asks && eyes.Position.Y == standing, "she does not meet the cat from the landing above it");
-        await Walk((7f, 19.55f), (7f, 17.5f), (1.2f, 17.5f));
-        await Until(() => player.Hud.SubtitleText == Asks, 3, "she must ask the cat what it sees");
+        // From the landing at the turn, down the last flight due west along the stair hall's north wall, as far from the cat
+        // as she can keep (3.05 m at the closest), with the key held: she stops for the cat, turns to it and kneels, and
+        // walks on once she has said she will be late.
+        await Walk((7f, 19.55f), (7f, 17.5f));
+        player.Position = new(7f, player.Position.Y, 16.75f);
+        player.Rotation = new(0, Mathf.Pi / 2, 0);
+        Input.ActionPress("move_forward");
+        await Until(() => player.Hud.SubtitleText == Asks, 8, "she must ask the cat what it sees");
+        Check(player.Position.Z < 16.8f, $"she meets the cat along the north wall; she is at {player.Position}");
         Check(eyes.Position.Y < standing - .5f, $"she kneels to ask; her eyes are {standing - eyes.Position.Y} m lower");
+        var toCat = Flat(cat.GlobalPosition - player.GlobalPosition).Normalized();
+        Check(Flat(-player.GlobalBasis.Z).Normalized().Dot(toCat) > .98f, $"she faces the cat as she asks; it is along {toCat}, she looks along {-player.GlobalBasis.Z}");
+        var kneeling = player.Position;
+        await Frames(30);
+        Check(player.Position.IsEqualApprox(kneeling), "she does not walk on while she talks to the cat");
         await Until(() => player.Hud.SubtitleText == "那里明明什么也没有……", 5, "she must find nothing there");
         await Until(() => player.Hud.SubtitleText == "算了，要迟到了。", 5, "she must go on");
         Check(Mathf.IsEqualApprox(eyes.Position.Y, standing) && cat.Posture == Posture.Sitting, "she stands up again, and the cat stays");
+        await Until(() => Flat(player.Position - kneeling).Length() > .3f, 4, "she must walk on once she has said it");
+        Input.ActionRelease("move_forward");
         Check(!finished, "the stair and the cat do not end the scene");
     }
 
@@ -100,7 +114,9 @@ public partial class HomeFlowChecks
     private async Task CheckBus()
     {
         var bus = scene.GetNode<Region3D>("Region").Props("Ⅰ")!.GetNode<Bus3D>("Bus");
-        Engine.TimeScale = 8;  // the walk across the compound is long
+        // The walk across the compound is long. A running step is then 0.38 m a frame, short enough to stop within the
+        // 0.25 m that Walk asks for, not to step to and fro past a point.
+        Engine.TimeScale = 6;
         await Walk((-3f, 18.5f), (-3f, 41f), (15.8f, 41f), (15.8f, 93.5f), (81f, 93.5f), (82f, 87.2f));
         Check(bus.State == Bus3D.BusState.Away, $"16 m from the stop the bus has not been called; it is {bus.State}");
         await Walk((82f, 85f));
@@ -121,9 +137,15 @@ public partial class HomeFlowChecks
         Input.ActionPress("move_forward");
         Input.ParseInputEvent(new InputEventMouseMotion { Relative = new(300, 0), ScreenRelative = new(300, 0) });
         Press(Key.E);
+        Button(MouseButton.Right, true);
         await Frames(30);
+        Button(MouseButton.Right, false);
         Input.ActionRelease("move_forward");
         Check(player.Position.IsEqualApprox(feet) && player.Rotation.IsEqualApprox(facing), "on the bus the keys and the mouse do nothing");
+        var hud = player.Hud;
+        Check(hud.HintText == "" && !hud.CrosshairVisible && !hud.GetNode<Control>("Backpack").Visible
+            && scene.FindChildren("Controls", nameof(Label), true, false).Cast<Label>().All(help => !help.Visible),
+            $"on the bus no crosshair, hint, backpack or controls are shown; the hint is \"{hud.HintText}\"");
         Check(player.Camera.GlobalPosition.DistanceTo(bus.ToGlobal(PassengerEyes)) < .01f, "her view rides with the bus");
         await Until(() => finished, 8, "the scene must end after the ride");
         var ride = Time.GetTicksMsec() - boarded;
@@ -131,6 +153,9 @@ public partial class HomeFlowChecks
         Check(bus.State == Bus3D.BusState.Departing && bus.GlobalPosition.DistanceTo(stop) > 8, $"the bus has driven off; it is {bus.State}, {bus.GlobalPosition.DistanceTo(stop)} m from the stop");
         Check(scene.FindChildren("*", nameof(ColorRect), true, false).Cast<ColorRect>().Any(black => black.Color == Colors.Black),
             "the screen has faded to black");
+        Press(Key.Escape);
+        await Frames(2);
+        Check(!player.PointerCaptured, "Esc lets go of the mouse on the black screen");
         await End();
     }
 }

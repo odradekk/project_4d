@@ -22,13 +22,13 @@ public partial class HomeMorning : Node
     // She wakes beside her bed, facing it.
     private static readonly Vector3 Wake = new(5f, HomeScene.Floor + .02f, 4.8f);
     // The cat sits under the ground-floor stair, west of the wall at x 5, facing the corner between that wall and the
-    // stair hall's south wall. She meets it within CatReach of it on the ground floor, which she cannot help as she comes
-    // off the flight down, and not from the floor above.
+    // stair hall's south wall. She meets it within CatReach of it on the ground floor, and not from the floor above. Every
+    // way off the flight down passes within 3.1 m of it, along the stair hall's north wall too.
     private static readonly Vector3 CatSpot = new(2.6f, .02f, 19.8f), Corner = new(4.9f, .2f, 20.6f);
-    private const float CatReach = 3, GroundFloor = .5f;
-    // How far her eyes drop when she kneels.
+    private const float CatReach = 3.5f, GroundFloor = .5f;
+    // How far her eyes drop when she kneels, and how long she takes to turn to the cat and to kneel.
     private const float Kneel = .55f;
-    private const double KneelSeconds = .45;
+    private const double TurnSeconds = .4, KneelSeconds = .45, LastLineSeconds = 2.5;
     // The middle of the bus shelter on the sidewalk; the bus is called when she comes within CallDistance of it.
     private static readonly Vector3 BusStop = new(81.8f, 0, 71);
     private const float CallDistance = 15;
@@ -163,31 +163,39 @@ public partial class HomeMorning : Node
         Say(3.5, "文具盒里，是昨天在铁道边捡到的那个……");
     }
 
-    // She kneels beside the cat and asks it what it is staring at in the empty corner.
+    // She stops, turns to the cat, kneels and asks it what it is staring at in the empty corner; she goes on once she has
+    // said that she will be late.
     private void MeetCat()
     {
-        var eyes = home.Player.Camera;
+        var player = home.Player;
+        var eyes = player.Camera;
         var standing = eyes.Position.Y;
+        var offset = cat.GlobalPosition - player.GlobalPosition;
+        var facing = player.Rotation.Y + Mathf.Wrap(Mathf.Atan2(-offset.X, -offset.Z) - player.Rotation.Y, -Mathf.Pi, Mathf.Pi);
+        player.Seated = true;
         var beat = CreateTween();
+        beat.TweenProperty(player, "rotation:y", facing, TurnSeconds);
         beat.TweenProperty(eyes, "position:y", standing - Kneel, KneelSeconds);
         beat.TweenCallback(Callable.From(() => Say(2.5, "你看什么呢？")));
         beat.TweenInterval(3);
         beat.TweenCallback(Callable.From(() => Say(3, "那里明明什么也没有……")));
         beat.TweenInterval(2);
         beat.TweenProperty(eyes, "position:y", standing, KneelSeconds);
-        beat.TweenCallback(Callable.From(() => Say(2.5, "算了，要迟到了。")));
+        beat.TweenCallback(Callable.From(() => Say(LastLineSeconds, "算了，要迟到了。")));
+        beat.TweenInterval(LastLineSeconds);
+        beat.TweenCallback(Callable.From(() => player.Seated = false));
     }
 
-    // On the bus she only watches: her keys and the mouse are off while the doors close and the bus moves off, and the
-    // screen fades under the subtitles.
+    // On the bus she only watches while the doors close and the bus moves off, and the screen fades over the prism's
+    // layer and under the subtitles.
     private void Board()
     {
         var player = home.Player;
-        player.Seated = true;
-        player.SetProcessUnhandledInput(false);
+        player.Watching = true;
+        SetProcessUnhandledInput(false);
         bus.Seat(player.Camera);
         bus.Depart();
-        var layer = new CanvasLayer();
+        var layer = new CanvasLayer { Layer = 5 };
         var black = new ColorRect { Color = new(0, 0, 0, 0), MouseFilter = Control.MouseFilterEnum.Ignore };
         layer.AddChild(black);
         AddChild(layer);
