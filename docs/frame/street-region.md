@@ -4,7 +4,7 @@
 
 `game/regions/street.tscn` 是序章第 2 场（上学路）和第 6 场（回家路与小卖部）共用的区域，格式见[场景标注](scene-authoring.md)。楼房元素、固定物件和道具分成 `game/regions/street/` 下的几个子场景，盒子零件的模板是 `game/regions/box_part.tscn`。本页不是契约，只写脚本和以后的修改要遵守的限制；具体坐标以场景为准。
 
-按 Decision note: 2026-10-31-bus-commute，序章不再播放第 2 场，它已并入第 1 场；序章里只有第 6 场还用这个区域。第 2 场的脚本和调试入口 `school-road` 暂时保留，第 6 场拿到的是第 1 场留下的 20 毛。
+按 Decision note: 2026-10-31-bus-commute，序章不再播放第 2、6 场，它们已分别并入第 1、7 场，序章里没有哪一场用这个区域。第 2、6 场的脚本和调试入口 `school-road`、`home-road` 暂时保留，以后和这个区域一起删除。
 
 坐标：x 向东（沿街），z 向南，y 向上，单位米。区域只有一个截面Ⅰ（W = 0）和一栋楼 `street`（W −0.5 到 0.5），棱镜关闭。两场的脚本在 `game/flow/`：`SchoolRoad` 和 `HomeRoad`，共用 `Street`；调试入口是 `-- --start=school-road` 和 `-- --start=home-road`。
 
@@ -39,4 +39,4 @@
 
 出生点：小满 `xiaoman` 在平台上，面朝楼道；煤球 `cat`；早点摊的摊主 `bun_vendor`、校门口小摊的摊主 `toy_vendor`、小卖部的老板娘 `clerk`；三个跳皮筋的孩子 `rope_a`、`rope_b`、`rope_c`。摊主和老板娘用 `game/characters/vendor.tscn`，孩子用同学的场景，名字由出生点的 `DisplayName` 给。
 
-钱是 `Wallet`（`game/flow/Wallet.cs`），单位是毛，场景之间传。第 2 场默认 20 毛，包子 5 毛；第 6 场默认 15 毛，小卖部的冰棍 3 毛、汽水 10 毛、辣条 2 毛、贴纸 5 毛，火腿肠 5 毛。挑任何一样再买火腿肠，都不会超过包子之后剩下的 15 毛。
+钱是 `Wallet`（`game/flow/Wallet.cs`），单位是毛。第 2 场默认 20 毛，包子 5 毛；第 6 场默认 15 毛，小卖部的冰棍 3 毛、汽水 10 毛、辣条 2 毛、贴纸 5 毛，火腿肠 5 毛。挑任何一样再买火腿肠，都不会超过包子之后剩下的 15 毛。
