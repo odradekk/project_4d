@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FourD;
 using Game.Adapter;
-using Game.Characters;
 using Game.Flow;
 using Game.Interaction;
 using Game.Player;
@@ -12,8 +11,8 @@ using static Game.Tests.TurningFixture;
 
 namespace Game.Tests;
 
-// Scenes 1 and 3 to 7, each finished by the quickest moves that its own checks use: props are pressed without walking to them,
-// and the school scenes are driven through the engine as the keys do. Scenes 1, 4, 5, 6 and 7 are started again on the way.
+// Scenes 1, 3, 4, 5 and 7, each finished by the quickest moves that its own checks use: props are pressed without walking to
+// them, and the school scenes are driven through the engine as the keys do. Scenes 1, 4, 5 and 7 are started again on the way.
 public partial class PrologueChecks
 {
     private async Task PlayMorning()
@@ -106,42 +105,31 @@ public partial class PrologueChecks
         return Region;
     }
 
-    private async Task PlayHomeRoad(Region3D schoolRegion)
-    {
-        await Arrive(6, 1, 2, 3, 4);
-        var road = (HomeRoad)prologue.Scene!;
-        Check(!GodotObject.IsInstanceValid(schoolRegion), "the school region is gone");
-        // Scene 6 has 15 mao of its own; it is given the two yuan that scene 1 left her with.
-        Check(road.Wallet.Mao == 20 && !Player.Hud.NotebookAvailable, "she comes to the kiosk with the two yuan of scene 1, and the notebook is still shut");
-        Prop("IcePop").Interact();
-        Check(road.Wallet.Mao == 17, "an ice pop costs 3 mao");
-        // Backspace starts the scene again with the money she had at its start.
-        await Again(() => Press(Key.Backspace), 6, 1, 2, 3, 4);
-        road = (HomeRoad)prologue.Scene!;
-        Check(road.Wallet.Mao == 20, "she has the two yuan again");
-        Prop("IcePop").Interact();
-        Prop("Sausage").Interact();
-        Check(road.Wallet.Mao == 12, "an ice pop and a sausage are paid from the two yuan");
-        var cat = Region.Character("cat");
-        cat.GetNode<Interactable3D>("Pickup").Interact();
-        Check(cat.GetNode<Cat>("Cat").Held, "she has the cat in her arms at the door");
-        Prop("HomeDoor").Interact();
-    }
-
-    private async Task PlayHomeEvening()
+    // Scene 7 starts on the bus as it comes in, and again so. Off the bus she is put down by the cat, which follows her, and
+    // in the flat behind the open front door; once the cat is in too, the door is locked.
+    private async Task PlayHomeEvening(Region3D schoolRegion)
     {
         await Arrive(7, 1, 2, 3, 4);
-        var evening = (HomeEvening)prologue.Scene!;
+        Check(!GodotObject.IsInstanceValid(schoolRegion), "the school region is gone");
         Check(Player.Hud.NotebookAvailable, "the notebook can be opened from here");
-        Check(evening.CatBody.GetNode<Cat>("Cat").Held && Player.Position.X < 1.8f && Player.Position.Z is > 6.4f and < 7.35f,
-            "she is in the entrance hall just inside the front door with the cat in her arms");
+        var bus = Region.Props("Ⅰ")!.GetNode<Bus3D>("Bus");
+        Check(Player.Watching && bus.State == Bus3D.BusState.Arriving, $"she starts on the bus as it comes in; it is {bus.State}");
         await Again(() => Press(Key.Backspace), 7, 1, 2, 3, 4);
-        evening = (HomeEvening)prologue.Scene!;
-        Check(evening.CatBody.GetNode<Cat>("Cat").Held, "the cat is in her arms again");
+        var evening = (HomeEvening)prologue.Scene!;
+        bus = Region.Props("Ⅰ")!.GetNode<Bus3D>("Bus");
+        Check(Player.Watching && bus.State == Bus3D.BusState.Arriving, "she is on the bus again");
+        await Until(() => bus.State == Bus3D.BusState.Waiting, 60, "the bus must stop and open its doors");
+        bus.GetChildren().OfType<Interactable3D>().First().Interact();
+        Check(!Player.Watching && bus.State == Bus3D.BusState.Closing, "she gets off and the bus shuts its doors");
+        Player.Position = new(-2f, .02f, 18.5f);
+        await Says("爸不让养猫");
+        Prop("HomeDoors/FrontDoor/Leaf").Interact();
+        Player.Position = new(4.6f, HomeScene.Floor + .02f, 2.9f);
+        await Until(() => evening.Indoors, 60, $"the cat must follow her in; it is at {evening.CatBody.Position}");
         foreach (var name in new[] { "Note", "HairClip", "Tv", "Stove" }) Prop(name).Interact();
         await Until(() => evening.Heated, 6, "the meal must be hot");
         Prop("Sausage").Interact();
-        await Until(() => evening.CatFed, 20, "the cat must come for its half");
+        await Until(() => evening.CatFed, 20, $"the cat must come for its half; it is at {evening.CatBody.Position}");
         Prop("Desk").Interact();
     }
 }
