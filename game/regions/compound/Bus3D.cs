@@ -33,8 +33,9 @@ public partial class Bus3D : Node3D
     // 209.5), and turns between them and the main road about a centre Corner metres from its path.
     private const float Lane = 92.875f, Bay = 85.65f, Stop = 70, Shift = 40, North = -24.25f, South = 207.25f, Corner = 7;
     // Where it starts on the north street and is hidden on the south street: x of its middle, with the compound's
-    // south-east and north-east buildings between it and the sidewalk.
-    private const float From = 20, Hidden = 50;
+    // north-east and south-east buildings between it and the sidewalk. Hidden is also past the lane between the last two
+    // columns of buildings, which looks down to the south street from the stretch of the road to the gate she walks home on.
+    private const float From = 20, Hidden = 40;
     private const float Cruise = 12, Turning = 7, Accel = 1.5f, Brake = 1.8f, DoorTime = 1.2f;  // m/s, m/s², s
     private const float Fold = 80 * Mathf.Pi / 180;
 

@@ -14,7 +14,7 @@ namespace Game.Tests;
 /// The bus outside the compound's gate: called, it comes east along the north street, turns down the main road's lane
 /// nearest the compound, pulls in to stop beside the sidewalk, folds its doors open and says it has arrived, then waits;
 /// sent off, it folds them shut, moves off briskly and turns into the south street, where it is hidden. Along the whole
-/// way it keeps clear of everything the city stands on the ground. E from the sidewalk on an open door says she boards;
+/// way it keeps clear of everything the city stands on the ground, and it turns smoothly, as a seated camera would see. E from the sidewalk on an open door says she boards;
 /// E does nothing while the bus is away, opening or closing. A seated camera rides at the passenger's eyes and goes back
 /// where it was when let go.
 /// Decision note: 2026-10-31-bus-commute
@@ -24,6 +24,10 @@ public partial class BusChecks : Node
     // The sidewalk's top and its edge; the motor lane the bus keeps to on the main road; the bus's half size; the
     // passenger's eyes on the bus.
     private const float Walk = -.1f, Edge = 84, LaneWest = 91, LaneEast = 98.5f, Half = 1.25f, End = 5.5f;
+    // The most the bus may turn per metre it moves: 1° a frame at the 7 m/s and 60 frames a second it turns at. Its turns
+    // about a 7 m centre take 8.2°/m; a step of 2° from one quarter-metre sample's direction to the next, in a frame that
+    // moves it about 0.12 m, would be four times that. Measured per metre, it holds whatever the frame took.
+    private const float TurnPerMetre = 1 / (7 / 60f);
     private static readonly Vector3 Eyes = new(-.8f, 2.02f, -1.3f);
 
     private TurningFixture play = null!;
@@ -87,7 +91,7 @@ public partial class BusChecks : Node
             var unseated = camera.Transform;
             bus.Seat(camera);
             seated = true;
-            await Follow(() => moving.TimeLeft <= 0, leaves, 1);
+            await Follow(() => moving.TimeLeft <= 0, leaves);
             var off = bus.GlobalPosition.DistanceTo(stop);
             Check(bus.State == Departing && off > 8, $"5 s after it is sent off the bus has moved off; it is {bus.State}, {off} m from the stop");
             bus.Unseat();
@@ -107,27 +111,28 @@ public partial class BusChecks : Node
             GD.PushError($"CHECK FAILED: {error.Message}");
             GetTree().Quit(1);
         }
-        finally
-        {
-            Engine.TimeScale = 1;
-        }
     }
 
-    // Plays on until done, at the given speed while the bus drives, recording each state it enters and where it is seen,
-    // and checking where it drives: clear of the city's obstacles, on the main road within the lane between its corners
-    // and the stop, and in the streets' near halves; a seated camera stays at the passenger's eyes.
-    private async Task Follow(Func<bool> done, Node3D[]? leaves = null, double driving = 4)
+    // Plays on until done, frame by frame at the game's own speed, recording each state the bus enters and where it is
+    // seen, and checking where it drives: clear of the city's obstacles, on the main road within the lane between its
+    // corners and the stop, and in the streets' near halves; that it turns smoothly; and that a seated camera stays at the
+    // passenger's eyes.
+    private async Task Follow(Func<bool> done, Node3D[]? leaves = null)
     {
+        var (front, at) = (bus.GlobalBasis.Z, bus.GlobalPosition);
         for (var frame = 0; !done(); frame++)
         {
             Check(frame < 60 * 60, $"the bus must go on; it is {bus.State} at {bus.GlobalPosition}");
-            Engine.TimeScale = bus.State is Arriving or Departing ? driving : 1;
             await play.Frames(1);
+            var (turned, moved) = (Mathf.RadToDeg(front.AngleTo(bus.GlobalBasis.Z)), at.DistanceTo(bus.GlobalPosition));
+            (front, at) = (bus.GlobalBasis.Z, bus.GlobalPosition);
+            if (bus.Visible && moved > .01f)
+                Check(turned / moved < TurnPerMetre, $"the bus turns smoothly; at {at} it turned {turned}° over {moved} m");
             if (bus.State != states[^1]) states.Add(bus.State);
             if (leaves is not null && Fold(leaves) is > .02f and < .1f) foldedPartway = true;
             if (seated) Check(play.Player.Camera.GlobalPosition.DistanceTo(bus.ToGlobal(Eyes)) < .01f, $"the seated camera rides at the passenger's eyes; it is at {play.Player.Camera.GlobalPosition}");
             if (!bus.Visible) continue;
-            var (at, corners) = (bus.GlobalPosition, Corners());
+            var corners = Corners();
             seen.Add(at);
             var hit = obstacles.FirstOrDefault(o => Overlaps(corners, o));
             Check(hit.Size == Vector2.Zero, $"the bus keeps clear of the city; at {at} it runs into the box from {hit.Position} to {hit.End} (x, z)");
@@ -136,7 +141,6 @@ public partial class BusChecks : Node
             if (at.X < 80 && at.Z < 0) Check(corners.All(c => c.Z >= -26.5f && c.Z <= -22), $"on the north street the bus keeps to the eastbound half; it is at {at}");
             if (at.X < 80 && at.Z > 200) Check(corners.All(c => c.Z >= 205 && c.Z <= 209.5f), $"on the south street the bus keeps to the westbound half; it is at {at}");
         }
-        Engine.TimeScale = 1;
     }
 
     private Vector3[] Corners() =>

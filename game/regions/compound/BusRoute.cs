@@ -25,7 +25,11 @@ internal sealed class BusRoute
     internal float Length => along[^1];
 
     /// <summary>A straight line to <paramref name="to"/>.</summary>
-    internal BusRoute Line(Vector2 to) => Add(t => Last.Lerp(to, t), Last.DistanceTo(to), cruise);
+    internal BusRoute Line(Vector2 to)
+    {
+        var from = Last;
+        return Add(t => from.Lerp(to, t), from.DistanceTo(to), cruise);
+    }
 
     /// <summary>A change of lane while driving along z to <paramref name="to"/>, eased at both ends.</summary>
     internal BusRoute Ease(Vector2 to)
@@ -53,12 +57,16 @@ internal sealed class BusRoute
         return this;
     }
 
-    /// <summary>The point at distance <paramref name="s"/> along the route, and the direction it heads there.</summary>
+    /// <summary>
+    /// The point at distance <paramref name="s"/> along the route, and the direction it heads there, turning from one
+    /// sample's direction to the next's along the way, so that it turns smoothly rather than in steps.
+    /// </summary>
     internal (Vector2 At, Vector2 Heading) At(float s)
     {
         var (i, t) = Find(s);
         var (a, b) = (points[i].At, points[i + 1].At);
-        return (a.Lerp(b, t), (b - a).Normalized());
+        var next = i + 2 < points.Count ? points[i + 2].At - b : b - a;
+        return (a.Lerp(b, t), (b - a).Normalized().Lerp(next.Normalized(), t).Normalized());
     }
 
     /// <summary>The fastest the bus may go at distance <paramref name="s"/>.</summary>
