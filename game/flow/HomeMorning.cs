@@ -1,27 +1,44 @@
 using System;
 using Game.Audio;
+using Game.Characters;
 using Game.Interaction;
+using Game.Regions;
 using Godot;
 
 namespace Game.Flow;
 
 /// <summary>
 /// Scene 1, the morning at home: the alarm, her father asleep in the living room, the note and the two yuan on the tea
-/// table, brushing her teeth, the school bag, out of the front door and down the stairs. The prism stays in the pencil case
-/// until school.
+/// table, brushing her teeth, the school bag, out of the front door and down the stairs, where the cat stares at the empty
+/// corner under the ground-floor stair and she kneels to ask it what it sees; out of the compound to the bus stop, where the
+/// bus comes once she is near and waits for her. E on its door seats her on the bus, which drives off; the screen fades and
+/// <see cref="Finished"/> follows. The prism stays in the pencil case until school.
 /// Decision note: 2026-10-26-prologue-greybox
 /// Decision note: 2026-10-29-home-scene-layout
+/// Decision note: 2026-10-31-bus-commute
 /// </summary>
 public partial class HomeMorning : Node
 {
     // She wakes beside her bed, facing it.
     private static readonly Vector3 Wake = new(5f, HomeScene.Floor + .02f, 4.8f);
-    // Lower than the flat's floor by half a riser: only the flight down from the second storey takes her there.
-    private const float Downstairs = HomeScene.Floor - .06f;
+    // The cat sits under the ground-floor stair, west of the wall at x 5, facing the corner between that wall and the
+    // stair hall's south wall. She meets it within CatReach of it on the ground floor, which she cannot help as she comes
+    // off the flight down, and not from the floor above.
+    private static readonly Vector3 CatSpot = new(2.6f, .02f, 19.8f), Corner = new(4.9f, .2f, 20.6f);
+    private const float CatReach = 3, GroundFloor = .5f;
+    // How far her eyes drop when she kneels.
+    private const float Kneel = .55f;
+    private const double KneelSeconds = .45;
+    // The middle of the bus shelter on the sidewalk; the bus is called when she comes within CallDistance of it.
+    private static readonly Vector3 BusStop = new(81.8f, 0, 71);
+    private const float CallDistance = 15;
+    private const double RideSeconds = 5, FadeSeconds = 1;
 
     private HomeScene home = null!;
     private SectionSound alarm = null!;
-    private bool finished;
+    private Character3D cat = null!;
+    private Bus3D bus = null!;
+    private bool catMet, busCalled;
 
     [Signal] public delegate void FinishedEventHandler();
 
@@ -41,7 +58,7 @@ public partial class HomeMorning : Node
 
     public override void _Ready()
     {
-        home = HomeScene.Open(this);
+        home = HomeScene.Open(this, region => HomeScene.AddCat(region, CatSpot));
         home.Player.Position = Wake;
         home.Player.Rotation = new(0, -Mathf.Pi / 2, 0);
         foreach (var name in new[] { "HairClip", "Sausage" }) home.Show(name, false);
@@ -61,14 +78,29 @@ public partial class HomeMorning : Node
             if (Missing is { } reason) Say(2.5, reason);
             else if (door.State == Door3D.DoorState.Open) Say(2, "我走啦。");
         };
+        cat = home.Region.Character("cat");
+        var staring = cat.GetNode<Cat>("Cat");
+        // The cat is only looked at this morning, not carried.
+        staring.Holdable = false;
+        staring.Sit(Corner);
+        bus = home.Prop<Bus3D>("Bus");
+        bus.Boarding += Board;
         home.Hud.Say("", "6:50。闹钟响了。", 3);
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        if (finished || home.Player.GlobalPosition.Y > Downstairs) return;
-        finished = true;
-        EmitSignal(SignalName.Finished);
+        var feet = home.Player.GlobalPosition;
+        if (!catMet && feet.Y < GroundFloor && Flat(feet - cat.GlobalPosition) < CatReach)
+        {
+            catMet = true;
+            MeetCat();
+        }
+        if (!busCalled && Flat(feet - BusStop) < CallDistance)
+        {
+            busCalled = true;
+            bus.Arrive();
+        }
     }
 
     public override void _UnhandledInput(InputEvent input)
@@ -76,6 +108,8 @@ public partial class HomeMorning : Node
         if (input is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true })
             home.Hud.ShowNotice("棱镜收在书包的文具盒里。", 1.5);
     }
+
+    private static float Flat(Vector3 offset) => new Vector2(offset.X, offset.Z).Length();
 
     private void On(string prop, Action handler) => home.Prop(prop).Interacted += () => handler();
 
@@ -127,5 +161,40 @@ public partial class HomeMorning : Node
         HasBackpack = true;
         home.Show("Backpack", false);
         Say(3.5, "文具盒里，是昨天在铁道边捡到的那个……");
+    }
+
+    // She kneels beside the cat and asks it what it is staring at in the empty corner.
+    private void MeetCat()
+    {
+        var eyes = home.Player.Camera;
+        var standing = eyes.Position.Y;
+        var beat = CreateTween();
+        beat.TweenProperty(eyes, "position:y", standing - Kneel, KneelSeconds);
+        beat.TweenCallback(Callable.From(() => Say(2.5, "你看什么呢？")));
+        beat.TweenInterval(3);
+        beat.TweenCallback(Callable.From(() => Say(3, "那里明明什么也没有……")));
+        beat.TweenInterval(2);
+        beat.TweenProperty(eyes, "position:y", standing, KneelSeconds);
+        beat.TweenCallback(Callable.From(() => Say(2.5, "算了，要迟到了。")));
+    }
+
+    // On the bus she only watches: her keys and the mouse are off while the doors close and the bus moves off, and the
+    // screen fades under the subtitles.
+    private void Board()
+    {
+        var player = home.Player;
+        player.Seated = true;
+        player.SetProcessUnhandledInput(false);
+        bus.Seat(player.Camera);
+        bus.Depart();
+        var layer = new CanvasLayer();
+        var black = new ColorRect { Color = new(0, 0, 0, 0), MouseFilter = Control.MouseFilterEnum.Ignore };
+        layer.AddChild(black);
+        AddChild(layer);
+        black.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        var ride = CreateTween();
+        ride.TweenInterval(RideSeconds);
+        ride.TweenProperty(black, "color:a", 1f, FadeSeconds);
+        ride.TweenCallback(Callable.From(() => EmitSignal(SignalName.Finished)));
     }
 }

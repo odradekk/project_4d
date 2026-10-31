@@ -1,5 +1,4 @@
 using System;
-using Game.Adapter;
 using Game.Characters;
 using Game.Interaction;
 using Godot;
@@ -54,16 +53,7 @@ public partial class HomeEvening : Node
         {
             // Her father has gone to work, and the living-room door is open: ajar, it would stand in the cat's way.
             region.GetNode<Door3D>("Sections/Ⅰ/Props/HomeDoors/LivingRoomDoor").State = Door3D.DoorState.Open;
-            region.GetNode("Sections/Ⅰ/Spawns").AddChild(new CreatureSpawn3D
-            {
-                Name = "Cat",
-                EntityId = "cat",
-                Position = Arrival + new Vector3(0, 0, -.6f),
-                PassageRadius = .15,
-                PassageHeight = .4,
-                CanUseSeamsWithoutPrism = true,
-                CharacterScene = GD.Load<PackedScene>("res://characters/cat.tscn")
-            });
+            HomeScene.AddCat(region, Arrival + new Vector3(0, 0, -.6f));
         });
         home.Player.Position = Arrival;
         foreach (var name in new[] { "Father", "Money", "Backpack", "Sink" }) home.Show(name, false);
