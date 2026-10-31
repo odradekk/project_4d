@@ -1,0 +1,97 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://adapter/BuildingElement3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.851, 0.843, 0.82, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(9.69, 0.2, 7.59)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m1")
+size = Vector3(1.47, 0.2, 4.24)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m1")
+size = Vector3(3.64, 0.2, 1.7)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m1")
+size = Vector3(9.69, 0.2, 4.25)
+
+[node name="Shell" type="Node3D"]
+
+[node name="Roof" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "Roof"
+BuildingId = "home"
+WMin = -0.5
+WMax = 0.5
+
+[node name="p1" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(3.125, 9.5, 3.675)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(8.585, 9.5, 2)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(0.1, 9.5, 8.2)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(3.125, 9.5, 12.725)
+mesh = SubResource("b1")
+PartId = "p4"
+
+[node name="p5" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(8.585, 9.5, 14.4)
+mesh = SubResource("b2")
+PartId = "p5"
+
+[node name="p6" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(0.1, 9.5, 8.2)
+mesh = SubResource("b3")
+PartId = "p6"
+
+[node name="p7" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(3.125, 9.5, 33.375)
+mesh = SubResource("b1")
+PartId = "p7"
+
+[node name="p8" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(8.585, 9.5, 35.05)
+mesh = SubResource("b2")
+PartId = "p8"
+
+[node name="p9" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(0.1, 9.5, 28.85)
+mesh = SubResource("b3")
+PartId = "p9"
+
+[node name="p10" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(3.125, 9.5, 24.325)
+mesh = SubResource("b1")
+PartId = "p10"
+
+[node name="p11" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(8.585, 9.5, 22.65)
+mesh = SubResource("b2")
+PartId = "p11"
+
+[node name="p12" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(0.1, 9.5, 28.85)
+mesh = SubResource("b3")
+PartId = "p12"
+
+[node name="p13" parent="Roof" instance=ExtResource("e2")]
+position = Vector3(3.125, 9.5, 18.525)
+mesh = SubResource("b4")
+PartId = "p13"
