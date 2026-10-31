@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace Game.Interaction;
@@ -38,10 +39,17 @@ public partial class Door3D : Node3D
     /// <summary>The degrees, with the sign of <see cref="Swing"/>, from shut to ajar.</summary>
     [Export] public float AjarSwing { get; set; } = 45;
 
+    /// <summary>Whether E leaves the shut door shut for now; the scene script that sets it says why.</summary>
+    public Func<bool> Locked { get; set; } = () => false;
+
     public override void _Ready()
     {
         leaf = GetNode<Interactable3D>("Leaf");
-        leaf.Interacted += () => State = State == DoorState.Shut ? DoorState.Open : DoorState.Shut;
+        leaf.Interacted += () =>
+        {
+            if (State != DoorState.Shut) State = DoorState.Shut;
+            else if (!Locked()) State = DoorState.Open;
+        };
         State = state;
     }
 }

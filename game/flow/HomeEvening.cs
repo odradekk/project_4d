@@ -11,14 +11,17 @@ namespace Game.Flow;
 /// the weather forecast, and the homework that ends with the last page of the notebook. The notebook can be opened
 /// from here on.
 /// Decision note: 2026-10-26-prologue-greybox
+/// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class HomeEvening : Node
 {
     private const double HeatSeconds = 2.5;
     private const double HomeworkSeconds = 8.5;
-    // One step inside the front door, which is where scene 6 ends, facing into the flat with the door behind her.
-    private static readonly Vector3 Arrival = new(3.4f, .02f, 7.45f);
-    private static readonly Vector3 Dinner = new(5.8f, 0, 8.5f);
+    // In the entrance hall just inside the front door, which is where scene 6 ends, facing into the flat with the door
+    // behind her, as the compound's spawn faces.
+    private static readonly Vector3 Arrival = new(.75f, HomeScene.Floor + .02f, 6.7f);
+    // On the floor between the tea table and the television.
+    private static readonly Vector3 Dinner = new(5.4f, HomeScene.Floor, 2.75f);
     // The cat stops this close to its spot, since she may be standing on it.
     private const float DinnerReach = .4f;
     private static readonly Color ScreenOn = new(.7f, .85f, 1f);
@@ -49,7 +52,8 @@ public partial class HomeEvening : Node
     {
         home = HomeScene.Open(this, region =>
         {
-            region.PrismEnabled = false;
+            // Her father has gone to work, and the living-room door is open: ajar, it would stand in the cat's way.
+            region.GetNode<Door3D>("Sections/Ⅰ/Props/HomeDoors/LivingRoomDoor").State = Door3D.DoorState.Open;
             region.GetNode("Sections/Ⅰ/Spawns").AddChild(new CreatureSpawn3D
             {
                 Name = "Cat",
@@ -62,9 +66,8 @@ public partial class HomeEvening : Node
             });
         });
         home.Player.Position = Arrival;
-        // The alarm clock stays on the bedside table, where it is seen from the other sections in scene 9.
-        foreach (var name in new[] { "Father", "Money", "Backpack", "FrontDoor", "Sink" }) home.Show(name, false);
-        foreach (var name in new[] { "Clock", "StairDoor" }) home.Enable(name, false);
+        foreach (var name in new[] { "Father", "Money", "Backpack", "Sink" }) home.Show(name, false);
+        home.Enable("Clock", false);
         home.Prop("Tv").GetNode<MeshInstance3D>("Screen").MaterialOverride = new StandardMaterial3D
         {
             AlbedoColor = ScreenOn,
@@ -84,6 +87,9 @@ public partial class HomeEvening : Node
         On("Sausage", Share);
         On("Tv", Forecast);
         On("Desk", Homework);
+        // She stays in for the evening, and HomeRoute leads nowhere outside the flat.
+        home.Door("FrontDoor").Locked = () => true;
+        On("HomeDoors/FrontDoor/Leaf", () => Say(2.5, "天黑了，不出去了。"));
         home.Hud.Say("", "爸爸已经去厂里上中班了。", 3);
         home.Hud.Say("", "煤球，小声点。按 N 翻看数学笔记本。", 3.5);
     }

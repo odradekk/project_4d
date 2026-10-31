@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
@@ -49,6 +49,10 @@ size = Vector3(0.48, 0.8, 0.5)
 [sub_resource type="BoxMesh" id="b11"]
 material = SubResource("m1")
 size = Vector3(0.5, 0.05, 0.5)
+
+[sub_resource type="BoxMesh" id="b12"]
+material = SubResource("m1")
+size = Vector3(0.35, 0.45, 0.4)
 
 [node name="Furniture" type="Node3D"]
 
@@ -160,4 +164,14 @@ EntityId = "squat_toilet"
 [node name="p1" parent="squat_toilet" instance=ExtResource("e2")]
 position = Vector3(0, 0.025, 0)
 mesh = SubResource("b11")
+PartId = "p1"
+
+[node name="bag_stool" type="Node3D" parent="."]
+position = Vector3(6.755, 3.2, 6.4)
+script = ExtResource("e1")
+EntityId = "bag_stool"
+
+[node name="p1" parent="bag_stool" instance=ExtResource("e2")]
+position = Vector3(0, 0.225, 0)
+mesh = SubResource("b12")
 PartId = "p1"

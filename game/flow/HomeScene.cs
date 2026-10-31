@@ -11,14 +11,20 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// The home region as the day's scenes use it: the props that a scene switches on and off, and the sounds of the flat.
+/// The home region as the day's scenes use it: the props that a scene switches on and off, the flat's doors, and the
+/// sounds of the flat. Scenes 1 and 7 play in the compound; scenes 8 and 9 still play in the old home's room.
 /// Decision note: 2026-10-26-prologue-greybox
+/// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 internal sealed class HomeScene
 {
-    internal const string RegionPath = "res://regions/home.tscn";
+    internal const string RegionPath = "res://regions/compound.tscn";
     internal const string RoomPath = "res://regions/room.tscn";
     internal const string Section = "Ⅰ";
+    /// <summary>The height of the flat's floor in the compound, on the second storey.</summary>
+    // The same value as HOME * S in regions/compound/generate.py. HomeMorning ends scene 1 when she is lower than this, so
+    // nothing she can reach on the second storey but the flight down may lie lower than 3.14 m.
+    internal const float Floor = 3.2f;
 
     private readonly Dictionary<string, uint> layers = [];
 
@@ -36,8 +42,8 @@ internal sealed class HomeScene
     internal GameHud Hud => Player.Hud;
 
     /// <summary>
-    /// Loads the region into <paramref name="host"/>, after <paramref name="change"/> has edited it. The region is the home
-    /// by default, or a scene that inherits it, such as the room of scenes 8 and 9.
+    /// Loads the region into <paramref name="host"/>, after <paramref name="change"/> has edited it. The region is the
+    /// compound by default, or the room of scenes 8 and 9.
     /// </summary>
     internal static HomeScene Open(Node host, Action<Region3D>? change = null, string path = RegionPath)
     {
@@ -58,6 +64,9 @@ internal sealed class HomeScene
     internal T Prop<T>(string name, string section = Section) where T : Node => Region.Props(section)!.GetNode<T>(name);
 
     internal Interactable3D Prop(string name) => Prop<Interactable3D>(name);
+
+    /// <summary>One of the flat's doors in the compound, such as FrontDoor.</summary>
+    internal Door3D Door(string name) => Prop<Door3D>($"HomeDoors/{name}");
 
     /// <summary>Lets the crosshair find the prop, or stops it.</summary>
     internal void Enable(string name, bool on) => Prop(name).CollisionLayer = on ? layers[name] : 0;

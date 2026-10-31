@@ -10,11 +10,25 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The home region's layout: how the room differs in its three sections, the building ranges and the floor hole, and the
-/// space kept free for the seam, the hoop and the cat in scene 8.
+/// The home regions. In the compound of scenes 1 and 7, each prop rests on the furniture of its room. In the old home,
+/// whose room scenes 8 and 9 still use: how the room differs in its three sections, the building ranges and the floor
+/// hole, and the space kept free for the seam, the hoop and the cat in scene 8.
+/// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class HomeChecks : Node
 {
+    private const string OldHome = "res://regions/home.tscn";
+    // Each prop of scenes 1 and 7, the box child whose bottom rests, and the furniture under it, which puts it in its room.
+    private static readonly (string Prop, string Part, string Furniture)[] Resting =
+    [
+        ("Clock", "Visual", "desk"), ("Backpack", "Visual", "bag_stool"), ("Desk", "Shape", "desk"),
+        ("Father", "Visual", "father_bed"), ("Tv", "Screen", "tv_stand"), ("Note", "Paper/Sheet", "tea_table"),
+        ("Money", "Visual", "tea_table"), ("HairClip", "Visual", "tea_table"), ("Sausage", "Visual", "tea_table"),
+        ("Sink", "Shape", "basin"), ("Stove", "Visual", "stove"),
+    ];
+    // How far a resting part may float above its furniture or sink into it, give or take the engine's 5 mm of contact:
+    // a 1.3 cm box just beyond this distance below the part must meet the furniture, and one above its bottom must not.
+    private const float RestSlack = .007f;
     private const double Epsilon = .006;
     // The reaches of the cat's leap, longest first, how far its body goes beyond each end of one, and its radius: see Cat.cs.
     private static readonly float[] CatReaches = [1.2f, 1f, .8f, .6f];
@@ -28,11 +42,18 @@ public partial class HomeChecks : Node
     {
         try
         {
+            home = HomeScene.Open(this);
+            world = home.Region.World!;
+            await Frames(2);
+            CheckPropsRest();
+            RemoveChild(home.Region);
+            home.Region.Free();
+
             home = HomeScene.Open(this, region =>
             {
                 AddCatToys(region);
                 HideProps(region);
-            });
+            }, OldHome);
             world = home.Region.World!;
             await Frames(2);
             CheckSections();
@@ -41,7 +62,7 @@ public partial class HomeChecks : Node
             CheckFloorHole();
             CheckFreeSpace();
             CheckPropsShow();
-            GD.Print("Home checks passed: sections, room layout in three sections, buildings, floor hole, free space, props.");
+            GD.Print("Home checks passed: the compound's props on their furniture; the old home's sections, room layout in three sections, buildings, floor hole, free space, props.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -55,6 +76,32 @@ public partial class HomeChecks : Node
         (SectionGeometryResult.Geometry)world.GetSectionGeometry(new(section));
 
     private bool Has(string section, string entity) => Geometry(section).Entities.Any(slice => slice.Entity.Value == entity);
+
+    // Under the middle of the resting part's bottom, as the engine sees section I, is the top of its furniture.
+    private void CheckPropsRest()
+    {
+        foreach (var (name, part, furniture) in Resting)
+        {
+            var box = home.Prop(name).GetNode<Node3D>(part);
+            var height = box switch
+            {
+                MeshInstance3D { Mesh: BoxMesh mesh } => mesh.Size.Y,
+                CollisionShape3D { Shape: BoxShape3D shape } => shape.Size.Y,
+                _ => throw new InvalidOperationException($"{name}/{part} must be a box")
+            };
+            var bottom = box.GlobalPosition with { Y = box.GlobalPosition.Y - height / 2 };
+            var below = Hits(bottom - new Vector3(0, RestSlack + .0065f, 0));
+            Check(below.Contains(furniture), $"{name} stands on the {furniture}, not above it; just under it are {string.Join(", ", below)}");
+            Check(!Hits(bottom + new Vector3(0, RestSlack + .0065f, 0)).Contains(furniture), $"{name} stands on the {furniture}, not sunk into it");
+        }
+    }
+
+    // What a box 1 cm across and 1.3 cm high around the point meets in section I, contact within 5 mm left out.
+    private string[] Hits(Vector3 point)
+    {
+        var box = new OccupancyBox(SceneReader.PoseOf(new Transform3D(Basis.Identity, point), Geometry(HomeScene.Section).W), new(.005, .0065, .005, Epsilon));
+        return ((OccupancyResult.Occupancy)world.QueryOccupancy(box, [])).Hits.Select(hit => hit.Entity.Value).ToArray();
+    }
 
     private void CheckSections()
     {

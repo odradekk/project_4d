@@ -20,9 +20,11 @@ public partial class PrologueChecks
     {
         await Arrive(1);
         Check(!Player.Hud.NotebookAvailable, "the notebook cannot be opened in the morning");
-        foreach (var name in new[] { "Clock", "Sink", "Money", "Backpack", "Note", "FrontDoor" }) Prop(name).Interact();
-        Check(((HomeMorning)prologue.Scene!).DoorOpen, "the door is open once the alarm is off, the teeth brushed and the bag and the money taken");
-        Prop("StairDoor").Interact();
+        foreach (var name in new[] { "Clock", "Sink", "Money", "Backpack", "Note", "HomeDoors/FrontDoor/Leaf" }) Prop(name).Interact();
+        Check(Region.Props("Ⅰ")!.GetNode<Door3D>("HomeDoors/FrontDoor").State == Door3D.DoorState.Open,
+            "the door is open once the alarm is off, the teeth brushed and the bag and the money taken");
+        // Put down on the flight that leads down from the second storey, which ends the scene.
+        Player.Position = new(3.85f, 2.6f, 19.56f);
     }
 
     private async Task PlaySchoolRoad()
@@ -138,7 +140,8 @@ public partial class PrologueChecks
         await Arrive(7, 1, 2, 3, 4);
         var evening = (HomeEvening)prologue.Scene!;
         Check(Player.Hud.NotebookAvailable, "the notebook can be opened from here");
-        Check(evening.CatBody.GetNode<Cat>("Cat").Held && Player.Position.X is > 3.2f and < 3.6f, "she is one step inside the front door with the cat in her arms");
+        Check(evening.CatBody.GetNode<Cat>("Cat").Held && Player.Position.X < 1.8f && Player.Position.Z is > 6.4f and < 7.35f,
+            "she is in the entrance hall just inside the front door with the cat in her arms");
         await Again(() => Press(Key.Backspace), 7, 1, 2, 3, 4);
         evening = (HomeEvening)prologue.Scene!;
         Check(evening.CatBody.GetNode<Cat>("Cat").Held, "the cat is in her arms again");
