@@ -9,8 +9,8 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// The prologue from scene 1 to scene 9, one scene after the other. A scene is added to this node and plays until it emits
-/// Finished and the line it is saying is said. Between two scenes the screen fades to black and the scene before is freed with
+/// The prologue from scene 1 to scene 9, one scene after the other; scene 2 is part of scene 1. A scene is added to this
+/// node and plays until it emits Finished and the line it is saying is said. Between two scenes the screen fades to black and the scene before is freed with
 /// its region. A scene can play in the region of the scene before, as scenes 4 and 5 do in the school of scene 3 and scene 9 in
 /// the room of scene 8; the scene that loaded the region stays, since the region is its child, and does nothing more, until the last of them is over.
 /// What the scenes pass on is kept here: the notebook, and the money, which a scene is given as a copy. Backspace starts the
@@ -18,10 +18,13 @@ namespace Game.Flow;
 /// does the same, unless it set its own. The last scene, which ends on the title, stays on the screen when it is over, and
 /// Backspace does nothing from its black screen on.
 /// Decision note: 2026-10-26-prologue-greybox
+/// Decision note: 2026-10-31-bus-commute
 /// </summary>
 public partial class Prologue : Node
 {
     private const double FadeSeconds = .4;
+    // The money scene 1 leaves her with, in mao.
+    private const int MorningMoney = 20;
 
     private readonly ColorRect veil = new() { Color = Colors.Black, MouseFilter = Control.MouseFilterEnum.Ignore };
     private NotebookState notebook = new();
@@ -56,17 +59,17 @@ public partial class Prologue : Node
         layer.AddChild(hint);
         hint.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomLeft, Control.LayoutPresetMode.Minsize, 12);
 
-        await Play(_ => new HomeMorning());
-        var mao = (await Play(_ => new SchoolRoad())).Wallet.Mao;
-        await Play(region => new MathClass { Region = region });
-        await Play(region => new Recess { Region = region }, true);
-        await Play(region => new Duty { Region = region }, true);
-        // The money is a copy, so that starting the scene again gives it the money it started with.
-        await Play(_ => new HomeRoad { Wallet = new Wallet(mao) });
+        // Scene 2, the way to school, is part of scene 1 now: she rides the bus from the compound to scene 3.
+        await Play(1, _ => new HomeMorning());
+        await Play(3, region => new MathClass { Region = region });
+        await Play(4, region => new Recess { Region = region }, true);
+        await Play(5, region => new Duty { Region = region }, true);
+        // The two yuan from the table, as a copy, so that starting the scene again gives it the money it started with.
+        await Play(6, _ => new HomeRoad { Wallet = new Wallet(MorningMoney) });
         // Scene 6 ends with the cat in her arms.
-        await Play(_ => new HomeEvening { CarryingCat = true });
-        await Play(_ => new CatRoom());
-        await Play(region => new DeepRoom { Region = region }, true);
+        await Play(7, _ => new HomeEvening { CarryingCat = true });
+        await Play(8, _ => new CatRoom());
+        await Play(9, region => new DeepRoom { Region = region }, true);
         // The title is up: nothing is left to restart.
         hint.Hide();
         EmitSignal(SignalName.Finished);
@@ -83,15 +86,14 @@ public partial class Prologue : Node
     private void Restart() => running?.TrySetResult(false);
 
     /// <summary>
-    /// Plays the scene until it finishes. <paramref name="create"/> makes the scene, given the region of the scene before if
+    /// Plays the scene of the given number until it finishes. <paramref name="create"/> makes the scene, given the region of the scene before if
     /// <paramref name="shares"/> says that the scene plays in it, and none otherwise, which is also the case when the scene is
     /// started again: then it loads a region of its own.
     /// </summary>
-    private async Task<T> Play<T>(Func<Region3D?, T> create, bool shares = false) where T : Node
+    private async Task Play(int number, Func<Region3D?, Node> create, bool shares = false)
     {
         var pages = notebook.Pages.ToArray();
         var available = notebook.Available;
-        var number = Number + 1;
         for (var again = false; ; again = true)
         {
             if (again)
@@ -125,7 +127,7 @@ public partial class Prologue : Node
             // The veil covers the lines, so the line that is being said is said before the screen fades.
             var said = player.Hud.SubtitleText;
             while (said != "" && player.Hud.SubtitleText == said) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            return next;
+            return;
         }
     }
 

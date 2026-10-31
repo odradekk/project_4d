@@ -6,55 +6,47 @@ using Game.Characters;
 using Game.Flow;
 using Game.Interaction;
 using Game.Player;
+using Game.Regions;
 using Godot;
-using static Game.Tests.CharacterFixture;
 using static Game.Tests.TurningFixture;
 
 namespace Game.Tests;
 
-// Scenes 1 to 7, each finished by the quickest moves that its own checks use: props are pressed without walking to them, and
-// the school scenes are driven through the engine as the keys do. Scenes 2, 4, 5, 6 and 7 are started again on the way.
+// Scenes 1 and 3 to 7, each finished by the quickest moves that its own checks use: props are pressed without walking to them,
+// and the school scenes are driven through the engine as the keys do. Scenes 1, 4, 5, 6 and 7 are started again on the way.
 public partial class PrologueChecks
 {
     private async Task PlayMorning()
     {
         await Arrive(1);
         Check(!Player.Hud.NotebookAvailable, "the notebook cannot be opened in the morning");
+        var morning = (HomeMorning)prologue.Scene!;
+        var begin = Player.Position;
+        Prop("Money").Interact();
+        // The checkpoint that the flow made starts the scene again, with the money back on the table and her where she began.
+        Player.Position += new Vector3(-2, 0, 0);
+        await Again(() => morning.GetChildren().OfType<SceneCheckpoint>().Single().Restart(), 1);
+        Check(!GodotObject.IsInstanceValid(morning), "the scene that was started again is freed");
+        morning = (HomeMorning)prologue.Scene!;
+        Check(!morning.MoneyTaken && Prop("Money").Visible && Player.Position.DistanceTo(begin) < .01f, "the money is on the table again and she stands where she began");
         foreach (var name in new[] { "Clock", "Sink", "Money", "Backpack", "Note", "HomeDoors/FrontDoor/Leaf" }) Prop(name).Interact();
         Check(Region.Props("Ⅰ")!.GetNode<Door3D>("HomeDoors/FrontDoor").State == Door3D.DoorState.Open,
             "the door is open once the alarm is off, the teeth brushed and the bag and the money taken");
-        // Put down on the flight that leads down from the second storey, which ends the scene.
-        Player.Position = new(3.85f, 2.6f, 19.56f);
-    }
-
-    private async Task PlaySchoolRoad()
-    {
-        await Arrive(2);
-        var road = (SchoolRoad)prologue.Scene!;
-        Check(road.Wallet.Mao == 20 && Player.Position.Y > 2.9f, "the two yuan of the table are in her pocket, and she stands on the landing");
-        var begin = Player.Position;
-        Prop("BunStall").Interact();
-        Check(road.Wallet.Mao == 15, "the bun costs 5 mao");
-        // The checkpoint that the flow made starts the scene again, with the money she had at its start, where she began.
-        Player.Position += new Vector3(3, 0, 0);
-        await Again(() => road.GetChildren().OfType<SceneCheckpoint>().Single().Restart(), 2);
-        Check(!GodotObject.IsInstanceValid(road), "the scene that was started again is freed");
-        road = (SchoolRoad)prologue.Scene!;
-        Check(road.Wallet.Mao == 20 && Apart(Player.Position, begin) < .01f, "she has the two yuan again and stands where she began");
-        Prop("BunStall").Interact();
-        // A mao more is spent on the way, so that scene 6 can tell the money it is given from the 15 mao it has of its own.
-        Check(road.Wallet.Spend(1) && road.Wallet.Mao == 14, "she has 14 mao left");
-        Region.Character("cat").GetNode<Interactable3D>("Feed").Interact();
-        await Says("要迟到了", 30);
-        await Until(() => Player.Hud.SubtitleText == "", 10, "she must have said it");
-        // The line at the gate is said before the screen fades: the scene leaves the tree after its 2 s and the fade, not at once.
+        // Put down on the sidewalk by the bus stop, which calls the bus.
+        Player.Position = new(83.4f, -.1f, 74.3f);
+        var bus = Region.Props("Ⅰ")!.GetNode<Bus3D>("Bus");
+        await Until(() => bus.State == Bus3D.BusState.Waiting, 60, "the bus must come and open its doors");
+        bus.GetChildren().OfType<Interactable3D>().First().Interact();
+        // A line that is still being said when the scene finishes is said before the screen fades: the scene leaves the tree
+        // after the line's 8 s and the fade, not when it finishes, about 6 s after she boards.
         speed = 1;
         ulong left = 0;
-        road.TreeExited += () => left = Time.GetTicksMsec();
-        var pressed = Time.GetTicksMsec();
-        Prop("SchoolGate").Interact();
+        prologue.Scene!.TreeExited += () => left = Time.GetTicksMsec();
+        Player.Hud.ClearText();
+        var said = Time.GetTicksMsec();
+        Player.Hud.Say("", "车开动了。", 8);
         await Until(() => left != 0, 20, "the scene must leave");
-        Check(left - pressed > 2300, $"the line at the gate is said before the scene leaves; it left after {left - pressed} ms");
+        Check(left - said > 8300, $"the line is said before the scene leaves; it left after {left - said} ms");
         speed = FastSpeed;
     }
 
@@ -119,16 +111,17 @@ public partial class PrologueChecks
         await Arrive(6, 1, 2, 3, 4);
         var road = (HomeRoad)prologue.Scene!;
         Check(!GodotObject.IsInstanceValid(schoolRegion), "the school region is gone");
-        Check(road.Wallet.Mao == 14 && !Player.Hud.NotebookAvailable, "she comes to the kiosk with the change of scene 2, and the notebook is still shut");
+        // Scene 6 has 15 mao of its own; it is given the two yuan that scene 1 left her with.
+        Check(road.Wallet.Mao == 20 && !Player.Hud.NotebookAvailable, "she comes to the kiosk with the two yuan of scene 1, and the notebook is still shut");
         Prop("IcePop").Interact();
-        Check(road.Wallet.Mao == 11, "an ice pop costs 3 mao");
-        // Backspace starts the scene again with the change she had at its start.
+        Check(road.Wallet.Mao == 17, "an ice pop costs 3 mao");
+        // Backspace starts the scene again with the money she had at its start.
         await Again(() => Press(Key.Backspace), 6, 1, 2, 3, 4);
         road = (HomeRoad)prologue.Scene!;
-        Check(road.Wallet.Mao == 14, "she has the change again");
+        Check(road.Wallet.Mao == 20, "she has the two yuan again");
         Prop("IcePop").Interact();
         Prop("Sausage").Interact();
-        Check(road.Wallet.Mao == 6, "an ice pop and a sausage are paid from the change");
+        Check(road.Wallet.Mao == 12, "an ice pop and a sausage are paid from the two yuan");
         var cat = Region.Character("cat");
         cat.GetNode<Interactable3D>("Pickup").Interact();
         Check(cat.GetNode<Cat>("Cat").Held, "she has the cat in her arms at the door");

@@ -15,8 +15,8 @@ namespace Game.Tests;
 
 /// <summary>
 /// Scenes 1 and 7 played through in the compound: the player walks the flat on the real physics, finds each prop with the
-/// crosshair, and presses E on it. Scene 1 ends on the flight down from the second storey; in scene 7 the cat's way
-/// between the rooms is clear.
+/// crosshair, and presses E on it. Scene 1 goes on down the stair, past the cat, out to the bus and onto it (in
+/// HomeFlowChecksMorning.cs); in scene 7 the cat's way between the rooms is clear.
 /// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class HomeFlowChecks : Node
@@ -34,7 +34,7 @@ public partial class HomeFlowChecks : Node
         {
             await CheckMorning();
             await CheckEvening();
-            GD.Print("Home flow checks passed: morning (alarm, note, teeth, bag, door, flight down) and evening (cat routes, note, clip, meal, cat, forecast, homework, notebook).");
+            GD.Print("Home flow checks passed: morning (alarm, note, teeth, bag, door, cat under the stair, bus called near the stop, boarding, ride, fade) and evening (cat routes, note, clip, meal, cat, forecast, homework, notebook).");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -44,64 +44,11 @@ public partial class HomeFlowChecks : Node
         }
         finally
         {
+            Engine.TimeScale = 1;
             Input.ActionRelease("move_forward");
             Input.ActionRelease("run");
             Input.MouseMode = Input.MouseModeEnum.Visible;
         }
-    }
-
-    private async Task CheckMorning()
-    {
-        var morning = await Start<HomeMorning>("home-morning");
-        var hud = player.Hud;
-        var alarm = Sound("alarm");
-        Check(morning.AlarmRinging, "the alarm rings at 6:50");
-        Check(player.Position.X > 3.25f && player.Position.Z is > 4 and < 7.35f, $"she wakes in her room; she is at {player.Position}");
-        Check(Door("LivingRoomDoor").State == Door3D.DoorState.Ajar, "the living-room door is ajar, with her father asleep inside");
-        await Until(() => alarm.Playing && Sound("breathing").Playing, 2, "the alarm must sound and her father must snore");
-        Button(MouseButton.Right, true);
-        await Frames(2);
-        Check(!player.PrismRaised && hud.HintText.Contains("棱镜"), "the prism cannot be raised at home in the morning");
-        Button(MouseButton.Right, false);
-        Press(Key.N);
-        await Frames(2);
-        Check(!hud.NotebookOpen, "the notebook cannot be opened in the morning");
-        // Out of her room, the bathroom, the kitchen, past the ajar door into the living room and out onto the balcony,
-        // then back to the entrance hall, each through its door.
-        await Walk((2.75f, 4.6f), (2.55f, 5f), (2.55f, 6f), (2.55f, 5f), (1f, 4.5f), (1f, 3.3f), (1f, 4.5f), (2.8f, 4.5f), (2.8f, 3.3f),
-            (3.8f, 3f), (6.2f, 3f), (7.3f, 3.42f), (8.5f, 3.42f), (7.3f, 3.42f), (6.2f, 3f), (3.8f, 3f), (2.8f, 3.3f), (2.8f, 4.5f), (.75f, 6.6f));
-        await Refused("闹钟还在响。");
-        await Use("Clock");
-        Check(!morning.AlarmRinging && !alarm.Playing, "the alarm stops");
-        await Refused("牙还没刷。");
-        hud.ClearText();
-        await Use("Father");
-        Check(hud.SubtitleText.Contains("爸爸睡得很沉"), "her father is asleep");
-        await Use("Sink");
-        Check(morning.TeethBrushed, "she brushes her teeth in front of the mirror");
-        await Refused("早饭钱还在桌上。");
-        await Use("Money");
-        Check(morning.MoneyTaken && !Prop("Money").Visible, "she takes the two yuan");
-        await Refused("书包还在凳子上。");
-        await Use("Backpack");
-        Check(morning.HasBackpack && morning.Missing is null && !morning.NoteWritten, "the note is hers to answer, not a step before the bag is");
-        hud.ClearText();
-        await Use("Note");
-        var paper = Prop("Note").GetNode<Node3D>("Paper");
-        Check(morning.NoteWritten && Mathf.Abs(paper.Rotation.X - Mathf.Pi) < .01f, "E turns the note over");
-        Check(paper.GetNode<Label3D>("Back").Visible && paper.GetNode<Label3D>("Back").Text == "爸，我上学去了。"
-            && !paper.GetNode<Label3D>("Front").Visible, "she writes the answer on the back");
-        Check(Heard("爸，我上学去了。", 10), "the written line is shown");
-        hud.ClearText();
-        await Use(FrontDoor);
-        Check(Door("FrontDoor").State == Door3D.DoorState.Open && hud.SubtitleText == "我走啦。", "the front door opens, and she says goodbye");
-        // Out through the shared vestibule and along the open corridor to the stair hall's landing on the second storey,
-        // where the flight up and the flight down begin; only stepping onto the flight down ends the scene.
-        await Walk((.75f, 6.8f), (.75f, 8.2f), (-.9f, 8.2f), (-.9f, 18.5f), (.8f, 17.5f), (2.2f, 17.5f), (.8f, 17.5f), (.8f, 19.55f));
-        Check(!finished, "the corridor, the landing and the first steps up do not end the scene");
-        await Walk((2.6f, 19.55f));
-        Check(finished, $"stepping onto the flight down ends the scene; she is at {player.Position}");
-        await End();
     }
 
     private async Task CheckEvening()
