@@ -43,6 +43,7 @@ public partial class HomeEvening : Node
     private Cat cat = null!;
     private Bus3D bus = null!;
     private Door3D frontDoor = null!;
+    // catGoingBack stays set while the cat waits at the stair, until it follows her again.
     private bool catCalled, catGoingBack, homeworkStarted;
 
     [Signal] public delegate void FinishedEventHandler();
@@ -176,7 +177,6 @@ public partial class HomeEvening : Node
         {
             var next = HomeRoute.Next(catBody.Position, CatWaits);
             if (!catBody.WalkTo(next, catBody.WalkSpeed) || next != CatWaits) return false;
-            catGoingBack = false;
             cat.Sit(Outside);
             return true;
         });

@@ -91,8 +91,13 @@ public partial class HomeFlowChecks
         await Walk((-9f, 18.5f));
         await Until(() => cat.Posture == Posture.Sitting && Flat(cat.Position - CatWaits).Length() < .3f, 15,
             $"the cat must go back to the stair and wait; it is at {cat.Position}");
+        var told = 0;
+        void Told() => told++;
+        cat.ActionReplaced += Told;
         await Frames(60);
-        Check(cat.Posture == Posture.Sitting && Flat(cat.Position - CatWaits).Length() < .3f, "the cat waits at the stair while she is away");
+        cat.ActionReplaced -= Told;
+        Check(cat.Posture == Posture.Sitting && Flat(cat.Position - CatWaits).Length() < .3f && told == 0,
+            $"the cat waits at the stair while she is away, and is not sent back again; it was told {told} times");
         hud.ClearText();
         await Walk((-3.8f, 18.5f));
         await Frames(30);
