@@ -1,6 +1,6 @@
 # 序章的流程
 
-[家的区域](home-region.md) · [街道的区域](street-region.md) · [学校区域](school-region.md)
+[家的区域](home-region.md) · [学校区域](school-region.md)
 
 `game/flow/Prologue.cs` 把序章第 1 到第 9 场接成一次玩通。按 Decision note: 2026-10-31-bus-commute，第 2、6 场已分别并入第 1、7 场，不再单独播放。主场景 `game/main.tscn` 载入它；debug 构建里 `-- --start=<场景>` 仍然只启动单独一场，见 `game/debug/DebugScenes.cs`。
 
