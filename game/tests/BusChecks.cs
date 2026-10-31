@@ -11,21 +11,28 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The bus outside the compound's gate: called, it comes down the motor lane, pulls in to stop beside the sidewalk, folds
-/// its doors open and says it has arrived, then waits; sent off, it folds them shut and leaves south until it is hidden.
-/// E from the sidewalk on an open door says she boards; E does nothing while the bus is away, opening or closing.
+/// The bus outside the compound's gate: called, it comes east along the north street, turns down the main road's lane
+/// nearest the compound, pulls in to stop beside the sidewalk, folds its doors open and says it has arrived, then waits;
+/// sent off, it folds them shut, moves off briskly and turns into the south street, where it is hidden. Along the whole
+/// way it keeps clear of everything the city stands on the ground. E from the sidewalk on an open door says she boards;
+/// E does nothing while the bus is away, opening or closing. A seated camera rides at the passenger's eyes and goes back
+/// where it was when let go.
 /// Decision note: 2026-10-31-bus-commute
 /// </summary>
 public partial class BusChecks : Node
 {
-    // The sidewalk's top and its edge; the motor lane the bus keeps to away from the stop; the bus's half size.
+    // The sidewalk's top and its edge; the motor lane the bus keeps to on the main road; the bus's half size; the
+    // passenger's eyes on the bus.
     private const float Walk = -.1f, Edge = 84, LaneWest = 91, LaneEast = 98.5f, Half = 1.25f, End = 5.5f;
+    private static readonly Vector3 Eyes = new(-.8f, 2.02f, -1.3f);
 
     private TurningFixture play = null!;
     private Bus3D bus = null!;
+    private Rect2[] obstacles = [];
     private int boardings, arrivals;
     private readonly List<Bus3D.BusState> states = [];
-    private bool foldedPartway;
+    private readonly List<Vector3> seen = [];
+    private bool foldedPartway, seated;
 
     public override async void _Ready()
     {
@@ -34,6 +41,7 @@ public partial class BusChecks : Node
         {
             await play.Load(scene: "res://regions/compound.tscn");
             bus = play.Region.Props("Ⅰ")!.GetNode<Bus3D>("Bus");
+            obstacles = Obstacles(play.Region.Props("Ⅰ")!.GetNode<MeshInstance3D>("City/Boxes"));
             bus.Boarding += () => boardings++;
             bus.Arrived += () => arrivals++;
             var doorways = bus.GetChildren().OfType<Interactable3D>().ToArray();
@@ -44,11 +52,12 @@ public partial class BusChecks : Node
 
             bus.Arrive();
             states.Add(bus.State);
-            await Follow(Opening);
+            await Follow(() => bus.State == Opening);
+            Check(seen[0].X < 78 && seen[0].Z > -26.5f && seen[0].Z < -22, $"the bus comes into sight on the north street; it was first at {seen[0]}");
             Check(Fold(leaves) < .02f, "the doors are shut when the bus stops");
             await PressE(74.3f, "while the doors are opening");
             Check(arrivals == 0, "the bus does not say it has arrived before its doors are open");
-            await Follow(Waiting, leaves);
+            await Follow(() => bus.State == Waiting, leaves);
             Check(foldedPartway, "the doors fold open over time");
             Check(arrivals == 1, $"the bus says once that it has arrived when its doors are open; it said so {arrivals} times");
             var right = Corners().Min(c => c.X);
@@ -70,15 +79,27 @@ public partial class BusChecks : Node
             }
 
             bus.Depart();
+            var stop = bus.GlobalPosition;
+            var moving = GetTree().CreateTimer(5, true, true);
             foldedPartway = false;
             await PressE(74.3f, "while the doors are closing");
-            await Follow(Away, leaves);
+            var camera = play.Player.Camera;
+            var unseated = camera.Transform;
+            bus.Seat(camera);
+            seated = true;
+            await Follow(() => moving.TimeLeft <= 0, leaves, 1);
+            var off = bus.GlobalPosition.DistanceTo(stop);
+            Check(bus.State == Departing && off > 8, $"5 s after it is sent off the bus has moved off; it is {bus.State}, {off} m from the stop");
+            bus.Unseat();
+            seated = false;
+            Check(camera.Transform.IsEqualApprox(unseated), $"the camera goes back where it was when let go; it is at {camera.Transform}");
+            await Follow(() => bus.State == Away, leaves);
             Check(foldedPartway, "the doors fold shut over time");
-            Check(!bus.Visible && bus.GlobalPosition.Z > 70 + 300, $"the bus is hidden more than 300 m past the stop; it is at {bus.GlobalPosition}, visible {bus.Visible}");
+            Check(seen[^1].X < 78 && seen[^1].Z > 205 && seen[^1].Z < 209.5f, $"the bus goes out of sight on the south street; it was last at {seen[^1]}");
             Bus3D.BusState[] order = [Arriving, Opening, Waiting, Closing, Departing, Away];
             Check(states.SequenceEqual(order), $"the bus goes {string.Join(", ", order)}; it went {string.Join(", ", states)}");
             await PressE(74.3f, "once the bus has gone");
-            GD.Print("Bus checks passed: arrives along the motor lane, stops beside the sidewalk, folds its doors open, says it arrived, waits, takes E on open doors only, folds them shut, leaves south and is hidden 300 m on.");
+            GD.Print("Bus checks passed: comes along the north street and down the motor lane, clear of the city, stops beside the sidewalk, folds its doors open, says it arrived, waits, takes E on open doors only, folds them shut, carries a seated camera and lets it go, moves off within 5 s and is hidden on the south street.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -92,28 +113,68 @@ public partial class BusChecks : Node
         }
     }
 
-    // Plays on until the bus is in the given state, quickly while it drives, recording each state it enters and checking
-    // where it drives: never over the sidewalk, and within the motor lane away from the stop.
-    private async Task Follow(Bus3D.BusState until, Node3D[]? leaves = null)
+    // Plays on until done, at the given speed while the bus drives, recording each state it enters and where it is seen,
+    // and checking where it drives: clear of the city's obstacles, on the main road within the lane between its corners
+    // and the stop, and in the streets' near halves; a seated camera stays at the passenger's eyes.
+    private async Task Follow(Func<bool> done, Node3D[]? leaves = null, double driving = 4)
     {
-        for (var frame = 0; bus.State != until; frame++)
+        for (var frame = 0; !done(); frame++)
         {
-            Check(frame < 60 * 60, $"the bus must reach {until}; it is {bus.State} at {bus.GlobalPosition}");
-            Engine.TimeScale = bus.State is Arriving or Departing ? 8 : 1;
+            Check(frame < 60 * 60, $"the bus must go on; it is {bus.State} at {bus.GlobalPosition}");
+            Engine.TimeScale = bus.State is Arriving or Departing ? driving : 1;
             await play.Frames(1);
             if (bus.State != states[^1]) states.Add(bus.State);
             if (leaves is not null && Fold(leaves) is > .02f and < .1f) foldedPartway = true;
+            if (seated) Check(play.Player.Camera.GlobalPosition.DistanceTo(bus.ToGlobal(Eyes)) < .01f, $"the seated camera rides at the passenger's eyes; it is at {play.Player.Camera.GlobalPosition}");
             if (!bus.Visible) continue;
-            var corners = Corners();
-            Check(corners.All(c => c.X >= Edge), $"the bus keeps off the sidewalk; it is at {bus.GlobalPosition}");
-            if (Mathf.Abs(bus.GlobalPosition.Z - 70) > 46)
-                Check(corners.All(c => c.X >= LaneWest && c.X <= LaneEast), $"away from the stop the bus keeps to the motor lane; it is at {bus.GlobalPosition}");
+            var (at, corners) = (bus.GlobalPosition, Corners());
+            seen.Add(at);
+            var hit = obstacles.FirstOrDefault(o => Overlaps(corners, o));
+            Check(hit.Size == Vector2.Zero, $"the bus keeps clear of the city; at {at} it runs into the box from {hit.Position} to {hit.End} (x, z)");
+            if (at.X > 88 && (at.Z is > -17 and < 30 || at.Z is > 110 and < 200))
+                Check(corners.All(c => c.X >= LaneWest && c.X <= LaneEast), $"on the main road the bus keeps to the motor lane; it is at {at}");
+            if (at.X < 80 && at.Z < 0) Check(corners.All(c => c.Z >= -26.5f && c.Z <= -22), $"on the north street the bus keeps to the eastbound half; it is at {at}");
+            if (at.X < 80 && at.Z > 200) Check(corners.All(c => c.Z >= 205 && c.Z <= 209.5f), $"on the south street the bus keeps to the westbound half; it is at {at}");
         }
         Engine.TimeScale = 1;
     }
 
     private Vector3[] Corners() =>
-        [.. new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) }.Select(c => bus.ToGlobal(new(c.Item1 * Half, 0, c.Item2 * End)))];
+        [.. new[] { (-1, -1), (-1, 1), (1, 1), (1, -1) }.Select(c => bus.ToGlobal(new(c.Item1 * Half, 0, c.Item2 * End)))];
+
+    // The footprints (x, z) of the city's boxes that would stand in the bus's way near its route: taller than 5 cm and
+    // starting below its roof, 3 m up. The city merges its boxes into one surface per colour, 24 vertices to a box.
+    private static Rect2[] Obstacles(MeshInstance3D boxes)
+    {
+        var mesh = (ArrayMesh)boxes.Mesh;
+        var found = new List<Rect2>();
+        for (var surface = 0; surface < mesh.GetSurfaceCount(); surface++)
+        {
+            var vertices = (Vector3[])mesh.SurfaceGetArrays(surface)[(int)Mesh.ArrayType.Vertex];
+            for (var i = 0; i < vertices.Length; i += 24)
+            {
+                var box = new Aabb(vertices[i], Vector3.Zero);
+                for (var k = 1; k < 24; k++) box = box.Expand(vertices[i + k]);
+                if (box.Size.Y > .05f && box.Position.Y < 3 && box.End.X > -20 && box.Position.X < 120 && box.End.Z > -50 && box.Position.Z < 230)
+                    found.Add(new Rect2(box.Position.X, box.Position.Z, box.Size.X, box.Size.Z));
+            }
+        }
+        return [.. found];
+    }
+
+    // Whether the bus's footprint, its corners in order around it, and a box's footprint overlap: no axis of either
+    // separates them.
+    private static bool Overlaps(Vector3[] corners, Rect2 box)
+    {
+        var bus = corners.Select(c => new Vector2(c.X, c.Z)).ToArray();
+        Vector2[] other = [box.Position, new(box.End.X, box.Position.Y), box.End, new(box.Position.X, box.End.Y)];
+        foreach (var axis in new[] { Vector2.Right, Vector2.Down, bus[1] - bus[0], bus[3] - bus[0] })
+        {
+            var (a, b) = (bus.Select(axis.Dot).ToArray(), other.Select(axis.Dot).ToArray());
+            if (a.Max() <= b.Min() || b.Max() <= a.Min()) return false;
+        }
+        return true;
+    }
 
     // How far into the bus the least folded leaf has turned, at the middle of its lower panel.
     private float Fold(Node3D[] leaves) =>

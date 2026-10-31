@@ -6,12 +6,13 @@ using Godot;
 namespace Game.Regions;
 
 /// <summary>
-/// The city bus that stops outside the gate. Called with <see cref="Arrive"/>, it comes from the north along the southbound
-/// motor lane nearest the compound, pulls into the bicycle lane, stops at the bus stop with its right side 0.4 m from the
-/// sidewalk, folds its two doors open and emits <see cref="ArrivedEventHandler">Arrived</see>; then it waits, and E on an
-/// open door emits <see cref="BoardingEventHandler">Boarding</see>. Called with <see cref="Depart"/>, it folds its doors
-/// shut, pulls back into the motor lane and speeds south into the fog, and is hidden 300 m past the stop. Away, it is
-/// hidden. A passenger aboard is the caller's business: a camera under <see cref="PassengerSpot"/> rides along.
+/// The city bus that stops outside the gate. Called with <see cref="Arrive"/>, it comes east along the north street from
+/// behind the compound, turns right onto the main road's southbound lane nearest the compound, pulls into the bicycle lane,
+/// stops at the bus stop with its right side 0.4 m from the sidewalk, folds its two doors open and emits
+/// <see cref="ArrivedEventHandler">Arrived</see>; then it waits, and E on an open door emits
+/// <see cref="BoardingEventHandler">Boarding</see>. Called with <see cref="Depart"/>, it folds its doors shut, pulls back
+/// into the lane, drives south, turns right into the south street and is hidden once the compound's buildings stand
+/// between it and the sidewalk. Away, it is hidden. <see cref="Seat"/> holds a camera at a passenger's eyes.
 /// It is scenery that the engine does not know of, with no body that stops anything: she cannot walk off the sidewalk to
 /// it. The node's y is the ground; the script sets its x, z and heading. Its local +z is its front and −x its right side.
 /// Decision note: 2026-10-31-bus-commute
@@ -25,17 +26,28 @@ public partial class Bus3D : Node3D
 
     public BusState State { get; private set; }
 
-    /// <summary>At a window seat on the left, facing the middle door, at a seated child's eye height; it moves with the bus.</summary>
-    public Node3D PassengerSpot { get; private set; } = null!;
-
-    // x of the bus's middle in the lane (x 91 to 94.75) and at the stop, where its right side is at 84.4; z of its middle
-    // at the stop, with both doors along the bus shelter (z 67 to 75). It eases between the lane and the stop over Turn
-    // metres of z on either side, and City3DBay.cs opens the green belt where it crosses it.
-    private const double Lane = 92.875, Bay = 85.65, Stop = 70, Turn = 40;
-    private const double From = 200, Gone = 300, Cruise = 11, Rate = 1, DoorTime = 1.2;  // m, m, m/s, m/s², s
+    // x of the bus's middle in the main road's southbound lane nearest the compound (x 91 to 94.75) and at the stop, where
+    // its right side is at 84.4; z of its middle at the stop, with both doors along the bus shelter (z 67 to 75). It eases
+    // between the lane and the stop over Shift metres of z on either side, and City3DBay.cs opens the green belt there.
+    // It drives in the north street's eastbound half (z −26.5 to −22) and the south street's westbound half (z 205 to
+    // 209.5), and turns between them and the main road about a centre Corner metres from its path.
+    private const float Lane = 92.875f, Bay = 85.65f, Stop = 70, Shift = 40, North = -24.25f, South = 207.25f, Corner = 7;
+    // Where it starts on the north street and is hidden on the south street: x of its middle, with the compound's
+    // south-east and north-east buildings between it and the sidewalk.
+    private const float From = 20, Hidden = 50;
+    private const float Cruise = 12, Turning = 7, Accel = 1.5f, Brake = 1.8f, DoorTime = 1.2f;  // m/s, m/s², s
     private const float Fold = 80 * Mathf.Pi / 180;
 
-    private double z, speed, doors;  // doors: 0 shut, 1 open
+    private static readonly BusRoute In = new BusRoute(new(From, North), Cruise, Turning, Brake)
+        .Line(new(Lane - Corner, North)).Turn(new(Lane - Corner, North + Corner), -Mathf.Pi / 2, 0)
+        .Line(new(Lane, Stop - Shift)).Ease(new(Bay, Stop)).End(0);
+    private static readonly BusRoute Out = new BusRoute(new(Bay, Stop), Cruise, Turning, Brake)
+        .Ease(new(Lane, Stop + Shift)).Line(new(Lane, South - Corner)).Turn(new(Lane - Corner, South - Corner), 0, Mathf.Pi / 2)
+        .Line(new(Hidden, South)).End(Cruise);
+
+    private float s, speed, doors;  // along the route; doors: 0 shut, 1 open
+    private RemoteTransform3D? seat;
+    private Transform3D unseated;
 
     public override void _Ready()
     {
@@ -46,8 +58,8 @@ public partial class Bus3D : Node3D
     public void Arrive()
     {
         if (State != BusState.Away) throw new InvalidOperationException($"the bus can only arrive while away; it is {State}");
-        (z, State, Visible) = (Stop - From, BusState.Arriving, true);
-        Place();
+        (s, speed, State, Visible) = (0, Cruise, BusState.Arriving, true);
+        Place(In);
     }
 
     public void Depart()
@@ -57,49 +69,77 @@ public partial class Bus3D : Node3D
         SetDoorways(false);
     }
 
+    /// <summary>
+    /// Holds <paramref name="camera"/> at a passenger's eyes, on the seat behind the middle door, facing ahead and toward the
+    /// door and the window, and moves it with the bus until <see cref="Unseat"/>. The caller stops her looking about and
+    /// using things meanwhile.
+    /// </summary>
+    public void Seat(Camera3D camera)
+    {
+        if (seat is not null) throw new InvalidOperationException("a camera is already seated on the bus");
+        unseated = camera.Transform;
+        passengerSpot.AddChild(seat = new RemoteTransform3D());
+        seat.RemotePath = seat.GetPathTo(camera);
+    }
+
+    /// <summary>Lets the seated camera go, back where it was in its parent when it was seated.</summary>
+    public void Unseat()
+    {
+        if (seat is null) throw new InvalidOperationException("no camera is seated on the bus");
+        var camera = seat.GetNode<Camera3D>(seat.RemotePath);
+        seat.Free();
+        seat = null;
+        camera.Transform = unseated;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
+        var dt = (float)delta;
         switch (State)
         {
             case BusState.Arriving:
-                // Braking at Rate for the last stretch, so it stops at the stop.
-                z = Math.Min(Stop, z + Math.Min(Cruise, Math.Sqrt(2 * Rate * (Stop - z))) * delta);
-                if (Stop - z < .001) (z, State) = (Stop, BusState.Opening);
+                Drive(In, dt);
+                if (In.Length - s < .001f) (s, State) = (In.Length, BusState.Opening);
+                Place(In);
                 break;
             case BusState.Opening:
-                doors = Math.Min(1, doors + delta / DoorTime);
+                doors = Math.Min(1, doors + dt / DoorTime);
                 if (doors < 1) break;
                 State = BusState.Waiting;
                 SetDoorways(true);
                 EmitSignal(SignalName.Arrived);
                 break;
             case BusState.Closing:
-                doors = Math.Max(0, doors - delta / DoorTime);
-                if (doors == 0) (State, speed) = (BusState.Departing, 0);
+                doors = Math.Max(0, doors - dt / DoorTime);
+                if (doors == 0) (State, s, speed) = (BusState.Departing, 0, 0);
                 break;
             case BusState.Departing:
-                speed = Math.Min(Cruise, speed + Rate * delta);
-                z += speed * delta;
-                if (z - Stop > Gone) (State, Visible) = (BusState.Away, false);
+                Drive(Out, dt);
+                Place(Out);
+                if (s >= Out.Length) (State, Visible) = (BusState.Away, false);
                 break;
             default:
                 return;
         }
-        Place();
         foreach (var (first, second, along) in leaves)
         {
-            first.Rotation = new(0, along * Fold * (float)doors, 0);
-            second.Rotation = new(0, -2 * along * Fold * (float)doors, 0);
+            first.Rotation = new(0, along * Fold * doors, 0);
+            second.Rotation = new(0, -2 * along * Fold * doors, 0);
         }
     }
 
-    // The bus's middle on its path, heading along it.
-    private void Place()
+    // Speeds up at Accel, no faster than the route allows where the bus is, and moves on along it.
+    private void Drive(BusRoute route, float dt)
     {
-        var u = Math.Min(1, Math.Abs(z - Stop) / Turn);
-        var slope = Math.Sign(z - Stop) * (Lane - Bay) * 6 * u * (1 - u) / Turn;
-        Position = new((float)(Bay + (Lane - Bay) * u * u * (3 - 2 * u)), Position.Y, (float)z);
-        Rotation = new(0, (float)Math.Atan(slope), 0);
+        speed = Math.Min(speed + Accel * dt, route.Limit(s));
+        s = Math.Min(route.Length, s + speed * dt);
+    }
+
+    private void Place(BusRoute route)
+    {
+        var (at, heading) = route.At(s);
+        Position = new(at.X, Position.Y, at.Y);
+        Rotation = new(0, Mathf.Atan2(heading.X, heading.Y), 0);
     }
 
     private void SetDoorways(bool open)

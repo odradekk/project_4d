@@ -13,7 +13,7 @@ namespace Game.Regions;
 public partial class Bus3D
 {
     private const uint Paint = 0xe9e4d4ff, Stripe = 0xb35a4aff, Under = 0x3a3c3fff, Tire = 0x26272aff, Floor = 0x6f6a60ff,
-        Seat = 0x5a7290ff, Rail = 0xc4c8ccff, Leaf = 0xd8d2c0ff, Sign = 0xf4f2eaff, Lamp = 0xf2e7b0ff;
+        Upholstery = 0x5a7290ff, Rail = 0xc4c8ccff, Leaf = 0xd8d2c0ff, Sign = 0xf4f2eaff, Lamp = 0xf2e7b0ff;
     private const float Half = 1.25f, End = 5.5f, Skin = .06f, Deck = .9f, Ceiling = 2.75f;
     private const float FrontAxle = 2.9f, RearAxle = -2.7f, Wheel = .45f;
     // The doorways (z) in the right side: the front door ahead of the front wheels, the middle door between the axles.
@@ -21,6 +21,7 @@ public partial class Bus3D
     private static readonly (float, float)[] Arches = [(RearAxle - .6f, RearAxle + .6f), (FrontAxle - .6f, FrontAxle + .6f)];
 
     private readonly Dictionary<uint, StandardMaterial3D> materials = [];
+    private Node3D passengerSpot = null!;
 
     private void Build()
     {
@@ -74,8 +75,8 @@ public partial class Bus3D
         const float Cushion = Deck + .42f;
         void Chair(float x0, float x1, float z)
         {
-            Box(this, x0, x1, Cushion - .08f, Cushion, z, z + .45f, Seat);
-            Box(this, x0, x1, Cushion, Cushion + .6f, z, z + .06f, Seat);
+            Box(this, x0, x1, Cushion - .08f, Cushion, z, z + .45f, Upholstery);
+            Box(this, x0, x1, Cushion, Cushion + .6f, z, z + .06f, Upholstery);
             Box(this, (x0 + x1) / 2 - .03f, (x0 + x1) / 2 + .03f, Deck, Cushion - .08f, z + .2f, z + .26f, Rail);
         }
         for (var z = -4.7f; z < 3.4f; z += .8f)
@@ -89,8 +90,9 @@ public partial class Bus3D
         foreach (var x in new[] { -.45f, .45f }) Box(this, x - .02f, x + .02f, 2.48f, 2.52f, -End + .3f, End - .5f, Rail);
         foreach (var (x, z) in new[] { (-.35f, 3.55f), (-.35f, .45f), (-.35f, -1.05f), (-.35f, -3.6f), (.12f, 2), (.12f, -2) })
             Box(this, x - .02f, x + .02f, Deck, Ceiling, z - .02f, z + .02f, Rail);
-        PassengerSpot = new Marker3D { Name = "PassengerSpot", Transform = new Transform3D(Basis.Identity, new(.9f, 2.02f, -1.25f)).LookingAt(new(-Half, 1.5f, -.2f)) };
-        AddChild(PassengerSpot);
+        // On the single seat behind the middle door, at a seated child's eyes, turned about 45° toward the door and the
+        // window from facing ahead, and a little down.
+        AddChild(passengerSpot = new Node3D { Transform = new Transform3D(Basis.Identity, new(-.8f, 2.02f, -1.3f)).LookingAt(new(-Half, 1.95f, -.85f)) });
     }
 
     // Two halves, each a pair of leaves that fold inward to their jamb, and the doorway that E finds while they stand open.
