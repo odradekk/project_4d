@@ -12,11 +12,14 @@ namespace Game.Flow;
 /// first, then through it to that spot.
 /// Out of the flat the way is one line of stretches, each walked straight: the shared vestibule, the open corridor, the
 /// stair landing of the flat's storey, the flight down to the turn, the turn, the flight down to the ground floor, the
-/// ground floor's stair hall and corridor, and the compound outside. Between each two the way passes a doorway as the
-/// flat's doorways are passed; the last is the open west side of the stair hall, in line with the middle of the slope
-/// out, so that a cat coming along the building's west wall does not run into the slope's side.
+/// ground floor's stair hall and corridor, the compound west of the building and everywhere else outside, the ground
+/// north of the building, the ground east of it, and the gap between the two flats of its north half, which opens east.
+/// Between each two the way passes a doorway as the flat's doorways are passed. The way out of the stair hall is its open
+/// west side, in line with the middle of the slope out, so that a cat coming along the building's west wall does not run
+/// into the slope's side; a cat east of the building goes round its north end.
 /// The stretches cover her building's north half only, up to her storey: every point higher than her storey's floor less
-/// 0.3 m counts as on her storey, the corridor of the south half and the floor above included.
+/// 0.3 m counts as on her storey, the corridor of the south half and the floor above included, and the gap between the
+/// flats of the south half counts as east of the building.
 /// Decision note: 2026-10-29-home-scene-layout
 /// Decision note: 2026-10-31-bus-commute
 /// </summary>
@@ -45,6 +48,9 @@ internal static class HomeRoute
     private const float GroundFoot = 1.01f, TurnFoot = 6.71f, StoreyEdge = 1.39f;
     // The flat's front wall, the vestibule's south wall, the stair hall's north and south walls, and the corridor's railing.
     private const float FrontWall = 7.35f, Vestibule = 9.05f, StairHall = 16.4f, HallEnd = 20.65f, Railing = -1.72f;
+    // The stair hall's east wall, the outer wall of the balconies, the vestibule's east wall, and how far from the building
+    // the ground north and east of it counts as beside it, short of the next path.
+    private const float HallEast = 7.85f, Balconies = 9.2f, GapWest = 1.8f, Beside = 5f;
 
     // The doorways along the way out, the first between the flat and the vestibule; each joins the stretch of its number to
     // the next. Up the stair the cat keeps to the middle of each flight.
@@ -57,7 +63,10 @@ internal static class HomeRoute
         new(OnFlight(5.9f, 19.55f), new(7f, Landing, 19.55f), true),  // its foot at the turn
         new(new(7f, Landing, 17.5f), OnFlight(5.9f, 17.5f), true),  // the top of the flight to the ground floor
         new(OnFlight(1.6f, 17.5f), new(.5f, 0, 17.5f), true),  // its foot
-        new(new(-1f, 0, 17.5f), new(-3.2f, -.2f, 17.5f), true)  // the way out, past the slope's foot
+        new(new(-1f, 0, 17.5f), new(-3.2f, -.2f, 17.5f), true),  // the way out, past the slope's foot
+        new(new(-3.2f, -.2f, -1.5f), new(-1f, -.2f, -1.5f), true),  // round the building's north-west corner
+        new(new(10.5f, -.2f, -1.5f), new(10.5f, -.2f, .5f), false),  // round its north-east corner
+        new(new(10.5f, -.2f, 8.2f), new(7f, -.2f, 8.2f), true)  // into the gap between the flats
     ];
 
     /// <summary>The point to walk to now, from <paramref name="from"/> toward <paramref name="goal"/>.</summary>
@@ -95,7 +104,8 @@ internal static class HomeRoute
 
     // Which stretch of the way a point is on, by its height and the walls' middle lines: 0 in the flat, 1 in the vestibule,
     // 2 on the corridor, 3 on the stair landing of the flat's storey, 4 on the flight down from it, 5 at the turn, 6 on the
-    // flight down to the ground floor, 7 in the ground floor's stair hall or on its corridor, and 8 outside.
+    // flight down to the ground floor, 7 in the ground floor's stair hall or on its corridor, 8 outside west of the building
+    // or anywhere not beside it, 9 north of it, 10 east of it, and 11 in the gap between its flats.
     private static int Stretch(Vector3 point)
     {
         if (point.Y > Y - .3f)
@@ -106,7 +116,12 @@ internal static class HomeRoute
         }
         if (point.Y > Landing - .3f) return point.X >= Turn ? 5 : point.Z > Middle ? 4 : 6;
         if (point.X is >= GroundFoot and < Turn && point.Z is > StairHall and < Middle) return 6;
-        return point.X > Railing && point.Z is > 0 and < HallEnd ? 7 : 8;
+        if (point.X is > Railing and < 0 && point.Z is > 0 and < StairHall) return 7;
+        if (point.X is > Railing and < HallEast && point.Z is >= StairHall and < HallEnd) return 7;
+        if (point.X is > GapWest and < HallEast && point.Z is > FrontWall and < Vestibule) return 11;
+        if (point.X is > Balconies and < Balconies + Beside && point.Z is >= 0 and < 2 * Middle) return 10;
+        if (point.X is > Railing and < Balconies + Beside && point.Z is < 0 and > -Beside) return 9;
+        return 8;
     }
 
     // A point on the slope over a flight: north of the wall between them on the one from the ground floor, south of it on the
