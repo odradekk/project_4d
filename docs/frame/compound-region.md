@@ -131,6 +131,7 @@
 | `furniture.tscn` | 截面Ⅰ的固定物件：`stove`、`piano`、`sofa`、`tea_table`、`father_bed`、`tv_stand`，以及占位的 `bed`、`desk`、`wardrobe`、`basin`、`squat_toilet` 和 `bag_stool`。凳子不在原型里，是第 1 场放书包加的；不叫 `stool`，因为第 8 场 `room.tscn` 里能翻转的凳子已经用了这个 ID |
 | `doors.tscn`、`home_doors.tscn` | 一栋楼的门：其余 15 栋楼各 12 块别人家门板前的 `Interactable3D`；小满家这栋是 11 块，加小满家的 6 个 `Door3D`（`FrontDoor`、`KitchenDoor`、`LivingRoomDoor`、`RoomDoor`、`BathroomDoor`、`BalconyDoor`） |
 | `City3D.cs` | 城市布景和远山的脚本，手写，不由 `generate.py` 生成 |
+| `City3DBay.cs`、`Bus3D.cs`、`Bus3DBody.cs`、`BusRoute.cs` | 城市布景的路口和公交车进出站的口子；公交车，见[公交车](compound-bus.md) |
 | `slopes.tscn`、`props.tscn` | 一栋楼的楼梯斜坡；截面Ⅰ的 `Props`：每栋楼一份 `slopes.tscn` 和一份门（`HomeDoors`、`Building_<列>_<排>Doors`），加上人行道的两块斜坡 |
 
 ## 检查
