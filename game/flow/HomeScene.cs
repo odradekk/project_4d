@@ -22,8 +22,7 @@ internal sealed class HomeScene
     internal const string RoomPath = "res://regions/room.tscn";
     internal const string Section = "Ⅰ";
     /// <summary>The height of the flat's floor in the compound, on the second storey.</summary>
-    // The same value as HOME * S in regions/compound/generate.py. HomeMorning ends scene 1 when she is lower than this, so
-    // nothing she can reach on the second storey but the flight down may lie lower than 3.14 m.
+    // The same value as HOME * S in regions/compound/generate.py.
     internal const float Floor = 3.2f;
 
     private readonly Dictionary<string, uint> layers = [];
@@ -54,6 +53,18 @@ internal sealed class HomeScene
         if (!region.Loaded) throw new InvalidOperationException($"The home region did not load:\n{region.Diagnostics}");
         return new HomeScene(region);
     }
+
+    /// <summary>Adds the cat's spawn to a home region that is not loaded yet, for <see cref="Open"/>'s change.</summary>
+    internal static void AddCat(Region3D region, Vector3 position) => region.GetNode("Sections/Ⅰ/Spawns").AddChild(new CreatureSpawn3D
+    {
+        Name = "Cat",
+        EntityId = "cat",
+        Position = position,
+        PassageRadius = .15,
+        PassageHeight = .4,
+        CanUseSeamsWithoutPrism = true,
+        CharacterScene = GD.Load<PackedScene>("res://characters/cat.tscn")
+    });
 
     /// <summary>The scene's view of a home region that an earlier scene has loaded and left in its state.</summary>
     internal static HomeScene Of(Region3D region) => new(region);

@@ -25,7 +25,7 @@ public partial class City3D : Node3D
     private const double FX = 27, FZ = 92.5;  // the compound's centre
     // Carriageways (z) of the streets north and south of the compound and opposite the gate, and of the road to the gate.
     private static readonly (double, double) R2 = (-31, -22), R3 = (205, 214), E1 = (89, 98), Cross = (90, 97);
-    private static readonly (double, double)[] WestCross = [(R2.Item1 - 3, R2.Item2 + 3), Cross, (R3.Item1 - 3, R3.Item2 + 3)],
+    private static readonly (double, double)[] WestCross = [NorthCross, BayIn, BayOut, SouthCross],
         EastCross = [(E1.Item1 - 3, E1.Item2 + 3)];
 
     private readonly Dictionary<uint, List<Aabb>> boxes = [];
@@ -67,7 +67,8 @@ public partial class City3D : Node3D
     {
         // The main road: motor lanes, green belts, bicycle lanes and sidewalks, cut where streets cross; the
         // compound's site has the stretch of sidewalk she walks on, from z 57 to 105.
-        Run(78, 84, .1, Walk, [WestCross[0], (57, 105), WestCross[2]]);
+        Run(78, 84, .1, Walk, [NorthCross, (57, 105), SouthCross]);
+        BusBay();
         Run(84, 89, .02, Bike, [R2, Cross, R3]);
         Run(89, 91, .15, Green, WestCross);
         Box(91, 106, 0, .02, Z0, Z1, Asphalt);
@@ -106,7 +107,7 @@ public partial class City3D : Node3D
         PoleLine(true, R3.Item1 - 1.5, X0 + 20, 80);
         PoleLine(false, -35.6, R2.Item2 + 3, R3.Item1 - 3);
         // The factory's railway spur on a low embankment west of the compound; it crosses the streets at grade.
-        (double, double)[] railGaps = [WestCross[0], WestCross[2]];
+        (double, double)[] railGaps = [NorthCross, SouthCross];
         Run(-52, -44, .3, Ballast, railGaps, -200);
         foreach (var x in new[] { -48.72, -47.28 }) Box(x - .04, x + .04, 0, .45, -200, Z1, Rail);
         for (double z = -200; z < Z1; z += .7)

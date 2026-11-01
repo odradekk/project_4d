@@ -35,7 +35,7 @@ description: 按本仓库写下的规则和以往出过的错，审查 project_4
 | `engine/**`、`engine.tests/**` | [计算原则](../../../docs/frame/principles.md)、[内容分类](../../../docs/frame/content.md)、[跨截面规则与尺寸规范](../../../docs/frame/rules.md)、[引擎模块](../../../docs/frame/engine.md)、[公共契约](../../../docs/frame/contract.md)及其分页（[数据定义](../../../docs/frame/contract-data.md)、[动作与推进](../../../docs/frame/contract-actions.md)、[抓取与布置](../../../docs/frame/contract-carry.md)、[截面与查询](../../../docs/frame/contract-views.md)）、玩法文档；决策笔记 `2026-10-26-engine-rewrite`、`2026-10-26-device-translation` |
 | `game/adapter/**` | 引擎模块、公共契约及其分页、[场景标注](../../../docs/frame/scene-authoring.md)、[预期操作](../../../docs/frame/operations-authoring.md)、[装置搭法](../../../docs/frame/device-authoring.md)；决策笔记 `2026-10-26-region-scene-authoring` |
 | `game/**` | [框架目录](../../../docs/frame/README.md)、玩法文档；决策笔记 `2026-10-26-prologue-greybox`、`2026-10-26-game-layer-csharp`。[风格文档](../../../docs/style.md)等序章定稿后才适用。改动在下面几行的目录里时，另外读那一行的文档 |
-| `game/regions/**` | 场景标注、预期操作、装置搭法、对应的区域页（[家](../../../docs/frame/home-region.md)、[学校](../../../docs/frame/school-region.md)、[街道](../../../docs/frame/street-region.md)）；决策笔记 `2026-10-26-region-scene-authoring` |
+| `game/regions/**` | 场景标注、预期操作、装置搭法、对应的区域页（[家](../../../docs/frame/home-region.md)、[学校](../../../docs/frame/school-region.md)）；决策笔记 `2026-10-26-region-scene-authoring` |
 | `game/characters/**` | [角色搭法](../../../docs/frame/character-authoring.md) |
 | `game/creatures/**` | [啃食者搭法](../../../docs/frame/grazer-authoring.md)、家的区域页 |
 | `game/flow/**`、`game/ui/**`、`game/debug/**`、`game/main.tscn` | [序章的流程](../../../docs/frame/prologue-flow.md)、写到这个场景脚本的区域页、[序章文档](../../../docs/prologue.md)、[故事文档](../../../docs/story.md) |

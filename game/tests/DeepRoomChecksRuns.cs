@@ -61,7 +61,7 @@ public partial class DeepRoomChecks
         await Walk(spot);
         Engine.TimeScale = 6;
         await Until(() => eaten.Contains(DeepGrazer.Frame), 100, $"it must bite the window frame while she stands at {spot}");
-        Check(!room.CatFled && !play.Player.Seated && room.Entries(DeepRoom.Stage.Grazing) == 0,
+        Check(!room.CatFled && !play.Player.Watching && room.Entries(DeepRoom.Stage.Grazing) == 0,
             $"standing at {spot} she is not held and the cat does not tear loose while it is still at its bites");
         await Until(() => room.Entries(DeepRoom.Stage.Scream) > 0, 200, "she must scream in the end");
         Check(fledAt >= grazingAt && grazingAt > 0, $"the cat tears loose {fledAt - grazingAt:F1} s after the chase has begun");

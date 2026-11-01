@@ -12,11 +12,12 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The prologue from scene 1 to scene 9 played through in one run, started as the main scene starts it and without a debug
-/// entry. Each scene is finished by the quickest moves that its own checks use. What is checked is the way between the scenes:
-/// every scene starts with a checkpoint and with what the scenes before gave it, the scenes of the school share one region,
-/// a region is gone before the next one is loaded, the scene that holds a shared region does nothing more, and a scene that is
-/// started again starts with what it was given the first time (scene 9 further on, with her already in section II, as it starts
+/// The prologue from scene 1 to scene 9 played through in one run, started as the main scene starts it and without a
+/// debug entry; scenes 2 and 6 are parts of scenes 1 and 7, so scene 3 follows scene 1 and scene 7 follows scene 5. Each scene is finished by the
+/// quickest moves that its own checks use. What is checked is the way between the scenes: every scene starts with a
+/// checkpoint and with what the scenes before gave it, the scenes of the school share one region, a region is gone
+/// before the next one is loaded, the scene that holds a shared region does nothing more, and a scene that is started
+/// again starts with what it was given the first time (scene 9 further on, with her already in section II, as it starts
 /// by itself). Waits for the scripts of the scenes run at a faster pace.
 /// </summary>
 public partial class PrologueChecks : Node
@@ -52,12 +53,10 @@ public partial class PrologueChecks : Node
             prologue.Finished += () => ended = true;
             AddChild(prologue);
             await PlayMorning();
-            await PlaySchoolRoad();
             var schoolRegion = await PlayMathClass();
             schoolRegion = await PlayRecess(schoolRegion);
             schoolRegion = await PlayDuty(schoolRegion);
-            await PlayHomeRoad(schoolRegion);
-            await PlayHomeEvening();
+            await PlayHomeEvening(schoolRegion);
             var roomRegion = await PlayCatRoom();
             await PlayDeepRoom(roomRegion);
             await Until(() => ended, 15, "the prologue must end after scene 9");
@@ -66,7 +65,7 @@ public partial class PrologueChecks : Node
             prologue.Free();
             // The audio thread fades a stopped sound out before it lets go of it, which takes time and not frames.
             await ToSignal(GetTree().CreateTimer(.5), SceneTreeTimer.SignalName.Timeout);
-            GD.Print("Prologue checks passed: scenes 1 to 9 in a row, with the notebook, the wallet, the cat and a checkpoint at every start, and six scenes started again.");
+            GD.Print("Prologue checks passed: scenes 1, 3, 4, 5, 7, 8 and 9 in a row, with the notebook, the cat and a checkpoint at every start, and five scenes started again.");
             GetTree().Quit();
         }
         catch (Exception error)

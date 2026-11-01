@@ -138,16 +138,13 @@ public partial class DeepRoom
         Say(Xiaoman, 3, "它过来了，往后退！");
     }
 
-    // She is caught: her keys and the mouse are off and the scene turns her eyes to the grazer, and the cat tears out of her arms.
+    // She is caught: she only watches while the scene turns her eyes to the grazer, and the cat tears out of her arms.
     private void Corner()
     {
         cornered = true;
         CatFled = true;
         var player = home.Player;
-        prism.SetRaised(false);
-        home.Hud.CloseNotebook();
-        player.Seated = true;
-        player.SetProcessUnhandledInput(false);
+        player.Watching = true;
         cat.Holdable = false;
         Say(Xiaoman, 2, "煤球——！");
         // It is in front of her chest, so it jumps down and runs off to her side, the one that is farther from the grazer. Any

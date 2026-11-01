@@ -15,7 +15,6 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private const float LookSensitivity = 0.0025f;
     private const float PitchLimit = 1.5f;
     private const string ArmsFull = "手里抱着猫呢。";
-    private float pitch;
     private bool pointerCaptured;
     private PrismView? prism;
     private PlayerActions? actions;
@@ -25,6 +24,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private string? aimedEntity;
     private string? markedEntity;
     private bool seated;
+    private bool watching;
     internal bool PointerCaptured => pointerCaptured;
     internal bool PrismRaised => prism?.Raised ?? false;
 
@@ -39,6 +39,24 @@ public partial class FirstPersonPlayer : CharacterBody3D
         {
             seated = value;
             prism?.Seated = value;
+        }
+    }
+
+    /// <summary>
+    /// Whether she only watches, as on the bus or once the grazer has her: she cannot walk, look about, use anything, raise the
+    /// prism or open the notebook, and the crosshair, the backpack's slots and the control hints are hidden. Esc still
+    /// releases the mouse.
+    /// </summary>
+    public bool Watching
+    {
+        get => watching;
+        set
+        {
+            watching = value;
+            Hud.Watching = value;
+            if (!value) return;
+            prism?.SetRaised(false);
+            Hud.CloseNotebook();
         }
     }
 
@@ -84,6 +102,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
 
     public override void _UnhandledInput(InputEvent input)
     {
+        if (watching && input is not InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) return;
         if (input is InputEventKey { Pressed: true, Echo: false } key)
         {
             if (Hud.NotebookOpen)
@@ -180,7 +199,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
         else if (input is InputEventMouseMotion motion && pointerCaptured)
         {
             RotateY(-motion.ScreenRelative.X * LookSensitivity * ScreenSide);
-            pitch = Mathf.Clamp(pitch - motion.ScreenRelative.Y * LookSensitivity, -PitchLimit, PitchLimit);
+            // From where the camera is, which a seat on the bus may have held elsewhere and let go.
+            var pitch = Mathf.Clamp(Camera.Rotation.X - motion.ScreenRelative.Y * LookSensitivity, -PitchLimit, PitchLimit);
             Camera.Rotation = new Vector3(pitch, 0, 0);
         }
     }
@@ -191,7 +211,7 @@ public partial class FirstPersonPlayer : CharacterBody3D
         aimedEntity = null;
         markedEntity = null;
         Hud.LensUp = PrismRaised;
-        if (pointerCaptured && !Hud.NotebookOpen)
+        if (pointerCaptured && !Hud.NotebookOpen && !watching)
         {
             if (prism?.SeenEntity() is { } seen && LensMarks.ContainsKey(seen)) markedEntity = seen;
             var from = Camera.GlobalPosition;
@@ -207,9 +227,9 @@ public partial class FirstPersonPlayer : CharacterBody3D
         }
         actions?.Aim(aimedEntity);
         Hud.SetHint(HintText());
-        if (prism is not null) prism.GetNode<Label>("Controls").Visible = !prism.Raised && Hud.HintText == "" &&
+        if (prism is not null) prism.GetNode<Label>("Controls").Visible = !watching && !prism.Raised && Hud.HintText == "" &&
             (!Hud.SubtitleVisible || Hud.SubtitleText == "");
-        var input = pointerCaptured && !Hud.NotebookOpen && !Seated
+        var input = pointerCaptured && !Hud.NotebookOpen && !Seated && !watching
             ? Input.GetVector("move_left", "move_right", "move_forward", "move_back") : Vector2.Zero;
         var direction = Basis * new Vector3(input.X * ScreenSide, 0, input.Y);
         var speed = Input.IsActionPressed("run") ? RunSpeed : WalkSpeed;
@@ -220,9 +240,10 @@ public partial class FirstPersonPlayer : CharacterBody3D
     }
 
     // The prompt of what the crosshair is on if it can be used, else the keys that act on a seam at her feet and on what is
-    // held or aimed at.
+    // held or aimed at; nothing while she only watches.
     private string HintText()
     {
+        if (watching) return "";
         if (target is not null) return $"E  {target.Prompt}";
         if (markedEntity is not null) return $"E  {LensMarks[markedEntity]}";
         var keys = new List<string>();
