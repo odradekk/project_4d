@@ -47,27 +47,27 @@ size = Vector3(160, 0.2, 280)
 
 [sub_resource type="BoxMesh" id="b2"]
 material = SubResource("m2")
-size = Vector3(7, 0.024, 205)
+size = Vector3(7, 0.204, 205)
 
 [sub_resource type="BoxMesh" id="b3"]
 material = SubResource("m2")
-size = Vector3(102, 0.024, 7)
+size = Vector3(102, 0.204, 7)
 
 [sub_resource type="BoxMesh" id="b4"]
 material = SubResource("m2")
-size = Vector3(9.28, 0.024, 3)
+size = Vector3(9.28, 0.204, 3)
 
 [sub_resource type="BoxMesh" id="b5"]
 material = SubResource("m2")
-size = Vector3(2, 0.024, 3)
+size = Vector3(2, 0.204, 3)
 
 [sub_resource type="BoxMesh" id="b6"]
 material = SubResource("m2")
-size = Vector3(3, 0.024, 90)
+size = Vector3(3, 0.204, 90)
 
 [sub_resource type="BoxMesh" id="b7"]
 material = SubResource("m2")
-size = Vector3(3, 0.024, 90.05)
+size = Vector3(3, 0.204, 90.05)
 
 [sub_resource type="BoxMesh" id="b8"]
 material = SubResource("m3")
@@ -169,12 +169,12 @@ script = ExtResource("e1")
 EntityId = "roads"
 
 [node name="p1" parent="roads" instance=ExtResource("e2")]
-position = Vector3(-14.5, -0.208, 92.5)
+position = Vector3(-14.5, -0.298, 92.5)
 mesh = SubResource("b2")
 PartId = "p1"
 
 [node name="p2" parent="roads" instance=ExtResource("e2")]
-position = Vector3(40, -0.208, 93.5)
+position = Vector3(40, -0.298, 93.5)
 mesh = SubResource("b3")
 PartId = "p2"
 
@@ -183,112 +183,112 @@ script = ExtResource("e1")
 EntityId = "paths"
 
 [node name="p1" parent="paths" instance=ExtResource("e2")]
-position = Vector3(-6.36, -0.208, 18.525)
+position = Vector3(-6.36, -0.298, 18.525)
 mesh = SubResource("b4")
 PartId = "p1"
 
 [node name="p2" parent="paths" instance=ExtResource("e2")]
-position = Vector3(-6.36, -0.208, 63.525)
+position = Vector3(-6.36, -0.298, 63.525)
 mesh = SubResource("b4")
 PartId = "p2"
 
 [node name="p3" parent="paths" instance=ExtResource("e2")]
-position = Vector3(-6.36, -0.208, 123.525)
+position = Vector3(-6.36, -0.298, 123.525)
 mesh = SubResource("b4")
 PartId = "p3"
 
 [node name="p4" parent="paths" instance=ExtResource("e2")]
-position = Vector3(-6.36, -0.208, 168.525)
+position = Vector3(-6.36, -0.298, 168.525)
 mesh = SubResource("b4")
 PartId = "p4"
 
 [node name="p5" parent="paths" instance=ExtResource("e2")]
-position = Vector3(18.28, -0.208, 18.525)
+position = Vector3(18.28, -0.298, 18.525)
 mesh = SubResource("b5")
 PartId = "p5"
 
 [node name="p6" parent="paths" instance=ExtResource("e2")]
-position = Vector3(18.28, -0.208, 63.525)
+position = Vector3(18.28, -0.298, 63.525)
 mesh = SubResource("b5")
 PartId = "p6"
 
 [node name="p7" parent="paths" instance=ExtResource("e2")]
-position = Vector3(18.28, -0.208, 123.525)
+position = Vector3(18.28, -0.298, 123.525)
 mesh = SubResource("b5")
 PartId = "p7"
 
 [node name="p8" parent="paths" instance=ExtResource("e2")]
-position = Vector3(18.28, -0.208, 168.525)
+position = Vector3(18.28, -0.298, 168.525)
 mesh = SubResource("b5")
 PartId = "p8"
 
 [node name="p9" parent="paths" instance=ExtResource("e2")]
-position = Vector3(39.28, -0.208, 18.525)
+position = Vector3(39.28, -0.298, 18.525)
 mesh = SubResource("b5")
 PartId = "p9"
 
 [node name="p10" parent="paths" instance=ExtResource("e2")]
-position = Vector3(39.28, -0.208, 63.525)
+position = Vector3(39.28, -0.298, 63.525)
 mesh = SubResource("b5")
 PartId = "p10"
 
 [node name="p11" parent="paths" instance=ExtResource("e2")]
-position = Vector3(39.28, -0.208, 123.525)
+position = Vector3(39.28, -0.298, 123.525)
 mesh = SubResource("b5")
 PartId = "p11"
 
 [node name="p12" parent="paths" instance=ExtResource("e2")]
-position = Vector3(39.28, -0.208, 168.525)
+position = Vector3(39.28, -0.298, 168.525)
 mesh = SubResource("b5")
 PartId = "p12"
 
 [node name="p13" parent="paths" instance=ExtResource("e2")]
-position = Vector3(60.28, -0.208, 18.525)
+position = Vector3(60.28, -0.298, 18.525)
 mesh = SubResource("b5")
 PartId = "p13"
 
 [node name="p14" parent="paths" instance=ExtResource("e2")]
-position = Vector3(60.28, -0.208, 63.525)
+position = Vector3(60.28, -0.298, 63.525)
 mesh = SubResource("b5")
 PartId = "p14"
 
 [node name="p15" parent="paths" instance=ExtResource("e2")]
-position = Vector3(60.28, -0.208, 123.525)
+position = Vector3(60.28, -0.298, 123.525)
 mesh = SubResource("b5")
 PartId = "p15"
 
 [node name="p16" parent="paths" instance=ExtResource("e2")]
-position = Vector3(60.28, -0.208, 168.525)
+position = Vector3(60.28, -0.298, 168.525)
 mesh = SubResource("b5")
 PartId = "p16"
 
 [node name="p17" parent="paths" instance=ExtResource("e2")]
-position = Vector3(15.78, -0.208, 45)
+position = Vector3(15.78, -0.298, 45)
 mesh = SubResource("b6")
 PartId = "p17"
 
 [node name="p18" parent="paths" instance=ExtResource("e2")]
-position = Vector3(15.78, -0.208, 142.025)
+position = Vector3(15.78, -0.298, 142.025)
 mesh = SubResource("b7")
 PartId = "p18"
 
 [node name="p19" parent="paths" instance=ExtResource("e2")]
-position = Vector3(36.78, -0.208, 45)
+position = Vector3(36.78, -0.298, 45)
 mesh = SubResource("b6")
 PartId = "p19"
 
 [node name="p20" parent="paths" instance=ExtResource("e2")]
-position = Vector3(36.78, -0.208, 142.025)
+position = Vector3(36.78, -0.298, 142.025)
 mesh = SubResource("b7")
 PartId = "p20"
 
 [node name="p21" parent="paths" instance=ExtResource("e2")]
-position = Vector3(57.78, -0.208, 45)
+position = Vector3(57.78, -0.298, 45)
 mesh = SubResource("b6")
 PartId = "p21"
 
 [node name="p22" parent="paths" instance=ExtResource("e2")]
-position = Vector3(57.78, -0.208, 142.025)
+position = Vector3(57.78, -0.298, 142.025)
 mesh = SubResource("b7")
 PartId = "p22"
 

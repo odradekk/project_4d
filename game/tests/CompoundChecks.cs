@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Game.Debugging;
 using Godot;
@@ -11,7 +12,8 @@ namespace Game.Tests;
 /// The compound region, walked with the movement keys: from the flat's entrance hall through the shared vestibule, the open
 /// corridor and the stair to the top floor, then down and out of the ground floor, along the roads and out of the gate to
 /// the bus stop; and from its path into every other building and back out, along its path or lane to the road to the gate. The railings, the
-/// fence and the shut front doors stop her. <c>CompoundChecksDoors.cs</c> has the doors and the edge of the sidewalk.
+/// fence and the shut front doors stop her, and nothing else does where the paths and the lawn meet the west road.
+/// <c>CompoundChecksDoors.cs</c> has the doors and the edge of the sidewalk.
 /// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class CompoundChecks : Node
@@ -26,6 +28,7 @@ public partial class CompoundChecks : Node
     // origin, the lane west of it; and the fence on either side.
     private static readonly float[] Cols = [0, 21, 42, 63], Rows = [0, 45, 105, 150];
     private const float WestRoad = -14.5f, CrossRoad = 93.5f, Lane = -5.22f, WestFence = -24, EastFence = 78, NorthFence = -12, SouthFence = 197;
+    private const float WestRoadEdge = -11;  // its east edge
     private const float Ground = -.2f;
 
     private TurningFixture play = null!;
@@ -112,10 +115,11 @@ public partial class CompoundChecks : Node
             await Push((21 + .75f, 5));
             Check(feet.Z > FlatDoor && OnFloor(1), $"in the next building the front door on the second floor is shut; she is at {feet}");
             Engine.TimeScale = 1;
+            await CheckWestRoadEdge();
 #if DEBUG
             Check(DebugScenes.Find("compound") == "res://regions/compound.tscn", "the debug entry starts the compound region");
 #endif
-            GD.Print("Compound checks passed: entrance hall, Xiaoman's doors, neighbor's door and line, corridor railing, up the stair, top railings, down, under the stair and out; fences, gate, bus stop, sidewalk edge, every building's way in and to the gate, the next building's shut door and line.");
+            GD.Print("Compound checks passed: entrance hall, Xiaoman's doors, neighbor's door and line, corridor railing, up the stair, top railings, down, under the stair and out; fences, gate, bus stop, sidewalk edge, every building's way in and to the gate, the next building's shut door and line, the west road's edge.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -147,6 +151,34 @@ public partial class CompoundChecks : Node
                 await Step(point);
             }
         }
+        Input.ActionRelease("move_forward");
+        Input.ActionRelease("run");
+    }
+
+    // Across the west road's east edge at the real time scale, onto the road and back: from the path of each building beside
+    // it, from the lawn at z 30, and from the road to the gate. Each is crossed walking and running from start points 3 mm
+    // apart over a step's length, 3.7 cm walking and 6.3 cm running, so that a step ends at every distance from the edge.
+    private async Task CheckWestRoadEdge()
+    {
+        foreach (var z in Rows.Select(z => z + Exit).Append(30).Append(CrossRoad))
+            foreach (var way in new[] { -1, 1 })
+                foreach (var (run, step) in new[] { (false, .037f), (true, .064f) })
+                    for (var start = .25f; start < .25f + step; start += .003f)
+                    {
+                        var from = new Vector3(WestRoadEdge - way * start, Ground, z);
+                        var to = new Vector3(WestRoadEdge + way * .25f, Ground, z);
+                        play.LookAt(from, to with { Y = 1.3f });
+                        await play.Frames(2);
+                        for (var frame = 0; (to.X - feet.X) * way > 0; frame++)
+                        {
+                            Check(frame < 60, $"she must {(run ? "run" : "walk")} across the west road's edge from {from}; she is stopped at {feet}");
+                            Input.ActionPress("move_forward");
+                            if (run) Input.ActionPress("run");
+                            else Input.ActionRelease("run");
+                            play.Player.Rotation = new(0, Mathf.Atan2(feet.X - to.X, feet.Z - to.Z), 0);
+                            await play.Frames(1);
+                        }
+                    }
         Input.ActionRelease("move_forward");
         Input.ActionRelease("run");
     }
