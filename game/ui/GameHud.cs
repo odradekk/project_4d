@@ -20,7 +20,7 @@ public partial class GameHud : CanvasLayer
     private Control notebook = null!;
     private double remaining;
     private double noticeRemaining;
-    private bool lensUp;
+    private bool lensUp, watching;
     private string prompt = "";
     private int currentPage;
     public bool NotebookAvailable { get => Notebook.Available; set => Notebook.Available = value; }
@@ -105,7 +105,19 @@ public partial class GameHud : CanvasLayer
     private void RefreshVisibility()
     {
         subtitle.Visible = noticeRemaining <= 0;
-        crosshair.Visible = !NotebookOpen && (lensUp || noticeRemaining > 0 || remaining <= 0);
+        crosshair.Visible = !watching && !NotebookOpen && (lensUp || noticeRemaining > 0 || remaining <= 0);
+        // SeamTravel adds the backpack's slots to the HUD.
+        if (GetNodeOrNull<Control>("Backpack") is { } backpack) backpack.Visible = !watching;
+    }
+
+    /// <summary>Whether she only watches: the crosshair and the backpack's slots are hidden.</summary>
+    internal bool Watching
+    {
+        set
+        {
+            watching = value;
+            RefreshVisibility();
+        }
     }
 
     /// <summary>Whether the lens is up: she aims through it, so the crosshair stays whatever is being said.</summary>

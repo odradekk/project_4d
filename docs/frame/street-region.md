@@ -4,6 +4,8 @@
 
 `game/regions/street.tscn` 是序章第 2 场（上学路）和第 6 场（回家路与小卖部）共用的区域，格式见[场景标注](scene-authoring.md)。楼房元素、固定物件和道具分成 `game/regions/street/` 下的几个子场景，盒子零件的模板是 `game/regions/box_part.tscn`。本页不是契约，只写脚本和以后的修改要遵守的限制；具体坐标以场景为准。
 
+按 Decision note: 2026-10-31-bus-commute，序章不再播放第 2 场，它已并入第 1 场；序章里只有第 6 场还用这个区域。第 2 场的脚本和调试入口 `school-road` 暂时保留，第 6 场拿到的是第 1 场留下的 20 毛。
+
 坐标：x 向东（沿街），z 向南，y 向上，单位米。区域只有一个截面Ⅰ（W = 0）和一栋楼 `street`（W −0.5 到 0.5），棱镜关闭。两场的脚本在 `game/flow/`：`SchoolRoad` 和 `HomeRoad`，共用 `Street`；调试入口是 `-- --start=school-road` 和 `-- --start=home-road`。
 
 ## 子场景
