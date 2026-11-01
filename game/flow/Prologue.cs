@@ -9,12 +9,11 @@ using Godot;
 namespace Game.Flow;
 
 /// <summary>
-/// The prologue from scene 1 to scene 9, one scene after the other; scene 2 is part of scene 1. A scene is added to this
+/// The prologue from scene 1 to scene 9, one scene after the other; scenes 2 and 6 are parts of scenes 1 and 7. A scene is added to this
 /// node and plays until it emits Finished and the line it is saying is said. Between two scenes the screen fades to black and the scene before is freed with
 /// its region. A scene can play in the region of the scene before, as scenes 4 and 5 do in the school of scene 3 and scene 9 in
 /// the room of scene 8; the scene that loaded the region stays, since the region is its child, and does nothing more, until the last of them is over.
-/// What the scenes pass on is kept here: the notebook, and the money, which a scene is given as a copy. Backspace starts the
-/// scene again from what the scene before passed on, in a region loaded anew; every scene has a checkpoint at its start that
+/// What the scenes pass on is kept here: the notebook. Backspace starts the scene again from what the scene before passed on, in a region loaded anew; every scene has a checkpoint at its start that
 /// does the same, unless it set its own. The last scene, which ends on the title, stays on the screen when it is over, and
 /// Backspace does nothing from its black screen on.
 /// Decision note: 2026-10-26-prologue-greybox
@@ -23,8 +22,6 @@ namespace Game.Flow;
 public partial class Prologue : Node
 {
     private const double FadeSeconds = .4;
-    // The money scene 1 leaves her with, in mao.
-    private const int MorningMoney = 20;
 
     private readonly ColorRect veil = new() { Color = Colors.Black, MouseFilter = Control.MouseFilterEnum.Ignore };
     private NotebookState notebook = new();
@@ -64,10 +61,8 @@ public partial class Prologue : Node
         await Play(3, region => new MathClass { Region = region });
         await Play(4, region => new Recess { Region = region }, true);
         await Play(5, region => new Duty { Region = region }, true);
-        // The two yuan from the table, as a copy, so that starting the scene again gives it the money it started with.
-        await Play(6, _ => new HomeRoad { Wallet = new Wallet(MorningMoney) });
-        // Scene 6 ends with the cat in her arms.
-        await Play(7, _ => new HomeEvening { CarryingCat = true });
+        // Scene 6, the way home, is part of scene 7 now: she rides the bus from school to the compound.
+        await Play(7, _ => new HomeEvening());
         await Play(8, _ => new CatRoom());
         await Play(9, region => new DeepRoom { Region = region }, true);
         // The title is up: nothing is left to restart.

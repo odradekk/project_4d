@@ -15,8 +15,8 @@ namespace Game.Tests;
 /// nearest the compound, pulls in to stop beside the sidewalk, folds its doors open and says it has arrived, then waits;
 /// sent off, it folds them shut, moves off briskly and turns into the south street, where it is hidden. Along the whole
 /// way it keeps clear of everything the city stands on the ground, and it turns smoothly, as a seated camera would see. E from the sidewalk on an open door says she boards;
-/// E does nothing while the bus is away, opening or closing. A seated camera rides at the passenger's eyes and goes back
-/// where it was when let go.
+/// E does nothing while the bus is away, opening or closing. From the seat, E on the open door says she gets off. A seated
+/// camera rides at the passenger's eyes and goes back where it was when let go.
 /// Decision note: 2026-10-31-bus-commute
 /// </summary>
 public partial class BusChecks : Node
@@ -33,7 +33,7 @@ public partial class BusChecks : Node
     private TurningFixture play = null!;
     private Bus3D bus = null!;
     private Rect2[] obstacles = [];
-    private int boardings, arrivals;
+    private int boardings, gettingOff, arrivals;
     private readonly List<Bus3D.BusState> states = [];
     private readonly List<Vector3> seen = [];
     private bool foldedPartway, seated;
@@ -47,6 +47,7 @@ public partial class BusChecks : Node
             bus = play.Region.Props("Ⅰ")!.GetNode<Bus3D>("Bus");
             obstacles = Obstacles(play.Region.Props("Ⅰ")!.GetNode<MeshInstance3D>("City/Boxes"));
             bus.Boarding += () => boardings++;
+            bus.GettingOff += () => gettingOff++;
             bus.Arrived += () => arrivals++;
             var doorways = bus.GetChildren().OfType<Interactable3D>().ToArray();
             var leaves = bus.FindChildren("Leaf*", nameof(Node3D), true, false).Cast<Node3D>().ToArray();
@@ -81,13 +82,23 @@ public partial class BusChecks : Node
                 await PressE(doorway.GlobalPosition.Z, "on an open door", "E  上车");
                 Check(boardings == before + 1, $"E on the open door at z {doorway.GlobalPosition.Z} says she boards");
             }
+            // Seated, she looks at the middle door, which says she gets off; let go, the doors say she boards again.
+            var camera = play.Player.Camera;
+            var boarded = boardings;
+            bus.Seat(camera);
+            await play.Frames(2);
+            Check(play.Player.Hud.HintText == "E  下车", $"from the seat the open door says she gets off; the hint is \"{play.Player.Hud.HintText}\"");
+            Press(Key.E);
+            await play.Frames(2);
+            Check(gettingOff == 1 && boardings == boarded, $"E on the door from the seat says she gets off, not that she boards; {gettingOff} times off, {boardings - boarded} on");
+            bus.Unseat();
+            Check(doorways.All(doorway => doorway.Prompt == "上车"), "with nobody seated the doors say she boards");
 
             bus.Depart();
             var stop = bus.GlobalPosition;
             var moving = GetTree().CreateTimer(5, true, true);
             foldedPartway = false;
             await PressE(74.3f, "while the doors are closing");
-            var camera = play.Player.Camera;
             var unseated = camera.Transform;
             bus.Seat(camera);
             seated = true;
@@ -103,7 +114,7 @@ public partial class BusChecks : Node
             Bus3D.BusState[] order = [Arriving, Opening, Waiting, Closing, Departing, Away];
             Check(states.SequenceEqual(order), $"the bus goes {string.Join(", ", order)}; it went {string.Join(", ", states)}");
             await PressE(74.3f, "once the bus has gone");
-            GD.Print("Bus checks passed: comes along the north street and down the motor lane, clear of the city, stops beside the sidewalk, folds its doors open, says it arrived, waits, takes E on open doors only, folds them shut, carries a seated camera and lets it go, moves off within 5 s and is hidden on the south street.");
+            GD.Print("Bus checks passed: comes along the north street and down the motor lane, clear of the city, stops beside the sidewalk, folds its doors open, says it arrived, waits, takes E on open doors only, from the sidewalk to board and from the seat to get off, folds them shut, carries a seated camera and lets it go, moves off within 5 s and is hidden on the south street.");
             GetTree().Quit();
         }
         catch (Exception error)

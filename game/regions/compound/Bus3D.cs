@@ -10,9 +10,10 @@ namespace Game.Regions;
 /// behind the compound, turns right onto the main road's southbound lane nearest the compound, pulls into the bicycle lane,
 /// stops at the bus stop with its right side 0.4 m from the sidewalk, folds its two doors open and emits
 /// <see cref="ArrivedEventHandler">Arrived</see>; then it waits, and E on an open door emits
-/// <see cref="BoardingEventHandler">Boarding</see>. Called with <see cref="Depart"/>, it folds its doors shut, pulls back
-/// into the lane, drives south, turns right into the south street and is hidden once the compound's buildings stand
-/// between it and the sidewalk. Away, it is hidden. <see cref="Seat"/> holds a camera at a passenger's eyes.
+/// <see cref="BoardingEventHandler">Boarding</see>, or <see cref="GettingOffEventHandler">GettingOff</see> while a camera
+/// is seated. Called with <see cref="Depart"/>, it folds its doors shut, pulls back into the lane, drives south, turns
+/// right into the south street and is hidden once the compound's buildings stand between it and the sidewalk. Away, it is
+/// hidden. <see cref="Seat"/> holds a camera at a passenger's eyes.
 /// It is scenery that the engine does not know of, with no body that stops anything: she cannot walk off the sidewalk to
 /// it. The node's y is the ground; the script sets its x, z and heading. Its local +z is its front and −x its right side.
 /// Decision note: 2026-10-31-bus-commute
@@ -23,6 +24,7 @@ public partial class Bus3D : Node3D
 
     [Signal] public delegate void ArrivedEventHandler();
     [Signal] public delegate void BoardingEventHandler();
+    [Signal] public delegate void GettingOffEventHandler();
 
     public BusState State { get; private set; }
 
@@ -47,11 +49,12 @@ public partial class Bus3D : Node3D
         .Line(new(Hidden, South)).End(Cruise);
 
     private float s, speed, doors;  // along the route; doors: 0 shut, 1 open
-    private RemoteTransform3D? seat;
+    private Camera3D? seat;
     private Transform3D unseated;
 
     public override void _Ready()
     {
+        ProcessPhysicsPriority = -1;
         Build();
         Visible = false;
     }
@@ -72,29 +75,36 @@ public partial class Bus3D : Node3D
 
     /// <summary>
     /// Holds <paramref name="camera"/> at a passenger's eyes, on the seat behind the middle door, facing ahead and toward the
-    /// door and the window, and moves it with the bus until <see cref="Unseat"/>. The caller stops her looking about and
-    /// using things meanwhile.
+    /// door and the window, every frame until <see cref="Unseat"/>, whatever turns the camera meanwhile; the doors read
+    /// 「下车」 meanwhile. The caller stops her looking about and using things while the bus moves.
     /// </summary>
     public void Seat(Camera3D camera)
     {
         if (seat is not null) throw new InvalidOperationException("a camera is already seated on the bus");
         unseated = camera.Transform;
-        passengerSpot.AddChild(seat = new RemoteTransform3D());
-        seat.RemotePath = seat.GetPathTo(camera);
+        seat = camera;
+        Pin();
+        SetPrompts("下车");
     }
 
     /// <summary>Lets the seated camera go, back where it was in its parent when it was seated.</summary>
     public void Unseat()
     {
         if (seat is null) throw new InvalidOperationException("no camera is seated on the bus");
-        var camera = seat.GetNode<Camera3D>(seat.RemotePath);
-        seat.Free();
+        seat.Transform = unseated;
         seat = null;
-        camera.Transform = unseated;
+        SetPrompts("上车");
     }
+
+    // Again after the mouse may have turned the player, whose child the camera is.
+    public override void _Process(double delta) => Pin();
+
+    private void Pin() => seat?.GlobalTransform = passengerSpot.GlobalTransform;
 
     public override void _PhysicsProcess(double delta)
     {
+        // Before the player's step aims the crosshair from the seated camera.
+        Pin();
         var dt = (float)delta;
         switch (State)
         {
@@ -141,6 +151,12 @@ public partial class Bus3D : Node3D
         var (at, heading) = route.At(s);
         Position = new(at.X, Position.Y, at.Y);
         Rotation = new(0, Mathf.Atan2(heading.X, heading.Y), 0);
+        Pin();
+    }
+
+    private void SetPrompts(string prompt)
+    {
+        foreach (var doorway in doorways) doorway.Prompt = prompt;
     }
 
     private void SetDoorways(bool open)

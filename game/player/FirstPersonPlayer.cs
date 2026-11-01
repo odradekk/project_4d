@@ -15,7 +15,6 @@ public partial class FirstPersonPlayer : CharacterBody3D
     private const float LookSensitivity = 0.0025f;
     private const float PitchLimit = 1.5f;
     private const string ArmsFull = "手里抱着猫呢。";
-    private float pitch;
     private bool pointerCaptured;
     private PrismView? prism;
     private PlayerActions? actions;
@@ -200,7 +199,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
         else if (input is InputEventMouseMotion motion && pointerCaptured)
         {
             RotateY(-motion.ScreenRelative.X * LookSensitivity * ScreenSide);
-            pitch = Mathf.Clamp(pitch - motion.ScreenRelative.Y * LookSensitivity, -PitchLimit, PitchLimit);
+            // From where the camera is, which a seat on the bus may have held elsewhere and let go.
+            var pitch = Mathf.Clamp(Camera.Rotation.X - motion.ScreenRelative.Y * LookSensitivity, -PitchLimit, PitchLimit);
             Camera.Rotation = new Vector3(pitch, 0, 0);
         }
     }

@@ -117,7 +117,7 @@ public partial class Bus3D
         }
         var doorway = new Interactable3D { Prompt = "上车", CollisionLayer = 0, CollisionMask = 0, Position = new(-Half - .2f, 1.6f, (z0 + z1) / 2) };
         doorway.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = new(.6f, 1.4f, z1 - z0) } });
-        doorway.Interacted += () => EmitSignal(SignalName.Boarding);
+        doorway.Interacted += () => EmitSignal(seat is null ? SignalName.Boarding : SignalName.GettingOff);
         AddChild(doorway);
         doorways.Add(doorway);
     }

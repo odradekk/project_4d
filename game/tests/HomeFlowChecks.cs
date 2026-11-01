@@ -16,8 +16,10 @@ namespace Game.Tests;
 /// <summary>
 /// Scenes 1 and 7 played through in the compound: the player walks the flat on the real physics, finds each prop with the
 /// crosshair, and presses E on it. Scene 1 goes on down the stair, past the cat, out to the bus and onto it (in
-/// HomeFlowChecksMorning.cs); in scene 7 the cat's way between the rooms is clear.
+/// HomeFlowChecksMorning.cs); scene 7 starts on the bus, and she walks home with the cat (in HomeFlowChecksEvening.cs). The
+/// cat's way between the rooms, and between the flat and the ground floor, is clear.
 /// Decision note: 2026-10-29-home-scene-layout
+/// Decision note: 2026-10-31-bus-commute
 /// </summary>
 public partial class HomeFlowChecks : Node
 {
@@ -34,7 +36,7 @@ public partial class HomeFlowChecks : Node
         {
             await CheckMorning();
             await CheckEvening();
-            GD.Print("Home flow checks passed: morning (alarm, note, teeth, bag, door, cat under the stair, bus called near the stop, boarding, ride, fade) and evening (cat routes, note, clip, meal, cat, forecast, homework, notebook).");
+            GD.Print("Home flow checks passed: morning (alarm, note, teeth, bag, door, cat under the stair, bus called near the stop, boarding, ride, fade) and evening (cat routes, ride, getting off, the bus leaving, the cat at the stair, up to the door, the door locked, note, clip, meal, cat, forecast, homework, notebook).");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -55,8 +57,9 @@ public partial class HomeFlowChecks : Node
     {
         var evening = await Start<HomeEvening>("home-evening");
         var hud = player.Hud;
-        Check(player.Position.X < 1.8f && player.Position.Z is > 5.5f and < 7.35f, $"she starts in the entrance hall; she is at {player.Position}");
         CheckCatRoutes();
+        await CheckRideHome();
+        await CheckCatUpstairs(evening);
         Check(hud.NotebookAvailable && hud.UnlockedPages.SequenceEqual([1, 2, 3, 4]), "the notebook is open to her from here, with the pages of the school");
         Press(Key.N);
         await Frames(2);
@@ -71,6 +74,7 @@ public partial class HomeFlowChecks : Node
         foreach (var name in new[] { "Father", "Money", "Backpack", "Sink" })
             Check(!Prop(name).Visible && Prop(name).CollisionLayer == 0, $"{name} belongs to the morning");
         Check(Prop("Clock").Visible && Prop("Clock").CollisionLayer == 0, "the alarm clock stays on the desk and cannot be used");
+        await Walk((1.2f, 5f), (.75f, 6.7f));
         await Refused("天黑了，不出去了。");
         await Walk((.75f, 5f), (2.6f, 4.5f), (2.6f, 3.3f), (4.75f, 2.6f));
         hud.ClearText();
@@ -128,48 +132,67 @@ public partial class HomeFlowChecks : Node
     }
 
     // The cat walks straight from each waypoint of HomeRoute to the next. Between every two of the entrance hall, the
-    // living room, the kitchen, her room and the bathroom, no wall, door or furniture stands on those lines. Toward her on
-    // the balcony it walks as clear a way and stops in the living room. Put down on the balcony, in line with its door or
-    // not, it walks a clear way back in.
+    // living room, the kitchen, her room, the bathroom, the vestibule, the corridor, the stair landing of the flat's storey,
+    // each flight, the turn, the ground floor's stair hall and the forecourt, its corners too,
+    // the cat walks a clear way, with the front door open. Toward her on the balcony it walks as clear a way and stops in the living room.
+    // Put down on the balcony, in line with its door or not, it walks a clear way back in.
     private void CheckCatRoutes()
     {
         var floor = HomeScene.Floor;
-        Vector3[] places = [new(.75f, floor, 6.1f), new(5.4f, floor, 2.75f), new(1f, floor, 2f), new(4.8f, floor, 6f), new(2.4f, floor, 6.3f)];
+        Vector3[] places =
+        [
+            new(.75f, floor, 6.1f), new(5.4f, floor, 2.75f), new(1f, floor, 2f), new(4.8f, floor, 6f), new(2.4f, floor, 6.3f),
+            new(1.3f, floor, 8.7f), new(-1.4f, floor, 12f), new(.3f, floor, 18f), new(3.5f, 2.565f, 20.2f), new(7.3f, 1.6f, 20f),
+            new(3.5f, .749f, 16.9f), CatWaits, new(-6f, -.2f, 15f), new(-2.8f, -.2f, 14.7f), new(-2.8f, -.2f, 22.3f)
+        ];
+        var door = Door("FrontDoor");
+        door.State = Door3D.DoorState.Open;
         var balcony = new Vector3(8.5f, floor, 2f);
         foreach (var from in places)
             foreach (var goal in places.Where(place => place != from).Append(balcony))
             {
                 var at = Route(from, goal);
-                Check(goal == balcony ? at.X < 7.6f && at.Z < 4 : at == goal,
+                Check(goal == balcony ? at.X < 7.6f && at.Z < 4 : Flat(at - goal).Length() < .01f,
                     goal == balcony ? $"toward the balcony the cat stops in the living room; it stops at {at}" : $"the cat gets from {from} to {goal}; it stops at {at}");
             }
         foreach (var from in new Vector3[] { new(8.3f, floor, 3.42f), new(8.9f, floor, 1f), new(8.5f, floor, 2.2f) })
-            foreach (var goal in new[] { places[2], places[3] })
-                Check(Route(from, goal) == goal, $"the cat gets back in from {from} to {goal}");
+            foreach (var goal in new[] { places[2], places[3], CatWaits })
+                Check(Flat(Route(from, goal) - goal).Length() < .01f, $"the cat gets back in from {from} to {goal}");
+        door.State = Door3D.DoorState.Shut;
     }
 
-    // Follows HomeRoute from one point toward another, each leg clear, until it gets there or stays; returns where it ends.
+    // Walks HomeRoute from one point toward another as the cat does: a quarter of a metre at a time toward the point that
+    // HomeRoute gives from where it stands, on the floor there, each step clear; returns where it stops.
     private Vector3 Route(Vector3 from, Vector3 goal)
     {
         var at = from;
-        for (var leg = 0; at != goal; leg++)
+        for (var step = 0; ; step++)
         {
-            Check(leg < 8, $"the route from {from} must reach {goal}");
-            var next = HomeRoute.Next(at, goal);
-            if (next == at) break;
-            for (var step = 0f; step <= 1; step += .02f)
-                Check(CatFits(at.Lerp(next, step)), $"the cat's way from {from} to {goal} is clear between {at} and {next}");
-            at = next;
+            Check(step < 2000, $"the cat must stop on its way from {from} to {goal}; it is still going at {at}");
+            var offset = Flat(HomeRoute.Next(at, goal) - at);
+            if (offset.Length() < .01f) return at;
+            var ahead = at + offset.LimitLength(.25f);
+            var floor = Footing(ahead);
+            Check(floor is not null, $"the cat's way from {from} to {goal} is clear at {ahead}");
+            at = floor!.Value;
         }
-        return at;
     }
 
-    private bool CatFits(Vector3 spot) => player.GetWorld3D().DirectSpaceState.IntersectShape(new PhysicsShapeQueryParameters3D
+    // Where the cat stands at the spot: on a floor no more than half a metre above or below it, with its body there meeting
+    // nothing; null where it cannot stand.
+    private Vector3? Footing(Vector3 spot)
     {
-        Shape = new SphereShape3D { Radius = .15f },
-        Transform = new Transform3D(Basis.Identity, spot + new Vector3(0, .25f, 0)),
-        CollisionMask = PhysicsLayers.World
-    }, 1).Count == 0;
+        var space = player.GetWorld3D().DirectSpaceState;
+        var floor = space.IntersectRay(PhysicsRayQueryParameters3D.Create(spot + Vector3.Up * .5f, spot + Vector3.Down * .5f, PhysicsLayers.World));
+        if (floor.Count == 0) return null;
+        var feet = floor["position"].AsVector3();
+        return space.IntersectShape(new PhysicsShapeQueryParameters3D
+        {
+            Shape = new SphereShape3D { Radius = .15f },
+            Transform = new Transform3D(Basis.Identity, feet + new Vector3(0, .25f, 0)),
+            CollisionMask = PhysicsLayers.World
+        }, 1).Count == 0 ? feet : null;
+    }
 
     /// <summary>Presses E on the front door, which stays shut while she may not leave, and checks what she says.</summary>
     private async Task Refused(string line)
