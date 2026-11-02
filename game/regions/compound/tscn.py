@@ -103,11 +103,11 @@ def doors(leaves, shut, line):
 
 
 # A scene whose root holds instances: (name, scene, position, overrides), where each override is (node, properties) for
-# a node of the instanced scene, and scenes are paths under res://regions/compound.
-def packed(root, entries, script=None, properties=(), subs=(), nodes=()):
+# a node of the instanced scene, and scenes are paths under res://regions/<under>.
+def packed(root, entries, script=None, properties=(), subs=(), nodes=(), under='compound'):
     scenes = list(dict.fromkeys(s for _, s, _, _ in entries))
     ext = ([f'[ext_resource type="Script" path="res://adapter/{script}.cs" id="e0"]\n'] if script else []) + [
-        f'[ext_resource type="PackedScene" path="res://regions/compound/{s}" id="e{i}"]\n' for i, s in enumerate(scenes, 1)]
+        f'[ext_resource type="PackedScene" path="res://regions/{under}/{s}" id="e{i}"]\n' for i, s in enumerate(scenes, 1)]
     out = [f'[gd_scene load_steps={1 + len(ext) + len(subs)} format=3]\n', *([''.join(ext)] if ext else []), *subs,
            f'[node name="{root}" type="Node3D"]\n' + ('script = ExtResource("e0")\n' if script else '')
            + ''.join(f'{k} = {v}\n' for k, v in properties)]

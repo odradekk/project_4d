@@ -1,0 +1,267 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/west.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/east.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/inside.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/flights.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/classroom.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/upper.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/ground.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/top.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/fittings.tscn" id="e9"]
+
+[node name="Teaching1" type="Node3D"]
+
+[node name="West1" parent="." instance=ExtResource("e1")]
+
+[node name="teaching1_west" parent="West1"]
+EntityId = "teaching1_west_1"
+
+[node name="East1" parent="." instance=ExtResource("e2")]
+
+[node name="teaching1_east" parent="East1"]
+EntityId = "teaching1_east_1"
+
+[node name="Inside1" parent="." instance=ExtResource("e3")]
+
+[node name="teaching1_inside" parent="Inside1"]
+EntityId = "teaching1_inside_1"
+
+[node name="Flights1" parent="." instance=ExtResource("e4")]
+
+[node name="teaching1_flights" parent="Flights1"]
+EntityId = "teaching1_flights_1"
+
+[node name="Class1_1" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 0, 20.44)
+
+[node name="teaching1_class" parent="Class1_1"]
+EntityId = "teaching1_class_1_1"
+
+[node name="Class1_2" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 0, 28.84)
+
+[node name="teaching1_class" parent="Class1_2"]
+EntityId = "teaching1_class_1_2"
+
+[node name="Class1_3" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 0, 37.24)
+
+[node name="teaching1_class" parent="Class1_3"]
+EntityId = "teaching1_class_1_3"
+
+[node name="Class1_4" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 0, 52.64)
+
+[node name="teaching1_class" parent="Class1_4"]
+EntityId = "teaching1_class_1_4"
+
+[node name="Class1_5" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 0, 61.04)
+
+[node name="teaching1_class" parent="Class1_5"]
+EntityId = "teaching1_class_1_5"
+
+[node name="Class1_6" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 0, 69.44)
+
+[node name="teaching1_class" parent="Class1_6"]
+EntityId = "teaching1_class_1_6"
+
+[node name="West2" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching1_west" parent="West2"]
+EntityId = "teaching1_west_2"
+
+[node name="East2" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching1_east" parent="East2"]
+EntityId = "teaching1_east_2"
+
+[node name="Inside2" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching1_inside" parent="Inside2"]
+EntityId = "teaching1_inside_2"
+
+[node name="Flights2" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching1_flights" parent="Flights2"]
+EntityId = "teaching1_flights_2"
+
+[node name="Upper2" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching1_upper" parent="Upper2"]
+EntityId = "teaching1_upper_2"
+
+[node name="Class2_1" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 3.6, 20.44)
+
+[node name="teaching1_class" parent="Class2_1"]
+EntityId = "teaching1_class_2_1"
+
+[node name="Class2_2" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 3.6, 28.84)
+
+[node name="teaching1_class" parent="Class2_2"]
+EntityId = "teaching1_class_2_2"
+
+[node name="Class2_3" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 3.6, 37.24)
+
+[node name="teaching1_class" parent="Class2_3"]
+EntityId = "teaching1_class_2_3"
+
+[node name="Class2_4" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 3.6, 52.64)
+
+[node name="teaching1_class" parent="Class2_4"]
+EntityId = "teaching1_class_2_4"
+
+[node name="Class2_5" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 3.6, 61.04)
+
+[node name="teaching1_class" parent="Class2_5"]
+EntityId = "teaching1_class_2_5"
+
+[node name="Class2_6" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 3.6, 69.44)
+
+[node name="teaching1_class" parent="Class2_6"]
+EntityId = "teaching1_class_2_6"
+
+[node name="West3" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching1_west" parent="West3"]
+EntityId = "teaching1_west_3"
+
+[node name="East3" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching1_east" parent="East3"]
+EntityId = "teaching1_east_3"
+
+[node name="Inside3" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching1_inside" parent="Inside3"]
+EntityId = "teaching1_inside_3"
+
+[node name="Flights3" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching1_flights" parent="Flights3"]
+EntityId = "teaching1_flights_3"
+
+[node name="Upper3" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching1_upper" parent="Upper3"]
+EntityId = "teaching1_upper_3"
+
+[node name="Class3_1" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 7.2, 20.44)
+
+[node name="teaching1_class" parent="Class3_1"]
+EntityId = "teaching1_class_3_1"
+
+[node name="Class3_2" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 7.2, 28.84)
+
+[node name="teaching1_class" parent="Class3_2"]
+EntityId = "teaching1_class_3_2"
+
+[node name="Class3_3" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 7.2, 37.24)
+
+[node name="teaching1_class" parent="Class3_3"]
+EntityId = "teaching1_class_3_3"
+
+[node name="Class3_4" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 7.2, 52.64)
+
+[node name="teaching1_class" parent="Class3_4"]
+EntityId = "teaching1_class_3_4"
+
+[node name="Class3_5" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 7.2, 61.04)
+
+[node name="teaching1_class" parent="Class3_5"]
+EntityId = "teaching1_class_3_5"
+
+[node name="Class3_6" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 7.2, 69.44)
+
+[node name="teaching1_class" parent="Class3_6"]
+EntityId = "teaching1_class_3_6"
+
+[node name="West4" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching1_west" parent="West4"]
+EntityId = "teaching1_west_4"
+
+[node name="East4" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching1_east" parent="East4"]
+EntityId = "teaching1_east_4"
+
+[node name="Inside4" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching1_inside" parent="Inside4"]
+EntityId = "teaching1_inside_4"
+
+[node name="Upper4" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching1_upper" parent="Upper4"]
+EntityId = "teaching1_upper_4"
+
+[node name="Class4_1" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 10.8, 20.44)
+
+[node name="teaching1_class" parent="Class4_1"]
+EntityId = "teaching1_class_4_1"
+
+[node name="Class4_2" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 10.8, 28.84)
+
+[node name="teaching1_class" parent="Class4_2"]
+EntityId = "teaching1_class_4_2"
+
+[node name="Class4_3" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 10.8, 37.24)
+
+[node name="teaching1_class" parent="Class4_3"]
+EntityId = "teaching1_class_4_3"
+
+[node name="Class4_4" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 10.8, 52.64)
+
+[node name="teaching1_class" parent="Class4_4"]
+EntityId = "teaching1_class_4_4"
+
+[node name="Class4_5" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 10.8, 61.04)
+
+[node name="teaching1_class" parent="Class4_5"]
+EntityId = "teaching1_class_4_5"
+
+[node name="Class4_6" parent="." instance=ExtResource("e5")]
+position = Vector3(114.5, 10.8, 69.44)
+
+[node name="teaching1_class" parent="Class4_6"]
+EntityId = "teaching1_class_4_6"
+
+[node name="Ground" parent="." instance=ExtResource("e7")]
+
+[node name="Top" parent="." instance=ExtResource("e8")]
+
+[node name="Fittings" parent="." instance=ExtResource("e9")]

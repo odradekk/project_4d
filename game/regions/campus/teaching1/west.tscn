@@ -1,0 +1,566 @@
+[gd_scene load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.94, 0.937, 0.918, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.612, 0.769, 0.91, 0.35)
+transparency = 1
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.9, 32.16)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.7, 1.17)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.7, 2.07)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.7, 1.52)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.7, 0.5)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.7, 4.74)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 1.17)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 2.07)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 1.52)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="b12"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 0.5)
+
+[sub_resource type="BoxMesh" id="b13"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 2.22)
+
+[sub_resource type="BoxMesh" id="b14"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.8, 1.32)
+
+[sub_resource type="BoxMesh" id="b15"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.3, 7.46)
+
+[sub_resource type="BoxMesh" id="b16"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.3, 1)
+
+[sub_resource type="BoxMesh" id="b17"]
+material = SubResource("m1")
+size = Vector3(0.24, 0.3, 0.5)
+
+[sub_resource type="BoxMesh" id="b18"]
+material = SubResource("m2")
+size = Vector3(0.04, 1.5, 1.5)
+
+[sub_resource type="BoxMesh" id="b19"]
+material = SubResource("m2")
+size = Vector3(0.04, 0.8, 1.2)
+
+[sub_resource type="BoxMesh" id="b20"]
+material = SubResource("m2")
+size = Vector3(0.04, 1.8, 1.8)
+
+[sub_resource type="BoxMesh" id="b21"]
+material = SubResource("m2")
+size = Vector3(0.04, 1.5, 1.2)
+
+[node name="West" type="Node3D"]
+
+[node name="teaching1_west" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_west"
+
+[node name="p1" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 0.45, 29.56)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 0.45, 68.72)
+mesh = SubResource("b1")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 14.065)
+mesh = SubResource("b2")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 17.185)
+mesh = SubResource("b3")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 20.18)
+mesh = SubResource("b4")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 23.24)
+mesh = SubResource("b5")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 26.04)
+mesh = SubResource("b5")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 28.84)
+mesh = SubResource("b5")
+PartId = "p8"
+
+[node name="p9" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 31.64)
+mesh = SubResource("b5")
+PartId = "p9"
+
+[node name="p10" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 34.44)
+mesh = SubResource("b5")
+PartId = "p10"
+
+[node name="p11" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 37.24)
+mesh = SubResource("b5")
+PartId = "p11"
+
+[node name="p12" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 40.04)
+mesh = SubResource("b5")
+PartId = "p12"
+
+[node name="p13" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 42.84)
+mesh = SubResource("b5")
+PartId = "p13"
+
+[node name="p14" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 45.39)
+mesh = SubResource("b6")
+PartId = "p14"
+
+[node name="p15" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 52.89)
+mesh = SubResource("b6")
+PartId = "p15"
+
+[node name="p16" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 55.44)
+mesh = SubResource("b5")
+PartId = "p16"
+
+[node name="p17" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 58.24)
+mesh = SubResource("b5")
+PartId = "p17"
+
+[node name="p18" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 61.04)
+mesh = SubResource("b5")
+PartId = "p18"
+
+[node name="p19" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 63.84)
+mesh = SubResource("b5")
+PartId = "p19"
+
+[node name="p20" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 66.64)
+mesh = SubResource("b5")
+PartId = "p20"
+
+[node name="p21" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 69.44)
+mesh = SubResource("b5")
+PartId = "p21"
+
+[node name="p22" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 72.24)
+mesh = SubResource("b5")
+PartId = "p22"
+
+[node name="p23" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 75.04)
+mesh = SubResource("b5")
+PartId = "p23"
+
+[node name="p24" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 78.1)
+mesh = SubResource("b4")
+PartId = "p24"
+
+[node name="p25" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.25, 82.43)
+mesh = SubResource("b7")
+PartId = "p25"
+
+[node name="p26" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 14.065)
+mesh = SubResource("b8")
+PartId = "p26"
+
+[node name="p27" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 17.185)
+mesh = SubResource("b9")
+PartId = "p27"
+
+[node name="p28" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 20.18)
+mesh = SubResource("b10")
+PartId = "p28"
+
+[node name="p29" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 23.24)
+mesh = SubResource("b11")
+PartId = "p29"
+
+[node name="p30" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 26.04)
+mesh = SubResource("b11")
+PartId = "p30"
+
+[node name="p31" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 28.84)
+mesh = SubResource("b11")
+PartId = "p31"
+
+[node name="p32" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 31.64)
+mesh = SubResource("b11")
+PartId = "p32"
+
+[node name="p33" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 34.44)
+mesh = SubResource("b11")
+PartId = "p33"
+
+[node name="p34" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 37.24)
+mesh = SubResource("b11")
+PartId = "p34"
+
+[node name="p35" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 40.04)
+mesh = SubResource("b11")
+PartId = "p35"
+
+[node name="p36" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 42.84)
+mesh = SubResource("b11")
+PartId = "p36"
+
+[node name="p37" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 45.39)
+mesh = SubResource("b12")
+PartId = "p37"
+
+[node name="p38" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 52.89)
+mesh = SubResource("b12")
+PartId = "p38"
+
+[node name="p39" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 55.44)
+mesh = SubResource("b11")
+PartId = "p39"
+
+[node name="p40" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 58.24)
+mesh = SubResource("b11")
+PartId = "p40"
+
+[node name="p41" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 61.04)
+mesh = SubResource("b11")
+PartId = "p41"
+
+[node name="p42" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 63.84)
+mesh = SubResource("b11")
+PartId = "p42"
+
+[node name="p43" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 66.64)
+mesh = SubResource("b11")
+PartId = "p43"
+
+[node name="p44" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 69.44)
+mesh = SubResource("b11")
+PartId = "p44"
+
+[node name="p45" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 72.24)
+mesh = SubResource("b11")
+PartId = "p45"
+
+[node name="p46" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 75.04)
+mesh = SubResource("b11")
+PartId = "p46"
+
+[node name="p47" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 78.1)
+mesh = SubResource("b10")
+PartId = "p47"
+
+[node name="p48" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 81.17)
+mesh = SubResource("b13")
+PartId = "p48"
+
+[node name="p49" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 84.14)
+mesh = SubResource("b14")
+PartId = "p49"
+
+[node name="p50" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 17.21)
+mesh = SubResource("b15")
+PartId = "p50"
+
+[node name="p51" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 23.24)
+mesh = SubResource("b16")
+PartId = "p51"
+
+[node name="p52" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 26.04)
+mesh = SubResource("b16")
+PartId = "p52"
+
+[node name="p53" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 28.84)
+mesh = SubResource("b16")
+PartId = "p53"
+
+[node name="p54" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 31.64)
+mesh = SubResource("b16")
+PartId = "p54"
+
+[node name="p55" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 34.44)
+mesh = SubResource("b16")
+PartId = "p55"
+
+[node name="p56" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 37.24)
+mesh = SubResource("b16")
+PartId = "p56"
+
+[node name="p57" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 40.04)
+mesh = SubResource("b16")
+PartId = "p57"
+
+[node name="p58" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 42.84)
+mesh = SubResource("b16")
+PartId = "p58"
+
+[node name="p59" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 45.39)
+mesh = SubResource("b17")
+PartId = "p59"
+
+[node name="p60" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 52.89)
+mesh = SubResource("b17")
+PartId = "p60"
+
+[node name="p61" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 55.44)
+mesh = SubResource("b16")
+PartId = "p61"
+
+[node name="p62" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 58.24)
+mesh = SubResource("b16")
+PartId = "p62"
+
+[node name="p63" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 61.04)
+mesh = SubResource("b16")
+PartId = "p63"
+
+[node name="p64" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 63.84)
+mesh = SubResource("b16")
+PartId = "p64"
+
+[node name="p65" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 66.64)
+mesh = SubResource("b16")
+PartId = "p65"
+
+[node name="p66" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 69.44)
+mesh = SubResource("b16")
+PartId = "p66"
+
+[node name="p67" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 72.24)
+mesh = SubResource("b16")
+PartId = "p67"
+
+[node name="p68" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 75.04)
+mesh = SubResource("b16")
+PartId = "p68"
+
+[node name="p69" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2.55, 81.07)
+mesh = SubResource("b15")
+PartId = "p69"
+
+[node name="p70" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 3.15, 29.56)
+mesh = SubResource("b1")
+PartId = "p70"
+
+[node name="p71" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 3.15, 68.72)
+mesh = SubResource("b1")
+PartId = "p71"
+
+[node name="p72" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.65, 15.4)
+mesh = SubResource("b18")
+PartId = "p72"
+
+[node name="p73" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 2, 82.88)
+mesh = SubResource("b19")
+PartId = "p73"
+
+[node name="p74" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 21.84)
+mesh = SubResource("b20")
+PartId = "p74"
+
+[node name="p75" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 24.64)
+mesh = SubResource("b20")
+PartId = "p75"
+
+[node name="p76" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 27.44)
+mesh = SubResource("b20")
+PartId = "p76"
+
+[node name="p77" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 30.24)
+mesh = SubResource("b20")
+PartId = "p77"
+
+[node name="p78" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 33.04)
+mesh = SubResource("b20")
+PartId = "p78"
+
+[node name="p79" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 35.84)
+mesh = SubResource("b20")
+PartId = "p79"
+
+[node name="p80" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 38.64)
+mesh = SubResource("b20")
+PartId = "p80"
+
+[node name="p81" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 41.44)
+mesh = SubResource("b20")
+PartId = "p81"
+
+[node name="p82" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 44.24)
+mesh = SubResource("b20")
+PartId = "p82"
+
+[node name="p83" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 54.04)
+mesh = SubResource("b20")
+PartId = "p83"
+
+[node name="p84" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 56.84)
+mesh = SubResource("b20")
+PartId = "p84"
+
+[node name="p85" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 59.64)
+mesh = SubResource("b20")
+PartId = "p85"
+
+[node name="p86" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 62.44)
+mesh = SubResource("b20")
+PartId = "p86"
+
+[node name="p87" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 65.24)
+mesh = SubResource("b20")
+PartId = "p87"
+
+[node name="p88" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 68.04)
+mesh = SubResource("b20")
+PartId = "p88"
+
+[node name="p89" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 70.84)
+mesh = SubResource("b20")
+PartId = "p89"
+
+[node name="p90" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 73.64)
+mesh = SubResource("b20")
+PartId = "p90"
+
+[node name="p91" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.8, 76.44)
+mesh = SubResource("b20")
+PartId = "p91"
+
+[node name="p92" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.65, 18.82)
+mesh = SubResource("b21")
+PartId = "p92"
+
+[node name="p93" parent="teaching1_west" instance=ExtResource("e2")]
+position = Vector3(114.5, 1.65, 79.46)
+mesh = SubResource("b21")
+PartId = "p93"
