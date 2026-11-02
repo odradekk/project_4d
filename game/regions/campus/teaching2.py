@@ -236,8 +236,8 @@ def props():
     rafter = resource(subs, 'BoxMesh', 'rafter', material=iron, size=vec(length, 0.08, 0.08))
     show(nodes, 'GlassWest', pane, (AX0 + half / 2, y + h / 2, zm), rotation=vec(0, 0, pitch))
     show(nodes, 'GlassEast', pane, (AX1 - half / 2, y + h / 2, zm), rotation=vec(0, 0, -pitch))
-    for name, z in (('GableNorth', AZ0), ('GableSouth', AZ1)): show(nodes, name, gable, (SX, y + h / 2, z))
-    show(nodes, 'Ridge', resource(subs, 'BoxMesh', 'ridge', material=iron, size=vec(0.12, 0.12, depth)), (SX, y + h, zm))
+    for name, z in (('GableNorth', AZ0), ('GableSouth', AZ1)): show(nodes, name, gable, (AX0 + half, y + h / 2, z))
+    show(nodes, 'Ridge', resource(subs, 'BoxMesh', 'ridge', material=iron, size=vec(0.12, 0.12, depth)), (AX0 + half, y + h, zm))
     for k in range(17):
         z = AZ0 + k * depth / 16
         show(nodes, f'Rafter{k + 1}West', rafter, (AX0 + half / 2, y + h / 2, z), rotation=vec(0, 0, pitch))
