@@ -231,7 +231,9 @@ def site():
     g, ground, roads, paths, fence, sidewalk, edge, bus, kiosk = GROUND, [], [], [], [], [], [], [], []
     box(ground, -40, 120, g - 0.2, g, -40, 240, 'ground')
 
-    def pave(boxes, x0, x1, z0, z1): box(boxes, x0, x1, g - 0.02, g + 0.004, z0, z1, 'road')  # as the rooms' floors
+    # As deep as the ground: Godot cuts each side of a slab into two triangles, and on a road 205 m long and 2.4 cm thick
+    # they are so thin that the player's capsule, touching one, is pulled down into the slab and stuck there.
+    def pave(boxes, x0, x1, z0, z1): box(boxes, x0, x1, g - 0.2, g + 0.004, z0, z1, 'road')
     pave(roads, *WEST_ROAD, FENCE_Z0 + 2, FENCE_Z1 - 2)
     pave(roads, WEST_ROAD[1], MAIN_ROAD, *CROSS_ROAD)
     # Every stair hall's exit reaches a road: in the first column straight west, in the others onto the lane to their
