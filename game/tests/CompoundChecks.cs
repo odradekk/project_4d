@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Game.Debugging;
+using Game.Player;
 using Godot;
 using static Game.Tests.CharacterFixture;
 using static Game.Tests.TurningFixture;
@@ -157,24 +158,26 @@ public partial class CompoundChecks : Node
 
     // Across the west road's east edge at the real time scale, onto the road and back: from the path of each building beside
     // it, from the lawn at z 30, and from the road to the gate. Each is crossed walking and running from start points 3 mm
-    // apart over a step's length, 3.7 cm walking and 6.3 cm running, so that a step ends at every distance from the edge.
+    // apart over one step's length, so that a step ends at every distance from the edge.
     private async Task CheckWestRoadEdge()
     {
         foreach (var z in Rows.Select(z => z + Exit).Append(30).Append(CrossRoad))
             foreach (var way in new[] { -1, 1 })
-                foreach (var (run, step) in new[] { (false, .037f), (true, .064f) })
-                    for (var start = .25f; start < .25f + step; start += .003f)
+                foreach (var (run, speed) in new[] { (false, FirstPersonPlayer.WalkSpeed), (true, FirstPersonPlayer.RunSpeed) })
+                    for (var start = .25f; start < .25f + speed / Engine.PhysicsTicksPerSecond; start += .003f)
                     {
                         var from = new Vector3(WestRoadEdge - way * start, Ground, z);
                         var to = new Vector3(WestRoadEdge + way * .25f, Ground, z);
+                        // Let go first, so that she stands still at the start point while she settles there.
+                        Input.ActionRelease("move_forward");
+                        Input.ActionRelease("run");
                         play.LookAt(from, to with { Y = 1.3f });
                         await play.Frames(2);
+                        Input.ActionPress("move_forward");
+                        if (run) Input.ActionPress("run");
                         for (var frame = 0; (to.X - feet.X) * way > 0; frame++)
                         {
                             Check(frame < 60, $"she must {(run ? "run" : "walk")} across the west road's edge from {from}; she is stopped at {feet}");
-                            Input.ActionPress("move_forward");
-                            if (run) Input.ActionPress("run");
-                            else Input.ActionRelease("run");
                             play.Player.Rotation = new(0, Mathf.Atan2(feet.X - to.X, feet.Z - to.Z), 0);
                             await play.Frames(1);
                         }
