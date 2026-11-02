@@ -12,7 +12,7 @@ namespace Game.Tests;
 /// steps onto the stand; into both rooms of the lodge and into the sports store; through the open bay under the toilet
 /// block into the boys' toilet, then up the outside stair to the landing and into the girls' toilet. The steps and the
 /// stair are walked and run, up and down. The school wall on each side, the stand's side, and the open edges of the stair
-/// and its landing stop her. The routes keep clear of the sites left for the two teaching buildings.
+/// and its landing stop her. The routes keep clear of the two teaching buildings.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class CampusChecks : Node
@@ -64,7 +64,7 @@ public partial class CampusChecks : Node
             Check(Inside(87.06f, 89.88f, .12f, 5.88f), $"she walks on into the gatekeeper's room; she is at {feet}");
             await WalkTo((86.2f, 5.05f), (84.5f, 4.85f), (81.5f, 4.85f));
 
-            // North of the site left for teaching building 2, over the courts and round to the sports store's door.
+            // North of teaching building 2, over the courts and round to the sports store's door.
             await WalkTo((81.5f, 10), (25, 10), (25, 3));
             await Push((25, -3));
             Check(Stopped(feet.Z, NorthWall) && OnGround, $"the north wall stops her; she is at {feet}");
@@ -74,7 +74,7 @@ public partial class CampusChecks : Node
             await WalkTo((11, 64), (11, 69.5f));
             Check(Inside(3.12f, 18.88f, 67.12f, 74.88f), $"she walks into the sports store; she is at {feet}");
 
-            // South of both teaching buildings' sites to the toilet block.
+            // South of both teaching buildings to the toilet block.
             await WalkTo((11, 64), (25, 64), (25, 88), (100, 88));
             await Push((100, 95));
             Check(Stopped(feet.Z, SouthWall) && OnGround, $"the south wall stops her; she is at {feet}");

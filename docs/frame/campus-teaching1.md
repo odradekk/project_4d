@@ -1,6 +1,6 @@
 # 教学楼 1
 
-[新的学校区域](campus-region.md) · [场景标注](scene-authoring.md)
+[新的学校区域](campus-region.md) · [教学楼 2](campus-teaching2.md) · [场景标注](scene-authoring.md)
 
 教学楼 1 在广场东边，4 层都能走，三部楼梯都能上下，每间教室、水房和教师厕所都能进。它按 Decision note: 2026-11-01-school-scene-layout 的「教学楼 1」一节搭，位置、尺寸和摆设照白模原型的 `TB1_*` 常量和「teaching building 1, inside」一节。坐标和[新的学校区域](campus-region.md)相同：单位米，x 向东，z 向南，墙的位置按中线。整栋楼只在截面Ⅰ里：墙、地面、楼梯和家具是 `Sections/Ⅰ/Fixed/Teaching1` 下的固定物件；楼梯的斜坡、楼梯间的尖顶和椅子是 `Sections/Ⅰ/Props/Teaching1` 下的普通节点，引擎不知道它们。
 
@@ -44,7 +44,7 @@
 
 ## 文件
 
-`game/regions/campus/teaching1.py` 按原型的常量写出 `game/regions/campus/teaching1/` 下的场景，`generate.py` 运行时一起写；墙、铺地和固定物件场景的写法在 `shapes.py` 里，两个脚本共用。每层用同一套场景，每间教室用同一份家具，`building.tscn` 给每个实例换上自己的 ID：层从 1 数，教室从北往南数，例如 `teaching1_west_2` 是 2 层的西墙，`teaching1_class_3_4` 是 3 层从北数第 4 间教室的家具。
+`game/regions/campus/teaching1.py` 按原型的常量写出 `game/regions/campus/teaching1/` 下的场景，`generate.py` 运行时一起写；墙、铺地、固定物件场景和网格的写法在 `shapes.py` 里，和校园、教学楼 2 共用；水房和教师厕所里东西的摆法也在那里，和教学楼 2 共用。每层用同一套场景，每间教室用同一份家具，`building.tscn` 给每个实例换上自己的 ID：层从 1 数，教室从北往南数，例如 `teaching1_west_2` 是 2 层的西墙，`teaching1_class_3_4` 是 3 层从北数第 4 间教室的家具。
 
 | 文件 | 内容 | 用在 |
 |---|---|---|
