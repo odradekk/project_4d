@@ -10,7 +10,7 @@ Decision note: 2026-11-01-school-scene-layout
 import math
 from collections import namedtuple
 
-from shapes import TOP, fixed, gap, material, pave, resource, show, toilet, wall, water_room, window
+from shapes import TOP, fixed, gap, material, pave, resource, show, teacher_toilet, wall, water_room, window
 from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once shapes is imported
 
 FH, FLOORS = 3.6, 4  # storey height
@@ -175,7 +175,7 @@ def fittings():  # every floor's water room and teachers' toilet, a men's toilet
     for f in range(FLOORS):
         water, wc = [], []
         water_room(fixture(water, f * FH), *WATER, XC - X0, middle(*WATER))
-        toilet(fixture(wc, f * FH), *TOILET, XC - X0, middle(*TOILET), f % 2 == 0)
+        teacher_toilet(fixture(wc, f * FH), *TOILET, XC - X0, middle(*TOILET), f % 2 == 0)
         parts[f'teaching1_water_{f + 1}'], parts[f'teaching1_toilet_{f + 1}'] = water, wc
     return fixed('Fittings', **parts)
 

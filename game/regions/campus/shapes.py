@@ -1,6 +1,7 @@
 """What generate.py, teaching1.py and teaching2.py share: the wall thickness, the yard's levels, walls with holes in them,
-paving, scenes of fixed objects, plain meshes for a section's Props, and the fittings of a water room and a teachers'
-toilet. Importing it puts the compound region's tscn.py, which writes the scene text, on the path."""
+paving, scenes of fixed objects, and plain meshes for a section's Props; and what the two teaching buildings share, the
+fittings of a water room and a teachers' toilet. Importing it puts the compound region's tscn.py, which writes the scene
+text, on the path."""
 import sys
 from pathlib import Path
 
@@ -77,7 +78,7 @@ def water_room(put, ua, ub, v, door):  # a boiler for drinking water, a long sin
 
 # A screen inside the door, basins at one end, squatting stalls at the other, and for men a urinal trough on the far wall.
 # The pans stand 4 cm high, as in the toilet block, so that she can walk over them.
-def toilet(put, ua, ub, v, door, men):
+def teacher_toilet(put, ua, ub, v, door, men):
     stalls = 2 if men else 3
     put('wall', door - 0.9, door + 0.9, 0, 2.0, 1.4, 1.5)
     put('concrete', ua + 0.12, ua + 0.62, 0, 0.8, 2.0, 3.6)
