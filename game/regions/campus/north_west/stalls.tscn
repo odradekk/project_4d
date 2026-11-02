@@ -4,19 +4,19 @@
 [ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
 
 [sub_resource type="StandardMaterial3D" id="m1"]
-albedo_color = Color(0.549, 0.569, 0.588, 1)
+albedo_color = Color(0.816, 0.165, 0.165, 1)
 
 [sub_resource type="StandardMaterial3D" id="m2"]
 albedo_color = Color(0.541, 0.518, 0.471, 1)
 
 [sub_resource type="StandardMaterial3D" id="m3"]
-albedo_color = Color(0.788, 0.655, 0.486, 1)
+albedo_color = Color(0.549, 0.569, 0.588, 1)
 
 [sub_resource type="StandardMaterial3D" id="m4"]
-albedo_color = Color(0.561, 0.639, 0.722, 1)
+albedo_color = Color(0.788, 0.655, 0.486, 1)
 
 [sub_resource type="StandardMaterial3D" id="m5"]
-albedo_color = Color(0.816, 0.165, 0.165, 1)
+albedo_color = Color(0.561, 0.639, 0.722, 1)
 
 [sub_resource type="BoxMesh" id="b1"]
 material = SubResource("m1")
@@ -76,7 +76,7 @@ PartId = "p6"
 
 [node name="p7" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-11.45, -0.078, 66.6)
-mesh = SubResource("b3")
+mesh = SubResource("b1")
 PartId = "p7"
 
 [node name="p8" parent="stalls" instance=ExtResource("e2")]
@@ -86,7 +86,7 @@ PartId = "p8"
 
 [node name="p9" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-11.45, -0.078, 71.1)
-mesh = SubResource("b1")
+mesh = SubResource("b3")
 PartId = "p9"
 
 [node name="p10" parent="stalls" instance=ExtResource("e2")]
@@ -96,7 +96,7 @@ PartId = "p10"
 
 [node name="p11" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-11.45, -0.078, 75.6)
-mesh = SubResource("b4")
+mesh = SubResource("b1")
 PartId = "p11"
 
 [node name="p12" parent="stalls" instance=ExtResource("e2")]
@@ -106,7 +106,7 @@ PartId = "p12"
 
 [node name="p13" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-11.45, -0.078, 80.1)
-mesh = SubResource("b1")
+mesh = SubResource("b4")
 PartId = "p13"
 
 [node name="p14" parent="stalls" instance=ExtResource("e2")]
@@ -116,7 +116,7 @@ PartId = "p14"
 
 [node name="p15" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-11.45, -0.078, 84.6)
-mesh = SubResource("b3")
+mesh = SubResource("b5")
 PartId = "p15"
 
 [node name="p16" parent="stalls" instance=ExtResource("e2")]
@@ -126,7 +126,7 @@ PartId = "p16"
 
 [node name="p17" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-6.15, -0.078, 53.1)
-mesh = SubResource("b5")
+mesh = SubResource("b4")
 PartId = "p17"
 
 [node name="p18" parent="stalls" instance=ExtResource("e2")]
@@ -136,7 +136,7 @@ PartId = "p18"
 
 [node name="p19" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-6.15, -0.078, 57.6)
-mesh = SubResource("b3")
+mesh = SubResource("b5")
 PartId = "p19"
 
 [node name="p20" parent="stalls" instance=ExtResource("e2")]
@@ -156,7 +156,7 @@ PartId = "p22"
 
 [node name="p23" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-6.15, -0.078, 66.6)
-mesh = SubResource("b5")
+mesh = SubResource("b4")
 PartId = "p23"
 
 [node name="p24" parent="stalls" instance=ExtResource("e2")]
@@ -176,7 +176,7 @@ PartId = "p26"
 
 [node name="p27" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-6.15, -0.078, 75.6)
-mesh = SubResource("b1")
+mesh = SubResource("b5")
 PartId = "p27"
 
 [node name="p28" parent="stalls" instance=ExtResource("e2")]
@@ -196,7 +196,7 @@ PartId = "p30"
 
 [node name="p31" parent="stalls" instance=ExtResource("e2")]
 position = Vector3(-6.15, -0.078, 84.6)
-mesh = SubResource("b4")
+mesh = SubResource("b3")
 PartId = "p31"
 
 [node name="p32" parent="stalls" instance=ExtResource("e2")]

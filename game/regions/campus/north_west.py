@@ -34,7 +34,7 @@ FRAMES, SPAN = ((-72, -98, 4, 2, 9), (-42, -95, 3, 2, 6), (-70, -62, 3, 2, 12)),
 SHEETS = ('furn', 'shop_sign', 'shutter', 'door')  # the stalls' sheets, the prototype's stall, sign, shutter and door
 # The prototype's random state where it lays out the frames, the poplars and the stalls; between them it draws numbers for
 # other things.
-FRAMES_SEED, POPLARS_SEED, STALLS_SEED = 172379834, 118437132, 964653836
+FRAMES_SEED, POPLARS_SEED, STALLS_SEED = 1223483939, 1637571316, 979486785
 
 
 def numbers(seed):  # the prototype's random numbers from that state on

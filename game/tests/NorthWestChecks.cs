@@ -12,19 +12,20 @@ namespace Game.Tests;
 /// road's south sidewalk to the dirt road; up the dirt road to the building site's north end; across the road and along the
 /// estate's lawn strip; down the dirt road between the stalls to the iron gate; and from inside the school out of the back
 /// gate, over the dirt road into the sports ground and once round its track. The building site's hoarding, the estate's
-/// railing on its west and south sides and its shut gate, a vendor's stool, and the sports ground's wire fence on each side
-/// stop her.
+/// railing on its west, south and east sides and its shut gate, a vendor's stool, and the sports ground's wire fence on
+/// each side stop her.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class NorthWestChecks : Node
 {
     // The middle of the dirt road (x), of the south sidewalk (z), and of the lawn strip outside the estate's railing (z).
     private const float Road = -8.8f, Sidewalk = -1.8f, Lawn = -15;
-    // Lines through the belts of poplars clear of their trunks: to the building site's hoarding, and to the estate's railing.
-    private const float ToHoarding = -69.9f, ToRailing = -59.7f;
-    // The faces that stop her: the hoarding's east side; the estate's low wall on its west and south sides and its gate;
-    // the east side of the stool by the first stall on the road's west edge, and the line through it.
-    private const float Hoarding = -16.95f, EstateWest = -.72f, EstateSouth = -19.68f, EstateGate = -19.76f;
+    // Lines through the belts of poplars at least 1 m from the middle of every trunk: to the building site's hoarding,
+    // and to the estate's railing.
+    private const float ToHoarding = -69.8f, ToRailing = -60.8f;
+    // The faces that stop her: the hoarding's east side; the estate's low wall on its west, south and east sides and its
+    // gate; the east side of the stool by the first stall on the road's west edge, and the line through it.
+    private const float Hoarding = -16.95f, EstateWest = -.72f, EstateSouth = -19.68f, EstateEast = 237.12f, EstateGate = -19.76f;
     private const float Stool = -11.15f, StoolLine = 54.65f;
     // The sports ground's wire fence, the inner faces of its east, south, west and north sides.
     private const float FieldEast = -17.63f, FieldSouth = 91.97f, FieldWest = -80.27f, FieldNorth = -27.77f;
@@ -52,7 +53,8 @@ public partial class NorthWestChecks : Node
             await WalkTo((Road, ToHoarding), (Road, -105.5f));
             Check(OnGround, $"she walks up the dirt road to the building site's north end; she is at {feet}");
 
-            // The estate's railing, from the belt east of the dirt road and from the lawn strip, and its gate.
+            // The estate's railing, from the belt east of the dirt road, from the lawn strip and from the ground east of it, and
+            // its gate.
             await WalkTo((Road, ToRailing), (-4.5f, ToRailing));
             await Push((3, ToRailing));
             Check(Stopped(feet.X, EstateWest, -4.5f) && OnGround, $"the estate's railing on its west side stops her; she is at {feet}");
@@ -62,9 +64,12 @@ public partial class NorthWestChecks : Node
             await WalkTo((50, Lawn), (105, Lawn), (105, -16));
             await Push((105, -24));
             Check(Stopped(feet.Z, EstateGate, -16) && OnGround, $"the estate's shut gate stops her; she is at {feet}");
+            await WalkTo((105, Lawn), (238.2f, Lawn), (238.2f, -25));
+            await Push((233, -25));
+            Check(Stopped(feet.X, EstateEast, 238.2f) && OnGround, $"the estate's railing on its east side stops her; she is at {feet}");
 
             // Back across to the dirt road, and down it between the stalls to the iron gate.
-            await WalkTo((105, -12), (Road, -12), (Road, StoolLine));
+            await WalkTo((238.2f, -12), (Road, -12), (Road, StoolLine));
             await Push((-14, StoolLine));
             Check(Stopped(feet.X, Stool, Road) && OnGround, $"a vendor's stool stops her: the stalls are set out; she is at {feet}");
             await WalkTo((Road, StoolLine), (Road, 91.5f));
@@ -100,7 +105,7 @@ public partial class NorthWestChecks : Node
             await WalkTo((TrackX + Lane, 8));
             Check(OnGround, $"she runs once round the track; she is at {feet}");
 
-            GD.Print("North and west checks passed: out of the gate and along the south sidewalk to the dirt road; up the dirt road to the building site's north end; the hoarding; the estate's railing on two sides and its gate; a vendor's stool; down the dirt road between the stalls to the iron gate; out of the back gate into the sports ground; once round the track; the sports ground's fence on every side.");
+            GD.Print("North and west checks passed: out of the gate and along the south sidewalk to the dirt road; up the dirt road to the building site's north end; the hoarding; the estate's railing on three sides and its gate; a vendor's stool; down the dirt road between the stalls to the iron gate; out of the back gate into the sports ground; once round the track; the sports ground's fence on every side.");
             GetTree().Quit();
         }
         catch (Exception error)
