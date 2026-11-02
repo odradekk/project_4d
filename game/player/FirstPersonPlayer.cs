@@ -10,8 +10,8 @@ namespace Game.Player;
 
 public partial class FirstPersonPlayer : CharacterBody3D
 {
-    private const float WalkSpeed = 2.2f;
-    private const float RunSpeed = 3.8f;
+    internal const float WalkSpeed = 2.2f;
+    internal const float RunSpeed = 3.8f;
     private const float LookSensitivity = 0.0025f;
     private const float PitchLimit = 1.5f;
     private const string ArmsFull = "手里抱着猫呢。";
