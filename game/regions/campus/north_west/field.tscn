@@ -1,0 +1,185 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.769, 0.749, 0.706, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.29, 0.333, 0.314, 0.25)
+transparency = 1
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.29, 0.302, 0.322, 1)
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.933, 0.933, 0.918, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(62.7, 0.204, 119.8)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(0.06, 2.95, 33.8)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m3")
+size = Vector3(0.05, 0.06, 33.8)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m2")
+size = Vector3(0.06, 2.95, 82)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m3")
+size = Vector3(0.05, 0.06, 82)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m2")
+size = Vector3(0.06, 2.95, 119.8)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m3")
+size = Vector3(0.05, 0.06, 119.8)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m2")
+size = Vector3(62.7, 2.95, 0.06)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m3")
+size = Vector3(62.7, 0.06, 0.05)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m4")
+size = Vector3(0.12, 2, 0.12)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m4")
+size = Vector3(5.12, 0.1, 0.12)
+
+[node name="Field" type="Node3D"]
+
+[node name="field" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "field"
+
+[node name="p1" parent="field" instance=ExtResource("e2")]
+position = Vector3(-48.95, -0.098, 32.1)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="field_fence" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "field_fence"
+
+[node name="p1" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-17.6, 1.475, -10.9)
+mesh = SubResource("b2")
+PartId = "p1"
+
+[node name="p2" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-17.6, 0.1, -10.9)
+mesh = SubResource("b3")
+PartId = "p2"
+
+[node name="p3" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-17.6, 2.95, -10.9)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-17.6, 1.475, 51)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-17.6, 0.1, 51)
+mesh = SubResource("b5")
+PartId = "p5"
+
+[node name="p6" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-17.6, 2.95, 51)
+mesh = SubResource("b5")
+PartId = "p6"
+
+[node name="p7" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-80.3, 1.475, 32.1)
+mesh = SubResource("b6")
+PartId = "p7"
+
+[node name="p8" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-80.3, 0.1, 32.1)
+mesh = SubResource("b7")
+PartId = "p8"
+
+[node name="p9" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-80.3, 2.95, 32.1)
+mesh = SubResource("b7")
+PartId = "p9"
+
+[node name="p10" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-48.95, 1.475, -27.8)
+mesh = SubResource("b8")
+PartId = "p10"
+
+[node name="p11" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-48.95, 0.1, -27.8)
+mesh = SubResource("b9")
+PartId = "p11"
+
+[node name="p12" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-48.95, 2.95, -27.8)
+mesh = SubResource("b9")
+PartId = "p12"
+
+[node name="p13" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-48.95, 1.475, 92)
+mesh = SubResource("b8")
+PartId = "p13"
+
+[node name="p14" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-48.95, 0.1, 92)
+mesh = SubResource("b9")
+PartId = "p14"
+
+[node name="p15" parent="field_fence" instance=ExtResource("e2")]
+position = Vector3(-48.95, 2.95, 92)
+mesh = SubResource("b9")
+PartId = "p15"
+
+[node name="goals" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "goals"
+
+[node name="p1" parent="goals" instance=ExtResource("e2")]
+position = Vector3(-51.5, 1, -1.2)
+mesh = SubResource("b10")
+PartId = "p1"
+
+[node name="p2" parent="goals" instance=ExtResource("e2")]
+position = Vector3(-46.5, 1, -1.2)
+mesh = SubResource("b10")
+PartId = "p2"
+
+[node name="p3" parent="goals" instance=ExtResource("e2")]
+position = Vector3(-49, 1.95, -1.2)
+mesh = SubResource("b11")
+PartId = "p3"
+
+[node name="p4" parent="goals" instance=ExtResource("e2")]
+position = Vector3(-51.5, 1, 66.8)
+mesh = SubResource("b10")
+PartId = "p4"
+
+[node name="p5" parent="goals" instance=ExtResource("e2")]
+position = Vector3(-46.5, 1, 66.8)
+mesh = SubResource("b10")
+PartId = "p5"
+
+[node name="p6" parent="goals" instance=ExtResource("e2")]
+position = Vector3(-49, 1.95, 66.8)
+mesh = SubResource("b11")
+PartId = "p6"

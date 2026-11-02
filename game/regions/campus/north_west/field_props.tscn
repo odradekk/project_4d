@@ -1,0 +1,412 @@
+[gd_scene load_steps=37 format=3]
+
+[sub_resource type="StandardMaterial3D" id="c0"]
+albedo_color = Color(0.933, 0.933, 0.918, 1)
+
+[sub_resource type="StandardMaterial3D" id="c1"]
+albedo_color = Color(0.659, 0.439, 0.361, 1)
+
+[sub_resource type="StandardMaterial3D" id="c2"]
+albedo_color = Color(0.525, 0.627, 0.416, 1)
+
+[sub_resource type="BoxMesh" id="f1"]
+material = SubResource("c0")
+size = Vector3(53.84, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f2"]
+material = SubResource("c0")
+top_radius = 26.919999999999998
+bottom_radius = 26.919999999999998
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f3"]
+material = SubResource("c1")
+size = Vector3(53.68, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f4"]
+material = SubResource("c1")
+top_radius = 26.84
+bottom_radius = 26.84
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f5"]
+material = SubResource("c0")
+size = Vector3(51.4, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f6"]
+material = SubResource("c0")
+top_radius = 25.7
+bottom_radius = 25.7
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f7"]
+material = SubResource("c1")
+size = Vector3(51.24, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f8"]
+material = SubResource("c1")
+top_radius = 25.62
+bottom_radius = 25.62
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f9"]
+material = SubResource("c0")
+size = Vector3(48.96, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f10"]
+material = SubResource("c0")
+top_radius = 24.48
+bottom_radius = 24.48
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f11"]
+material = SubResource("c1")
+size = Vector3(48.8, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f12"]
+material = SubResource("c1")
+top_radius = 24.400000000000002
+bottom_radius = 24.400000000000002
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f13"]
+material = SubResource("c0")
+size = Vector3(46.52, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f14"]
+material = SubResource("c0")
+top_radius = 23.259999999999998
+bottom_radius = 23.259999999999998
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f15"]
+material = SubResource("c1")
+size = Vector3(46.36, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f16"]
+material = SubResource("c1")
+top_radius = 23.18
+bottom_radius = 23.18
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f17"]
+material = SubResource("c0")
+size = Vector3(44.08, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f18"]
+material = SubResource("c0")
+top_radius = 22.04
+bottom_radius = 22.04
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f19"]
+material = SubResource("c2")
+size = Vector3(43.92, 0.001, 55)
+
+[sub_resource type="CylinderMesh" id="f20"]
+material = SubResource("c2")
+top_radius = 21.96
+bottom_radius = 21.96
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f21"]
+material = SubResource("c0")
+size = Vector3(38, 0.001, 0.12)
+
+[sub_resource type="BoxMesh" id="f22"]
+material = SubResource("c0")
+size = Vector3(38, 0.001, 0.12)
+
+[sub_resource type="BoxMesh" id="f23"]
+material = SubResource("c0")
+size = Vector3(0.12, 0.001, 68)
+
+[sub_resource type="BoxMesh" id="f24"]
+material = SubResource("c0")
+size = Vector3(0.12, 0.001, 68)
+
+[sub_resource type="BoxMesh" id="f25"]
+material = SubResource("c0")
+size = Vector3(0.12, 0.001, 10)
+
+[sub_resource type="BoxMesh" id="f26"]
+material = SubResource("c0")
+size = Vector3(24, 0.001, 0.12)
+
+[sub_resource type="BoxMesh" id="f27"]
+material = SubResource("c0")
+size = Vector3(24, 0.001, 0.12)
+
+[sub_resource type="CylinderMesh" id="f28"]
+material = SubResource("c0")
+top_radius = 6.05
+bottom_radius = 6.05
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="CylinderMesh" id="f29"]
+material = SubResource("c2")
+top_radius = 5.95
+bottom_radius = 5.95
+height = 0.001
+radial_segments = 64
+rings = 1
+
+[sub_resource type="BoxMesh" id="f30"]
+material = SubResource("c0")
+size = Vector3(38, 0.001, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="c33"]
+albedo_color = Color(0.29, 0.302, 0.322, 1)
+
+[sub_resource type="BoxMesh" id="post"]
+material = SubResource("c33")
+size = Vector3(0.08, 3, 0.08)
+
+[sub_resource type="MultiMesh" id="posts"]
+transform_format = 1
+instance_count = 150
+mesh = SubResource("post")
+buffer = PackedFloat32Array(1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -25.385714, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -22.971429, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -20.557143, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -18.142857, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -15.728571, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -13.314286, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -10.9, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -8.485714, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -6.071429, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -3.657143, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -1.242857, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 1.171429, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 3.585714, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 6, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 10, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 12.484848, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 14.969697, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 17.454545, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 19.939394, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 22.424242, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 24.909091, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 27.393939, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 29.878788, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 32.363636, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 34.848485, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 37.333333, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 39.818182, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 42.30303, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 44.787879, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 47.272727, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 49.757576, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 52.242424, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 54.727273, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 57.212121, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 59.69697, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 62.181818, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 64.666667, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 67.151515, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 69.636364, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 72.121212, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 74.606061, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 77.090909, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 79.575758, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 82.060606, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 84.545455, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 87.030303, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 89.515152, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -25.304167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -22.808333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -20.3125, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -17.816667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -15.320833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -12.825, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -10.329167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -7.833333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -5.3375, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -2.841667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -0.345833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 2.15, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 4.645833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 7.141667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 9.6375, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 12.133333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 14.629167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 17.125, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 19.620833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 22.116667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 24.6125, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 27.108333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 29.604167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 32.1, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 34.595833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 37.091667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 39.5875, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 42.083333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 44.579167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 47.075, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 49.570833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 52.066667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 54.5625, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 57.058333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 59.554167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 62.05, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 64.545833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 67.041667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 69.5375, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 72.033333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 74.529167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 77.025, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 79.520833, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 82.016667, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 84.5125, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 87.008333, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 89.504167, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -77.792, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -75.284, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -72.776, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -70.268, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -67.76, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -65.252, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -62.744, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -60.236, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -57.728, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -55.22, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -52.712, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -50.204, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -47.696, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -45.188, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -42.68, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -40.172, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -37.664, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -35.156, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -32.648, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -30.14, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -27.632, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -25.124, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -22.616, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -20.108, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, -27.8, 1, 0, 0, -80.3, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -77.792, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -75.284, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -72.776, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -70.268, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -67.76, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -65.252, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -62.744, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -60.236, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -57.728, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -55.22, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -52.712, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -50.204, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -47.696, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -45.188, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -42.68, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -40.172, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -37.664, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -35.156, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -32.648, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -30.14, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -27.632, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -25.124, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -22.616, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -20.108, 0, 1, 0, 1.5, 0, 0, 1, 92, 1, 0, 0, -17.6, 0, 1, 0, 1.5, 0, 0, 1, 92)
+
+[node name="Field" type="Node3D"]
+
+[node name="Track1" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0045, 32.8)
+mesh = SubResource("f1")
+
+[node name="Track1North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0045, 5.3)
+mesh = SubResource("f2")
+
+[node name="Track1South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0045, 60.3)
+mesh = SubResource("f2")
+
+[node name="Track2" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0055, 32.8)
+mesh = SubResource("f3")
+
+[node name="Track2North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0055, 5.3)
+mesh = SubResource("f4")
+
+[node name="Track2South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0055, 60.3)
+mesh = SubResource("f4")
+
+[node name="Track3" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0065, 32.8)
+mesh = SubResource("f5")
+
+[node name="Track3North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0065, 5.3)
+mesh = SubResource("f6")
+
+[node name="Track3South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0065, 60.3)
+mesh = SubResource("f6")
+
+[node name="Track4" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0075, 32.8)
+mesh = SubResource("f7")
+
+[node name="Track4North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0075, 5.3)
+mesh = SubResource("f8")
+
+[node name="Track4South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0075, 60.3)
+mesh = SubResource("f8")
+
+[node name="Track5" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0085, 32.8)
+mesh = SubResource("f9")
+
+[node name="Track5North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0085, 5.3)
+mesh = SubResource("f10")
+
+[node name="Track5South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0085, 60.3)
+mesh = SubResource("f10")
+
+[node name="Track6" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0095, 32.8)
+mesh = SubResource("f11")
+
+[node name="Track6North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0095, 5.3)
+mesh = SubResource("f12")
+
+[node name="Track6South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0095, 60.3)
+mesh = SubResource("f12")
+
+[node name="Track7" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0105, 32.8)
+mesh = SubResource("f13")
+
+[node name="Track7North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0105, 5.3)
+mesh = SubResource("f14")
+
+[node name="Track7South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0105, 60.3)
+mesh = SubResource("f14")
+
+[node name="Track8" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0115, 32.8)
+mesh = SubResource("f15")
+
+[node name="Track8North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0115, 5.3)
+mesh = SubResource("f16")
+
+[node name="Track8South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0115, 60.3)
+mesh = SubResource("f16")
+
+[node name="Track9" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0125, 32.8)
+mesh = SubResource("f17")
+
+[node name="Track9North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0125, 5.3)
+mesh = SubResource("f18")
+
+[node name="Track9South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0125, 60.3)
+mesh = SubResource("f18")
+
+[node name="Track10" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0135, 32.8)
+mesh = SubResource("f19")
+
+[node name="Track10North" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0135, 5.3)
+mesh = SubResource("f20")
+
+[node name="Track10South" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0135, 60.3)
+mesh = SubResource("f20")
+
+[node name="Line1" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0145, -1.14)
+mesh = SubResource("f21")
+
+[node name="Line2" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0145, 66.74)
+mesh = SubResource("f22")
+
+[node name="Line3" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-67.94, 0.0145, 32.8)
+mesh = SubResource("f23")
+
+[node name="Line4" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-30.06, 0.0145, 32.8)
+mesh = SubResource("f24")
+
+[node name="Line5" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-60.94, 0.0145, 3.8)
+mesh = SubResource("f25")
+
+[node name="Line6" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-37.06, 0.0145, 3.8)
+mesh = SubResource("f25")
+
+[node name="Line7" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0145, 8.74)
+mesh = SubResource("f26")
+
+[node name="Line8" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-60.94, 0.0145, 61.8)
+mesh = SubResource("f25")
+
+[node name="Line9" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-37.06, 0.0145, 61.8)
+mesh = SubResource("f25")
+
+[node name="Line10" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0145, 56.86)
+mesh = SubResource("f27")
+
+[node name="CentreCircle" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0145, 32.8)
+mesh = SubResource("f28")
+
+[node name="CentreCircleInside" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0155, 32.8)
+mesh = SubResource("f29")
+
+[node name="HalfwayLine" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(-49, 0.0165, 32.8)
+mesh = SubResource("f30")
+
+[node name="FencePosts" type="MultiMeshInstance3D" parent="."]
+layers = 3
+multimesh = SubResource("posts")
