@@ -108,7 +108,7 @@
 
 ## 文件
 
-`campus.tscn` 是手写的区域根场景。`game/regions/campus/` 下的子场景都由同一目录下的 `generate.py` 按原型的常量写出，场景文本用新的家区域的 `tscn.py` 来写，校园用的颜色也加在那里。改格局时改脚本里的常量，再运行 `python game/regions/campus/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
+`campus.tscn` 是手写的区域根场景。`game/regions/campus/` 下的子场景都由同一目录下的 `generate.py` 按原型的常量写出，场景文本用新的家区域的 `tscn.py` 来写；校园用的颜色写在 `generate.py` 里，运行时并进 `tscn.py` 的颜色表。改格局时改脚本里的常量，再运行 `python game/regions/campus/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
 
 | 文件 | 内容 |
 |---|---|

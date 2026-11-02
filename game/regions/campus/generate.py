@@ -2,8 +2,7 @@
 
 The layout is the greybox prototype's (branch prototype/school-layout, prototypes/school-layout/index.html), in metres with
 x east, z south and y up; walls are placed by their centrelines. The origin is the school wall's north-west corner, and
-y = 0 is the top of the yard. The scene text comes from the compound region's tscn.py. Hand edits to the scenes are lost
-when this runs again.
+y = 0 is the top of the yard. The scene text comes from the compound region's tscn.py. Hand edits are lost when this runs.
 Decision note: 2026-11-01-school-scene-layout
 """
 import math
@@ -13,10 +12,19 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'compound'))
 from tscn import COLORS, bodies, box, fmt, packed, scene, slope, vec  # noqa: E402
 
+# The campus's colors, beside the compound's; scene() looks them up by name.
+COLORS.update({
+    'brick': (0.886, 0.863, 0.812, 1), 'yard': (0.769, 0.749, 0.706, 1), 'plaza': (0.837, 0.817, 0.783, 1),
+    'plaza_band': (0.741, 0.711, 0.659, 1), 'court': (0.62, 0.639, 0.639, 1), 'line': (0.933, 0.933, 0.918, 1),
+    'name_wall': (0.478, 0.231, 0.188, 1), 'iron': (0.29, 0.302, 0.322, 1), 'pole': (0.427, 0.435, 0.447, 1),
+    'backdrop': (0.949, 0.769, 0.541, 1), 'concrete': (0.725, 0.714, 0.682, 1), 'cement': (0.741, 0.718, 0.671, 1),
+    'desk': (0.69, 0.541, 0.353, 1), 'chair': (0.541, 0.416, 0.267, 1), 'glass': (0.373, 0.408, 0.439, 1),
+    'door': (0.816, 0.165, 0.165, 1), 'white': (0.957, 0.957, 0.941, 1), 'pane': (0.612, 0.769, 0.91, 0.35),
+})
+
 WT = 0.24  # brick wall thickness
 GROUND = -0.2  # the bottom of the yard's slab
-# Paving and the buildings' floors stand this much over the yard, lines on them a little more. Each reaches down into the
-# yard so that it is at least 1 cm thick, as the engine's solids must be.
+# Paving and floors stand this much over the yard, lines a little more; each reaches into the yard, 1 cm thick at least.
 TOP, LINE = 0.004, 0.008
 
 SCHOOL_X, SCHOOL_Z, WALL_H = (0, 149), (0, 92), 2.4
@@ -124,8 +132,7 @@ def courts():
     return fixed('Courts', courts=courts, ping_pong=tables), circles, rims
 
 
-# The gatekeeper's lodge against the north wall: a duty room by the gate that also takes the mail, and the gatekeeper's
-# room behind it.
+# The lodge against the north wall: a duty room by the gate, which takes the mail too, and the gatekeeper's room.
 def lodge():
     shell, things = [], []
     (x0, x1), (z0, z1), h, mx = LODGE_X, LODGE_Z, LODGE_H, LODGE_MX
@@ -139,8 +146,7 @@ def lodge():
     floor(shell, x0, x1, z0, z1, 'cement')
     box(shell, x0 - 0.12, x1 + 0.12, h - 0.2, h, z0 - 0.12, z1 + 0.12, 'slab')
     box(shell, x0 + 0.12, x0 + 0.95, 0, 2.1, 4.4, 4.45, 'door')  # the leaf, open
-    # The duty room: a desk at the window onto the gate with the phone, a chair, a coal stove piped out through the roof,
-    # pigeonholes for the mail on the back wall.
+    # The duty room: desk and phone at the window, chair, coal stove piped out through the roof, pigeonholes for mail.
     box(things, x0 + 0.12, x0 + 0.82, 0, 0.75, 1.3, 3.1, 'desk')
     box(things, x0 + 0.3, x0 + 0.55, 0.75, 0.85, 1.5, 1.8, 'glass')
     box(things, x0 + 1.0, x0 + 1.4, 0, 0.45, 2.0, 2.4, 'chair')
@@ -165,9 +171,8 @@ def strip(a, b, skip=(0, 0)):
     return out
 
 
-# The toilet block, two storeys, doors facing south. Downstairs the boys' toilet fills the north part; its door is at the
-# back of an open bay on columns, open to the west and south. Upstairs the girls' toilet fills the whole block, reached by
-# a stair of its own up the outside of the south wall, railed on its open side.
+# The toilet block, doors facing south: the boys' toilet in the north part downstairs, its door at the back of a bay open
+# to the west and south; the girls' toilet over the whole block, up its own stair outside the south wall.
 def toilet():
     down, up, stair, edge = [], [], [], []
     (x0, x1), (z0, z1), th = TOILET_X, TOILET_Z, TOILET_H
@@ -194,15 +199,13 @@ def toilet():
     for i in range(4): box(stair, FOOT + i * RUN / 3 - 0.03, FOOT + i * RUN / 3 + 0.03, i * th / 3, i * th / 3 + 1.0, *rail, 'iron')
     box(stair, *LANDING, th + 1.0, th + 1.05, *rail, 'iron')
     box(stair, LANDING[1] - 0.08, LANDING[1] - 0.03, th + 1.0, th + 1.05, *STAIR_Z, 'iron')
-    # Round the landing the handrail stops her. Up the stair she would slip out between the posts, under the sloping
-    # handrail, which has no collision: an unseen wall stops her there.
+    # The landing's handrail stops her; between the stair's posts, under a handrail without collision, an unseen wall does.
     box(edge, FOOT, LANDING[0], 0, th + 1.1, STAIR_Z[1] - 0.1, STAIR_Z[1], 'unseen')
     return (fixed('Toilet', toilet=down, toilet_stair=stair, toilet_stair_edge=edge),
             fixed('ToiletUpstairs', toilet_upstairs=up))
 
 
-# Inside each door a screen; washing troughs; squatting stalls behind partitions 1.2 m high, the pans too low to stop
-# her; for the boys a urinal trough on the far wall.
+# A screen inside each door, washing troughs, stalls behind 1.2 m partitions with pans she walks over, a urinal trough.
 def toilet_fittings():
     down, up = [], []
     (x0, x1), (z0, z1), th = TOILET_X, TOILET_Z, TOILET_H
@@ -228,8 +231,7 @@ def toilet_fittings():
     return fixed('ToiletFittings', toilet_fittings=down, toilet_upstairs_fittings=up)
 
 
-# The sports store south of the courts: a double door 3 m wide toward them, high windows; open shelves of balls along the
-# back wall, stacked mats, a vaulting box, hurdles stood along the east wall, ball carts.
+# The sports store: a 3 m double door to the courts, high windows; shelves of balls, mats, a vaulting box, hurdles, carts.
 def store():
     shell, things = [], []
     (x0, x1), (z0, z1), h = STORE_X, STORE_Z, STORE_H
@@ -241,8 +243,7 @@ def store():
     floor(shell, x0, x1, z0, z1, 'cement')
     box(shell, x0 - 0.12, x1 + 0.12, h - 0.2, h, z0 - 0.12, z1 + 0.12, 'slab')
     for x in (9.55, 12.45): box(shell, x - 0.025, x + 0.025, 0, 2.6, z0 + 0.12, z0 + 1.6, 'door')  # the leaves, open inward
-    # The prototype draws the shelves as a solid block with the balls inside it; here they are open, so the balls show:
-    # a back, two ends, a board under each row of balls and one on top.
+    # The prototype's shelves are a solid block hiding the balls; these are open: a back, two ends, a board under each row.
     sx0, sx1, sz0, sz1 = x0 + 0.5, x1 - 0.5, z1 - 0.62, z1 - 0.12
     box(things, sx0, sx1, 0, 2.0, sz1 - 0.04, sz1, 'desk')
     for x in (sx0, sx1 - 0.04): box(things, x, x + 0.04, 0, 2.0, sz0, sz1, 'desk')
@@ -257,9 +258,8 @@ def store():
     return fixed('Store', store=shell, store_furniture=things)
 
 
-# Section I's Props: the collision-only slopes over the stand's steps and the toilet's outside stair, through the front
-# edges of their treads, and what is drawn without boxes, which the engine does not know: the plaza's rings, the courts'
-# centre circles and rims, the stair's sloping handrail, and the balls.
+# Section I's Props: collision-only slopes through the front edges of the stand's and the outside stair's treads, and what
+# upright boxes cannot draw, unknown to the engine: the plaza's rings, centre circles, rims, the sloping handrail, balls.
 def props(circles, rims):
     subs, nodes = bodies([slope('StandSlope', 'z', STEPS_Z[0] - GO, 0, STEPS_Z[0] + (STEPS - 1) * GO, STAND_H, *STEPS_X),
                           slope('ToiletStairSlope', 'x', FOOT - RUN / TREADS, 0, LANDING[0], TOILET_H, *STAIR_Z)])
