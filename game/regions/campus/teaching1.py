@@ -75,12 +75,13 @@ def east():  # a row of windows along the corridor; the north wall
 
 # The walls across the building, and the corridor's wall, open to the stair bays, with two doors to each classroom and one
 # to the water room and the toilet, each leaf open into the room; a wall between each stair's flights, and one between
-# the wide stair and the passage from door 1.
+# the wide stair and the passage from door 1. A leaf is 0.9 m long, 5 cm shorter than the prototype's, so that a back
+# door's leaf clears the chair beside it.
 def inside():
     boxes, holes = [], [gap(s.z0, s.z1, FH) for s in STAIRS]
     for z in [z for z0, z1 in ROOMS for z in (z0 + 0.6, z1 - 1.6)] + [middle(*WATER) - 0.5, middle(*TOILET) - 0.5]:
         holes.append(gap(z, z + 1, 2.1))
-        box(boxes, XC - 1.05, XC - 0.1, 0, 2.1, z, z + 0.05, 'door')
+        box(boxes, XC - 1.0, XC - 0.1, 0, 2.1, z, z + 0.05, 'door')
     wall(boxes, 'z', XC, Z0, Z1, FH, holes, 0.2)
     for _, z, _ in BAYS[1:]: wall(boxes, 'x', z, TX if z in (WIDE.z0, WIDE.z1) else X0, XC, FH, t=0.2)
     for s in STAIRS: box(boxes, s.hx1, s.lx, 0, FH, middle(s.f0, s.f1) - 0.1, middle(s.f0, s.f1) + 0.1, 'wall')
