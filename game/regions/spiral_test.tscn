@@ -1,0 +1,123 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e4"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="e5"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="e6"]
+[ext_resource type="Script" path="res://regions/campus/SpiralStair3D.cs" id="e7"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.784, 0.804, 0.816, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.851, 0.843, 0.82, 1)
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.886, 0.863, 0.812, 1)
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.94, 0.937, 0.918, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(10, 0.2, 9.1)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(10, 0.2, 2.4)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m3")
+size = Vector3(3.9, 1.1, 0.16)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m4")
+size = Vector3(10, 3.4, 0.2)
+
+[node name="SpiralTest" type="Node3D"]
+script = ExtResource("e1")
+PrismEnabled = false
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="ground" type="Node3D" parent="Sections/Ⅰ/Fixed"]
+script = ExtResource("e3")
+EntityId = "ground"
+
+[node name="p1" parent="Sections/Ⅰ/Fixed/ground" instance=ExtResource("e4")]
+position = Vector3(0, -0.1, 0.45)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="corridor_1" type="Node3D" parent="Sections/Ⅰ/Fixed"]
+position = Vector3(0, 3.6, 0)
+script = ExtResource("e3")
+EntityId = "corridor_1"
+
+[node name="p1" parent="Sections/Ⅰ/Fixed/corridor_1" instance=ExtResource("e4")]
+position = Vector3(0, -0.1, -2.9)
+mesh = SubResource("b2")
+PartId = "p1"
+
+[node name="p2" parent="Sections/Ⅰ/Fixed/corridor_1" instance=ExtResource("e4")]
+position = Vector3(-3.05, 0.55, -1.7)
+mesh = SubResource("b3")
+PartId = "p2"
+
+[node name="p3" parent="Sections/Ⅰ/Fixed/corridor_1" instance=ExtResource("e4")]
+position = Vector3(3.05, 0.55, -1.7)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="Sections/Ⅰ/Fixed/corridor_1" instance=ExtResource("e4")]
+position = Vector3(0, 1.7, -4.1)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="corridor_2" type="Node3D" parent="Sections/Ⅰ/Fixed"]
+position = Vector3(0, 7.2, 0)
+script = ExtResource("e3")
+EntityId = "corridor_2"
+
+[node name="p1" parent="Sections/Ⅰ/Fixed/corridor_2" instance=ExtResource("e4")]
+position = Vector3(0, -0.1, -2.9)
+mesh = SubResource("b2")
+PartId = "p1"
+
+[node name="p2" parent="Sections/Ⅰ/Fixed/corridor_2" instance=ExtResource("e4")]
+position = Vector3(-3.05, 0.55, -1.7)
+mesh = SubResource("b3")
+PartId = "p2"
+
+[node name="p3" parent="Sections/Ⅰ/Fixed/corridor_2" instance=ExtResource("e4")]
+position = Vector3(3.05, 0.55, -1.7)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="Sections/Ⅰ/Fixed/corridor_2" instance=ExtResource("e4")]
+position = Vector3(0, 1.7, -4.1)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(-0.41, 0, -1.13)
+script = ExtResource("e5")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("e6")
+
+[node name="Props" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Stair" type="Node3D" parent="Sections/Ⅰ/Props"]
+script = ExtResource("e7")
+Floors = 3
