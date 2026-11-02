@@ -1,0 +1,52 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
+[ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
+[ext_resource type="Script" path="res://adapter/CreatureSpawn3D.cs" id="e3"]
+[ext_resource type="PackedScene" path="res://player/first_person_player.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/campus/site.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://regions/campus/courts.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://regions/campus/lodge.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://regions/campus/store.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/campus/toilet.tscn" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/campus/toilet_upstairs.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/campus/toilet_fittings.tscn" id="e11"]
+[ext_resource type="PackedScene" path="res://regions/campus/props.tscn" id="e12"]
+
+[node name="Campus" type="Node3D"]
+script = ExtResource("e1")
+PrismEnabled = false
+
+[node name="Sections" type="Node" parent="."]
+
+[node name="Ⅰ" type="Node3D" parent="Sections"]
+script = ExtResource("e2")
+SectionId = "Ⅰ"
+W = 0
+
+[node name="Fixed" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="Site" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e5")]
+
+[node name="Courts" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e6")]
+
+[node name="Lodge" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e7")]
+
+[node name="Store" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e8")]
+
+[node name="Toilet" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e9")]
+
+[node name="ToiletUpstairs" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e10")]
+
+[node name="ToiletFittings" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e11")]
+
+[node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
+
+[node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
+position = Vector3(76, 0.02, 2)
+rotation = Vector3(0, 3.141593, 0)
+script = ExtResource("e3")
+EntityId = "xiaoman"
+CharacterScene = ExtResource("e4")
+
+[node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e12")]

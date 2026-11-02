@@ -20,6 +20,7 @@ public static class DebugScenes
             "cat-room" => "res://flow/cat_room_debug.tscn",
             "deep-room" => "res://flow/deep_room.tscn",
             "compound" => "res://regions/compound.tscn",
+            "campus" => "res://regions/campus.tscn",
             _ => null
         };
 #else

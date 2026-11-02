@@ -1,0 +1,508 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.62, 0.639, 0.639, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.933, 0.933, 0.918, 1)
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.427, 0.435, 0.447, 1)
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.94, 0.937, 0.918, 1)
+
+[sub_resource type="StandardMaterial3D" id="m5"]
+albedo_color = Color(0.725, 0.714, 0.682, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(35.5, 0.204, 44)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(28, 0.208, 0.1)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m2")
+size = Vector3(0.1, 0.208, 15)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m2")
+size = Vector3(5.8, 0.208, 0.1)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m2")
+size = Vector3(0.1, 0.208, 4.9)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m3")
+size = Vector3(0.2, 3.4, 0.2)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m3")
+size = Vector3(2.2, 0.1, 0.12)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m4")
+size = Vector3(0.06, 1.05, 1.8)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m5")
+size = Vector3(1.52, 0.1, 2.74)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m5")
+size = Vector3(1, 0.66, 0.3)
+
+[sub_resource type="BoxMesh" id="b11"]
+material = SubResource("m5")
+size = Vector3(1.52, 0.15, 0.12)
+
+[node name="Courts" type="Node3D"]
+
+[node name="courts" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "courts"
+
+[node name="p1" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.75, -0.098, 41)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.5, -0.096, 22.05)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.5, -0.096, 36.95)
+mesh = SubResource("b2")
+PartId = "p3"
+
+[node name="p4" parent="courts" instance=ExtResource("e2")]
+position = Vector3(4.55, -0.096, 29.5)
+mesh = SubResource("b3")
+PartId = "p4"
+
+[node name="p5" parent="courts" instance=ExtResource("e2")]
+position = Vector3(32.45, -0.096, 29.5)
+mesh = SubResource("b3")
+PartId = "p5"
+
+[node name="p6" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.5, -0.096, 29.5)
+mesh = SubResource("b3")
+PartId = "p6"
+
+[node name="p7" parent="courts" instance=ExtResource("e2")]
+position = Vector3(7.4, -0.096, 27.1)
+mesh = SubResource("b4")
+PartId = "p7"
+
+[node name="p8" parent="courts" instance=ExtResource("e2")]
+position = Vector3(7.4, -0.096, 31.9)
+mesh = SubResource("b4")
+PartId = "p8"
+
+[node name="p9" parent="courts" instance=ExtResource("e2")]
+position = Vector3(4.55, -0.096, 29.5)
+mesh = SubResource("b5")
+PartId = "p9"
+
+[node name="p10" parent="courts" instance=ExtResource("e2")]
+position = Vector3(10.25, -0.096, 29.5)
+mesh = SubResource("b5")
+PartId = "p10"
+
+[node name="p11" parent="courts" instance=ExtResource("e2")]
+position = Vector3(3.5, 1.7, 29.5)
+mesh = SubResource("b6")
+PartId = "p11"
+
+[node name="p12" parent="courts" instance=ExtResource("e2")]
+position = Vector3(4.6, 3.25, 29.5)
+mesh = SubResource("b7")
+PartId = "p12"
+
+[node name="p13" parent="courts" instance=ExtResource("e2")]
+position = Vector3(5.7, 3.425, 29.5)
+mesh = SubResource("b8")
+PartId = "p13"
+
+[node name="p14" parent="courts" instance=ExtResource("e2")]
+position = Vector3(29.6, -0.096, 27.1)
+mesh = SubResource("b4")
+PartId = "p14"
+
+[node name="p15" parent="courts" instance=ExtResource("e2")]
+position = Vector3(29.6, -0.096, 31.9)
+mesh = SubResource("b4")
+PartId = "p15"
+
+[node name="p16" parent="courts" instance=ExtResource("e2")]
+position = Vector3(26.75, -0.096, 29.5)
+mesh = SubResource("b5")
+PartId = "p16"
+
+[node name="p17" parent="courts" instance=ExtResource("e2")]
+position = Vector3(32.45, -0.096, 29.5)
+mesh = SubResource("b5")
+PartId = "p17"
+
+[node name="p18" parent="courts" instance=ExtResource("e2")]
+position = Vector3(33.5, 1.7, 29.5)
+mesh = SubResource("b6")
+PartId = "p18"
+
+[node name="p19" parent="courts" instance=ExtResource("e2")]
+position = Vector3(32.4, 3.25, 29.5)
+mesh = SubResource("b7")
+PartId = "p19"
+
+[node name="p20" parent="courts" instance=ExtResource("e2")]
+position = Vector3(31.3, 3.425, 29.5)
+mesh = SubResource("b8")
+PartId = "p20"
+
+[node name="p21" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.5, -0.096, 45.05)
+mesh = SubResource("b2")
+PartId = "p21"
+
+[node name="p22" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.5, -0.096, 59.95)
+mesh = SubResource("b2")
+PartId = "p22"
+
+[node name="p23" parent="courts" instance=ExtResource("e2")]
+position = Vector3(4.55, -0.096, 52.5)
+mesh = SubResource("b3")
+PartId = "p23"
+
+[node name="p24" parent="courts" instance=ExtResource("e2")]
+position = Vector3(32.45, -0.096, 52.5)
+mesh = SubResource("b3")
+PartId = "p24"
+
+[node name="p25" parent="courts" instance=ExtResource("e2")]
+position = Vector3(18.5, -0.096, 52.5)
+mesh = SubResource("b3")
+PartId = "p25"
+
+[node name="p26" parent="courts" instance=ExtResource("e2")]
+position = Vector3(7.4, -0.096, 50.1)
+mesh = SubResource("b4")
+PartId = "p26"
+
+[node name="p27" parent="courts" instance=ExtResource("e2")]
+position = Vector3(7.4, -0.096, 54.9)
+mesh = SubResource("b4")
+PartId = "p27"
+
+[node name="p28" parent="courts" instance=ExtResource("e2")]
+position = Vector3(4.55, -0.096, 52.5)
+mesh = SubResource("b5")
+PartId = "p28"
+
+[node name="p29" parent="courts" instance=ExtResource("e2")]
+position = Vector3(10.25, -0.096, 52.5)
+mesh = SubResource("b5")
+PartId = "p29"
+
+[node name="p30" parent="courts" instance=ExtResource("e2")]
+position = Vector3(3.5, 1.7, 52.5)
+mesh = SubResource("b6")
+PartId = "p30"
+
+[node name="p31" parent="courts" instance=ExtResource("e2")]
+position = Vector3(4.6, 3.25, 52.5)
+mesh = SubResource("b7")
+PartId = "p31"
+
+[node name="p32" parent="courts" instance=ExtResource("e2")]
+position = Vector3(5.7, 3.425, 52.5)
+mesh = SubResource("b8")
+PartId = "p32"
+
+[node name="p33" parent="courts" instance=ExtResource("e2")]
+position = Vector3(29.6, -0.096, 50.1)
+mesh = SubResource("b4")
+PartId = "p33"
+
+[node name="p34" parent="courts" instance=ExtResource("e2")]
+position = Vector3(29.6, -0.096, 54.9)
+mesh = SubResource("b4")
+PartId = "p34"
+
+[node name="p35" parent="courts" instance=ExtResource("e2")]
+position = Vector3(26.75, -0.096, 52.5)
+mesh = SubResource("b5")
+PartId = "p35"
+
+[node name="p36" parent="courts" instance=ExtResource("e2")]
+position = Vector3(32.45, -0.096, 52.5)
+mesh = SubResource("b5")
+PartId = "p36"
+
+[node name="p37" parent="courts" instance=ExtResource("e2")]
+position = Vector3(33.5, 1.7, 52.5)
+mesh = SubResource("b6")
+PartId = "p37"
+
+[node name="p38" parent="courts" instance=ExtResource("e2")]
+position = Vector3(32.4, 3.25, 52.5)
+mesh = SubResource("b7")
+PartId = "p38"
+
+[node name="p39" parent="courts" instance=ExtResource("e2")]
+position = Vector3(31.3, 3.425, 52.5)
+mesh = SubResource("b8")
+PartId = "p39"
+
+[node name="ping_pong" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "ping_pong"
+
+[node name="p1" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.71, 4.5)
+mesh = SubResource("b9")
+PartId = "p1"
+
+[node name="p2" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.33, 3.9)
+mesh = SubResource("b10")
+PartId = "p2"
+
+[node name="p3" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.33, 5.1)
+mesh = SubResource("b10")
+PartId = "p3"
+
+[node name="p4" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.835, 4.5)
+mesh = SubResource("b11")
+PartId = "p4"
+
+[node name="p5" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.71, 4.5)
+mesh = SubResource("b9")
+PartId = "p5"
+
+[node name="p6" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.33, 3.9)
+mesh = SubResource("b10")
+PartId = "p6"
+
+[node name="p7" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.33, 5.1)
+mesh = SubResource("b10")
+PartId = "p7"
+
+[node name="p8" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.835, 4.5)
+mesh = SubResource("b11")
+PartId = "p8"
+
+[node name="p9" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.71, 4.5)
+mesh = SubResource("b9")
+PartId = "p9"
+
+[node name="p10" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.33, 3.9)
+mesh = SubResource("b10")
+PartId = "p10"
+
+[node name="p11" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.33, 5.1)
+mesh = SubResource("b10")
+PartId = "p11"
+
+[node name="p12" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.835, 4.5)
+mesh = SubResource("b11")
+PartId = "p12"
+
+[node name="p13" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.71, 4.5)
+mesh = SubResource("b9")
+PartId = "p13"
+
+[node name="p14" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.33, 3.9)
+mesh = SubResource("b10")
+PartId = "p14"
+
+[node name="p15" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.33, 5.1)
+mesh = SubResource("b10")
+PartId = "p15"
+
+[node name="p16" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.835, 4.5)
+mesh = SubResource("b11")
+PartId = "p16"
+
+[node name="p17" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.71, 4.5)
+mesh = SubResource("b9")
+PartId = "p17"
+
+[node name="p18" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.33, 3.9)
+mesh = SubResource("b10")
+PartId = "p18"
+
+[node name="p19" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.33, 5.1)
+mesh = SubResource("b10")
+PartId = "p19"
+
+[node name="p20" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.835, 4.5)
+mesh = SubResource("b11")
+PartId = "p20"
+
+[node name="p21" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.71, 4.5)
+mesh = SubResource("b9")
+PartId = "p21"
+
+[node name="p22" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.33, 3.9)
+mesh = SubResource("b10")
+PartId = "p22"
+
+[node name="p23" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.33, 5.1)
+mesh = SubResource("b10")
+PartId = "p23"
+
+[node name="p24" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.835, 4.5)
+mesh = SubResource("b11")
+PartId = "p24"
+
+[node name="p25" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.71, 10)
+mesh = SubResource("b9")
+PartId = "p25"
+
+[node name="p26" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.33, 9.4)
+mesh = SubResource("b10")
+PartId = "p26"
+
+[node name="p27" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.33, 10.6)
+mesh = SubResource("b10")
+PartId = "p27"
+
+[node name="p28" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(111, 0.835, 10)
+mesh = SubResource("b11")
+PartId = "p28"
+
+[node name="p29" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.71, 10)
+mesh = SubResource("b9")
+PartId = "p29"
+
+[node name="p30" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.33, 9.4)
+mesh = SubResource("b10")
+PartId = "p30"
+
+[node name="p31" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.33, 10.6)
+mesh = SubResource("b10")
+PartId = "p31"
+
+[node name="p32" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(116, 0.835, 10)
+mesh = SubResource("b11")
+PartId = "p32"
+
+[node name="p33" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.71, 10)
+mesh = SubResource("b9")
+PartId = "p33"
+
+[node name="p34" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.33, 9.4)
+mesh = SubResource("b10")
+PartId = "p34"
+
+[node name="p35" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.33, 10.6)
+mesh = SubResource("b10")
+PartId = "p35"
+
+[node name="p36" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(121, 0.835, 10)
+mesh = SubResource("b11")
+PartId = "p36"
+
+[node name="p37" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.71, 10)
+mesh = SubResource("b9")
+PartId = "p37"
+
+[node name="p38" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.33, 9.4)
+mesh = SubResource("b10")
+PartId = "p38"
+
+[node name="p39" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.33, 10.6)
+mesh = SubResource("b10")
+PartId = "p39"
+
+[node name="p40" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(126, 0.835, 10)
+mesh = SubResource("b11")
+PartId = "p40"
+
+[node name="p41" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.71, 10)
+mesh = SubResource("b9")
+PartId = "p41"
+
+[node name="p42" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.33, 9.4)
+mesh = SubResource("b10")
+PartId = "p42"
+
+[node name="p43" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.33, 10.6)
+mesh = SubResource("b10")
+PartId = "p43"
+
+[node name="p44" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(131, 0.835, 10)
+mesh = SubResource("b11")
+PartId = "p44"
+
+[node name="p45" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.71, 10)
+mesh = SubResource("b9")
+PartId = "p45"
+
+[node name="p46" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.33, 9.4)
+mesh = SubResource("b10")
+PartId = "p46"
+
+[node name="p47" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.33, 10.6)
+mesh = SubResource("b10")
+PartId = "p47"
+
+[node name="p48" parent="ping_pong" instance=ExtResource("e2")]
+position = Vector3(136, 0.835, 10)
+mesh = SubResource("b11")
+PartId = "p48"
