@@ -1,10 +1,11 @@
-"""What generate.py and teaching1.py share: the wall thickness, the yard's levels, walls with holes in them, paving, and
-scenes of fixed objects. Importing it puts the compound region's tscn.py, which writes the scene text, on the path."""
+"""What generate.py and teaching1.py share: the wall thickness, the yard's levels, walls with holes in them, paving,
+scenes of fixed objects, and plain meshes for a section's Props. Importing it puts the compound region's tscn.py, which
+writes the scene text, on the path."""
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'compound'))
-from tscn import box, scene  # noqa: E402
+from tscn import box, fmt, scene, vec  # noqa: E402
 
 WT = 0.24  # brick wall thickness
 GROUND = -0.2  # the bottom of the yard's slab
@@ -41,3 +42,19 @@ def pave(boxes, x0, x1, z0, z1, top, m): box(boxes, x0, x1, GROUND, top, z0, z1,
 
 def fixed(root, **parts):  # a scene of fixed objects, one for each id and its boxes
     return scene([(eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"'}) for eid, boxes in parts.items()], 'FixedObject3D', root)
+
+
+# The text of meshes that the engine does not know, for a section's Props: resource adds a sub-resource to subs and
+# returns a reference to it, material adds one of that color, and show adds a node to nodes that draws a mesh.
+def resource(subs, kind, rid, **values):
+    subs.append(f'[sub_resource type="{kind}" id="{rid}"]\n' + ''.join(f'{k} = {v}\n' for k, v in values.items()))
+    return f'SubResource("{rid}")'
+
+
+def material(subs, rgb):
+    return resource(subs, 'StandardMaterial3D', f'c{len(subs)}', albedo_color=f'Color({", ".join(fmt(c) for c in rgb)}, 1)')
+
+
+def show(nodes, name, mesh, position, **values):
+    nodes.append(f'[node name="{name}" type="MeshInstance3D" parent="."]\nlayers = 3\nposition = {vec(*position)}\n'
+                 + ''.join(f'{k} = {v}\n' for k, v in values.items()) + f'mesh = {mesh}\n')
