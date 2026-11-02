@@ -48,14 +48,15 @@ def doors(r):  # where each door, 1 m wide and 2.1 m high, starts: one into a sh
     return [p + 0.6, q - 1.6] if q - p >= 6 else [(p + q) / 2 - 0.5]
 
 
-# Each door's leaf, open into the room along the wall, hinged where the door starts; the toilet's on the door's other side,
-# since its screen leaves her no way past a leaf there.
+# Each door's leaf, standing open into the room at right angles to the wall, 0.9 m long as in teaching building 1. It hangs
+# where the door starts, except on two kinds of door, where it hangs at the door's far end: a room's second door, whose
+# leaf would stand in a classroom's last desk; and the toilet's door, whose leaf would leave her no way past the screen.
 def leaves(boxes, r):
     at, _, _ = corridor(r)
     way = 1 if r.side in 'se' else -1
-    v = sorted((at + way * 0.1, at + way * 1.05))
-    for a in doors(r):
-        u = a + 0.95 if r is TOILET else a
+    v = sorted((at + way * 0.1, at + way * 1.0))
+    for i, a in enumerate(doors(r)):
+        u = a + 0.95 if i or r is TOILET else a
         if r.side in 'ns': box(boxes, u, u + 0.05, 0, 2.1, *v, 'door')
         else: box(boxes, *v, 0, 2.1, u, u + 0.05, 'door')
 
@@ -167,8 +168,8 @@ def rows(v, step, depth, end):  # the prototype's rows: from v, step apart, as l
 
 # One room's furniture from its north-west corner, as the prototype's furnish lays it out from the front wall, the west
 # wall north of the atrium and the north wall east of it: u runs across the room and v back from that wall. Returns the
-# boxes and where the chairs stand; the chairs are in props.tscn. Room 4 is 8 m deep, not 8.9 m as the others east of
-# the atrium, but its computer desks come out the same.
+# boxes and where the chairs stand; the chairs are in props.tscn. Room 4 runs 8 m north to south, not 8.9 m as the others
+# east of the atrium, but its computer desks come out the same.
 def furnish(kind, r):
     north, boxes, chairs = r.side == 'n', [], []
     U, V = (r.z1 - r.z0, r.x1 - r.x0) if north else (r.x1 - r.x0, r.z1 - r.z0)

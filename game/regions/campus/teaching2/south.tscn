@@ -79,7 +79,7 @@ size = Vector3(27.2, 1.5, 0.2)
 
 [sub_resource type="BoxMesh" id="b17"]
 material = SubResource("m3")
-size = Vector3(0.05, 2.1, 0.95)
+size = Vector3(0.05, 2.1, 0.9)
 
 [sub_resource type="BoxMesh" id="b18"]
 material = SubResource("m1")
@@ -262,22 +262,22 @@ mesh = SubResource("b16")
 PartId = "p34"
 
 [node name="p35" parent="teaching2_south" instance=ExtResource("e2")]
-position = Vector3(56.225, 1.05, 69.375)
+position = Vector3(56.225, 1.05, 69.35)
 mesh = SubResource("b17")
 PartId = "p35"
 
 [node name="p36" parent="teaching2_south" instance=ExtResource("e2")]
-position = Vector3(47.125, 1.05, 69.375)
+position = Vector3(47.125, 1.05, 69.35)
 mesh = SubResource("b17")
 PartId = "p36"
 
 [node name="p37" parent="teaching2_south" instance=ExtResource("e2")]
-position = Vector3(53.925, 1.05, 69.375)
+position = Vector3(54.875, 1.05, 69.35)
 mesh = SubResource("b17")
 PartId = "p37"
 
 [node name="p38" parent="teaching2_south" instance=ExtResource("e2")]
-position = Vector3(45.775, 1.05, 69.375)
+position = Vector3(45.775, 1.05, 69.35)
 mesh = SubResource("b17")
 PartId = "p38"
 
