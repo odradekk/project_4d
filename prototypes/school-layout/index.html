@@ -1,0 +1,1406 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>学校 · 白模原型</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #d4d8dd; font: 13px/1.5 system-ui, "Microsoft YaHei", sans-serif; }
+  #ui { position: fixed; left: 10px; top: 10px; width: 290px; max-height: calc(100% - 40px); overflow: auto; background: rgba(255,255,255,.9); padding: 8px 10px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  #ui button { margin: 2px 2px 2px 0; padding: 2px 7px; border: 1px solid #999; background: #fff; border-radius: 4px; cursor: pointer; font: inherit; }
+  #ui button.on { background: #333; color: #fff; border-color: #333; }
+  #ui .row { margin: 3px 0; }
+  #ui .dim { color: #555; font-size: 12px; }
+  #cross { position: fixed; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+<div id="ui">
+  <div class="row"><b>学校 · 白模原型</b> <span class="dim">（原型，定稿后丢弃）</span></div>
+  <div class="row">视图 <button data-view="plan">1 平面</button><button data-view="orbit">2 俯瞰</button><button data-view="walk">3 第一人称</button></div>
+  <div class="row">俯瞰 <button data-orbit="site">全部</button><button data-orbit="school">学校</button></div>
+  <div class="row">去 <button data-go="stop">公交车站</button><button data-go="gate">校门外</button><button data-go="plaza">广场</button><button data-go="tb1">教学楼1</button><button data-go="tb2">教学楼2</button><button data-go="back">后门外</button><button data-go="alley">家属院小巷</button><button data-go="field">操场</button><button data-go="iron">大铁门</button><button data-go="mall">商场隧道</button><button data-go="mall2">商场二楼</button></div>
+  <div class="row">剖开教学楼1 <button data-cut="tb1:1">1</button><button data-cut="tb1:2">2</button><button data-cut="tb1:3">3</button><button data-cut="tb1:4">4 层</button><button data-cut="tb1:0">不剖</button></div>
+  <div class="row">剖开教学楼2 <button data-cut="tb2:1">1</button><button data-cut="tb2:2">2</button><button data-cut="tb2:3">3</button><button data-cut="tb2:4">4</button><button data-cut="tb2:5">5</button><button data-cut="tb2:6">6 层</button><button data-cut="tb2:0">不剖</button></div>
+  <div class="row">揭顶 <button data-cut="small:1">传达室、仓库、厕所一楼</button><button data-cut="small:2">厕所二楼</button><button data-cut="small:0">盖上</button></div>
+  <div class="row">视线 <button data-eye="1.3">小满 1.3 m</button><button data-eye="1.65">父亲 1.65 m</button></div>
+  <div class="row">显示 <button id="tStalls">地摊</button><button id="tFurn">课桌椅</button><button id="tLabels">标注</button></div>
+  <div class="row dim" id="hint"></div>
+  <div class="row dim" id="info"></div>
+</div>
+<div id="cross" hidden></div>
+<script type="importmap">
+{ "imports": {
+  "three": "/archives/threejs-demo/node_modules/three/build/three.module.js",
+  "three/addons/": "/archives/threejs-demo/node_modules/three/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+// ---------- layout: meters, x = sketch right (east), z = sketch down (south), y up; origin at the school wall's north-west corner ----------
+// Scale from Xining's Wusi Primary School, the reference: about 14,800 m² of grounds, so one sketch pixel is about 0.185 m.
+// Positions are the sketch's at that scale, rounded; sizes of standard things (courts, tables, lanes) are their real ones.
+const WALL_H = 2.4, WT = 0.24;                // brick walls
+const SCHOOL = { x: [0, 149], z: [0, 92] };    // the school wall, by centerline; the east side drawn 11 m narrower
+const GATE = [72, 80], BACK = [6, 10];         // main gate in the north wall (x), back gate in the west wall (z)
+const FH = 3.6;                                // classroom storey
+// doors: [name, side, from, to] along that side; the first door opens under a stair tower, as at the Wusi school
+// teaching building 1, walkable inside, by wall centerlines. One grade a floor in six classrooms on the plaza side; a corridor
+// along the east wall past everything. From the north: the water room, a narrow stair, three classrooms, the wide stair inside the
+// stair tower beside a passage from door 1, three classrooms, a narrow stair, the teachers' toilet.
+const TB1_X = [114.5, 123.5, 126.5];  // west wall, corridor wall (rooms 9 m deep), east wall (corridor 3 m wide)
+const TB1_BAYS = [['water', 3.6], ['stair', 3.24], ['room', 8.4], ['room', 8.4], ['room', 8.4], ['wide', 7],
+  ['room', 8.4], ['room', 8.4], ['room', 8.4], ['stair', 3.24], ['toilet', 3.6]].reduce((out, [kind, d]) => {
+  const z = out.length ? out[out.length - 1].z[1] : 13.6;
+  return [...out, { kind, z: [z, z + d] }];
+}, []);
+const TB1 = { name: '教学楼1', note: '一层一个年级，每层 6 个班 · 4 层', x: [TB1_X[0], TB1_X[2]], z: [TB1_BAYS[0].z[0], TB1_BAYS.at(-1).z[1]], floors: 4 };
+const TB1_CORR = TB1_X[1];
+const TB1_ROOMS = TB1_BAYS.slice(1).map(b => b.z[0]);  // cross walls (z)
+// stair bays: z range; the half landing from hx0 to hx1 at the west; flights up westward (north half) then eastward (south half)
+// between hx1 and lx, over fz; the floor landing from lx to the corridor. The wide one reaches into the tower and leaves a passage.
+const TB1_STAIRS = TB1_BAYS.filter(b => b.kind === 'stair' || b.kind === 'wide').map(({ kind, z }) => kind === 'wide'
+  ? { z, fz: [z[0], z[0] + 4.4], hx0: TB1_X[0] - 1.38, hx1: TB1_X[0] + 1.3, lx: TB1_X[0] + 4.38 }
+  : { z, fz: z, hx0: TB1_X[0] + 0.12, hx1: TB1_X[0] + 1.5, lx: TB1_X[0] + 4.58 });
+const TB1_DOOR1 = [TB1_STAIRS[1].fz[1] + 0.36, TB1_STAIRS[1].z[1] - 0.44];  // in the tower's west wall, onto the passage
+// teaching building 2, walkable inside, by wall centerlines: a ring of rooms around a ring corridor around an atrium open through
+// all six floors under a pointed glass roof, with a spiral stair at each end of the atrium. As wide as the site sketch draws it.
+const TB2 = { name: '教学楼2', note: '回字形 · 五六年级、办公室、实验室、活动室、机房 · 6 层', x: [37.5, 64.5], z: [18, 76], floors: 6 };
+const TB2_RING = { x: [44.1, 57.9], z: [25.2, 68.8] };      // the corridor's outer walls: rooms 6.6 m deep east and west, 7.2 north and south
+const TB2_ATRIUM = { x: [46.5, 55.5], z: [27.6, 66.4] };    // inside the 2.4 m corridor
+// spiral stairs, 1.8 m radius, one turn a storey: center, and the angle (0 north, clockwise) where each floor's corridor meets them
+const TB2_SPIRALS = [{ c: [51, 29.3], e: 0 }, { c: [51, 64.7], e: Math.PI }];
+const TB2_DOOR1 = [28, 30.4], TB2_DOOR2 = [36, 38.4];      // in the east wall to the plaza and the west wall to the courts
+const PLAZA = { x: [66, 108], z: [18, 76] };
+const STAND = { x: [79, 95], z: [79.5, 84.5], h: 1.2 }, STEPS = { x: [83, 91], z: [77, 79.5] };  // the rostrum faces north, up its steps
+const POLE = [87, 72];                                    // not in the sketch
+const LODGE = { x: [83, 90], z: [0.12, 6] };              // the gatekeeper's lodge beside the gate, smaller than drawn
+const TOILET = { x: [134, 148.88], z: [19.5, 35] };       // the toilet block on the east wall
+const TOILET_H = 3.6, TOILET_MEN_Z = 28.5;                 // storey height; the boys' ground floor stops at this z
+const TOILET_DOORS = { men: [136.5, 138.3], women: [144.9, 146.3] };  // open doorways facing south: the boys' off the open bay, the girls' upstairs
+const TOILET_STAIR = { z: [35.12, 36.8], landing: [144.4, 146.8], foot: 138.5 };  // up the outside of the south wall, rising east
+const STORE = { x: [3, 19], z: [67, 75] };                // sports equipment store south of the courts: not in the sketch
+const COURTS = { x: [1, 36.5], z: [19, 63] };             // two courts, 28 × 15 m, along x, clear of teaching building 2
+
+const ALLEY = [149.12, 151.9], ALLEY_END = 90;            // "very cramped, no car gets through": narrower than drawn
+const SHOPS_N = { x: [151.9, 239.2], z: [0, 12] }, SHOPS_E = { x: [227.2, 239.2], z: [12, 92.12] };  // reaches the mall
+const FLATS = [[22, 33], [45, 56], [68, 79]];             // housing blocks in the yard: not in the sketch
+const YARD_DOORS = [[16, 19], [58, 61]];                  // from the alley into the yard: not in the sketch
+
+const ROAD = [-10.5, -3.5];         // the asphalt road (z), two lanes, sidewalks on both sides
+const DIRT = [-12.3, -5.3];         // the dirt road (x), two cars wide, through a belt of trees on each side
+const MAIN = [244.2, 260.2];        // the main road (x), four lanes like Shengli Road, sidewalks 5 m wide
+const STOP = [241.6, 15];           // bus stop on the main road's west sidewalk
+const RICH = { x: [-0.6, 237], z: [-106, -19.8] }, RICH_GATE = [100, 110];
+const SITE = { x: [-79.4, -17], z: [-106, -32.4] };       // the abandoned building site
+const FIELD = { x: [-80.3, -17.6], z: [-27.8, 92] }, FIELD_GATE = [6, 10];  // the field's gate is not in the sketch
+const TC = [-49, 32.8];             // track center
+const IRON = 92;                    // the double iron gate at the dirt road's south end (z): the mall's side door
+
+// the mall south of the school, against its south wall: a passage with shops on both sides, a market upstairs
+const MALL = { x: [-121.6, 239.2], z: [92.12, 122.12] };  // 40 m longer to the west than drawn, 30 m deep instead of 52
+const TUNNEL = [103.12, 111.12];   // the ground floor's passage (z), open at both ends
+const MF = 5.3, MH = 4.2;          // upper floor level, upper storey height
+const STAIR_X = [-80, 60, 200], STAIR_TOP = 94.75;  // straight stairs north from the passage, each 3 m wide, in place of a shop
+const FX = 100, FZ = -5;            // site center
+
+// ---------- scene ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+const canvas = renderer.domElement;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd4d8dd);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb0b0b0, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+sun.shadow.camera.far = 1500;
+sun.shadow.normalBias = 0.05;  // keeps the low sun from striping the flat yard
+scene.add(sun, sun.target);
+
+const mat = c => new THREE.MeshLambertMaterial({ color: c });
+const M = {
+  wall: mat(0xf0efea), wall2: mat(0xe2dccf), guess: mat(0xf2c48a), slab: mat(0xd9d7d1), concrete: mat(0xb9b6ae), roof: mat(0xa8503c),
+  ground: mat(0xa7ad9f), yard: mat(0xc4bfb4), road: mat(0x9c9b96), walk: mat(0xb8b4ab), asphalt: mat(0x55585c), dirt: mat(0x9a8a70),
+  green: mat(0x8a9a74), grass: mat(0x86a06a), track: mat(0xa8705c), court: mat(0x9ea3a3), line: mat(0xeeeeea), yellow: mat(0xd8b23a),
+  floor: mat(0xbdb7ab), tile: mat(0xc8cdd0), white: mat(0xf4f4f0), board: mat(0x2f4a3a), desk: mat(0xb08a5a), chair: mat(0x8a6a44),
+  pane: new THREE.MeshLambertMaterial({ color: 0x9cc4e8, transparent: true, opacity: 0.35, depthWrite: false }),
+  glassRoof: new THREE.MeshLambertMaterial({ color: 0xbfdcec, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false }),
+  door: mat(0xd02a2a), window: mat(0x6fa8e0), glass: mat(0x5f6870), shutter: mat(0x8c9196), sign: mat(0xc9a77c), nameWall: mat(0x7a3b30),
+  fence: mat(0x3f5f48), iron: mat(0x4a4d52), pole: mat(0x6d6f72), hoard: mat(0x8fa0b0), trunk: mat(0x8a8478), crown: mat(0x5d7a4a),
+  stall: mat(0x8fa3b8), vault: new THREE.MeshLambertMaterial({ color: 0xd6d1c6, side: THREE.DoubleSide }), mesh: new THREE.MeshLambertMaterial({ color: 0x4a5550, transparent: true, opacity: 0.25, depthWrite: false }),
+};
+
+let seed = 7;
+const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+// Boxes are collected per group and material and merged, so the whole site stays cheap to draw.
+const batches = new Map();
+function addGeom(group, material, geometry) {
+  if (!batches.has(group)) batches.set(group, new Map());
+  const byMat = batches.get(group);
+  if (!byMat.has(material)) byMat.set(material, []);
+  byMat.get(material).push(geometry);
+}
+function flush() {
+  for (const [group, byMat] of batches) for (const [material, list] of byMat) {
+    const m = new THREE.Mesh(mergeGeometries(list), material);
+    m.castShadow = !material.transparent;
+    m.receiveShadow = true;
+    group.add(m);
+  }
+  batches.clear();
+}
+
+const world = new THREE.Group(), stalls = new THREE.Group();
+scene.add(world, stalls);
+const solids = [], stallSolids = [];  // boxes the walker collides with
+function box(m, x0, x1, y0, y1, z0, z1, collide = false, group = world, hits = solids) {
+  if (m) addGeom(group, m, new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0).translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
+  if (collide) hits.push({ x0, x1, y0, y1, z0, z1 });
+}
+// ground surfaces: thin slabs whose tops differ, so overlaps don't flicker
+const pave = (m, x0, x1, z0, z1, y) => box(m, x0, x1, 0, y, z0, z1);
+
+// a wall along x (at z) or along z (at x), from a to b, leaving the gaps [[g0, g1], ...] in order
+function wall(along, at, a, b, h, gaps = [], m = M.wall2, t = WT) {
+  let s = a;
+  for (const [g0, g1] of [...gaps, [b, b]]) {
+    if (g0 > s) along === 'x' ? box(m, s, g0, 0, h, at - t / 2, at + t / 2, true) : box(m, at - t / 2, at + t / 2, 0, h, s, g0, true);
+    s = g1;
+  }
+}
+// a see-through fence of posts and rails, solid to the walker; panel: a faint mesh between the posts
+function fence(along, at, a, b, h, gaps = [], m = M.fence, step = 2.5, panel = null) {
+  const seg = (p, q, y0, y1, t, mm = m) => along === 'x' ? box(mm, p, q, y0, y1, at - t, at + t) : box(mm, at - t, at + t, y0, y1, p, q);
+  let s = a;
+  for (const [g0, g1] of [...gaps, [b, b]]) {
+    if (g0 > s) {
+      const n = Math.max(1, Math.round((g0 - s) / step));
+      for (let i = 0; i <= n; i++) { const p = s + (g0 - s) * i / n; seg(p - 0.04, p + 0.04, 0, h, 0.04); }
+      for (const y of [0.1, h - 0.05]) seg(s, g0, y - 0.03, y + 0.03, 0.025);
+      if (panel) seg(s, g0, 0.1, h - 0.05, 0.005, panel);
+      along === 'x' ? solids.push({ x0: s, x1: g0, y0: 0, y1: h, z0: at - 0.05, z1: at + 0.05 })
+                    : solids.push({ x0: at - 0.05, x1: at + 0.05, y0: 0, y1: h, z0: s, z1: g0 });
+    }
+    s = g1;
+  }
+}
+
+// a box on one face of block b, from a to c along that face, standing out by o (inward when o < 0)
+function onFace(m, b, side, a, c, lo, hi, o = 0.06) {
+  const [x0, x1] = b.x, [z0, z1] = b.z, span = (u, w) => u < w ? [u, w] : [w, u];
+  if (side === 'n') box(m, a, c, lo, hi, ...span(z0 - o, z0));
+  if (side === 's') box(m, a, c, lo, hi, ...span(z1, z1 + o));
+  if (side === 'w') box(m, ...span(x0 - o, x0), lo, hi, a, c);
+  if (side === 'e') box(m, ...span(x1, x1 + o), lo, hi, a, c);
+}
+// windows on the given sides of block b, floor by floor; keep: [side, from, to] spans left clear on the ground floor
+function windows(b, floors, fh, { y0 = 0, w = 1.5, h = 1.5, sill = 0.9, step = 3.3, sides = 'nsew', keep = [], o = 0.06 } = {}) {
+  for (const side of sides) {
+    const [a0, a1] = 'ns'.includes(side) ? b.x : b.z;
+    const n = Math.floor((a1 - a0) / step), pad = (a1 - a0 - n * step) / 2;
+    for (let f = 0; f < floors; f++) for (let i = 0; i < n; i++) {
+      const c = a0 + pad + (i + 0.5) * step, p = c - w / 2, q = c + w / 2;
+      if (f === 0 && keep.some(([s, a, e]) => s === side && q > a && p < e)) continue;
+      const lo = y0 + f * fh + sill;
+      onFace(M.window, b, side, p, q, lo, lo + h, o);
+    }
+  }
+}
+// flats over a row of shops on one face; sides: faces that get windows upstairs
+function shopBlock(b, floors, face, sides) {
+  box(M.wall2, b.x[0], b.x[1], 0, 3.6 + (floors - 1) * 2.9 + 0.6, b.z[0], b.z[1], true);
+  const [a0, a1] = 'ns'.includes(face) ? b.x : b.z;
+  for (let a = a0 + 0.5; a + 4 <= a1 - 0.5; a += 4) {
+    onFace(rand() < 0.5 ? M.shutter : M.glass, b, face, a + 0.3, a + 3.7, 0, 2.8, 0.04);
+    onFace(M.sign, b, face, a + 0.15, a + 3.85, 3.0, 3.5, 0.25);
+  }
+  windows(b, floors - 1, 2.9, { y0: 3.6, sides, h: 1.4 });
+}
+
+const notes = [];  // labels: [lines, x, z, y, size, guess]; size: screen pixels per line
+// floor, bld: shown only when that teaching building is cut at that floor
+const note = (lines, x, z, y = 20, size = 14, guess = false, floor, bld = 'tb1') => notes.push([lines, x, z, y, size, guess, floor, bld]);
+
+// ---------- the school ----------
+pave(M.yard, SCHOOL.x[0], SCHOOL.x[1], SCHOOL.z[0], SCHOOL.z[1], 0.01);
+const NAME_WALL = [62, 71.4];  // the school's name on a dark wall west of the gate, as at the Wusi school
+wall('x', SCHOOL.z[0], SCHOOL.x[0], SCHOOL.x[1], WALL_H, [NAME_WALL, GATE]);
+box(M.nameWall, NAME_WALL[0], NAME_WALL[1], 0, 3.2, -0.3, 0.3, true);
+wall('x', SCHOOL.z[1], SCHOOL.x[0], SCHOOL.x[1], WALL_H);
+wall('z', SCHOOL.x[0], SCHOOL.z[0], SCHOOL.z[1], WALL_H, [BACK]);
+wall('z', SCHOOL.x[1], SCHOOL.z[0], SCHOOL.z[1], WALL_H);
+box(M.wall, NAME_WALL[1], GATE[0], 0, 3.4, -0.4, 0.4, true);                     // gate pillars
+box(M.wall, GATE[1], GATE[1] + 0.8, 0, 3.4, -0.4, 0.4, true);
+box(M.iron, GATE[1] + 0.1, GATE[1] + 0.7, 0, 1.6, 0.4, 2.2, true);               // the folding gate, pushed open
+for (const z of BACK) box(M.wall, -0.4, 0.4, 0, 3.0, z - 0.4, z + 0.4, true);
+note(['大门', '校名墙在西边'], (GATE[0] + GATE[1]) / 2, 3, 6);
+note(['后门'], 3, (BACK[0] + BACK[1]) / 2, 6);
+
+
+// ---------- teaching building 1, inside ----------
+const tb1F = [], tb1Furn = [], tb1Roof = new THREE.Group(), furnSolids = [];  // per floor: walls, stairs and slab; desks
+for (let f = 0; f < TB1.floors; f++) { tb1F.push(new THREE.Group()); tb1Furn.push(new THREE.Group()); }
+scene.add(tb1Roof, ...tb1F, ...tb1Furn);
+// a wall along x (at z) or along z (at x) from a to b, y0 to y1, into group g, with openings { a, b, lo, hi, m }:
+// lo and hi above y0; m, if given, fills the opening as glass
+function wallOpen(g, along, at, a, b, y0, y1, t, open = [], m = M.wall) {
+  const put = (p, q, lo, hi, mm, tt, collide) => along === 'x'
+    ? box(mm, p, q, lo, hi, at - tt / 2, at + tt / 2, collide, g) : box(mm, at - tt / 2, at + tt / 2, lo, hi, p, q, collide, g);
+  let s = a;
+  for (const o of [...open].sort((u, v) => u.a - v.a)) {
+    if (o.a > s) put(s, o.a, y0, y1, m, t, true);
+    if (o.lo > 0) put(o.a, o.b, y0, y0 + o.lo, m, t, true);
+    if (o.hi < y1 - y0) put(o.a, o.b, y0 + o.hi, y1, m, t, true);
+    if (o.m) put(o.a, o.b, y0 + o.lo, y0 + o.hi, o.m, 0.04, false);  // the sill keeps the walker off the glass
+    s = Math.max(s, o.b);
+  }
+  if (b > s) put(s, b, y0, y1, m, t, true);
+}
+// a room's fixtures laid out from the wall with its door (`side`, door centred at dc along that wall): u runs along that wall,
+// v back from it; put() draws in those terms into group g, colliding with the walker when asked
+function roomFrame(g, room, base, side) {
+  const [x0, x1] = room.x, [z0, z1] = room.z, alongX = side === 'n' || side === 's';
+  const put = (m, u0, u1, y0, y1, v0, v1, collide = false) => {
+    const [p0, p1] = side === 'e' ? [x1 - v1, x1 - v0] : side === 'w' ? [x0 + v0, x0 + v1] : side === 's' ? [z1 - v1, z1 - v0] : [z0 + v0, z0 + v1];
+    return alongX ? box(m, u0, u1, base + y0, base + y1, p0, p1, collide, g) : box(m, p0, p1, base + y0, base + y1, u0, u1, collide, g);
+  };
+  return { ua: alongX ? x0 : z0, ub: alongX ? x1 : z1, V: alongX ? z1 - z0 : x1 - x0, put };
+}
+// a water room: a boiler for drinking water, a long sink with taps on the far wall, a mop basin; kept clear of the door
+function waterRoom(g, room, base, side, dc) {
+  const { ua, ub, V, put } = roomFrame(g, room, base, side), doorHigh = dc - ua > ub - dc + 0.5;
+  put(M.tile, ua, ub, 0, 0.03, 0, V);
+  put(M.iron, ua + 0.2, ua + 1.0, 0, 1.8, 0.5, 1.7, true);
+  put(M.pole, ua + 1.0, ua + 1.15, 0.8, 0.9, 1.0, 1.2);
+  put(M.concrete, ua + 0.4, ub - 0.4, 0, 0.8, V - 0.72, V - 0.12, true);
+  for (let u = ua + 0.8; u < ub - 0.5; u += 0.6) put(M.pole, u - 0.03, u + 0.03, 1.0, 1.08, V - 0.42, V - 0.12);
+  const [m0, m1] = doorHigh ? [ua + 1.3, ua + 2.1] : [ub - 1.0, ub - 0.2];
+  put(M.concrete, m0, m1, 0, 0.45, 0.5, 1.4, true);
+}
+// a teachers' toilet: a screen inside the door, basins at one end, squatting stalls at the other, and for men a urinal trough
+// on the far wall
+function teacherToilet(g, room, base, side, dc, men) {
+  const { ua, ub, V, put } = roomFrame(g, room, base, side), stalls = men ? 2 : 3;
+  put(M.tile, ua, ub, 0, 0.03, 0, V);
+  put(M.wall, dc - 0.9, dc + 0.9, 0, 2.0, 1.4, 1.5, true);
+  put(M.concrete, ua + 0.12, ua + 0.62, 0, 0.8, 2.0, 3.6, true);
+  for (let i = 0; i <= stalls; i++) put(M.stall, ub - 1.5, ub - 0.12, 0, 1.8, V - 0.15 - i * 1.1, V - 0.09 - i * 1.1, true);
+  for (let i = 0; i < stalls; i++) put(M.white, ub - 1.1, ub - 0.5, 0, 0.12, V - 0.92 - i * 1.1, V - 0.42 - i * 1.1);
+  if (men) put(M.concrete, ua + 0.3, ub - 1.8, 0, 0.25, V - 0.5, V - 0.12);
+}
+// one storey of a stair bay: the half landing, the flight up westward in the north half and the one on up eastward in the south half
+function stairFlights(g, s, base) {
+  const sm = (s.fz[0] + s.fz[1]) / 2, half = FH / 2, n = 12, tread = (s.lx - s.hx1) / (n - 1);
+  box(M.slab, s.hx0, s.hx1, base + half - 0.2, base + half, s.fz[0], s.fz[1], false, g);
+  for (let i = 0; i < n - 1; i++) {
+    const ya = base + (i + 1) * half / n, yb = ya + half;
+    box(M.slab, s.lx - (i + 1) * tread, s.lx - i * tread, Math.max(base, ya - 0.35), ya, s.fz[0], sm - 0.1, false, g);
+    box(M.slab, s.hx1 + i * tread, s.hx1 + (i + 1) * tread, yb - 0.35, yb, sm + 0.1, s.fz[1], false, g);
+  }
+  if (!base) {  // solid under the ground floor's half landing and second flight
+    box(M.slab, s.hx0, s.hx1, 0, half - 0.2, s.fz[0], sm - 0.1, true, g);
+    box(M.slab, s.hx0, s.lx, 0, half - 0.2, sm + 0.1, s.fz[1], true, g);
+  }
+}
+// a slab with its top at y, open over the stairwells
+function tb1Slab(g, y) {
+  const X0 = TB1.x[0] - 0.12, X1 = TB1.x[1] + 0.12, mid = TB1_STAIRS[1];
+  let z = TB1.z[0] - 0.12;
+  for (const s of TB1_STAIRS) {
+    if (s.fz[0] > z) box(M.slab, X0, X1, y - 0.2, y, z, s.fz[0], false, g);
+    if (s.hx0 > X0) box(M.slab, X0, s.hx0, y - 0.2, y, s.fz[0], s.fz[1], false, g);
+    box(M.slab, s.lx, X1, y - 0.2, y, s.fz[0], s.fz[1], false, g);
+    z = s.fz[1];
+  }
+  box(M.slab, X0, X1, y - 0.2, y, z, TB1.z[1] + 0.12, false, g);
+  box(M.slab, TB1.x[0] - 1.62, X0, y - 0.2, y, mid.fz[1], mid.z[1], false, g);  // the passage end inside the tower
+}
+{
+  const [x0, x1] = TB1.x, [z0, z1] = TB1.z, xc = TB1_CORR, top = TB1.floors * FH, TX = x0 - 1.5;  // TX: the tower's west wall
+  const mid = TB1_STAIRS[1], DOOR1 = TB1_DOOR1, DOOR2 = [xc + 0.7, x1 - 0.7], grades = ['一', '二', '三', '四'];
+  const rooms = TB1_BAYS.filter(b => b.kind === 'room').map(b => b.z), water = TB1_BAYS[0].z, toilet = TB1_BAYS.at(-1).z;
+  const win = (c, w, lo = 0.9, hi = 2.4) => ({ a: c - w / 2, b: c + w / 2, lo, hi, m: M.pane });
+  const door = (a, b, hi = 2.1) => ({ a, b, lo: 0, hi });
+  box(M.floor, x0, x1, 0, 0.02, z0, z1, false, tb1F[0]);
+  box(M.floor, TX, x0, 0, 0.02, mid.z[0], mid.z[1], false, tb1F[0]);
+  for (let f = 0; f < TB1.floors; f++) {
+    const g = tb1F[f], base = f * FH, y1 = base + FH;
+    // outer walls: three windows a classroom on the plaza side, a row of corridor windows on the east side, doors 1 and 2 downstairs
+    const west = [{ a: mid.z[0], b: mid.z[1], lo: 0, hi: FH }];  // the tower takes over here
+    for (const [r0, r1] of rooms) for (const k of [1, 3, 5]) west.push(win(r0 + (r1 - r0) * k / 6, 1.8, 0.9, 2.7));
+    for (const s of [TB1_STAIRS[0], TB1_STAIRS[2]]) west.push(win((s.z[0] + s.z[1]) / 2, 1.2));
+    west.push(win((water[0] + water[1]) / 2, 1.5), win((toilet[0] + toilet[1]) / 2, 1.2, 1.6, 2.4));  // the toilet's sits high
+    wallOpen(g, 'z', x0, z0, z1, base, y1, WT, west);
+    const east = [];
+    for (let z = z0 + 1.6; z < z1 - 1; z += 3.2) east.push(win(z, 1.5));
+    wallOpen(g, 'z', x1, z0, z1, base, y1, WT, east);
+    wallOpen(g, 'x', z0, x0, x1, base, y1, WT, [win((x0 + xc) / 2, 1.5), win((xc + x1) / 2, 1.5)]);
+    wallOpen(g, 'x', z1, x0, x1, base, y1, WT, [win((x0 + xc) / 2, 1.2, 1.6, 2.4), f ? win((xc + x1) / 2, 1.5) : door(...DOOR2, 2.4)]);
+    wallOpen(g, 'z', TX, mid.z[0], mid.z[1], base, y1, WT, [win((mid.fz[0] + mid.fz[1]) / 2, 2.4), f ? win((DOOR1[0] + DOOR1[1]) / 2, 1.8) : door(...DOOR1, 2.6)]);
+    // inside: walls across the building, and the corridor wall, open to the stair bays, with two doors to each classroom
+    for (const z of TB1_ROOMS) wallOpen(g, 'x', z, z === mid.z[0] || z === mid.z[1] ? TX : x0, xc, base, y1, 0.2);
+    const corr = TB1_STAIRS.map(s => ({ a: s.z[0], b: s.z[1], lo: 0, hi: FH }));
+    for (const [r0, r1] of rooms) for (const a of [r0 + 0.6, r1 - 1.6]) {
+      corr.push(door(a, a + 1));
+      box(M.door, xc - 1.05, xc - 0.1, base, base + 2.1, a, a + 0.05, false, g);  // the leaf, open into the classroom
+    }
+    for (const [r0, r1] of [water, toilet]) {
+      const c = (r0 + r1) / 2;
+      corr.push(door(c - 0.5, c + 0.5));
+      box(M.door, xc - 1.05, xc - 0.1, base, base + 2.1, c - 0.5, c - 0.45, false, g);
+    }
+    wallOpen(g, 'z', xc, z0, z1, base, y1, 0.2, corr);
+    const men = f % 2 === 0;  // men's toilet on the 1st and 3rd floors, women's on the 2nd and 4th
+    waterRoom(g, { x: [x0, xc], z: water }, base, 'e', (water[0] + water[1]) / 2);
+    teacherToilet(g, { x: [x0, xc], z: toilet }, base, 'e', (toilet[0] + toilet[1]) / 2, men);
+    note(['水房', '接开水、洗拖把'], (x0 + xc) / 2, (water[0] + water[1]) / 2, base + 3, 11, false, f);
+    note([men ? '男教师厕所' : '女教师厕所'], (x0 + xc) / 2, (toilet[0] + toilet[1]) / 2, base + 3, 11, false, f);
+    // stairs: a wall between each pair of flights, and one between the wide stair and the passage from door 1
+    for (const s of TB1_STAIRS) {
+      const sm = (s.fz[0] + s.fz[1]) / 2;
+      if (f < TB1.floors - 1) stairFlights(g, s, base);
+      else box(M.iron, s.lx - 0.04, s.lx + 0.04, base, base + 1.1, s.fz[0], sm, true, g);  // top floor: a rail where no flight goes up
+      box(M.wall, s.hx1, s.lx, base, y1, sm - 0.1, sm + 0.1, true, g);
+    }
+    box(M.wall, mid.hx0, mid.lx, base, y1, mid.fz[1] - 0.1, mid.fz[1] + 0.1, true, g);
+    if (f) tb1Slab(g, base);
+    // labels for the cutaway
+    rooms.forEach(([r0, r1], i) => note([`${grades[f]}年级${i + 1}班`], (x0 + xc) / 2, (r0 + r1) / 2, base + 3, 12, false, f));
+    for (const s of TB1_STAIRS) note([s === mid ? '中间宽楼梯' : '窄楼梯'], (s.hx0 + s.lx) / 2, (s.fz[0] + s.fz[1]) / 2, base + 3, 11, false, f);
+    note(['走廊', '东墙一排窗'], (xc + x1) / 2, (z0 + z1) / 2, base + 3, 11, false, f);
+  }
+  for (const z of [DOOR1[0] + 0.03, DOOR1[1] - 0.03]) box(M.door, TX + 0.12, TX + 1.02, 0, 2.6, z - 0.025, z + 0.025, false, tb1F[0]);
+  for (const x of [DOOR2[0] + 0.03, DOOR2[1] - 0.03]) box(M.door, x - 0.025, x + 0.025, 0, 2.4, z1 - 0.92, z1 - 0.12, false, tb1F[0]);
+  note(['教学楼1 门1', '进去是中间宽楼梯旁的过道'], TX - 2.5, (DOOR1[0] + DOOR1[1]) / 2, 4, 11);
+  note(['教学楼1 门2', '走廊南头'], (DOOR2[0] + DOOR2[1]) / 2, z1 + 2.5, 4, 11);
+  // roof, parapet, and the stair tower a storey above the roof under its pointed red roof
+  const R = { x: [TX - 0.12, x0 + 5.9], z: [mid.z[0] - 0.12, mid.z[1] + 0.12] };
+  box(M.slab, x0 - 0.12, x1 + 0.12, top - 0.2, top, z0 - 0.12, z1 + 0.12, false, tb1Roof);
+  box(M.slab, R.x[0], x0 - 0.12, top - 0.2, top, R.z[0], R.z[1], false, tb1Roof);
+  for (const [p, q, r, s] of [[x0, x1, z0, z0], [x0, x1, z1, z1], [x0, x0, z0, z1], [x1, x1, z0, z1]]) {
+    box(M.wall, p - 0.12, q + 0.12, top, top + 1.0, r - 0.12, s + 0.12, false, tb1Roof);
+  }
+  box(M.wall, R.x[0], R.x[1], top, top + 4.6, R.z[0], R.z[1], false, tb1Roof);
+  box(M.window, R.x[0] - 0.06, R.x[0], top + 1.2, top + 3.0, (mid.fz[0] + mid.fz[1]) / 2 - 0.7, (mid.fz[0] + mid.fz[1]) / 2 + 0.7, false, tb1Roof);
+  addGeom(tb1Roof, M.roof, new THREE.ConeGeometry(5.4, 3.2, 4).rotateY(Math.PI / 4).translate((R.x[0] + R.x[1]) / 2, top + 6.2, (R.z[0] + R.z[1]) / 2));
+  // classrooms: blackboard on the north wall, so the windows light the desks from the left; platform, teacher's desk, 24 double desks
+  for (let f = 0; f < TB1.floors; f++) for (const [r0] of rooms) {
+    const g = tb1Furn[f], base = f * FH, xm = (x0 + xc) / 2;
+    box(M.board, xm - 2, xm + 2, base + 0.9, base + 2.1, r0 + 0.1, r0 + 0.16, false, g);
+    box(M.slab, xm - 2.6, xm + 2.6, base, base + 0.2, r0 + 0.1, r0 + 1.1, false, g);
+    box(M.desk, xm - 0.6, xm + 0.6, base + 0.2, base + 1.0, r0 + 0.3, r0 + 0.85, true, g, furnSolids);
+    const gap = (xc - x0 - 0.24 - 4 * 1.2) / 5;  // four columns of double desks, even aisles between them and the walls
+    for (let k = 0; k < 4; k++) for (let j = 0; j < 6; j++) {
+      const cx = x0 + 0.12 + gap + 0.6 + k * (1.2 + gap), zr = r0 + 2.4 + 0.95 * j;
+      box(M.desk, cx - 0.6, cx + 0.6, base, base + 0.72, zr, zr + 0.45, true, g, furnSolids);
+      box(M.chair, cx - 0.5, cx + 0.5, base, base + 0.45, zr + 0.5, zr + 0.85, false, g);
+    }
+  }
+  note([TB1.name, TB1.note, `${(x1 - x0 + 0.24).toFixed(1)} × ${(z1 - z0 + 0.24).toFixed(1)} m，教室 8.4 × ${xc - x0} m`], (x0 + x1) / 2, (z0 + z1) / 2 + 10, top + 5);
+}
+// the floor under the walker in teaching building 1: the highest floor, landing or flight it can step onto; flights are smooth ramps
+function tb1Floor(x, z, y) {
+  const st = TB1_STAIRS.find(s => x > s.hx0 - 0.15 && x < s.lx && z > s.fz[0] && z < s.fz[1]);
+  let best = 0;
+  for (let f = 0; f < TB1.floors; f++) {
+    const base = f * FH, half = FH / 2;
+    let h = base;
+    if (st) {
+      if (f === TB1.floors - 1) continue;
+      const t = (x - st.hx1) / (st.lx - st.hx1);
+      h = x < st.hx1 ? base + half : z < (st.fz[0] + st.fz[1]) / 2 ? base + half * (1 - t) : base + half * (1 + t);
+    }
+    if (h <= y + 0.45 && h > best) best = h;
+  }
+  return best;
+}
+
+// ---------- teaching building 2, inside ----------
+const tb2F = [], tb2Furn = [], tb2Roof = new THREE.Group(), TAU = 2 * Math.PI;  // per floor: walls, stairs and slab; furniture
+for (let f = 0; f < TB2.floors; f++) { tb2F.push(new THREE.Group()); tb2Furn.push(new THREE.Group()); }
+scene.add(tb2Roof, ...tb2F, ...tb2Furn);
+// furniture for a room whose front wall is `front` ('n' or 'w'): a blackboard, then desks, lab benches or computers;
+// u runs across the room and v back from the front wall
+function furnish(g, room, kind, base, front) {
+  const [x0, x1] = room.x, [z0, z1] = room.z, U = front === 'n' ? x1 - x0 : z1 - z0, V = front === 'n' ? z1 - z0 : x1 - x0;
+  const put = (m, u0, u1, y0, y1, v0, v1, collide = false) => front === 'n'
+    ? box(m, x0 + u0, x0 + u1, base + y0, base + y1, z0 + v0, z0 + v1, collide, g, furnSolids)
+    : box(m, x0 + v0, x0 + v1, base + y0, base + y1, z0 + u0, z0 + u1, collide, g, furnSolids);
+  put(M.board, U / 2 - 2, U / 2 + 2, 0.9, 2.1, 0.1, 0.16);
+  if (kind === 'class') {
+    put(M.slab, U / 2 - 2.6, U / 2 + 2.6, 0, 0.2, 0.1, 1.1);
+    put(M.desk, U / 2 - 0.6, U / 2 + 0.6, 0.2, 1.0, 0.3, 0.85, true);
+    const cols = U >= 8 ? 4 : 3, gap = (U - 0.24 - cols * 1.2) / (cols + 1);
+    for (let k = 0; k < cols; k++) for (let v = 2.4; v + 0.85 < V - 0.3; v += 0.95) {
+      const c = 0.12 + gap + 0.6 + k * (1.2 + gap);
+      put(M.desk, c - 0.6, c + 0.6, 0, 0.72, v, v + 0.45, true);
+      put(M.chair, c - 0.5, c + 0.5, 0, 0.45, v + 0.5, v + 0.85);
+    }
+  } else if (kind === 'lab') {  // long benches across the room
+    for (let v = 2.2; v + 0.75 < V - 0.6; v += 1.8) put(M.concrete, 0.8, U - 0.8, 0, 0.9, v, v + 0.75, true);
+  } else if (kind === 'computer') {  // rows of desks, a monitor at each seat
+    for (let v = 2.0; v + 0.6 < V - 0.6; v += 1.5) {
+      put(M.desk, 0.6, U - 0.6, 0, 0.75, v, v + 0.6, true);
+      for (let c = 1.0; c < U - 0.8; c += 1.0) put(M.glass, c - 0.25, c + 0.25, 0.75, 1.15, v + 0.1, v + 0.4);
+    }
+  }
+}
+{
+  const [x0, x1] = TB2.x, [z0, z1] = TB2.z, Rg = TB2_RING, A = TB2_ATRIUM, top = TB2.floors * FH;
+  const win = (c, w, lo = 0.9, hi = 2.4) => ({ a: c - w / 2, b: c + w / 2, lo, hi, m: M.pane });
+  const door = (a, b, hi = 2.1) => ({ a, b, lo: 0, hi });
+  // the rooms clockwise from the north-west corner; hall: the bays of doors 1 and 2, halls on the ground floor and rooms above
+  const rooms = [
+    ...[[x0, A.x[0]], [A.x[0], A.x[1]], [A.x[1], x1]].map(x => ({ x, z: [z0, Rg.z[0]], side: 'n' })),
+    ...[[25.2, 33.2, 1], [33.2, 42.1], [42.1, 51], [51, 59.9], [59.9, 68.8]].map(([a, b, hall]) => ({ x: [Rg.x[1], x1], z: [a, b], side: 'e', hall })),
+    ...[[A.x[1], x1], [A.x[0], A.x[1]], [x0, A.x[0]]].map(x => ({ x, z: [Rg.z[1], z1], side: 's' })),
+    ...[[59.6, 68.8], [50.4, 59.6], [41.2, 50.4], [33.2, 41.2, 2], [25.2, 33.2]].map(([a, b, hall]) => ({ x: [x0, Rg.x[0]], z: [a, b], side: 'w', hall })),
+  ];
+  // one name list a floor, in the order above; my guess at what goes where, except the water room in the north-west corner
+  // and the teachers' toilet (WC) in the south-west one, as in teaching building 1
+  const NAMES = [
+    ['水房', '会议室', '教导处', '门厅', '校长室', '总务处', '少先队室', '医务室', '广播室', '财务室', 'WC', '体育器材室', '心理咨询室', '档案室', '门厅', '收发室'],
+    ['水房', '五年级1班', '五年级2班', '五年级办公室', '五年级3班', '五年级4班', '五年级5班', '五年级6班', '办公室', '办公室', 'WC', '美术室', '书法室', '办公室', '办公室', '储藏室'],
+    ['水房', '六年级1班', '六年级2班', '六年级办公室', '六年级3班', '六年级4班', '六年级5班', '六年级6班', '办公室', '办公室', 'WC', '劳技室', '社会教室', '办公室', '办公室', '储藏室'],
+    ['水房', '实验室1', '实验室2', '准备室', '实验室3', '实验室4', '仪器室', '标本室', '自然教室', '办公室', 'WC', '储藏室', '办公室', '办公室', '办公室', '储藏室'],
+    ['水房', '机房1', '机房2', '语音室', '电教室', '多媒体教室', '办公室', '储藏室', '图书室', '阅览室', 'WC', '阅览室', '储藏室', '办公室', '办公室', '储藏室'],
+    ['水房', '音乐室', '舞蹈室', '器乐室', '活动室', '合唱室', '棋艺室', '活动室', '活动室', '活动室', 'WC', '储藏室', '办公室', '活动室', '办公室', '储藏室'],
+  ];
+  const kindOf = name => name.endsWith('班') ? 'class' : /实验室/.test(name) ? 'lab' : /机房|语音室|电教室|多媒体/.test(name) ? 'computer' : null;
+  // where each room's wall meets the corridor: the wall's line, and the stretch of it facing the corridor
+  const corrSide = r => r.side === 'n' ? ['x', Rg.z[0], Math.max(r.x[0], Rg.x[0]), Math.min(r.x[1], Rg.x[1])]
+    : r.side === 's' ? ['x', Rg.z[1], Math.max(r.x[0], Rg.x[0]), Math.min(r.x[1], Rg.x[1])]
+    : r.side === 'e' ? ['z', Rg.x[1], r.z[0], r.z[1]] : ['z', Rg.x[0], r.z[0], r.z[1]];
+  box(M.floor, x0, x1, 0, 0.02, z0, z1, false, tb2F[0]);
+  box(M.tile, A.x[0], A.x[1], 0, 0.03, A.z[0], A.z[1], false, tb2F[0]);
+  for (let f = 0; f < TB2.floors; f++) {
+    const g = tb2F[f], base = f * FH, y1 = base + FH;
+    // outer walls: windows along each room's outside, doors 1 and 2 in the ground floor halls
+    const outer = { n: [], s: [], e: [], w: [] };
+    // the corridor walls, with one door into a short room and two into a long one; the halls open onto the corridor
+    const corr = { [Rg.z[0]]: [], [Rg.z[1]]: [], [Rg.x[0]]: [], [Rg.x[1]]: [] };
+    rooms.forEach((r, i) => {
+      const hall = !f && r.hall, men = f % 2 === 0, name = NAMES[f][i] === 'WC' ? (men ? '男教师厕所' : '女教师厕所') : NAMES[f][i];
+      const wins = (side, a, b) => {  // a toilet's sit high
+        const n = Math.max(1, Math.floor((b - a) / 3));
+        for (let k = 0; k < n; k++) outer[side].push(name.endsWith('厕所') ? win(a + (b - a) * (k + 0.5) / n, 1.2, 1.6, 2.4) : win(a + (b - a) * (k + 0.5) / n, 1.8));
+      };
+      if (hall) outer[r.side].push(door(...(r.hall === 1 ? TB2_DOOR1 : TB2_DOOR2), 2.6));
+      else {
+        if (r.z[0] === z0) wins('n', ...r.x);
+        if (r.z[1] === z1) wins('s', ...r.x);
+        if (r.x[0] === x0) wins('w', ...r.z);
+        if (r.x[1] === x1) wins('e', ...r.z);
+      }
+      const [, at, p, q] = corrSide(r);
+      if (hall) corr[at].push({ a: p, b: q, lo: 0, hi: FH });
+      else for (const a of q - p >= 6 ? [p + 0.6, q - 1.6] : [(p + q) / 2 - 0.5]) {
+        corr[at].push(door(a, a + 1));
+        const leaf = { n: [a, a + 0.05, at - 1.05, at - 0.1], s: [a, a + 0.05, at + 0.1, at + 1.05], e: [at + 0.1, at + 1.05, a, a + 0.05], w: [at - 1.05, at - 0.1, a, a + 0.05] }[r.side];
+        box(M.door, leaf[0], leaf[1], base, base + 2.1, leaf[2], leaf[3], false, g);
+      }
+      note([name], (r.x[0] + r.x[1]) / 2, (r.z[0] + r.z[1]) / 2, base + 3, 11, false, f, 'tb2');
+      const doorSide = { n: 's', s: 'n', e: 'w', w: 'e' }[r.side];  // the room's wall on the corridor
+      if (name === '水房') waterRoom(g, r, base, doorSide, (p + q) / 2);
+      else if (name.endsWith('教师厕所')) teacherToilet(g, r, base, doorSide, (p + q) / 2, men);
+      else if (!hall && kindOf(name)) furnish(tb2Furn[f], r, kindOf(name), base, r.side === 'n' || r.side === 's' ? 'w' : 'n');
+    });
+    wallOpen(g, 'x', z0, x0, x1, base, y1, WT, outer.n);
+    wallOpen(g, 'x', z1, x0, x1, base, y1, WT, outer.s);
+    wallOpen(g, 'z', x0, z0, z1, base, y1, WT, outer.w);
+    wallOpen(g, 'z', x1, z0, z1, base, y1, WT, outer.e);
+    wallOpen(g, 'x', Rg.z[0], x0, x1, base, y1, 0.2, corr[Rg.z[0]]);
+    wallOpen(g, 'x', Rg.z[1], x0, x1, base, y1, 0.2, corr[Rg.z[1]]);
+    wallOpen(g, 'z', Rg.x[0], Rg.z[0], Rg.z[1], base, y1, 0.2, corr[Rg.x[0]]);
+    wallOpen(g, 'z', Rg.x[1], Rg.z[0], Rg.z[1], base, y1, 0.2, corr[Rg.x[1]]);
+    // walls between rooms
+    for (const x of A.x) { wallOpen(g, 'z', x, z0, Rg.z[0], base, y1, 0.2); wallOpen(g, 'z', x, Rg.z[1], z1, base, y1, 0.2); }
+    for (const z of [33.2, 42.1, 51, 59.9]) wallOpen(g, 'x', z, Rg.x[1], x1, base, y1, 0.2);
+    for (const z of [33.2, 41.2, 50.4, 59.6]) wallOpen(g, 'x', z, x0, Rg.x[0], base, y1, 0.2);
+    // upstairs: the slab round the atrium, and a rail along its edge, open where the spiral stairs meet the corridor
+    if (f) {
+      for (const [p, q, r, s] of [[x0 - 0.12, x1 + 0.12, z0 - 0.12, A.z[0]], [x0 - 0.12, x1 + 0.12, A.z[1], z1 + 0.12],
+        [x0 - 0.12, A.x[0], A.z[0], A.z[1]], [A.x[1], x1 + 0.12, A.z[0], A.z[1]]]) box(M.slab, p, q, base - 0.2, base, r, s, false, g);
+      for (const z of A.z) for (const [p, q] of runs(A.x[0], A.x[1], TB2_SPIRALS.map(s => [s.c[0] - 1.1, s.c[0] + 1.1]))) {
+        box(M.wall2, p, q, base, base + 1.1, z - 0.08, z + 0.08, true, g);
+      }
+      for (const x of A.x) box(M.wall2, x - 0.08, x + 0.08, base, base + 1.1, A.z[0], A.z[1], true, g);
+    }
+    // spiral stairs: a column, and one turn of 18 steps up to the next floor, railed except where it meets the corridor
+    for (const s of TB2_SPIRALS) {
+      const [cx, cz] = s.c;
+      addGeom(g, M.pole, new THREE.CylinderGeometry(0.15, 0.15, FH, 12).translate(cx, base + FH / 2, cz));
+      if (f === TB2.floors - 1) continue;
+      for (let i = 0; i < 18; i++) {
+        const t = (i + 0.5) / 18 * TAU, th = s.e + t, h = base + (i + 1) * FH / 18;
+        addGeom(g, M.slab, new THREE.BoxGeometry(1.65, 0.08, 0.66).translate(0.98, 0, 0).rotateY(Math.PI / 2 - th).translate(cx, h - 0.04, cz));
+        if (t < 0.6 || t > TAU - 0.6) continue;
+        const px = cx + 1.75 * Math.sin(th), pz = cz - 1.75 * Math.cos(th);
+        box(M.iron, px - 0.02, px + 0.02, h, h + 1.0, pz - 0.02, pz + 0.02, false, g);
+        addGeom(g, M.iron, new THREE.BoxGeometry(0.62, 0.04, 0.04).rotateY(-th).translate(px, h + 1.0, pz));
+      }
+    }
+    note(['回字形走廊'], A.x[1] + 1.2, (A.z[0] + A.z[1]) / 2, base + 3, 11, false, f, 'tb2');
+    note(['中庭', '上下贯通到玻璃屋顶'], (A.x[0] + A.x[1]) / 2, (A.z[0] + A.z[1]) / 2, base + 3, 11, false, f, 'tb2');
+    for (const s of TB2_SPIRALS) note(['螺旋楼梯'], s.c[0], s.c[1], base + 3, 11, false, f, 'tb2');
+  }
+  // doors 1 and 2: double leaves, open inward
+  for (const z of [TB2_DOOR1[0] + 0.03, TB2_DOOR1[1] - 0.03]) box(M.door, x1 - 1.02, x1 - 0.12, 0, 2.6, z - 0.025, z + 0.025, false, tb2F[0]);
+  for (const z of [TB2_DOOR2[0] + 0.03, TB2_DOOR2[1] - 0.03]) box(M.door, x0 + 0.12, x0 + 1.02, 0, 2.6, z - 0.025, z + 0.025, false, tb2F[0]);
+  note(['教学楼2 门1', '朝广场'], x1 + 2.5, (TB2_DOOR1[0] + TB2_DOOR1[1]) / 2, 4, 11);
+  note(['教学楼2 门2', '朝篮球场'], x0 - 2.5, (TB2_DOOR2[0] + TB2_DOOR2[1]) / 2, 4, 11);
+  // roof: the slab round the atrium, a parapet, a curb round the atrium, and over the atrium a pointed glass roof on a steel frame
+  for (const [p, q, r, s] of [[x0 - 0.12, x1 + 0.12, z0 - 0.12, A.z[0]], [x0 - 0.12, x1 + 0.12, A.z[1], z1 + 0.12],
+    [x0 - 0.12, A.x[0], A.z[0], A.z[1]], [A.x[1], x1 + 0.12, A.z[0], A.z[1]]]) box(M.slab, p, q, top - 0.2, top, r, s, false, tb2Roof);
+  for (const [p, q, r, s] of [[x0, x1, z0, z0], [x0, x1, z1, z1], [x0, x0, z0, z1], [x1, x1, z0, z1]]) {
+    box(M.wall, p - 0.12, q + 0.12, top, top + 1.0, r - 0.12, s + 0.12, false, tb2Roof);
+  }
+  const y0 = top + 0.4, H = 3.5, rx = (A.x[0] + A.x[1]) / 2, half = rx - A.x[0];
+  for (const [p, q, r, s] of [[A.x[0], A.x[1], A.z[0], A.z[0]], [A.x[0], A.x[1], A.z[1], A.z[1]], [A.x[0], A.x[0], A.z[0], A.z[1]], [A.x[1], A.x[1], A.z[0], A.z[1]]]) {
+    box(M.wall, p - 0.12, q + 0.12, top, y0, r - 0.12, s + 0.12, false, tb2Roof);
+  }
+  const pos = [], P = [[A.x[0], y0], [rx, y0 + H], [A.x[1], y0]];  // the gable's outline across the atrium
+  for (let k = 0; k < 2; k++) {  // the two slopes
+    const [[ax, ay], [bx, by]] = [P[k], P[k + 1]];
+    pos.push(ax, ay, A.z[0], bx, by, A.z[0], bx, by, A.z[1], ax, ay, A.z[0], bx, by, A.z[1], ax, ay, A.z[1]);
+  }
+  for (const z of A.z) pos.push(...P.flatMap(([x, y]) => [x, y, z]));  // the two gable ends
+  const glass = new THREE.BufferGeometry();
+  glass.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  glass.computeVertexNormals();
+  tb2Roof.add(new THREE.Mesh(glass, M.glassRoof));
+  box(M.iron, rx - 0.06, rx + 0.06, y0 + H - 0.06, y0 + H + 0.06, A.z[0], A.z[1], false, tb2Roof);
+  const slope = Math.atan2(H, half), len = Math.hypot(H, half);
+  for (let z = A.z[0]; z < A.z[1] + 0.01; z += (A.z[1] - A.z[0]) / 16) {
+    addGeom(tb2Roof, M.iron, new THREE.BoxGeometry(len, 0.08, 0.08).rotateZ(slope).translate(A.x[0] + half / 2, y0 + H / 2, z));
+    addGeom(tb2Roof, M.iron, new THREE.BoxGeometry(len, 0.08, 0.08).rotateZ(-slope).translate(A.x[1] - half / 2, y0 + H / 2, z));
+  }
+  note([TB2.name, TB2.note, `${(x1 - x0 + 0.24).toFixed(1)} × ${(z1 - z0 + 0.24).toFixed(1)} m，中庭 ${A.x[1] - A.x[0]} × ${(A.z[1] - A.z[0]).toFixed(1)} m`],
+    (x0 + x1) / 2, (z0 + z1) / 2 + 10, top + 6);
+}
+// the floor under the walker in teaching building 2: on a spiral, one of its turns; in the atrium, only the ground floor;
+// elsewhere any floor; -Infinity where nothing is within a step
+function tb2Floor(x, z, y) {
+  let best = -Infinity;
+  const take = h => { if (h <= y + 0.45 && h > best) best = h; };
+  for (const s of TB2_SPIRALS) {
+    const dx = x - s.c[0], dz = z - s.c[1], r = Math.hypot(dx, dz);
+    if (r > 1.8) continue;
+    if (r < 0.3) return -Infinity;  // the column
+    const t = ((Math.atan2(dx, -dz) - s.e) % TAU + TAU) % TAU;
+    for (let k = 0; k < TB2.floors - 1; k++) take(k * FH + FH * t / TAU);
+    return best;
+  }
+  const A = TB2_ATRIUM;
+  if (x > A.x[0] && x < A.x[1] && z > A.z[0] && z < A.z[1]) { take(0); return best; }
+  for (let f = 0; f < TB2.floors; f++) take(f * FH);
+  return best;
+}
+
+// the plaza: 0.6 m art stone slabs, a darker border band and rings in the middle
+function plazaTexture(w, d) {
+  const p = 20, tile = 0.6 * p, c = document.createElement('canvas'), g = c.getContext('2d');
+  c.width = w * p; c.height = d * p;
+  for (let x = 0; x < c.width; x += tile) for (let y = 0; y < c.height; y += tile) {
+    g.fillStyle = `hsl(38, 14%, ${79 + rand() * 4}%)`;
+    g.fillRect(x, y, tile, tile);
+  }
+  g.globalAlpha = 0.55;
+  g.lineWidth = 1.2 * p; g.strokeStyle = '#a99f8e';
+  g.strokeRect(1.8 * p, 1.8 * p, (w - 3.6) * p, (d - 3.6) * p);
+  for (const [r, col] of [[13, '#b8ab96'], [10, '#e2dbcf'], [7, '#a99f8e'], [2.5, '#c9bfae']]) {
+    g.fillStyle = col; g.beginPath(); g.arc(w * p / 2, d * p / 2, r * p, 0, 2 * Math.PI); g.fill();
+  }
+  g.globalAlpha = 1;
+  g.fillStyle = '#b3aa9a';  // joints
+  for (let x = 0; x < c.width; x += tile) g.fillRect(x, 0, 1, c.height);
+  for (let y = 0; y < c.height; y += tile) g.fillRect(0, y, c.width, 1);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+{
+  const w = PLAZA.x[1] - PLAZA.x[0], d = PLAZA.z[1] - PLAZA.z[0];
+  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ map: plazaTexture(w, d) }));
+  plaza.position.set(PLAZA.x[0] + w / 2, 0.03, PLAZA.z[0] + d / 2);
+  plaza.receiveShadow = true;
+  world.add(plaza);
+  note(['广场', '艺术石砖', '升旗、广播体操、集体大会', `${w} × ${d} m`], PLAZA.x[0] + w / 2, PLAZA.z[0] + 16);
+}
+box(M.slab, STAND.x[0], STAND.x[1], 0, STAND.h, STAND.z[0], STAND.z[1], true);
+for (let i = 0; i < 6; i++) box(M.slab, STEPS.x[0], STEPS.x[1], 0, (i + 1) * STAND.h / 6, STEPS.z[0] + i * (STEPS.z[1] - STEPS.z[0]) / 6, STEPS.z[1]);
+box(M.guess, STAND.x[0], STAND.x[1], STAND.h, 4.5, STAND.z[1] - 0.24, STAND.z[1], true);  // backdrop: not in the sketch
+note(['主席台', `${STAND.x[1] - STAND.x[0]} × ${STAND.z[1] - STAND.z[0]} m · 高 ${STAND.h} m`], (STAND.x[0] + STAND.x[1]) / 2, STAND.z[1] + 3, 8);
+box(M.guess, POLE[0] - 1.5, POLE[0] + 1.5, 0, 0.45, POLE[1] - 1.5, POLE[1] + 1.5, true);
+addGeom(world, M.pole, new THREE.CylinderGeometry(0.06, 0.09, 12, 8).translate(POLE[0], 0.45 + 6, POLE[1]));
+note(['旗杆（我加的）'], POLE[0], POLE[1] - 4, 14, 12, true);
+
+// ---------- the lodge and the toilet block: one storey each, walkable inside; their roofs come off to show the inside ----------
+const smallF = new THREE.Group(), toiletUp = new THREE.Group(), smallRoof = new THREE.Group();  // ground floors; the toilet's upper floor
+scene.add(smallF, toiletUp, smallRoof);
+{
+  // the lodge, against the school's north wall: a duty room by the gate that also takes the mail, the gatekeeper's room behind it
+  const [x0, x1] = LODGE.x, z0 = SCHOOL.z[0] + 0.12, z1 = LODGE.z[1], h = 3.4, mx = 87, g = smallF;
+  const win = (c, w) => ({ a: c - w / 2, b: c + w / 2, lo: 0.9, hi: 2.2, m: M.pane });
+  const door = (a, b) => ({ a, b, lo: 0, hi: 2.1 });
+  wallOpen(g, 'z', x0, z0, z1, 0, h, WT, [win(2.2, 2.0), door(4.4, 5.3)]);
+  wallOpen(g, 'z', x1, z0, z1, 0, h, WT, [win(2.5, 1.0)]);
+  wallOpen(g, 'x', z1, x0, x1, 0, h, WT, [win(84.9, 1.4), win(88.6, 1.2)]);
+  wallOpen(g, 'z', mx, z0, z1, 0, h, 0.12, [door(4.6, 5.5)]);
+  box(M.wall, x0 - 0.12, x1 + 0.12, WALL_H, h, -WT / 2, WT / 2, true, g);  // the north wall: the school wall, built up to the roof
+  box(M.wall, x0, x1, 0, WALL_H, z0, z0 + 0.02, false, g);                  // and plastered inside
+  box(M.floor, x0, x1, 0, 0.02, z0, z1, false, g);
+  box(M.slab, x0 - 0.12, x1 + 0.12, h - 0.2, h, z0 - 0.12, z1 + 0.12, false, smallRoof);
+  box(M.door, x0 + 0.12, x0 + 0.95, 0, 2.1, 4.4, 4.45, false, g);
+  // duty room: a desk at the window onto the gate with the phone, a chair, a coal stove piped out through the roof,
+  // pigeonholes for the classes' and offices' mail on the back wall
+  box(M.desk, x0 + 0.12, x0 + 0.82, 0, 0.75, 1.3, 3.1, true, g);
+  box(M.glass, x0 + 0.3, x0 + 0.55, 0.75, 0.85, 1.5, 1.8, false, g);
+  box(M.chair, x0 + 1.0, x0 + 1.4, 0, 0.45, 2.0, 2.4, true, g);
+  box(M.iron, 85.4, 85.9, 0, 0.7, z0 + 0.3, z0 + 0.8, true, g);
+  addGeom(g, M.pole, new THREE.CylinderGeometry(0.06, 0.06, h + 0.1, 8).translate(85.65, 0.7 + (h + 0.1) / 2, z0 + 0.55));
+  box(M.desk, mx - 0.5, mx - 0.06, 0, 2.0, z0 + 0.2, 4.0, true, g);
+  for (let y = 0.4; y < 2.0; y += 0.32) box(M.slab, mx - 0.54, mx - 0.5, y, y + 0.03, z0 + 0.2, 4.0, false, g);
+  // the gatekeeper's room: bed, wardrobe, washstand
+  box(M.desk, x1 - 2.1, x1 - 0.12, 0, 0.45, z0 + 0.12, z0 + 1.12, true, g);
+  box(M.stall, x1 - 2.0, x1 - 0.2, 0.45, 0.55, z0 + 0.17, z0 + 1.07, false, g);
+  box(M.desk, x1 - 0.7, x1 - 0.12, 0, 2.0, 3.2, 4.4, true, g);
+  box(M.concrete, x1 - 0.62, x1 - 0.12, 0, 0.8, z1 - 0.62, z1 - 0.12, true, g);
+  note(['值班室', '窗口对着大门，信报也收在这里'], (x0 + mx) / 2, 3, 3, 11, false, 0, 'small');
+  note(['门卫住的屋'], (mx + x1) / 2, 3, 3, 11, false, 0, 'small');
+  note(['传达室'], (x0 + x1) / 2, (z0 + z1) / 2, 8, 12);
+}
+{
+  // the toilet block, two storeys, doors facing south: the boys' toilet on a smaller ground floor, its door in the back of an
+  // open bay on columns, open to the west and south; the girls' toilet over the whole block upstairs, reached by its own stair up
+  // the outside of the south wall. Washing troughs by the doors, squatting stalls behind low partitions, a screen inside each door,
+  // for boys a urinal trough; strip windows up high.
+  const [x0, x1] = [TOILET.x[0], TOILET.x[1] - 0.12], [z0, z1] = TOILET.z, zm = TOILET_MEN_Z, TH = TOILET_H, g = smallF, up = toiletUp;
+  const S = TOILET_STAIR, [d0, d1] = TOILET_DOORS.men, [u0, u1] = TOILET_DOORS.women;
+  const high = (c, w) => ({ a: c - w / 2, b: c + w / 2, lo: 2.2, hi: 2.8, m: M.pane });
+  const along = (a, b, skip = []) => {
+    const out = [];
+    for (let c = a + 1.5; c < b - 1; c += 3) if (!skip.some(([p, q]) => c + 0.8 > p && c - 0.8 < q)) out.push(high(c, 1.6));
+    return out;
+  };
+  const partitionZ = (gr, y, z, p, q) => box(M.stall, p, q, y, y + 1.2, z - 0.03, z + 0.03, true, gr);  // a partition across x
+  const partitionX = (gr, y, x, p, q) => box(M.stall, x - 0.03, x + 0.03, y, y + 1.2, p, q, true, gr);  // a partition across z
+  // ground floor: the boys' toilet, north of zm, its door in its south wall
+  wallOpen(g, 'z', x0, z0, zm, 0, TH, WT, along(z0, zm));
+  wallOpen(g, 'z', x1, z0, zm, 0, TH, WT, along(z0, zm));
+  wallOpen(g, 'x', z0, x0, x1, 0, TH, WT, along(x0, x1));
+  wallOpen(g, 'x', zm, x0, x1, 0, TH, WT, [{ a: d0, b: d1, lo: 0, hi: 2.4 }, ...along(x0, x1, [[d0, d1]])]);
+  box(M.tile, x0, x1, 0, 0.03, z0, zm, false, g);
+  box(M.wall, d0 - 0.9, d1 + 0.9, 0, 2.0, zm - 1.6, zm - 1.5, true, g);  // screen inside the door
+  for (let k = 0; k <= 8; k++) partitionZ(g, 0, z0 + 0.9 + k * 0.95, x1 - 1.5, x1 - 0.12);
+  for (let k = 0; k < 8; k++) box(M.white, x1 - 1.1, x1 - 0.5, 0, 0.1, z0 + 1.1 + k * 0.95, z0 + 1.65 + k * 0.95, false, g);
+  box(M.concrete, x0 + 1.6, x1 - 2.2, 0, 0.25, z0 + 0.12, z0 + 0.5, false, g);
+  box(M.concrete, x0 + 0.12, x0 + 0.72, 0, 0.8, z0 + 3, zm - 1.8, true, g);
+  // the open bay under the upper floor, on columns along its south edge
+  for (const x of [x0 + 0.2, (x0 + x1) / 2, x1 - 0.2]) box(M.wall, x - 0.2, x + 0.2, 0, TH - 0.2, z1 - 0.4, z1, true, g);
+  // the outside stair up the south wall, rising east to a landing at the girls' door, railed on its open side
+  const steps = 21, run = S.landing[0] - S.foot, tread = run / steps, rail = Math.hypot(run, TH);
+  for (let i = 0; i < steps; i++) box(M.concrete, S.foot + i * tread, S.foot + (i + 1) * tread, 0, (i + 1) * TH / (steps + 1), ...S.z, false, g);
+  box(M.concrete, ...S.landing, 0, TH, ...S.z, false, g);
+  addGeom(g, M.iron, new THREE.BoxGeometry(rail, 0.05, 0.05).rotateZ(Math.atan2(TH, run)).translate(S.foot + run / 2, TH / 2 + 1.0, S.z[1] - 0.05));
+  for (let i = 0; i <= 3; i++) {
+    const x = S.foot + i * run / 3, y = i * TH / 3;
+    box(M.iron, x - 0.03, x + 0.03, y, y + 1.0, S.z[1] - 0.08, S.z[1] - 0.03, false, g);
+  }
+  box(M.iron, ...S.landing, TH + 1.0, TH + 1.05, S.z[1] - 0.08, S.z[1] - 0.03, false, g);
+  box(M.iron, S.landing[1] - 0.08, S.landing[1] - 0.03, TH + 1.0, TH + 1.05, ...S.z, false, g);
+  // upper floor: the girls' toilet over the whole block; the washing trough along the south wall by the door, stalls along the
+  // east and north walls
+  box(M.slab, x0 - 0.12, x1 + 0.12, TH - 0.2, TH, z0 - 0.12, z1 + 0.12, false, up);
+  wallOpen(up, 'z', x0, z0, z1, TH, 2 * TH, WT, along(z0, z1));
+  wallOpen(up, 'z', x1, z0, z1, TH, 2 * TH, WT, along(z0, z1));
+  wallOpen(up, 'x', z0, x0, x1, TH, 2 * TH, WT, along(x0, x1));
+  wallOpen(up, 'x', z1, x0, x1, TH, 2 * TH, WT, [{ a: u0, b: u1, lo: 0, hi: 2.2 }, ...along(x0, x1, [[u0, u1]])]);
+  box(M.tile, x0, x1, TH, TH + 0.03, z0, z1, false, up);
+  box(M.wall, u0 - 0.9, u1 + 0.9, TH, TH + 2.0, z1 - 1.6, z1 - 1.5, true, up);  // screen inside the door
+  box(M.concrete, x0 + 3.0, u0 - 1.2, TH, TH + 0.8, z1 - 0.72, z1 - 0.12, true, up);
+  for (let k = 0; k <= 13; k++) partitionZ(up, TH, z0 + 0.9 + k * 0.95, x1 - 1.5, x1 - 0.12);
+  for (let k = 0; k < 13; k++) box(M.white, x1 - 1.1, x1 - 0.5, TH, TH + 0.1, z0 + 1.1 + k * 0.95, z0 + 1.65 + k * 0.95, false, up);
+  for (let k = 0; k <= 12; k++) partitionX(up, TH, x0 + 1.5 + k * 0.95, z0 + 0.12, z0 + 1.5);
+  for (let k = 0; k < 12; k++) box(M.white, x0 + 1.7 + k * 0.95, x0 + 2.25 + k * 0.95, TH, TH + 0.1, z0 + 0.5, z0 + 1.1, false, up);
+  box(M.slab, x0 - 0.12, x1 + 0.12, 2 * TH - 0.2, 2 * TH, z0 - 0.12, z1 + 0.12, false, smallRoof);
+  for (const [p, q, r, s] of [[x0, x1, z0, z0], [x0, x1, z1, z1], [x0, x0, z0, z1], [x1, x1, z0, z1]]) {
+    box(M.wall, p - 0.12, q + 0.12, 2 * TH, 2 * TH + 0.6, r - 0.12, s + 0.12, false, smallRoof);
+  }
+  note(['男', '门朝南，从架空处进'], (d0 + d1) / 2, zm + 2, 3.2, 11);
+  note(['女', '外侧楼梯上二楼'], (u0 + u1) / 2, S.z[1] + 1, TH + 3.2, 11);
+  note(['一楼男厕', '小便槽、蹲位、洗手槽'], (x0 + x1) / 2, (z0 + zm) / 2, 3, 11, false, 0, 'small');
+  note(['架空，柱子撑着二楼'], (x0 + x1) / 2, (zm + z1) / 2, 3, 11, false, 0, 'small');
+  note(['二楼女厕', '蹲位、洗手槽'], (x0 + x1) / 2, (z0 + z1) / 2, TH + 3, 11, false, 1, 'small');
+  note(['厕所', '两层'], (x0 + x1) / 2, (z0 + z1) / 2, 2 * TH + 5, 12);
+}
+// the floor under the walker at the toilet block: the outside stair and its landing, or the ground, or the upper floor
+function toiletFloor(x, z, y) {
+  const S = TOILET_STAIR, TH = TOILET_H;
+  let best = -Infinity;
+  const take = h => { if (h <= y + 0.45 && h > best) best = h; };
+  if (z > S.z[0] && z < S.z[1] && x > S.foot && x < S.landing[1]) {
+    take(x > S.landing[0] ? TH : TH * (x - S.foot) / (S.landing[0] - S.foot));
+    return best;
+  }
+  take(0);
+  if (x > TOILET.x[0] - 0.12 && x < TOILET.x[1] && z > TOILET.z[0] - 0.12 && z < TOILET.z[1] + 0.12) take(TH);  // the upper floor too
+  return best;
+}
+{
+  // the sports equipment store south of the courts: one storey, a wide door to the courts; shelves of balls, mats, a vaulting
+  // box, hurdles, ball carts
+  const [x0, x1] = STORE.x, [z0, z1] = STORE.z, h = 3.4, g = smallF;
+  const high = (c, w) => ({ a: c - w / 2, b: c + w / 2, lo: 1.8, hi: 2.6, m: M.pane });
+  wallOpen(g, 'x', z0, x0, x1, 0, h, WT, [{ a: 9.5, b: 12.5, lo: 0, hi: 2.6 }, high(5.5, 1.5), high(16, 1.5)]);
+  wallOpen(g, 'x', z1, x0, x1, 0, h, WT, [high(7, 1.5), high(15, 1.5)]);
+  wallOpen(g, 'z', x0, z0, z1, 0, h, WT, [high((z0 + z1) / 2, 1.5)]);
+  wallOpen(g, 'z', x1, z0, z1, 0, h, WT);
+  box(M.floor, x0, x1, 0, 0.02, z0, z1, false, g);
+  box(M.slab, x0 - 0.12, x1 + 0.12, h - 0.2, h, z0 - 0.12, z1 + 0.12, false, smallRoof);
+  for (const x of [9.55, 12.45]) box(M.door, x - 0.025, x + 0.025, 0, 2.6, z0 + 0.12, z0 + 1.6, false, g);  // the leaves, open in
+  box(M.desk, x0 + 0.5, x1 - 0.5, 0, 2.0, z1 - 0.62, z1 - 0.12, true, g);  // shelves along the back wall
+  for (let x = x0 + 0.8; x < x1 - 0.6; x += 0.45) for (const y of [0.55, 1.15, 1.75]) {
+    addGeom(g, M.door, new THREE.SphereGeometry(0.12, 8, 6).translate(x, y, z1 - 0.37));  // balls
+  }
+  box(M.stall, x0 + 0.3, x0 + 2.3, 0, 0.6, z0 + 0.6, z0 + 1.8, true, g);    // stacked mats
+  box(M.stall, x0 + 0.3, x0 + 2.3, 0, 0.6, z0 + 2.2, z0 + 3.4, true, g);
+  box(M.desk, x0 + 4.0, x0 + 5.4, 0, 1.1, z0 + 3.0, z0 + 3.5, true, g);  // vaulting box
+  for (let i = 0; i < 4; i++) {  // hurdles, stood along the east wall
+    const z = z0 + 1.0 + i * 0.5;
+    box(M.line, x1 - 1.3, x1 - 0.3, 0.76, 0.84, z - 0.02, z + 0.02, false, g);
+    for (const x of [x1 - 1.28, x1 - 0.32]) box(M.iron, x - 0.02, x + 0.02, 0, 0.8, z - 0.02, z + 0.02, false, g);
+  }
+  for (const x of [x0 + 8.0, x0 + 9.4]) box(M.iron, x, x + 1.0, 0, 0.9, z0 + 4.2, z0 + 5.0, true, g);  // ball carts
+  note(['体育用品仓库', '我加的'], (x0 + x1) / 2, (z0 + z1) / 2, h + 3, 12, true);
+  note(['球架、垫子、跳箱、跨栏、球车'], (x0 + x1) / 2, (z0 + z1) / 2, 2.6, 11, false, 0, 'small');
+}
+
+// lines: a rectangle outline of width w
+function lineRect(x0, x1, z0, z1, y, w = 0.1) {
+  box(M.line, x0, x1, 0, y, z0, z0 + w); box(M.line, x0, x1, 0, y, z1 - w, z1);
+  box(M.line, x0, x0 + w, 0, y, z0, z1); box(M.line, x1 - w, x1, 0, y, z0, z1);
+}
+const circleLine = (x, z, r, y) => addGeom(world, M.line, new THREE.RingGeometry(r - 0.05, r + 0.05, 48).rotateX(-Math.PI / 2).translate(x, y, z));
+
+// basketball: two courts along x with a hoop at each end
+pave(M.court, COURTS.x[0], COURTS.x[1], COURTS.z[0], COURTS.z[1], 0.03);
+for (const [z0, z1] of [[22, 37], [45, 60]]) {
+  const x0 = COURTS.x[0] + 3.5, x1 = x0 + 28, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  lineRect(x0, x1, z0, z1, 0.04);
+  box(M.line, cx - 0.05, cx + 0.05, 0, 0.04, z0, z1);
+  circleLine(cx, cz, 1.8, 0.04);
+  for (const [xb, in_] of [[x0, 1], [x1, -1]]) {
+    const xk = xb + in_ * 5.8, xp = xb - in_ * 1.0, xbd = xb + in_ * 1.2;
+    lineRect(Math.min(xb, xk), Math.max(xb, xk), cz - 2.45, cz + 2.45, 0.04);
+    box(M.pole, xp - 0.1, xp + 0.1, 0, 3.4, cz - 0.1, cz + 0.1, true);
+    box(M.pole, Math.min(xp, xbd), Math.max(xp, xbd), 3.2, 3.3, cz - 0.06, cz + 0.06);
+    box(M.wall, xbd - 0.03, xbd + 0.03, 2.9, 3.95, cz - 0.9, cz + 0.9);
+    addGeom(world, M.door, new THREE.TorusGeometry(0.225, 0.015, 6, 16).rotateX(Math.PI / 2).translate(xbd + in_ * 0.375, 3.05, cz));
+  }
+}
+note(['两个篮球场', '28 × 15 m'], (COURTS.x[0] + COURTS.x[1]) / 2, 41, 8);
+
+// table tennis: concrete tables with a brick net, in two rows, 5 m apart side to side
+const PING_X = 123.5, PING_STEP = 5;  // middle of the rows, spacing between tables
+for (const zc of [4.5, 10]) for (let i = 0; i < 6; i++) {  // clear of teaching building 1's north end
+  const xc = PING_X + (i - 2.5) * PING_STEP;
+  box(M.concrete, xc - 0.76, xc + 0.76, 0.66, 0.76, zc - 1.37, zc + 1.37, true);
+  for (const s of [-1, 1]) box(M.concrete, xc - 0.5, xc + 0.5, 0, 0.66, zc + s * 0.6 - 0.15, zc + s * 0.6 + 0.15, true);
+  box(M.concrete, xc - 0.76, xc + 0.76, 0.76, 0.91, zc - 0.06, zc + 0.06);
+}
+note(['乒乓球台', '12 张水泥台'], PING_X, 7.25, 6);
+
+// ---------- the staff housing east of the school, through a narrow alley ----------
+pave(M.road, ALLEY[0], ALLEY[1], 0, ALLEY_END, 0.012);
+pave(M.road, SHOPS_N.x[0], SHOPS_E.x[0], SHOPS_N.z[1], SHOPS_E.z[1], 0.012);
+shopBlock(SHOPS_N, 5, 'n', 'nsew');
+shopBlock(SHOPS_E, 5, 'e', 'esw');
+wall('z', SHOPS_N.x[0], SHOPS_N.z[1], SHOPS_E.z[1], WALL_H, YARD_DOORS);
+wall('x', SHOPS_E.z[1], SHOPS_N.x[0], SHOPS_E.x[0], WALL_H);
+wall('x', ALLEY_END, ALLEY[0], ALLEY[1], 3.0, [], M.wall2);
+for (const x of [ALLEY[0] + 0.1, ALLEY[1] - 0.1]) box(M.iron, x - 0.1, x + 0.1, 0, 3.6, -0.1, 0.1, true);
+box(M.sign, ALLEY[0], ALLEY[1], 3.6, 4.2, -0.15, 0.15);
+for (const [z0, z1] of FLATS) {
+  const b = { x: [160, 220], z: [z0, z1] };
+  box(M.guess, b.x[0], b.x[1], 0, 5 * 2.9 + 0.6, z0, z1, true);
+  windows(b, 5, 2.9, { sides: 'ns', h: 1.4 });
+}
+note(['家属院大门'], (ALLEY[0] + ALLEY[1]) / 2, -2, 8, 12);
+note(['小巷', `约 ${(ALLEY[1] - ALLEY[0]).toFixed(1)} m 宽，车进不去`], (ALLEY[0] + ALLEY[1]) / 2, 45, 8, 12);
+note(['一面墙'], (ALLEY[0] + ALLEY[1]) / 2, ALLEY_END + 3, 6, 12);
+note(['底商：小卖部、小食品'], 200, -1, 22);
+note(['底商：饭馆、奶茶、', '服装、眼镜'], 233, 55, 22);
+note(['老旧的家属院', '院里的楼是我猜的'], 195, 39.5, 22, 14, true);
+
+// ---------- roads ----------
+pave(M.asphalt, DIRT[1], MAIN[0], ROAD[0], ROAD[1], 0.025);
+for (let x = DIRT[1] + 4; x < MAIN[0] - 4; x += 8) box(M.line, x, x + 4, 0, 0.03, (ROAD[0] + ROAD[1]) / 2 - 0.07, (ROAD[0] + ROAD[1]) / 2 + 0.07);
+pave(M.walk, SCHOOL.x[0], MAIN[0] - 5, ROAD[1], SCHOOL.z[0], 0.03);
+pave(M.walk, RICH.x[0], MAIN[0] - 5, ROAD[0] - 3, ROAD[0], 0.03);
+note(['柏油路', '两车道，车很少，基本是进出高档小区的'], 120, (ROAD[0] + ROAD[1]) / 2, 6);
+
+const far = 700;  // the main road and the dirt road run on past the sketch into the fog
+const mid = (MAIN[0] + MAIN[1]) / 2;
+pave(M.asphalt, MAIN[0], MAIN[1], -far, far, 0.025);
+pave(M.walk, MAIN[0] - 5, MAIN[0], -far, ROAD[0], 0.03);
+pave(M.walk, MAIN[0] - 5, MAIN[0], ROAD[1], far, 0.03);
+pave(M.walk, MAIN[1], MAIN[1] + 5, -far, far, 0.03);
+for (const x of [mid - 0.2, mid + 0.2]) box(M.yellow, x - 0.06, x + 0.06, 0, 0.03, -far, far);        // double yellow line
+for (const x of [mid - 3.75, mid + 3.75]) for (let z = -far; z < far; z += 9) box(M.line, x - 0.07, x + 0.07, 0, 0.03, z, z + 3);
+note(['宽敞的主路', '双向四车道，像胜利路'], mid, -60, 8);
+
+pave(M.dirt, DIRT[0], DIRT[1], -far, IRON, 0.02);
+pave(M.green, FIELD.x[1], DIRT[0], -far, IRON, 0.015);
+pave(M.green, DIRT[1], SCHOOL.x[0], -far, IRON, 0.015);
+pave(M.dirt, FIELD.x[1], SCHOOL.x[0], FIELD_GATE[0], FIELD_GATE[1], 0.018);  // worn path from the back gate to the field
+note(['林间土路', '两辆车能并排走'], (DIRT[0] + DIRT[1]) / 2, 25, 8);
+note(['地摊', '中午、放学、上学时', '摆在大铁门北边的路两边'], (DIRT[0] + DIRT[1]) / 2, IRON - 24, 8);
+
+// the double iron gate at the dirt road's south end, kept by the school; it stands open onto the mall's side door
+const SIDE_DOOR = [DIRT[0] + 0.35, DIRT[1] - 0.35];
+for (const x of DIRT) box(M.wall2, x - 0.35, x + 0.35, 0, 3.4, IRON - 0.35, IRON + 0.35, true);
+for (const x of [SIDE_DOOR[0] + 0.05, SIDE_DOOR[1] - 0.05]) fence('z', x, IRON - (SIDE_DOOR[1] - SIDE_DOOR[0]) / 2, IRON - 0.35, 3.0, [], M.iron, 0.15);
+note(['双开大铁门', '也归学校管，开着通商场侧门'], (DIRT[0] + DIRT[1]) / 2, IRON - 6, 8);
+
+// bus stop
+{
+  const [x, z] = STOP;
+  for (const px of [x - 1, x + 1]) for (const pz of [z - 4.8, z + 4.8]) box(M.pole, px - 0.05, px + 0.05, 0, 2.6, pz - 0.05, pz + 0.05, true);
+  box(M.slab, x - 1.2, x + 1.3, 2.6, 2.72, z - 5, z + 5);
+  box(M.glass, x - 1.1, x - 1.02, 0.3, 2.3, z - 4.7, z + 4.7, true);
+  box(M.wall, x - 0.9, x - 0.5, 0, 0.45, z - 3, z + 3, true);
+  box(M.pole, MAIN[0] - 0.65, MAIN[0] - 0.55, 0, 3, z - 6.05, z - 5.95, true);
+  box(M.sign, MAIN[0] - 0.67, MAIN[0] - 0.53, 2.2, 3.0, z - 6.4, z - 5.6);
+  note(['公交车站'], x, z, 8);
+}
+
+// ---------- the mall tunnel south of the school ----------
+// the stretches of [a, b] outside the gaps
+function runs(a, b, gaps) {
+  const out = [];
+  let s = a;
+  for (const [g0, g1] of [...gaps].sort((p, q) => p[0] - q[0])) { if (g0 > s) out.push([s, Math.min(g0, b)]); s = Math.max(s, g1); }
+  if (b > s) out.push([s, b]);
+  return out.filter(([p, q]) => q - p > 0.5);
+}
+{
+  const [x0, x1] = MALL.x, [z0, z1] = MALL.z, [t0, t1] = TUNNEL, top = MF + MH;
+  const SPRING = 3.7, CROWN = 5.0;  // the passage's shallow arched ceiling
+  const stairs = STAIR_X.map(s => [s - 1.5, s + 1.5]);
+  // ground floor: two rows of shops facing the passage, a front and a sign every 4 m; the north row opens for the side door and the stairs
+  for (const [rz0, rz1, face, gaps] of [[z0, t0, 's', [SIDE_DOOR, ...stairs]], [t1, z1, 'n', []]]) {
+    for (const [a, b] of runs(x0, x1, gaps)) {
+      const blk = { x: [a, b], z: [rz0, rz1] };
+      box(M.wall2, a, b, 0, CROWN, rz0, rz1, true);
+      for (let u = a + 0.2; u + 4 <= b - 0.2; u += 4) {
+        onFace(rand() < 0.5 ? M.shutter : M.glass, blk, face, u + 0.3, u + 3.7, 0, 3.0, 0.04);
+        onFace(M.sign, blk, face, u + 0.15, u + 3.85, 3.1, 3.5, 0.3);
+      }
+    }
+  }
+  pave(M.road, x0, x1, t0, t1, 0.02);
+  pave(M.road, SIDE_DOOR[0], SIDE_DOOR[1], z0, t0, 0.02);
+  const half = (t1 - t0) / 2, rise = CROWN - SPRING, R = (half * half + rise * rise) / (2 * rise), a = Math.asin(half / R);
+  addGeom(world, M.vault, new THREE.CylinderGeometry(R, R, x1 - x0, 24, 1, true, 1.5 * Math.PI - a, 2 * a)
+    .rotateZ(-Math.PI / 2).translate((x0 + x1) / 2, CROWN - R, (t0 + t1) / 2));
+  // the upper floor's slab, open above each stair
+  for (const [p, q] of runs(x0, x1, stairs)) box(M.slab, p, q, CROWN, MF, z0, t0);
+  for (const [p, q] of stairs) box(M.slab, p, q, CROWN, MF, z0, STAIR_TOP);
+  box(M.slab, x0, x1, CROWN, MF, t0, z1);
+  const steps = 31, run = t0 - STAIR_TOP;
+  for (const [p, q] of stairs) {
+    for (let i = 0; i < steps; i++) box(M.slab, p, q, 0, (i + 1) * MF / steps, t0 - (i + 1) * run / steps, t0 - i * run / steps);
+    for (const [r0, r1, s0, s1] of [[p - 0.05, p + 0.05, STAIR_TOP, t0], [q - 0.05, q + 0.05, STAIR_TOP, t0], [p, q, t0 - 0.05, t0 + 0.05]]) {
+      box(M.iron, r0, r1, MF, MF + 1.1, s0, s1, true);  // railings round the stairwell upstairs
+    }
+  }
+  // upper floor: outer walls with windows on both faces, roof and parapet
+  for (const [p, q, r, s] of [[x0, x1, z0, z0 + WT], [x0, x1, z1 - WT, z1], [x0, x0 + WT, z0, z1], [x1 - WT, x1, z0, z1]]) {
+    box(M.wall2, p, q, MF, top, r, s, true);
+    box(M.wall2, p, q, top + 0.3, top + 1.0, r, s);
+  }
+  box(M.slab, x0, x1, top, top + 0.3, z0, z1);
+  windows(MALL, 1, MH, { y0: MF, w: 2.4, h: 1.8, sill: 1.0, step: 4 });
+  windows({ x: [x0 + WT, x1 - WT], z: [z0 + WT, z1 - WT] }, 1, MH, { y0: MF, w: 2.4, h: 1.8, sill: 1.0, step: 4, o: -0.06 });
+  for (const [x, o] of [[x1, 0.3], [x0, -0.3]]) box(M.sign, Math.min(x, x + o), Math.max(x, x + o), MF + 0.6, MF + 2.8, t0 - 3, t1 + 3);  // the mall's name over each end
+  // upper floor: 3 × 3 m stalls in rows facing the aisles, cross aisles every 30 m, the stairs' landings kept clear
+  const cross = [];
+  for (let x = x0 + 30; x < x1 - 10; x += 30) cross.push([x - 1.5, x + 1.5]);
+  const landings = STAIR_X.map(s => [s - 4.5, s + 4.5]);
+  const rows = [[z0 + WT, z0 + WT + 3, 's'], [99, 102, 'n'], [102, 105, 's'], [109.5, 112.5, 'n'], [112.5, 115.5, 's'], [z1 - WT - 3, z1 - WT, 'n']];
+  rows.forEach(([rz0, rz1, f], i) => {
+    const wallRow = i === 0 || i === rows.length - 1, [front0, front1] = f === 's' ? [rz1 - 0.5, rz1] : [rz0, rz0 + 0.5];
+    const gaps = [...(wallRow ? [] : cross), ...(rz0 < t0 ? landings : [])];
+    for (const [p, q] of runs(wallRow ? x0 + WT : x0 + 4, wallRow ? x1 - WT : x1 - 4, gaps)) {
+      box(M.stall, p, q, MF, MF + 2.4, ...(f === 's' ? [rz0, rz0 + 0.08] : [rz1 - 0.08, rz1]));  // back
+      for (let u = p; u < q - 0.5; u += 3) box(M.stall, u - 0.04, u + 0.04, MF, MF + 2.4, rz0, rz1);
+      box(M.stall, q - 0.08, q, MF, MF + 2.4, rz0, rz1);
+      for (let u = p; u + 3 <= q + 0.01; u += 3) box(M.sign, u + 0.3, u + 2.1, MF, MF + 1.0, front0, front1);  // counter, a way in beside it
+      solids.push({ x0: p, x1: q, y0: MF, y1: MF + 2.4, z0: rz0, z1: rz1 });
+    }
+  });
+  // outside the west end: a railed forecourt, where the walker stops
+  pave(M.walk, x0 - 7, x0, t0 - 4, t1 + 4, 0.03);
+  fence('z', x0 - 7, t0 - 4, t1 + 4, 1.2, [], M.iron);
+  fence('x', t0 - 4, x0 - 7, x0, 1.2, [], M.iron);
+  fence('x', t1 + 4, x0 - 7, x0, 1.2, [], M.iron);
+  note(['商场隧道', '一层：隧道，两边是底商', '二楼：商场，店主租的铺位', `${Math.round(x1 - x0)} × ${z1 - z0} m · 两层`], 60, (z0 + z1) / 2, top + 6);
+  note(['商场出口'], x1 + 3, (t0 + t1) / 2, 8);
+  note(['西头入口', '比草图多延伸约 40 m'], x0 - 4, (t0 + t1) / 2, 8);
+  note(['侧门'], (SIDE_DOOR[0] + SIDE_DOOR[1]) / 2, z0 + 4, 8, 11);
+  for (const s of STAIR_X) note(['楼梯'], s, (STAIR_TOP + t0) / 2, top + 2, 11);
+}
+
+// ---------- around the school ----------
+// the upscale compound across the asphalt road: a lawn strip, a railing on a low wall, towers inside
+pave(M.green, RICH.x[0], RICH.x[1], RICH.z[0], ROAD[0] - 3, 0.015);
+pave(M.walk, RICH_GATE[0], RICH_GATE[1], RICH.z[1], ROAD[0] - 3, 0.03);
+for (const [along, at, a, b, gaps] of [['x', RICH.z[1], ...RICH.x, [RICH_GATE]], ['z', RICH.x[0], ...RICH.z, []], ['z', RICH.x[1], ...RICH.z, []]]) {
+  wall(along, at, a, b, 0.5, gaps);
+  fence(along, at, a, b, 2.0, gaps);
+}
+for (const x of RICH_GATE) box(M.wall, x - 0.6, x + 0.6, 0, 3.5, RICH.z[1] - 0.6, RICH.z[1] + 0.6, true);
+box(M.guess, RICH_GATE[1] + 1, RICH_GATE[1] + 4, 0, 2.8, RICH.z[1] - 4, RICH.z[1] - 1, true);  // guard booth
+box(M.door, RICH_GATE[0] + 0.6, RICH_GATE[1] - 0.6, 0.9, 1.0, RICH.z[1] - 0.05, RICH.z[1] + 0.05);  // barrier arm
+solids.push({ x0: RICH_GATE[0], x1: RICH_GATE[1], y0: 0, y1: 3, z0: RICH.z[1] - 0.05, z1: RICH.z[1] + 0.05 });
+for (const [i, x] of [12, 58, 132, 178].entries()) for (const [j, z] of [-92, -58].entries()) {
+  const b = { x: [x, x + 24], z: [z, z + 15] }, floors = (i + j) % 2 ? 11 : 18;
+  box(M.wall, b.x[0], b.x[1], 0, floors * 3 + 1, b.z[0], b.z[1]);
+  windows(b, floors, 3, { h: 1.4 });
+}
+note(['高档小区', '里面的楼是我放的'], 118, -75, 62);
+note(['高档小区大门'], (RICH_GATE[0] + RICH_GATE[1]) / 2, RICH.z[1] - 3, 8, 12);
+
+// the abandoned building site: hoarding, and concrete frames left standing
+pave(M.dirt, SITE.x[0], SITE.x[1], SITE.z[0], SITE.z[1], 0.015);
+wall('x', SITE.z[0], SITE.x[0], SITE.x[1], 2.5, [], M.hoard, 0.1);
+wall('x', SITE.z[1], SITE.x[0], SITE.x[1], 2.5, [], M.hoard, 0.1);
+wall('z', SITE.x[0], SITE.z[0], SITE.z[1], 2.5, [], M.hoard, 0.1);
+wall('z', SITE.x[1], SITE.z[0], SITE.z[1], 2.5, [], M.hoard, 0.1);
+function frame(x0, z0, nx, nz, floors, span = 6) {
+  const x1 = x0 + nx * span, z1 = z0 + nz * span;
+  for (let f = 0; f < floors; f++) {
+    for (let i = 0; i <= nx; i++) for (let j = 0; j <= nz; j++) {
+      const x = x0 + i * span, z = z0 + j * span, h = f === floors - 1 ? 0.5 + rand() * 2.5 : 3;  // the top storey's columns stop short
+      box(M.concrete, x - 0.25, x + 0.25, f * 3, f * 3 + h, z - 0.25, z + 0.25);
+    }
+    if (f < floors - 1) box(M.concrete, x0 - 0.3, x1 + 0.3, f * 3 + 2.8, f * 3 + 3, z0 - 0.3, z1 + 0.3);
+  }
+}
+frame(-72, -98, 4, 2, 9);
+frame(-42, -95, 3, 2, 6);
+frame(-70, -62, 3, 2, 12);
+note(['废弃工地', '几栋烂尾楼'], -48, -78, 45);
+
+// the sports ground: a 250 m track around a small football pitch, fenced, with a gate facing the school's back gate
+pave(M.yard, FIELD.x[0], FIELD.x[1], FIELD.z[0], FIELD.z[1], 0.012);
+fence('z', FIELD.x[1], FIELD.z[0], FIELD.z[1], 3, [FIELD_GATE], M.iron, 2.5, M.mesh);
+fence('z', FIELD.x[0], FIELD.z[0], FIELD.z[1], 3, [], M.iron, 2.5, M.mesh);
+fence('x', FIELD.z[0], FIELD.x[0], FIELD.x[1], 3, [], M.iron, 2.5, M.mesh);
+fence('x', FIELD.z[1], FIELD.x[0], FIELD.x[1], 3, [], M.iron, 2.5, M.mesh);
+function stadium(r, len) {  // a track outline: two straights of len joined by half circles of radius r
+  const s = new THREE.Shape();
+  s.moveTo(r, -len / 2); s.lineTo(r, len / 2);
+  s.absarc(0, len / 2, r, 0, Math.PI, false);
+  s.lineTo(-r, -len / 2);
+  s.absarc(0, -len / 2, r, Math.PI, 2 * Math.PI, false);
+  return s;
+}
+const ring = (r0, r1, len) => { const s = stadium(r1, len); s.holes.push(stadium(r0, len)); return s; };
+const flatShape = (shape, m, y) => addGeom(world, m, new THREE.ShapeGeometry(shape, 32).rotateX(-Math.PI / 2).translate(TC[0], y, TC[1]));
+const TR = 22, TL = 55, LANES = 4, LANE = 1.22;  // 250 m on the first lane: inside radius, straight
+flatShape(stadium(TR, TL), M.grass, 0.03);
+flatShape(ring(TR, TR + LANES * LANE, TL), M.track, 0.03);
+for (let i = 0; i <= LANES; i++) flatShape(ring(TR + i * LANE - 0.04, TR + i * LANE + 0.04, TL), M.line, 0.035);
+{
+  const [x, z] = TC, hw = 19, hl = 34;  // a 38 × 68 m pitch fits inside the track
+  lineRect(x - hw, x + hw, z - hl, z + hl, 0.04, 0.12);
+  box(M.line, x - hw, x + hw, 0, 0.04, z - 0.06, z + 0.06);
+  circleLine(x, z, 6, 0.04);
+  for (const s of [-1, 1]) {
+    const zg = z + s * hl;
+    lineRect(x - 12, x + 12, Math.min(zg, zg - s * 10), Math.max(zg, zg - s * 10), 0.04, 0.12);
+    for (const px of [x - 2.5, x + 2.5]) box(M.line, px - 0.06, px + 0.06, 0, 2, zg - 0.06, zg + 0.06, true);
+    box(M.line, x - 2.56, x + 2.56, 1.9, 2, zg - 0.06, zg + 0.06);
+  }
+  note(['足球场', '约 250 m 跑道', '体育课、体育活动、运动会'], x, z, 8);
+}
+
+// the walker stays inside the sketch: the dirt road's north end, the gap between the building site and the field,
+// the main road's curb, and its sidewalk past the corners
+for (const [x0, x1, z0, z1] of [
+  [FIELD.x[1] - 1, RICH.x[0], SITE.z[0] - 0.1, SITE.z[0]],
+  [FIELD.x[1] - 0.1, FIELD.x[1], SITE.z[1], FIELD.z[0]],
+  [MAIN[0], MAIN[0] + 0.1, -30, MALL.z[1]],
+  [RICH.x[1], MAIN[0] + 0.1, -30.1, -30],
+  [MALL.x[1], MAIN[0] + 0.1, MALL.z[1] - 0.1, MALL.z[1]],
+]) solids.push({ x0, x1, y0: -1, y1: 5, z0, z1 });
+
+// ---------- the city past the sketch: scenery for the walker's eye, not walkable ----------
+for (const [z0, z1] of [[-far, -42], [-30, 70], [82, far]]) shopBlock({ x: [MAIN[1] + 6, MAIN[1] + 18], z: [z0, z1] }, 6, 'w', 'nsw');
+const reserved = [[-135, 285, -112, 130], [-22, 3, -far - 20, IRON], [235, 285, -far - 20, far + 20]];
+const free = (x0, x1, z0, z1) => !reserved.some(([a, b, c, d]) => x0 < b && x1 > a && z0 < d && z1 > c);
+for (let x = -1000; x < 1400; x += 44) for (let z = -520; z < 660; z += 44) {
+  if (rand() < 0.12) continue;
+  const w = 14 + rand() * 20, d = 11 + rand() * 18, x0 = x + rand() * (40 - w), z0 = z + rand() * (40 - d);
+  const floors = 4 + Math.floor(rand() * 4) + (rand() < 0.15 ? 10 : 0);  // mostly 4–7 storeys, a few towers
+  if (!free(x0, x0 + w, z0, z0 + d)) continue;
+  const b = { x: [x0, x0 + w], z: [z0, z0 + d] };
+  box(rand() < 0.5 ? M.wall : M.wall2, x0, x0 + w, 0, floors * 3, z0, z0 + d);
+  if (Math.hypot(x0 - FX, z0 - FZ) < 330) windows(b, floors, 3, { h: 1.4 });
+}
+note(['布景（草图外，我加的）'], 380, 40, 40, 16, true);
+
+// distant mountains north and south: the city lies in an east–west valley, as at home.
+// They skip the fog and are blended toward the sky by hand, so they stay visible as hazy ridges past the fogged city.
+const sky = new THREE.Color(0xd4d8dd), loess = new THREE.Color(0xa89a84), sunDir = new THREE.Vector3(10, 35, 8).normalize();
+function ridge(side, dist, height, haze, span = 8000, step = 160) {  // side: −1 north, 1 south; dist: the crest's distance from the site
+  const xs = [];
+  for (let x = -span; x <= span; x += step) xs.push(x);
+  const crest = xs.map(x => height * (1 - (x / span) ** 2) * (0.6 + 0.25 * Math.sin(x / 530 + side) + 0.1 * Math.sin(x / 170 - side) + 0.15 * rand()));
+  const rows = [[dist - 500, 0], [dist - 250, 0.35], [dist, 1]].map(([d, k]) =>  // valley floor, foothills, crest
+    xs.map((x, i) => new THREE.Vector3(FX + x + (rand() - 0.5) * step * 0.4, k ? crest[i] * k : -20, FZ + side * (d + (rand() - 0.5) * 120))));
+  const pos = [], col = [], n = new THREE.Vector3(), e = new THREE.Vector3(), c = new THREE.Color();
+  const tri = (a, b, d) => {
+    n.subVectors(b, a).cross(e.subVectors(d, a)).normalize();
+    if (n.z * side > 0) n.negate();  // face the site
+    c.copy(loess).multiplyScalar(0.75 + 0.25 * Math.max(0, n.dot(sunDir))).lerp(sky, haze);
+    for (const p of [a, b, d]) { pos.push(p.x, p.y, p.z); col.push(c.r, c.g, c.b); }
+  };
+  for (let r = 0; r < 2; r++) for (let i = 0; i + 1 < xs.length; i++) {
+    tri(rows[r][i], rows[r][i + 1], rows[r + 1][i + 1]);
+    tri(rows[r][i], rows[r + 1][i + 1], rows[r + 1][i]);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  scene.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide })));
+}
+ridge(-1, 1200, 520, 0.6);
+ridge(-1, 2300, 820, 0.78);
+ridge(1, 1250, 480, 0.6);
+ridge(1, 2400, 780, 0.78);
+
+// ---------- trees: poplars in the belts along the dirt road, on the lawn strip and along the main road ----------
+const trees = [];
+const inGap = (v, gaps) => gaps.some(([a, b]) => v > a && v < b);
+for (const [x, gaps] of [[-16.1, []], [-13.7, []], [-3.9, [[ROAD[0] - 4, SCHOOL.z[0] + 1]]], [-1.4, [[ROAD[0] - 4, SCHOOL.z[0] + 1]]]]) {
+  const off = rand() * 5;
+  for (let z = -far + off; z < IRON; z += 5) {
+    const tz = z + (rand() - 0.5) * 1.6;
+    if (!inGap(tz, [...gaps, [FIELD_GATE[0] - 2, FIELD_GATE[1] + 2], [IRON - 3, IRON + 3]])) trees.push([x + (rand() - 0.5) * 0.8, tz]);
+  }
+}
+for (let x = RICH.x[0] + 4; x < RICH.x[1] - 2; x += 7) if (!inGap(x, [[RICH_GATE[0] - 3, RICH_GATE[1] + 3]])) trees.push([x, (RICH.z[1] + ROAD[0] - 3) / 2]);
+for (let z = -far + 4; z < far; z += 8) {
+  if (!inGap(z, [[ROAD[0] - 5, ROAD[1] + 5], [STOP[1] - 8, STOP[1] + 8], [TUNNEL[0] - 6, TUNNEL[1] + 6]])) trees.push([MAIN[0] - 0.8, z]);
+  trees.push([MAIN[1] + 0.8, z]);
+}
+{
+  const trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.14, 0.22, 5, 6).translate(0, 2.5, 0), M.trunk, trees.length);
+  const crowns = new THREE.InstancedMesh(new THREE.ConeGeometry(1.7, 13, 7).translate(0, 10.5, 0), M.crown, trees.length);
+  trees.forEach(([x, z], i) => {
+    const m = new THREE.Matrix4().makeTranslation(x, 0, z);
+    trunks.setMatrixAt(i, m);
+    crowns.setMatrixAt(i, m);
+    solids.push({ x0: x - 0.25, x1: x + 0.25, y0: 0, y1: 5, z0: z - 0.25, z1: z + 0.25 });
+  });
+  trunks.castShadow = crowns.castShadow = true;
+  scene.add(trunks, crowns);
+}
+
+// ---------- street vendors on both edges of the dirt road near the iron gate, at noon and around school hours ----------
+{
+  const sheets = [M.stall, M.sign, M.shutter, M.door];
+  for (const [x0, x1] of [[DIRT[0] + 0.1, DIRT[0] + 1.6], [DIRT[1] - 1.6, DIRT[1] - 0.1]]) for (let z = IRON - 40; z < IRON - 7; z += 4.5) {  // stops short of the gate's open leaves
+    const cx = (x0 + x1) / 2;
+    box(sheets[Math.floor(rand() * sheets.length)], x0, x1, 0, 0.05, z, z + 2.2, false, stalls);       // goods on a sheet
+    box(M.trunk, cx - 0.3, cx + 0.3, 0, 0.45, z + 2.4, z + 2.9, true, stalls, stallSolids);         // the vendor's stool or crate
+    if (rand() < 0.5) {
+      addGeom(stalls, M.pole, new THREE.CylinderGeometry(0.025, 0.025, 2.1, 6).translate(cx, 1.05, z + 1.1));
+      addGeom(stalls, M.door, new THREE.ConeGeometry(1.1, 0.45, 8).translate(cx, 2.1, z + 1.1));
+    }
+  }
+}
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000).rotateX(-Math.PI / 2), M.ground);
+ground.position.set(FX, 0, FZ);
+ground.receiveShadow = true;
+scene.add(ground);
+const fog = new THREE.Fog(0xd4d8dd, 40, 900);  // first person only, as at home
+flush();
+
+// ---------- labels ----------
+// px: screen pixels per text line; sizeLabels() keeps it as the views zoom
+function label(lines, px, guess) {
+  const fonts = lines.map((_, i) => i ? '34px "Microsoft YaHei", sans-serif' : 'bold 44px "Microsoft YaHei", sans-serif');
+  const c = document.createElement('canvas'), g = c.getContext('2d');
+  const widths = lines.map((t, i) => { g.font = fonts[i]; return g.measureText(t).width; });
+  c.width = Math.ceil(Math.max(...widths)) + 24; c.height = 20 + 56 * lines.length;
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  lines.forEach((t, i) => {
+    g.font = fonts[i];
+    g.lineWidth = 9; g.strokeStyle = 'rgba(255,255,255,.92)'; g.strokeText(t, c.width / 2, 38 + i * 56);
+    g.fillStyle = guess ? '#a85400' : '#222'; g.fillText(t, c.width / 2, 38 + i * 56);
+  });
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, fog: false }));
+  s.renderOrder = 10;
+  s.userData = { px, w: c.width / 56, h: c.height / 56 };
+  return s;
+}
+const halfFov = THREE.MathUtils.degToRad(25);  // half the orbit camera's 50° field of view
+const v = new THREE.Vector3();
+function sizeLabels(cam) {
+  for (const s of labels.children) {
+    const perPx = cam.isOrthographicCamera ? (cam.top - cam.bottom) / cam.zoom / innerHeight
+      : 2 * Math.tan(halfFov) * v.copy(s.position).applyMatrix4(cam.matrixWorldInverse).negate().z / innerHeight;
+    const lineH = s.userData.px * perPx;
+    s.scale.set(lineH * s.userData.w, lineH * s.userData.h, 1);
+  }
+}
+const labels = new THREE.Group();
+scene.add(labels);
+for (const [lines, x, z, y, size, guess, floor, bld] of notes) {
+  const s = label(lines, size, guess);
+  Object.assign(s.userData, { floor, bld });
+  s.position.set(x, y, z);
+  labels.add(s);
+}
+
+// walker and its marker; y is the floor under its feet
+const player = { x: MAIN[0] - 0.8, y: 0, z: STOP[1], yaw: 0, pitch: 0, eye: 1.3 };
+window.player = player;  // to move the walker from the console
+const marker = new THREE.Group();
+const body = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1, 16), mat(0x3a6fd8));
+const nose = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 12), mat(0x3a6fd8));
+nose.rotation.x = -Math.PI / 2;
+marker.add(body, nose);
+scene.add(marker);
+
+// ---------- cameras ----------
+const PLAN = { x: [-135, 285], z: [-112, 130] };
+const PX = (PLAN.x[0] + PLAN.x[1]) / 2, PZ = (PLAN.z[0] + PLAN.z[1]) / 2;
+const planCam = new THREE.OrthographicCamera();
+planCam.position.set(PX, 400, PZ + 0.01);  // the tiny z offset keeps sketch-up (−z) at the top of the screen
+planCam.far = 1000;
+const orbitCam = new THREE.PerspectiveCamera(50, 1, 0.5, 12000);  // far enough for the mountains
+const walkCam = new THREE.PerspectiveCamera(70, 1, 0.1, 12000);
+walkCam.rotation.order = 'YXZ';
+
+const planCtl = new OrbitControls(planCam, canvas);
+planCtl.target.set(PX, 0, PZ);
+planCtl.enableRotate = false;
+planCtl.screenSpacePanning = true;
+planCtl.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+const orbitCtl = new OrbitControls(orbitCam, canvas);
+orbitCtl.maxPolarAngle = Math.PI / 2 - 0.05;
+planCtl.update();
+// orbit framing: everything in the sketch, or the school; both seen from the south, north up as in the sketch
+const SCHOOL_C = [80, 0, 46];
+// the teaching buildings that can be cut open: their floor groups, furniture, roof and center
+const CUTS = {
+  tb1: { floors: tb1F, furn: tb1Furn, roof: tb1Roof, c: [(TB1.x[0] + TB1.x[1]) / 2, 0, (TB1.z[0] + TB1.z[1]) / 2] },
+  tb2: { floors: tb2F, furn: tb2Furn, roof: tb2Roof, c: [(TB2.x[0] + TB2.x[1]) / 2, 0, (TB2.z[0] + TB2.z[1]) / 2] },
+  small: { floors: [smallF, toiletUp], furn: [], roof: smallRoof, c: [(STORE.x[0] + TOILET.x[1]) / 2, 0, (LODGE.z[0] + STORE.z[1]) / 2] },
+};
+// orbit: 'site', 'school', or 'cut' for building cutB cut at floor `cut`, seen from the south-west
+function aim(kind) {
+  const c = CUTS[cutB].c;
+  const [t, d] = kind === 'site' ? [[FX, 0, FZ], [0, 240, 220]] : kind === 'school' ? [SCHOOL_C, [0, 115, 150]]
+    : [[c[0], (cut - 1) * FH, c[2]], cutB === 'small' ? [0, 150, 125] : [-45, 42, 34]];
+  orbitCtl.target.set(...t);
+  orbitCam.position.set(t[0] + d[0], t[1] + d[1], t[2] + d[2]);
+  orbitCtl.update();
+}
+let cut = 0, cutB = 'tb1';  // building cutB shows floors below `cut` only; 0 shows it whole
+aim('school');
+const cams = { plan: planCam, orbit: orbitCam, walk: walkCam };
+
+function resize() {
+  renderer.setSize(innerWidth, innerHeight);
+  // fit the plan into the area right of the panel
+  const panel = Math.min(310, innerWidth / 3), k = Math.min((innerWidth - panel) / (PLAN.x[1] - PLAN.x[0]), innerHeight / (PLAN.z[1] - PLAN.z[0]));
+  const cx = panel + (innerWidth - panel) / 2;
+  Object.assign(planCam, { left: -cx / k, right: (innerWidth - cx) / k, top: innerHeight / 2 / k, bottom: -innerHeight / 2 / k });
+  planCam.updateProjectionMatrix();
+  for (const c of [orbitCam, walkCam]) { c.aspect = innerWidth / innerHeight; c.updateProjectionMatrix(); }
+}
+addEventListener('resize', resize);
+resize();
+
+// ---------- UI ----------
+let view = 'plan', orbit = 'school', showStalls = true, showFurn = true, showLabels = true;
+const hints = {
+  plan: '北在上，和草图一样。拖动平移，滚轮缩放。',
+  orbit: '左键旋转，右键平移，滚轮缩放。',
+  walk: '点画面锁定鼠标（或按住拖动），WASD 走，Shift 快走，Esc 解锁。能进学校、家属院、操场和商场隧道，能走上主席台和商场二楼；教学楼还进不去。',
+};
+const toGate = Math.round((player.z - ROAD[1] / 2) + (player.x - (GATE[0] + GATE[1]) / 2));
+document.getElementById('info').innerHTML =
+  `比例参考西宁五四小学：占地约 1.48 万 m²，其中运动场 5826 m²（《青海教育》2012 年第 4 期），卫星图上校园约 120 × 120 m。` +
+  `草图 1 像素约 0.185 m，学校围墙内 ${SCHOOL.x[1]} × ${SCHOOL.z[1]} m。<br>` +
+  `教学楼1 按你画的内部做：每层一个年级 6 间教室，每间 8.4 × ${TB1_CORR - TB1.x[0]} m；东边 3 m 宽的走廊，东墙一排窗；两头窄楼梯，中间宽楼梯在楼梯塔里；` +
+  `北头水房，南头教师厕所（1、3 层男，2、4 层女）。楼长约 ${Math.round(TB1.z[1] - TB1.z[0])} m、进深约 ${Math.round(TB1.x[1] - TB1.x[0])} m。` +
+  `教学楼1 的楼梯塔和尖顶参考五四小学的照片。教学楼2 回字形：外圈房间，里圈 2.4 m 宽的走廊围着上下贯通的中庭，中庭顶上是尖顶玻璃，` +
+  `南北两头各一部螺旋楼梯；按场地图宽到 ${TB2.x[1] - TB2.x[0]} m，篮球场往西挪了。层高都是 ${FH} m。<br>` +
+  `主路按胜利路做成双向四车道，路面 16 m，两边人行道各 5 m。小巷约 ${(ALLEY[1] - ALLEY[0]).toFixed(1)} m 宽。土路 7 m 宽，两边是杨树林。<br>` +
+  `商场隧道 ${Math.round(MALL.x[1] - MALL.x[0])} × ${MALL.z[1] - MALL.z[0]} m，两层：一层是 ${TUNNEL[1] - TUNNEL[0]} m 宽的拱顶通道，两边各一排 4 m 宽的铺面；` +
+  `${STAIR_X.length} 部楼梯上二楼，二楼是一排排 3 × 3 m 的铺位。<br>` +
+  `从公交车站沿人行道走到校门约 ${toGate} m，正常走约 ${Math.round(toGate / 2.2 / 6) / 10} 分钟。<br>` +
+  `红 = 门；蓝 = 窗；橙色 = 草图没画或没标、我猜的。草图外的城市是布景，走不进去。`;
+
+// teleport spots: x, z, yaw (0 faces north)
+const spots = {
+  stop: [MAIN[0] - 0.8, STOP[1], 0], gate: [(GATE[0] + GATE[1]) / 2, -5, Math.PI], plaza: [87, 24, Math.PI],
+  back: [-9, (BACK[0] + BACK[1]) / 2, -Math.PI / 2], alley: [(ALLEY[0] + ALLEY[1]) / 2, -2.5, Math.PI], field: [-30, 8, Math.PI / 2], iron: [(DIRT[0] + DIRT[1]) / 2, IRON - 46, Math.PI],
+  tb1: [TB1.x[0] - 4, (TB1_DOOR1[0] + TB1_DOOR1[1]) / 2, -Math.PI / 2], tb2: [TB2.x[1] + 1, (TB2_DOOR1[0] + TB2_DOOR1[1]) / 2, Math.PI / 2],
+  mall: [MALL.x[1] - 3, (TUNNEL[0] + TUNNEL[1]) / 2, Math.PI / 2], mall2: [66, 107.25, Math.PI / 2, MF],  // optional 4th: floor height
+};
+
+function refresh() {
+  for (const b of document.querySelectorAll('[data-view]')) b.classList.toggle('on', b.dataset.view === view);
+  for (const b of document.querySelectorAll('[data-orbit]')) b.classList.toggle('on', view === 'orbit' && b.dataset.orbit === orbit);
+  for (const b of document.querySelectorAll('[data-eye]')) b.classList.toggle('on', +b.dataset.eye === player.eye);
+  document.getElementById('tStalls').classList.toggle('on', showStalls);
+  document.getElementById('tLabels').classList.toggle('on', showLabels);
+  document.getElementById('hint').textContent = hints[view];
+  const walking = view === 'walk';
+  scene.fog = walking ? fog : null;
+  planCtl.enabled = view === 'plan';
+  orbitCtl.enabled = view === 'orbit';
+  labels.visible = showLabels && !walking;
+  const cutting = !walking && cut > 0;
+  for (const [k, b] of Object.entries(CUTS)) {
+    const on = cutting && k === cutB;
+    b.floors.forEach((g, f) => { g.visible = !on || f < cut; });
+    b.furn.forEach((g, f) => { g.visible = showFurn && (!on || f < cut); });
+    b.roof.visible = !on;
+  }
+  for (const s of labels.children) if (s.userData.floor !== undefined) s.visible = cutting && s.userData.bld === cutB && s.userData.floor === cut - 1;
+  for (const b of document.querySelectorAll('[data-cut]')) b.classList.toggle('on', cutting && b.dataset.cut === `${cutB}:${cut}`);
+  document.getElementById('tFurn').classList.toggle('on', showFurn);
+  stalls.visible = showStalls;
+  marker.visible = !walking;
+  marker.scale.setScalar(view === 'plan' ? 4 : 2);
+  document.getElementById('cross').hidden = !walking;
+  if (!walking && document.pointerLockElement) document.exitPointerLock();
+}
+function setView(v) { view = v; refresh(); }
+for (const b of document.querySelectorAll('[data-view]')) b.onclick = () => setView(b.dataset.view);
+for (const b of document.querySelectorAll('[data-orbit]')) b.onclick = () => { orbit = b.dataset.orbit; cut = 0; aim(orbit); setView('orbit'); };
+for (const b of document.querySelectorAll('[data-cut]')) b.onclick = () => {
+  const [k, n] = b.dataset.cut.split(':');
+  cutB = k;
+  cut = +n;
+  if (cut) { orbit = 'cut'; aim('cut'); }
+  setView('orbit');
+};
+for (const b of document.querySelectorAll('[data-go]')) b.onclick = () => {
+  [player.x, player.z, player.yaw, player.y = 0] = spots[b.dataset.go];
+  player.pitch = 0;
+  setView('walk');
+};
+for (const b of document.querySelectorAll('[data-eye]')) b.onclick = () => { player.eye = +b.dataset.eye; refresh(); };
+document.getElementById('tStalls').onclick = () => { showStalls = !showStalls; refresh(); };
+document.getElementById('tLabels').onclick = () => { showLabels = !showLabels; refresh(); };
+document.getElementById('tFurn').onclick = () => { showFurn = !showFurn; refresh(); };
+refresh();
+
+const keys = new Set();
+addEventListener('keydown', e => {
+  if (e.key === '1') setView('plan');
+  if (e.key === '2') setView('orbit');
+  if (e.key === '3') setView('walk');
+  keys.add(e.code);
+  if (e.code.startsWith('Arrow')) e.preventDefault();
+});
+addEventListener('keyup', e => keys.delete(e.code));
+
+let dragging = false;
+canvas.addEventListener('mousedown', () => {
+  if (view !== 'walk') return;
+  dragging = true;
+  canvas.requestPointerLock?.()?.catch?.(() => {});
+});
+addEventListener('mouseup', () => { dragging = false; });
+addEventListener('mousemove', e => {
+  if (view !== 'walk' || !(dragging || document.pointerLockElement === canvas)) return;
+  player.yaw -= e.movementX * 0.0025;
+  player.pitch = Math.max(-1.4, Math.min(1.4, player.pitch - e.movementY * 0.0025));
+});
+
+// ---------- walking ----------
+const R = 0.2;
+function blocked(x, z) {
+  const hit = b => x > b.x0 - R && x < b.x1 + R && z > b.z0 - R && z < b.z1 + R && b.y0 < player.y + 1.8 && b.y1 > player.y + 0.3;
+  return solids.some(hit) || (showStalls && stallSolids.some(hit)) || (showFurn && furnSolids.some(hit));
+}
+// the ground, or the rostrum and its steps (a smooth ramp) when the walker can step onto them
+function support(x, z, y) {
+  const inside = b => x > b.x[0] && x < b.x[1] && z > b.z[0] && z < b.z[1];
+  if (inside(STEPS)) return STAND.h * (z - STEPS.z[0]) / (STEPS.z[1] - STEPS.z[0]);
+  if (inside(STAND) && y > STAND.h - 0.45) return STAND.h;
+  if (z > STAIR_TOP && z < TUNNEL[0] && STAIR_X.some(s => Math.abs(x - s) < 1.5)) return MF * (TUNNEL[0] - z) / (TUNNEL[0] - STAIR_TOP);
+  if (inside(MALL) && y > MF - 0.45) return MF;
+  if (x > TB1.x[0] - 1.62 && x < TB1.x[1] + 0.12 && z > TB1.z[0] - 0.12 && z < TB1.z[1] + 0.12) return tb1Floor(x, z, y);
+  if (x > TB2.x[0] - 0.12 && x < TB2.x[1] + 0.12 && z > TB2.z[0] - 0.12 && z < TB2.z[1] + 0.12) return tb2Floor(x, z, y);
+  if (x > TOILET.x[0] - 0.12 && x < TOILET.x[1] && z > TOILET.z[0] - 0.12 && z < TOILET_STAIR.z[1]) return toiletFloor(x, z, y);
+  return 0;
+}
+function walk(dt) {
+  const f = (keys.has('KeyW') || keys.has('ArrowUp')) - (keys.has('KeyS') || keys.has('ArrowDown'));
+  const s = (keys.has('KeyD') || keys.has('ArrowRight')) - (keys.has('KeyA') || keys.has('ArrowLeft'));
+  if (!f && !s) return;
+  const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 3.8 : 2.2) * dt / Math.hypot(f, s);
+  const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+  const dx = (-sin * f + cos * s) * speed, dz = (-cos * f - sin * s) * speed;
+  for (const [mx, mz] of [[dx, 0], [0, dz]]) {
+    const x = player.x + mx, z = player.z + mz, h = support(x, z, player.y);
+    if (blocked(x, z) || h < player.y - 0.45) continue;  // no walking off an edge, or into a spot with nothing to stand on
+    player.x = x;
+    player.z = z;
+    player.y = h;
+  }
+}
+
+window.walk = walk;  // to step the walker frame by frame from the console
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (view === 'walk') walk(dt);
+  walkCam.position.set(player.x, player.y + player.eye, player.z);
+  walkCam.rotation.set(player.pitch, player.yaw, 0);
+  marker.position.set(player.x, player.y, player.z);
+  marker.rotation.y = player.yaw;
+  body.scale.y = player.eye;
+  body.position.y = player.eye / 2;
+  nose.position.set(0, player.eye, -0.25);
+  // the sun's shadow box follows the walker, or covers what the view frames
+  const near = view === 'orbit' && orbit !== 'site', cutV = view === 'orbit' && orbit === 'cut', cc = CUTS[cutB].c;
+  const r = view === 'walk' ? 80 : cutV ? (cutB === 'small' ? 100 : 60) : near ? 110 : 230;
+  const [cx, cz] = view === 'walk' ? [player.x, player.z] : cutV ? [cc[0], cc[2]] : near ? [SCHOOL_C[0], SCHOOL_C[2]] : [FX, FZ];
+  const k = r / 40;
+  sun.target.position.set(cx, 0, cz);
+  sun.position.set(cx + 10 * k, 35 * k, cz + 8 * k);
+  if (sun.shadow.camera.right !== r) {
+    Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r });
+    sun.shadow.camera.updateProjectionMatrix();
+  }
+  if (labels.visible) sizeLabels(cams[view]);
+  renderer.render(scene, cams[view]);
+});
+</script>
+</body>
+</html>
