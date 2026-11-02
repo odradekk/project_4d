@@ -9,7 +9,7 @@ Decision note: 2026-11-01-school-scene-layout
 """
 from collections import namedtuple
 
-from shapes import TOP, fixed, gap, pave, wall, window
+from shapes import TOP, fixed, gap, pave, toilet, wall, water_room, window
 from tscn import COLORS, bodies, box, fmt, packed, slope, vec
 
 FH, FLOORS = 3.6, 4  # storey height
@@ -162,44 +162,19 @@ def top():
     return fixed('Top', teaching1_top=boxes)
 
 
-# Both rooms open off the corridor, and their fixtures are laid out from its wall as in the prototype: u along the wall,
-# v back from it, y over the floor at y0.
+# Both rooms open off the corridor, and their fittings are laid out from its wall: u along the wall, v back from it, y
+# over the floor at y0.
 def fixture(boxes, y0):
     return lambda m, u0, u1, lo, hi, v0, v1: box(boxes, XC - v1, XC - v0, y0 + lo, y0 + hi, u0, u1, m)
-
-
-def water_room(y0):  # a boiler for drinking water, a long sink with taps on the far wall, a mop basin
-    boxes, (ua, ub), v = [], WATER, XC - X0
-    put = fixture(boxes, y0)
-    put('iron', ua + 0.2, ua + 1.0, 0, 1.8, 0.5, 1.7)
-    put('pole', ua + 1.0, ua + 1.15, 0.8, 0.9, 1.0, 1.2)
-    put('concrete', ua + 0.4, ub - 0.4, 0, 0.8, v - 0.72, v - 0.12)
-    u = ua + 0.8
-    while u < ub - 0.5:
-        put('pole', u - 0.03, u + 0.03, 1.0, 1.08, v - 0.42, v - 0.12)
-        u += 0.6
-    put('concrete', ub - 1.0, ub - 0.2, 0, 0.45, 0.5, 1.4)
-    return boxes
-
-
-# A screen inside the door, basins at one end, squatting stalls at the other, and for men a urinal trough on the far wall.
-# The pans stand 4 cm high, as in the toilet block, so that she can walk over them.
-def toilet(y0, men):
-    boxes, (ua, ub), v, stalls = [], TOILET, XC - X0, 2 if men else 3
-    put, dc = fixture(boxes, y0), middle(*TOILET)
-    put('wall', dc - 0.9, dc + 0.9, 0, 2.0, 1.4, 1.5)
-    put('concrete', ua + 0.12, ua + 0.62, 0, 0.8, 2.0, 3.6)
-    for i in range(stalls + 1): put('furn', ub - 1.5, ub - 0.12, 0, 1.8, v - 0.15 - i * 1.1, v - 0.09 - i * 1.1)
-    for i in range(stalls): put('white', ub - 1.1, ub - 0.5, -0.02, 0.04, v - 0.92 - i * 1.1, v - 0.42 - i * 1.1)
-    if men: put('concrete', ua + 0.3, ub - 1.8, 0, 0.25, v - 0.5, v - 0.12)
-    return boxes
 
 
 def fittings():  # every floor's water room and teachers' toilet, a men's toilet on the first and third floors
     parts = {}
     for f in range(FLOORS):
-        parts[f'teaching1_water_{f + 1}'] = water_room(f * FH)
-        parts[f'teaching1_toilet_{f + 1}'] = toilet(f * FH, f % 2 == 0)
+        water, wc = [], []
+        water_room(fixture(water, f * FH), *WATER, XC - X0, middle(*WATER))
+        toilet(fixture(wc, f * FH), *TOILET, XC - X0, middle(*TOILET), f % 2 == 0)
+        parts[f'teaching1_water_{f + 1}'], parts[f'teaching1_toilet_{f + 1}'] = water, wc
     return fixed('Fittings', **parts)
 
 

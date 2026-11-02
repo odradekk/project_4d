@@ -1,5 +1,6 @@
-"""What generate.py and teaching1.py share: the wall thickness, the yard's levels, walls with holes in them, paving, and
-scenes of fixed objects. Importing it puts the compound region's tscn.py, which writes the scene text, on the path."""
+"""What generate.py and teaching1.py share: the wall thickness, the yard's levels, walls with holes in them, paving,
+scenes of fixed objects, and the fittings of a water room and a teachers' toilet. Importing it puts the compound region's
+tscn.py, which writes the scene text, on the path."""
 import sys
 from pathlib import Path
 
@@ -41,3 +42,29 @@ def pave(boxes, x0, x1, z0, z1, top, m): box(boxes, x0, x1, GROUND, top, z0, z1,
 
 def fixed(root, **parts):  # a scene of fixed objects, one for each id and its boxes
     return scene([(eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"'}) for eid, boxes in parts.items()], 'FixedObject3D', root)
+
+
+# A water room's and a teachers' toilet's fittings, laid out as the prototype's roomFrame does from the wall with the door:
+# put(m, u0, u1, lo, hi, v0, v1) draws a box from u0 to u1 along that wall, v0 to v1 back from it and lo to hi over the
+# floor. The room runs from ua to ub along the wall and v back from it; its door is centred at door.
+def water_room(put, ua, ub, v, door):  # a boiler for drinking water, a long sink with taps on the far wall, a mop basin
+    put('iron', ua + 0.2, ua + 1.0, 0, 1.8, 0.5, 1.7)
+    put('pole', ua + 1.0, ua + 1.15, 0.8, 0.9, 1.0, 1.2)
+    put('concrete', ua + 0.4, ub - 0.4, 0, 0.8, v - 0.72, v - 0.12)
+    u = ua + 0.8
+    while u < ub - 0.5:
+        put('pole', u - 0.03, u + 0.03, 1.0, 1.08, v - 0.42, v - 0.12)
+        u += 0.6
+    m = ua + 1.3 if door - ua > ub - door + 0.5 else ub - 1.0  # the mop basin, clear of the door
+    put('concrete', m, m + 0.8, 0, 0.45, 0.5, 1.4)
+
+
+# A screen inside the door, basins at one end, squatting stalls at the other, and for men a urinal trough on the far wall.
+# The pans stand 4 cm high, as in the toilet block, so that she can walk over them.
+def toilet(put, ua, ub, v, door, men):
+    stalls = 2 if men else 3
+    put('wall', door - 0.9, door + 0.9, 0, 2.0, 1.4, 1.5)
+    put('concrete', ua + 0.12, ua + 0.62, 0, 0.8, 2.0, 3.6)
+    for i in range(stalls + 1): put('furn', ub - 1.5, ub - 0.12, 0, 1.8, v - 0.15 - i * 1.1, v - 0.09 - i * 1.1)
+    for i in range(stalls): put('white', ub - 1.1, ub - 0.5, -0.02, 0.04, v - 0.92 - i * 1.1, v - 0.42 - i * 1.1)
+    if men: put('concrete', ua + 0.3, ub - 1.8, 0, 0.25, v - 0.5, v - 0.12)
