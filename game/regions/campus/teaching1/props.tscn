@@ -8,12 +8,12 @@ size = Vector3(3.811771, 0.1, 1.42)
 [sub_resource type="BoxShape3D" id="s2"]
 size = Vector3(3.811771, 0.1, 2)
 
-[sub_resource type="StandardMaterial3D" id="m1"]
+[sub_resource type="StandardMaterial3D" id="c2"]
 albedo_color = Color(0.659, 0.314, 0.235, 1)
 
 [sub_resource type="CylinderMesh" id="roof"]
-material = SubResource("m1")
-top_radius = 0.0
+material = SubResource("c2")
+top_radius = 0
 bottom_radius = 5.4
 height = 3.2
 radial_segments = 4

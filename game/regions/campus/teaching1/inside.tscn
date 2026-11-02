@@ -11,7 +11,7 @@ albedo_color = Color(0.94, 0.937, 0.918, 1)
 
 [sub_resource type="BoxMesh" id="b1"]
 material = SubResource("m1")
-size = Vector3(0.95, 2.1, 0.05)
+size = Vector3(0.9, 2.1, 0.05)
 
 [sub_resource type="BoxMesh" id="b2"]
 material = SubResource("m2")
@@ -64,72 +64,72 @@ script = ExtResource("e1")
 EntityId = "teaching1_inside"
 
 [node name="p1" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 21.065)
+position = Vector3(122.95, 1.05, 21.065)
 mesh = SubResource("b1")
 PartId = "p1"
 
 [node name="p2" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 27.265)
+position = Vector3(122.95, 1.05, 27.265)
 mesh = SubResource("b1")
 PartId = "p2"
 
 [node name="p3" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 29.465)
+position = Vector3(122.95, 1.05, 29.465)
 mesh = SubResource("b1")
 PartId = "p3"
 
 [node name="p4" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 35.665)
+position = Vector3(122.95, 1.05, 35.665)
 mesh = SubResource("b1")
 PartId = "p4"
 
 [node name="p5" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 37.865)
+position = Vector3(122.95, 1.05, 37.865)
 mesh = SubResource("b1")
 PartId = "p5"
 
 [node name="p6" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 44.065)
+position = Vector3(122.95, 1.05, 44.065)
 mesh = SubResource("b1")
 PartId = "p6"
 
 [node name="p7" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 53.265)
+position = Vector3(122.95, 1.05, 53.265)
 mesh = SubResource("b1")
 PartId = "p7"
 
 [node name="p8" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 59.465)
+position = Vector3(122.95, 1.05, 59.465)
 mesh = SubResource("b1")
 PartId = "p8"
 
 [node name="p9" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 61.665)
+position = Vector3(122.95, 1.05, 61.665)
 mesh = SubResource("b1")
 PartId = "p9"
 
 [node name="p10" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 67.865)
+position = Vector3(122.95, 1.05, 67.865)
 mesh = SubResource("b1")
 PartId = "p10"
 
 [node name="p11" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 70.065)
+position = Vector3(122.95, 1.05, 70.065)
 mesh = SubResource("b1")
 PartId = "p11"
 
 [node name="p12" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 76.265)
+position = Vector3(122.95, 1.05, 76.265)
 mesh = SubResource("b1")
 PartId = "p12"
 
 [node name="p13" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 14.925)
+position = Vector3(122.95, 1.05, 14.925)
 mesh = SubResource("b1")
 PartId = "p13"
 
 [node name="p14" parent="teaching1_inside" instance=ExtResource("e2")]
-position = Vector3(122.925, 1.05, 82.405)
+position = Vector3(122.95, 1.05, 82.405)
 mesh = SubResource("b1")
 PartId = "p14"
 

@@ -7,10 +7,11 @@ classroom's, each instance with ids of its own. Layout and furniture are the gre
 "teaching building 1, inside" section, in its coordinates.
 Decision note: 2026-11-01-school-scene-layout
 """
+import math
 from collections import namedtuple
 
-from shapes import TOP, fixed, gap, pave, toilet, wall, water_room, window
-from tscn import COLORS, bodies, box, fmt, packed, slope, vec
+from shapes import TOP, fixed, gap, material, pave, resource, show, toilet, wall, water_room, window
+from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once shapes is imported
 
 FH, FLOORS = 3.6, 4  # storey height
 STEPS = 12  # risers a flight, two flights a storey
@@ -74,12 +75,13 @@ def east():  # a row of windows along the corridor; the north wall
 
 # The walls across the building, and the corridor's wall, open to the stair bays, with two doors to each classroom and one
 # to the water room and the toilet, each leaf open into the room; a wall between each stair's flights, and one between
-# the wide stair and the passage from door 1.
+# the wide stair and the passage from door 1. A leaf is 0.9 m long, 5 cm shorter than the prototype's, so that a back
+# door's leaf clears the chair beside it.
 def inside():
     boxes, holes = [], [gap(s.z0, s.z1, FH) for s in STAIRS]
     for z in [z for z0, z1 in ROOMS for z in (z0 + 0.6, z1 - 1.6)] + [middle(*WATER) - 0.5, middle(*TOILET) - 0.5]:
         holes.append(gap(z, z + 1, 2.1))
-        box(boxes, XC - 1.05, XC - 0.1, 0, 2.1, z, z + 0.05, 'door')
+        box(boxes, XC - 1.0, XC - 0.1, 0, 2.1, z, z + 0.05, 'door')
     wall(boxes, 'z', XC, Z0, Z1, FH, holes, 0.2)
     for _, z, _ in BAYS[1:]: wall(boxes, 'x', z, TX if z in (WIDE.z0, WIDE.z1) else X0, XC, FH, t=0.2)
     for s in STAIRS: box(boxes, s.hx1, s.lx, 0, FH, middle(s.f0, s.f1) - 0.1, middle(s.f0, s.f1) + 0.1, 'wall')
@@ -190,18 +192,11 @@ def classroom():
     return fixed('Classroom', teaching1_class=boxes)
 
 
-def material(rid, m):
-    return f'[sub_resource type="StandardMaterial3D" id="{rid}"]\nalbedo_color = Color({", ".join(fmt(c) for c in COLORS[m])})\n'
-
-
-def mesh(name, rid, position, rotation=None):
-    return (f'[node name="{name}" type="MeshInstance3D" parent="."]\nlayers = 3\nposition = {vec(*position)}\n'
-            + (f'rotation = {vec(*rotation)}\n' if rotation else '') + f'mesh = SubResource("{rid}")\n')
-
-
 def chairs():  # one classroom's, from its north-west corner, behind the desks
-    subs = [material('m1', 'chair'), '[sub_resource type="BoxMesh" id="chair"]\nmaterial = SubResource("m1")\nsize = Vector3(1, 0.45, 0.35)\n']
-    return packed('Chairs', [], subs=subs, nodes=[mesh(f'Chair{i}', 'chair', (x, 0.225, z + 0.675)) for i, (x, z) in enumerate(SEATS, 1)])
+    subs, nodes = [], []
+    chair = resource(subs, 'BoxMesh', 'chair', material=material(subs, COLORS['chair'][:3]), size=vec(1, 0.45, 0.35))
+    for i, (x, z) in enumerate(SEATS, 1): show(nodes, f'Chair{i}', chair, (x, 0.225, z + 0.675))
+    return packed('Chairs', [], subs=subs, nodes=nodes)
 
 
 # Under section I's Props: the collision-only slopes over the flights, through the front edges of their treads; the
@@ -216,9 +211,10 @@ def props():
             slopes.append(slope(f'{s.name}Stair{f + 1}West', 'x', s.lx + go, y, s.hx1, y + FH / 2, s.f0 + 0.1, sm - 0.1))
             slopes.append(slope(f'{s.name}Stair{f + 1}East', 'x', s.hx1 - go, y + FH / 2, s.lx, y + FH, sm + 0.1, s.f1 - 0.1))
     subs, nodes = bodies(slopes)
-    subs += [material('m1', 'roof'), '[sub_resource type="CylinderMesh" id="roof"]\nmaterial = SubResource("m1")\n'
-             'top_radius = 0.0\nbottom_radius = 5.4\nheight = 3.2\nradial_segments = 4\nrings = 0\n']
-    nodes.append(mesh('Roof', 'roof', (middle(TX - 0.12, X0 + 5.9), FLOORS * FH + 6.2, middle(WIDE.z0, WIDE.z1)), (0, 0.785398, 0)))
+    roof = resource(subs, 'CylinderMesh', 'roof', material=material(subs, COLORS['roof'][:3]), top_radius=0, bottom_radius=5.4,
+                    height=3.2, radial_segments=4, rings=0)
+    show(nodes, 'Roof', roof, (middle(TX - 0.12, X0 + 5.9), FLOORS * FH + 6.2, middle(WIDE.z0, WIDE.z1)),
+         rotation=vec(0, math.pi / 4, 0))
     entries = [(f'Chairs{n}_{k}', 'chairs.tscn', (X0, (n - 1) * FH, z0), []) for n in range(1, FLOORS + 1)
                for k, (z0, _) in enumerate(ROOMS, 1)]
     return packed('Teaching1', entries, subs=subs, nodes=nodes, under='campus/teaching1')

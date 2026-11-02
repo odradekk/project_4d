@@ -10,7 +10,7 @@ import math
 from pathlib import Path
 
 import teaching1
-from shapes import LINE, TOP, WT, fixed, gap, pave, wall, window
+from shapes import LINE, TOP, WT, fixed, gap, material, pave, resource, show, wall, window
 from tscn import COLORS, bodies, box, fmt, packed, slope, vec  # on the path once shapes is imported
 
 # The campus's colors, beside the compound's; scene() looks them up by name.
@@ -232,38 +232,30 @@ def props(circles, rims):
     subs, nodes = bodies([slope('StandSlope', 'z', STEPS_Z[0] - GO, 0, STEPS_Z[0] + (STEPS - 1) * GO, STAND_H, *STEPS_X),
                           slope('ToiletStairSlope', 'x', FOOT - RUN / TREADS, 0, LANDING[0], TOILET_H, *STAIR_Z)])
 
-    def resource(kind, rid, **values):
-        subs.append(f'[sub_resource type="{kind}" id="{rid}"]\n' + ''.join(f'{k} = {v}\n' for k, v in values.items()))
-        return f'SubResource("{rid}")'
-
-    def material(rgb): return resource('StandardMaterial3D', f'c{len(subs)}', albedo_color=f'Color({", ".join(fmt(c) for c in rgb)}, 1)')
-
-    def show(name, mesh, position, **values):
-        nodes.append(f'[node name="{name}" type="MeshInstance3D" parent="."]\nlayers = 3\nposition = {vec(*position)}\n'
-                     + ''.join(f'{k} = {v}\n' for k, v in values.items()) + f'mesh = {mesh}\n')
-
     def disc(rid, r, rgb, h):
-        return resource('CylinderMesh', rid, material=material(rgb), top_radius=r, bottom_radius=r, height=h, radial_segments=48, rings=1)
+        return resource(subs, 'CylinderMesh', rid, material=material(subs, rgb), top_radius=r, bottom_radius=r, height=h,
+                        radial_segments=48, rings=1)
 
     # The prototype lays each ring over the last at 55% opacity; these are the colors that gives.
     x, z = (PLAZA_X[0] + PLAZA_X[1]) / 2, (PLAZA_Z[0] + PLAZA_Z[1]) / 2
     for i, (r, rgb) in enumerate(((13, (0.774, 0.737, 0.676)), (10, (0.836, 0.804, 0.751)), (7, (0.741, 0.705, 0.644)),
                                   (2.5, (0.767, 0.729, 0.665))), 1):
-        show(f'PlazaRing{i}', disc(f'disc{i}', r, rgb, 0.004), (x, 0.002 + 0.004 * i, z))
+        show(nodes, f'PlazaRing{i}', disc(f'disc{i}', r, rgb, 0.004), (x, 0.002 + 0.004 * i, z))
     # A centre circle is a disc of the line's color under one of the court's, 0.1 m smaller, which the centre line crosses.
     for name, r, m, y in (('CentreCircle', 1.85, 'line', 0.0055), ('CentreCircleInside', 1.75, 'court', 0.0065)):
         mesh = disc(name, r, COLORS[m][:3], 0.001)
-        for i, (x, z) in enumerate(circles, 1): show(f'{name}{i}', mesh, (x, y, z))
-    red = material(COLORS['door'][:3])
-    rim = resource('TorusMesh', 'rim', material=red, inner_radius=0.21, outer_radius=0.24, rings=16, ring_segments=6)
-    for i, position in enumerate(rims, 1): show(f'Rim{i}', rim, position)
+        for i, (x, z) in enumerate(circles, 1): show(nodes, f'{name}{i}', mesh, (x, y, z))
+    red = material(subs, COLORS['door'][:3])
+    rim = resource(subs, 'TorusMesh', 'rim', material=red, inner_radius=0.21, outer_radius=0.24, rings=16, ring_segments=6)
+    for i, position in enumerate(rims, 1): show(nodes, f'Rim{i}', rim, position)
     th = TOILET_H
-    bar = resource('BoxMesh', 'handrail', material=material(COLORS['iron'][:3]), size=vec(math.hypot(RUN, th), 0.05, 0.05))
-    show('StairHandrail', bar, (FOOT + RUN / 2, th / 2 + 1.0, STAIR_Z[1] - 0.05), rotation=vec(0, 0, math.atan2(th, RUN)))
-    ball = resource('SphereMesh', 'ball', material=red, radius=BALL_R, height=2 * BALL_R, radial_segments=8, rings=6)
+    bar = resource(subs, 'BoxMesh', 'handrail', material=material(subs, COLORS['iron'][:3]),
+                   size=vec(math.hypot(RUN, th), 0.05, 0.05))
+    show(nodes, 'StairHandrail', bar, (FOOT + RUN / 2, th / 2 + 1.0, STAIR_Z[1] - 0.05), rotation=vec(0, 0, math.atan2(th, RUN)))
+    ball = resource(subs, 'SphereMesh', 'ball', material=red, radius=BALL_R, height=2 * BALL_R, radial_segments=8, rings=6)
     spots = [(STORE_X[0] + 0.8 + 0.45 * k, y, STORE_Z[1] - 0.37) for y in BALL_ROWS for k in range(33)]
     buffer = ', '.join(f'1, 0, 0, {fmt(x)}, 0, 1, 0, {fmt(y)}, 0, 0, 1, {fmt(z)}' for x, y, z in spots)
-    many = resource('MultiMesh', 'balls', transform_format=1, instance_count=len(spots), mesh=ball,
+    many = resource(subs, 'MultiMesh', 'balls', transform_format=1, instance_count=len(spots), mesh=ball,
                     buffer=f'PackedFloat32Array({buffer})')
     nodes.append(f'[node name="Balls" type="MultiMeshInstance3D" parent="."]\nlayers = 3\nmultimesh = {many}\n')
     return packed('Props', [], subs=subs, nodes=nodes)
