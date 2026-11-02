@@ -55,16 +55,18 @@ def roads():
     ground, asphalt, walks, dirt, gate = [], [], [], [], []
     pave(ground, FIELD_X[0], WALK_END, RICH_Z[0], OUT, 0, 'ground')
     pave(ground, FIELD_X[0], OUT, OUT, IRON + WT / 2, 0, 'ground')
-    pave(asphalt, DIRT[1], MAIN, *ROAD, TOP, 'asphalt')
+    # What she may walk on is in pieces no longer than the compound's roads, whose long thin sides can catch her (PR #79):
+    # the asphalt road and its sidewalks are cut in the middle of the estate's gate, the dirt road and the belts of poplars
+    # at the building site's north end, where she is to stop. The worn path from the back gate crosses the belts to the
+    # sports ground's gate.
+    cut = sum(RICH_GATE) / 2
+    for x0, x1 in ((DIRT[1], cut), (cut, MAIN)): pave(asphalt, x0, x1, *ROAD, TOP, 'asphalt')
     mid, x = sum(ROAD) / 2, DIRT[1] + 4
     while x < MAIN - 4:  # the dashed centre line
         pave(asphalt, x, x + 4, mid - 0.07, mid + 0.07, LINE, 'line')
         x += 8
-    pave(walks, RICH_X[0], WALK_END, *NORTH_WALK, TOP, 'walk')
-    pave(walks, OUT, WALK_END, *SOUTH_WALK, TOP, 'walk')
-    # The dirt road and the belts of poplars, cut at the building site's north end, where she is to stop: what she may walk
-    # on is no longer than the compound's roads, whose long thin sides can catch her (PR #79). The worn path from the back
-    # gate crosses the belts to the sports ground's gate.
+    for x0, z in ((RICH_X[0], NORTH_WALK), (OUT, SOUTH_WALK)):
+        for a, b in ((x0, cut), (cut, WALK_END)): pave(walks, a, b, *z, TOP, 'walk')
     west, east = (FIELD_X[1], DIRT[0]), (DIRT[1], OUT)
     for z0, z1 in ((FAR, RICH_Z[0]), (RICH_Z[0], IRON)): pave(dirt, *DIRT, z0, z1, TOP, 'dirt')
     for x0, x1, z0, z1 in ((*west, FAR, RICH_Z[0]), (*west, RICH_Z[0], FIELD_GATE[0]), (*west, FIELD_GATE[1], IRON),
