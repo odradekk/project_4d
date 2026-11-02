@@ -93,8 +93,8 @@ public partial class Teaching2Checks : Node
             await Room(floor, $"room {i + 4}", (EastSide, East[i] + 1.1f), (58.3f, East[i] + 1.4f), (60.5f, East[i] + 1.6f));
             if (i == 2) await Parapet(floor, (EastSide, 47), (52, 47), EastFace);
         }
-        await Room(floor, "room 9", (EastSide, SouthSide), (EastSide, 69.8f));
-        await Room(floor, "room 10", (54.4f, SouthSide), (54.4f, 69.8f));
+        await Room(floor, "room 9", (EastSide, SouthSide), (EastSide, 70));
+        await Room(floor, "room 10", (54.4f, SouthSide), (54.4f, 70));
         await Parapet(floor, (48, SouthSide), (48, 63), SouthFace);
         await Room(floor, "the teachers' toilet", (WestSide, SouthSide), (WestSide, 69.6f), (43.9f, 69.6f), (43.9f, 72.5f));
         for (var i = 0; i < West.Length; i++)
