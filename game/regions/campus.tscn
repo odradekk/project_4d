@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -14,6 +14,8 @@
 [ext_resource type="PackedScene" path="res://regions/campus/props.tscn" id="e12"]
 [ext_resource type="PackedScene" path="res://regions/campus/teaching1/building.tscn" id="e13"]
 [ext_resource type="PackedScene" path="res://regions/campus/teaching1/props.tscn" id="e14"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/building.tscn" id="e15"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/props.tscn" id="e16"]
 
 [node name="Campus" type="Node3D"]
 script = ExtResource("e1")
@@ -44,6 +46,8 @@ W = 0
 
 [node name="Teaching1" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e13")]
 
+[node name="Teaching2" parent="Sections/Ⅰ/Fixed" instance=ExtResource("e15")]
+
 [node name="Spawns" type="Node3D" parent="Sections/Ⅰ"]
 
 [node name="xiaoman" type="Node3D" parent="Sections/Ⅰ/Spawns"]
@@ -56,3 +60,5 @@ CharacterScene = ExtResource("e4")
 [node name="Props" parent="Sections/Ⅰ" instance=ExtResource("e12")]
 
 [node name="Teaching1" parent="Sections/Ⅰ/Props" instance=ExtResource("e14")]
+
+[node name="Teaching2" parent="Sections/Ⅰ/Props" instance=ExtResource("e16")]

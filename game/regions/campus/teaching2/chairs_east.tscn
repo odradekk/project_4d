@@ -1,0 +1,100 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="StandardMaterial3D" id="c0"]
+albedo_color = Color(0.541, 0.416, 0.267, 1)
+
+[sub_resource type="BoxMesh" id="chair"]
+material = SubResource("c0")
+size = Vector3(1, 0.45, 0.35)
+
+[node name="Chairs" type="Node3D"]
+
+[node name="Chair1" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(1.41, 0.225, 3.075)
+mesh = SubResource("chair")
+
+[node name="Chair2" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(3.3, 0.225, 3.075)
+mesh = SubResource("chair")
+
+[node name="Chair3" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(5.19, 0.225, 3.075)
+mesh = SubResource("chair")
+
+[node name="Chair4" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(1.41, 0.225, 4.025)
+mesh = SubResource("chair")
+
+[node name="Chair5" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(3.3, 0.225, 4.025)
+mesh = SubResource("chair")
+
+[node name="Chair6" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(5.19, 0.225, 4.025)
+mesh = SubResource("chair")
+
+[node name="Chair7" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(1.41, 0.225, 4.975)
+mesh = SubResource("chair")
+
+[node name="Chair8" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(3.3, 0.225, 4.975)
+mesh = SubResource("chair")
+
+[node name="Chair9" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(5.19, 0.225, 4.975)
+mesh = SubResource("chair")
+
+[node name="Chair10" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(1.41, 0.225, 5.925)
+mesh = SubResource("chair")
+
+[node name="Chair11" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(3.3, 0.225, 5.925)
+mesh = SubResource("chair")
+
+[node name="Chair12" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(5.19, 0.225, 5.925)
+mesh = SubResource("chair")
+
+[node name="Chair13" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(1.41, 0.225, 6.875)
+mesh = SubResource("chair")
+
+[node name="Chair14" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(3.3, 0.225, 6.875)
+mesh = SubResource("chair")
+
+[node name="Chair15" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(5.19, 0.225, 6.875)
+mesh = SubResource("chair")
+
+[node name="Chair16" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(1.41, 0.225, 7.825)
+mesh = SubResource("chair")
+
+[node name="Chair17" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(3.3, 0.225, 7.825)
+mesh = SubResource("chair")
+
+[node name="Chair18" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(5.19, 0.225, 7.825)
+mesh = SubResource("chair")

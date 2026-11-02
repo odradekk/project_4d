@@ -1,6 +1,6 @@
-"""What generate.py and teaching1.py share: the wall thickness, the yard's levels, walls with holes in them, paving,
-scenes of fixed objects, plain meshes for a section's Props, and the fittings of a water room and a teachers' toilet.
-Importing it puts the compound region's tscn.py, which writes the scene text, on the path."""
+"""What generate.py, teaching1.py and teaching2.py share: the wall thickness, the yard's levels, walls with holes in them,
+paving, scenes of fixed objects, plain meshes for a section's Props, and the fittings of a water room and a teachers'
+toilet. Importing it puts the compound region's tscn.py, which writes the scene text, on the path."""
 import sys
 from pathlib import Path
 

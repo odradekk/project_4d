@@ -1,0 +1,128 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.851, 0.843, 0.82, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.94, 0.937, 0.918, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(9.12, 0.2, 7.32)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m1")
+size = Vector3(18.12, 0.2, 7.32)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m1")
+size = Vector3(9.12, 0.2, 43.6)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m1")
+size = Vector3(9, 0.2, 2.4)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m2")
+size = Vector3(27.24, 1, 0.24)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m2")
+size = Vector3(0.24, 1, 58.24)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m2")
+size = Vector3(9.24, 0.4, 0.24)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m2")
+size = Vector3(0.24, 0.4, 39.04)
+
+[node name="Top" type="Node3D"]
+
+[node name="teaching2_top" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching2_top"
+
+[node name="p1" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(41.94, 21.5, 21.54)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(55.56, 21.5, 21.54)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(41.94, 21.5, 72.46)
+mesh = SubResource("b1")
+PartId = "p3"
+
+[node name="p4" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(55.56, 21.5, 72.46)
+mesh = SubResource("b2")
+PartId = "p4"
+
+[node name="p5" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(41.94, 21.5, 47)
+mesh = SubResource("b3")
+PartId = "p5"
+
+[node name="p6" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(60.06, 21.5, 47)
+mesh = SubResource("b3")
+PartId = "p6"
+
+[node name="p7" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(51, 21.5, 26.4)
+mesh = SubResource("b4")
+PartId = "p7"
+
+[node name="p8" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(51, 21.5, 67.6)
+mesh = SubResource("b4")
+PartId = "p8"
+
+[node name="p9" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(51, 22.1, 18)
+mesh = SubResource("b5")
+PartId = "p9"
+
+[node name="p10" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(51, 22.1, 76)
+mesh = SubResource("b5")
+PartId = "p10"
+
+[node name="p11" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(37.5, 22.1, 47)
+mesh = SubResource("b6")
+PartId = "p11"
+
+[node name="p12" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(64.5, 22.1, 47)
+mesh = SubResource("b6")
+PartId = "p12"
+
+[node name="p13" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(51, 21.8, 27.6)
+mesh = SubResource("b7")
+PartId = "p13"
+
+[node name="p14" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(51, 21.8, 66.4)
+mesh = SubResource("b7")
+PartId = "p14"
+
+[node name="p15" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(46.5, 21.8, 47)
+mesh = SubResource("b8")
+PartId = "p15"
+
+[node name="p16" parent="teaching2_top" instance=ExtResource("e2")]
+position = Vector3(55.5, 21.8, 47)
+mesh = SubResource("b8")
+PartId = "p16"
