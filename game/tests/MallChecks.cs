@@ -11,8 +11,8 @@ namespace Game.Tests;
 /// entrance and along the passage to the forecourt at its west end; from the dirt road through the iron gate and the side
 /// door into the passage; up the west stair to the upper floor, along the middle aisle from its west end to its east end,
 /// and down and up again the middle and east stairs on the way. A shop front in each row, the forecourt's railing on each
-/// side, the railings round each stairwell upstairs and the booths of every row stop her; a shop front stops her at the
-/// front itself, not at the block behind it.
+/// side, the railings round each stairwell upstairs and the booths of every row stop her; where she touches a shop front
+/// shows that the front, not the block behind it, is what stops her.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class MallChecks : Node
@@ -55,10 +55,12 @@ public partial class MallChecks : Node
                 $"she walks from the main road's sidewalk in at the mall's east entrance; she is at {feet}");
             await WalkTo((NorthShop, Passage));
             await Push((NorthShop, 100));
-            Check(Against(feet.Z, NorthFront, Passage) && OnGround, $"a shop front in the north row stops her; she is at {feet}");
+            Check(Stopped(feet.Z, NorthFront, Passage) && Mathf.Abs(Touched().Z - NorthFront) < .005f && OnGround,
+                $"a shop front in the north row stops her; she is at {feet}, touching {Touched()}");
             await WalkTo((SouthShop, Passage));
             await Push((SouthShop, 114));
-            Check(Against(feet.Z, SouthFront, Passage) && OnGround, $"a shop front in the south row stops her; she is at {feet}");
+            Check(Stopped(feet.Z, SouthFront, Passage) && Mathf.Abs(Touched().Z - SouthFront) < .005f && OnGround,
+                $"a shop front in the south row stops her; she is at {feet}, touching {Touched()}");
 
             // West along the passage to the forecourt, and against its railing on each side.
             await WalkTo((Forecourt, Passage));
@@ -157,9 +159,17 @@ public partial class MallChecks : Node
     // radius, 0.2 m, from it.
     private static bool Stopped(float at, float face, float from) => (at - face) * Mathf.Sign(from - face) is > .1f and < .5f;
 
-    // Stopped by that face itself. A shop's front is 4 cm thick on its solid block, so without the front she stops about
-    // 0.16 m from where the front should be, as on the school's east side.
-    private static bool Against(float at, float face, float from) => (at - face) * Mathf.Sign(from - face) is > .19f and < .25f;
+    // Where she touched what stopped her in the last physics frame: the contact of her last slide that does not hold her up.
+    // A shop's front is 4 cm thick on its solid block, so this tells the front from the block behind it.
+    private Vector3 Touched()
+    {
+        for (var i = 0; i < play.Player.GetSlideCollisionCount(); i++)
+        {
+            var hit = play.Player.GetSlideCollision(i);
+            if (Mathf.Abs(hit.GetNormal().Y) < .1f) return hit.GetPosition();
+        }
+        return new(float.NaN, float.NaN, float.NaN);
+    }
 
     // Runs the player to each point in turn with the movement keys, in straight lines, and lets go of them there. She gets
     // ten seconds and one more for every 2 m to each point.
