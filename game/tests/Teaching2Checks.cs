@@ -20,14 +20,14 @@ public partial class Teaching2Checks : Node
 {
     // A spiral stair: its column, and the angle from north, clockwise, at which the corridors meet it.
     private readonly record struct Spiral(string Name, float X, float Z, float E);
-    private static readonly Spiral North = new("north", 51, 29.3f, 0), South = new("south", 51, 64.7f, Mathf.Pi);
+    private static readonly Spiral North = new("north", 50.4f, 29.3f, 0), South = new("south", 50.4f, 64.7f, Mathf.Pi);
     // She climbs Line from the column. The last tread of each turn, up to 20° short of the corridor side, is level with
     // the floor; she steps on and off the stair there, at Landing.
     private const float Storey = SpiralStair3D.Storey, Tau = Mathf.Tau, Line = 1.2f, Landing = -.9f * SpiralStair3D.Going;
     private const int Floors = 6;
     // The middle of the corridor on each side of the atrium; the faces of the atrium's parapets toward it.
-    private const float NorthSide = 26.4f, EastSide = 56.7f, SouthSide = 67.6f, WestSide = 45.3f;
-    private const float NorthFace = 27.52f, EastFace = 55.58f, SouthFace = 66.48f, WestFace = 46.42f;
+    private const float NorthSide = 26.4f, EastSide = 56.1f, SouthSide = 67.6f, WestSide = 44.7f;
+    private const float NorthFace = 27.52f, EastFace = 54.98f, SouthFace = 66.48f, WestFace = 45.82f;
     // The north walls of the rooms east of the atrium from the north, and of those west of it from the south.
     private static readonly float[] East = [25.2f, 33.2f, 42.1f, 51, 59.9f], West = [59.6f, 50.4f, 41.2f, 33.2f, 25.2f];
     // The middle of door 1 in the east wall and of door 2 in the west wall, and points outside them.
@@ -84,23 +84,23 @@ public partial class Teaching2Checks : Node
     // the atrium keep clear of the classrooms' platforms and of the first row of desks or benches in any room there.
     private async Task Tour(int floor)
     {
-        await Room(floor, "the water room", (WestSide, NorthSide), (WestSide, 23.6f), (42, 21.6f));
-        await Room(floor, "room 2", (47.85f, NorthSide), (47.85f, 24.6f), (48.1f, 22.5f));
-        await Parapet(floor, (48, NorthSide), (48, 31), NorthFace);
-        await Room(floor, "room 3", (56.85f, NorthSide), (56.85f, 24.6f), (57.1f, 22.5f));
+        await Room(floor, "the water room", (WestSide, NorthSide), (WestSide, 23.6f), (41.5f, 21.6f));
+        await Room(floor, "room 2", (47.25f, NorthSide), (47.25f, 24.6f), (47.5f, 22.5f));
+        await Parapet(floor, (47.4f, NorthSide), (47.4f, 31), NorthFace);
+        await Room(floor, "room 3", (56.25f, NorthSide), (56.25f, 24.6f), (56.5f, 22.5f));
         for (var i = 0; i < East.Length; i++)
         {
-            await Room(floor, $"room {i + 4}", (EastSide, East[i] + 1.1f), (58.3f, East[i] + 1.4f), (60.5f, East[i] + 1.6f));
-            if (i == 2) await Parapet(floor, (EastSide, 47), (52, 47), EastFace);
+            await Room(floor, $"room {i + 4}", (EastSide, East[i] + 1.1f), (57.7f, East[i] + 1.4f), (59.9f, East[i] + 1.6f));
+            if (i == 2) await Parapet(floor, (EastSide, 47), (51.4f, 47), EastFace);
         }
         await Room(floor, "room 9", (EastSide, SouthSide), (EastSide, 70));
-        await Room(floor, "room 10", (54.4f, SouthSide), (54.4f, 70));
-        await Parapet(floor, (48, SouthSide), (48, 63), SouthFace);
-        await Room(floor, "the teachers' toilet", (WestSide, SouthSide), (WestSide, 69.6f), (43.9f, 69.6f), (43.9f, 72.5f));
+        await Room(floor, "room 10", (53.8f, SouthSide), (53.8f, 70));
+        await Parapet(floor, (47.4f, SouthSide), (47.4f, 63), SouthFace);
+        await Room(floor, "the teachers' toilet", (WestSide, SouthSide), (WestSide, 69.6f), (43.3f, 69.6f), (43.3f, 72.5f));
         for (var i = 0; i < West.Length; i++)
         {
-            await Room(floor, $"room {i + 12}", (WestSide, West[i] + 1.1f), (42, West[i] + 1.1f));
-            if (i == 1) await Parapet(floor, (WestSide, 47), (50, 47), WestFace);
+            await Room(floor, $"room {i + 12}", (WestSide, West[i] + 1.1f), (41.5f, West[i] + 1.1f));
+            if (i == 1) await Parapet(floor, (WestSide, 47), (49.4f, 47), WestFace);
         }
         await RunTo((WestSide, NorthSide), Off(North));
     }
