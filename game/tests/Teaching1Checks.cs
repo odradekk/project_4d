@@ -34,9 +34,10 @@ public partial class Teaching1Checks : Node
     private const float WaterDoor = 15.4f, ToiletDoor = 82.88f;
     // Outside door 1 in the tower's west wall, and outside door 2 in the south wall.
     private const float Door1 = 51.3f, WestOfDoor1 = 110, Door2 = 125, SouthOfDoor2 = 87;
-    // The north stair's ground floor to its second: each run's walks, from 0.25 m before one end of its slope to the same
-    // past the other (x and the height at each end), along its middle (z). The lower run's slope goes from x 119.36 on the
-    // ground floor up to the half landing's edge at 116; the upper run's from 115.72 on the half landing to 119.08.
+    // The north stair's ground floor to its second: each run's walks, from about 0.25 m before one end of its slope to the
+    // same past the other (x and the height at each end), along its middle (z). The lower run's slope goes from x 119.38 on
+    // the ground floor up to 116.02, by the half landing's edge at 116; the upper run's from 115.70 on the half landing up
+    // to 119.06, by the second floor's edge at 119.08.
     private static readonly (float From, float FromY, float To, float ToY, float Z)[] Runs =
     [
         (119.61f, 0, 115.75f, Storey / 2, North.West), (115.75f, Storey / 2, 119.61f, 0, North.West),
