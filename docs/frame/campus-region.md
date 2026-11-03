@@ -109,7 +109,7 @@
 
 ## 文件
 
-`campus.tscn` 是手写的区域根场景。`game/regions/campus/` 下的子场景都由同一目录下的 `generate.py` 按原型的常量写出，场景文本用新的家区域的 `tscn.py` 来写。两栋教学楼的场景由它调用的 `teaching1.py` 和 `teaching2.py` 写出，学校北面和西面的由 `north_west.py` 和 `field.py` 写出，学校东面的由 `east.py` 写出。它们共用 `shapes.py` 里墙、铺地、固定物件场景和网格的写法，两栋教学楼还共用其中水房和教师厕所的写法，学校北面、西面和东面还共用其中楼上的窗、杨树的场景和原型的随机数公式。区域用的颜色写在 `generate.py`、`north_west.py`、`field.py` 和 `east.py` 里，运行时并进 `tscn.py` 的颜色表。改格局时改脚本里的常量，再运行 `python game/regions/campus/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
+`campus.tscn` 是手写的区域根场景。`game/regions/campus/` 下的子场景都由同一目录下的 `generate.py` 按原型的常量写出，场景文本用新的家区域的 `tscn.py` 来写。两栋教学楼的场景由它调用的 `teaching1.py` 和 `teaching2.py` 写出，学校北面和西面的由 `north_west.py` 和 `field.py` 写出，学校东面的由 `east.py` 写出。它们共用 `shapes.py` 里墙、铺地、固定物件场景和网格的写法，两栋教学楼还共用其中水房和教师厕所的写法，学校北面、西面和东面还共用其中楼房的窗、杨树的场景和原型的随机数公式。区域用的颜色写在 `generate.py`、`north_west.py`、`field.py` 和 `east.py` 里，运行时并进 `tscn.py` 的颜色表。改格局时改脚本里的常量，再运行 `python game/regions/campus/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
 
 | 文件 | 内容 |
 |---|---|
