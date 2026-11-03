@@ -11,17 +11,17 @@ namespace Game.Tests;
 /// The campus region's school grounds, walked with the movement keys: in through the gate, across the plaza and up the
 /// steps onto the stand; into both rooms of the lodge and into the sports store; through the open bay under the toilet
 /// block into the boys' toilet, then up the outside stair to the landing and into the girls' toilet. The steps and the
-/// stair are walked and run, up and down. The school wall on each side, the stand's side, and the open edges of the stair
-/// and its landing stop her. The routes keep clear of the sites left for the two teaching buildings.
+/// stair are walked and run, up and down. The school wall on each side, the stand's side, the railings on both sides of the
+/// stair and the open edges of its landing stop her. The routes keep clear of the sites left for the two teaching buildings.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class CampusChecks : Node
 {
     private const float Stand = 1.2f, Upstairs = 3.6f;
-    // The school wall's inner faces; the stand's west side and north face; the line the outside stair's railing keeps her
-    // to, and the east end of its landing.
+    // The school wall's inner faces; the stand's west side and north face; the lines the outside stair's railings keep her
+    // between, and the east end of its landing.
     private const float NorthWall = .12f, WestWall = .12f, SouthWall = 91.88f, EastWall = 148.88f;
-    private const float StandWest = 79, StandNorth = 79.5f, StairEdge = 36.7f, LandingEnd = 146.7f;
+    private const float StandWest = 79, StandNorth = 79.5f, StairNorth = 35.22f, StairSouth = 36.7f, LandingEnd = 146.7f;
     // Along the outside stair; west of its foot; on its landing, in front of the girls' door.
     private const float StairLine = 35.9f, StairFoot = 137.4f, Landing = 145.6f;
 
@@ -97,10 +97,14 @@ public partial class CampusChecks : Node
             }
             await WalkTo((141.3f, StairLine));
             await Push((141.3f, 39));
-            Check(Stopped(feet.Z, StairEdge) && feet.Y > 1.5f, $"the railing along the stair's open side stops her; she is at {feet}");
+            Check(Stopped(feet.Z, StairSouth) && feet.Y > 1.5f, $"the railing along the stair's south side stops her; she is at {feet}");
+            // West of the bay's middle column, so that only the railing can stop her.
+            await WalkTo((140, StairLine));
+            await Push((140, 33));
+            Check(Stopped(feet.Z, StairNorth) && feet.Y > .5f, $"the railing along the stair's north side keeps her out of the bay; she is at {feet}");
             await WalkTo((Landing, StairLine));
             await Push((Landing, 39));
-            Check(Stopped(feet.Z, StairEdge) && OnLanding, $"the railing along the landing stops her; she is at {feet}");
+            Check(Stopped(feet.Z, StairSouth) && OnLanding, $"the railing along the landing stops her; she is at {feet}");
             await WalkTo((Landing, StairLine));
             await Push((152, StairLine));
             Check(Stopped(feet.X, LandingEnd) && OnLanding, $"the railing across the landing's end stops her; she is at {feet}");
@@ -112,7 +116,7 @@ public partial class CampusChecks : Node
             await WalkTo((143.4f, 33.9f), (Landing, 33.9f), (Landing, StairLine), (StairFoot, StairLine));
             Check(OnGround, $"she walks back out and down the stair; she is at {feet}");
 
-            GD.Print("Campus checks passed: the start inside the gate; in through the gate, across the plaza and up the stand's steps, walking and running; the stand's side and north face; both rooms of the lodge; the sports store; the school wall on every side; through the open bay into the boys' toilet; up the outside stair, walking and running, onto the landing and into the girls' toilet; the railings of the stair and its landing.");
+            GD.Print("Campus checks passed: the start inside the gate; in through the gate, across the plaza and up the stand's steps, walking and running; the stand's side and north face; both rooms of the lodge; the sports store; the school wall on every side; through the open bay into the boys' toilet; up the outside stair, walking and running, onto the landing and into the girls' toilet; the railings on both sides of the stair and its landing.");
             GetTree().Quit();
         }
         catch (Exception error)
