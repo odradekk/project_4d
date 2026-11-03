@@ -31,7 +31,7 @@ size = Vector3(0.15, 0.1, 0.2)
 
 [sub_resource type="BoxMesh" id="b3"]
 material = SubResource("m3")
-size = Vector3(8.2, 0.8, 0.6)
+size = Vector3(7.6, 0.8, 0.6)
 
 [sub_resource type="BoxMesh" id="b4"]
 material = SubResource("m2")
@@ -59,7 +59,7 @@ size = Vector3(0.6, 0.06, 0.5)
 
 [sub_resource type="BoxMesh" id="b10"]
 material = SubResource("m3")
-size = Vector3(6.9, 0.25, 0.38)
+size = Vector3(6.3, 0.25, 0.38)
 
 [node name="Fittings" type="Node3D"]
 
@@ -78,7 +78,7 @@ mesh = SubResource("b2")
 PartId = "p2"
 
 [node name="p3" parent="teaching2_water" instance=ExtResource("e2")]
-position = Vector3(42, 0.4, 18.42)
+position = Vector3(41.7, 0.4, 18.42)
 mesh = SubResource("b3")
 PartId = "p3"
 
@@ -143,21 +143,16 @@ mesh = SubResource("b4")
 PartId = "p15"
 
 [node name="p16" parent="teaching2_water" instance=ExtResource("e2")]
-position = Vector3(45.5, 1.04, 18.27)
-mesh = SubResource("b4")
-PartId = "p16"
-
-[node name="p17" parent="teaching2_water" instance=ExtResource("e2")]
 position = Vector3(39.2, 0.225, 24.25)
 mesh = SubResource("b5")
-PartId = "p17"
+PartId = "p16"
 
 [node name="teaching2_toilet" type="Node3D" parent="."]
 script = ExtResource("e1")
 EntityId = "teaching2_toilet"
 
 [node name="p1" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(45.3, 1, 70.25)
+position = Vector3(44.7, 1, 70.25)
 mesh = SubResource("b6")
 PartId = "p1"
 
@@ -167,31 +162,31 @@ mesh = SubResource("b7")
 PartId = "p2"
 
 [node name="p3" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(45.69, 0.9, 75.88)
+position = Vector3(45.09, 0.9, 75.88)
 mesh = SubResource("b8")
 PartId = "p3"
 
 [node name="p4" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(45.69, 0.9, 74.78)
+position = Vector3(45.09, 0.9, 74.78)
 mesh = SubResource("b8")
 PartId = "p4"
 
 [node name="p5" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(45.69, 0.9, 73.68)
+position = Vector3(45.09, 0.9, 73.68)
 mesh = SubResource("b8")
 PartId = "p5"
 
 [node name="p6" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(45.7, 0.01, 75.33)
+position = Vector3(45.1, 0.01, 75.33)
 mesh = SubResource("b9")
 PartId = "p6"
 
 [node name="p7" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(45.7, 0.01, 74.23)
+position = Vector3(45.1, 0.01, 74.23)
 mesh = SubResource("b9")
 PartId = "p7"
 
 [node name="p8" parent="teaching2_toilet" instance=ExtResource("e2")]
-position = Vector3(41.25, 0.125, 75.69)
+position = Vector3(40.95, 0.125, 75.69)
 mesh = SubResource("b10")
 PartId = "p8"
