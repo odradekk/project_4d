@@ -12,8 +12,9 @@ Decision note: 2026-11-01-school-scene-layout
 """
 import field
 from field import FIELD_GATE, FIELD_X
-from shapes import GROUND, LINE, TOP, WT, beam, fixed, gap, material, multimesh, pave, posts, resource, runs, show_many, wall
-from tscn import COLORS, box, fmt, packed, vec  # on the path once shapes is imported
+from shapes import (GROUND, LINE, TOP, WT, beam, fixed, gap, inside, material, multimesh, numbers, pave, poplars_scene,
+                    posts, resource, runs, show_many, wall, windows)
+from tscn import COLORS, box, packed, vec  # on the path once shapes is imported
 
 COLORS.update({
     'asphalt': (0.333, 0.345, 0.361, 1), 'dirt': (0.604, 0.541, 0.439, 1), 'green': (0.541, 0.604, 0.455, 1),
@@ -35,15 +36,6 @@ SHEETS = ('furn', 'shop_sign', 'shutter', 'door')  # the stalls' sheets, the pro
 # The prototype's random state where it lays out the frames, the poplars and the stalls; between them it draws numbers for
 # other things.
 FRAMES_SEED, POPLARS_SEED, STALLS_SEED = 1223483939, 1637571316, 979486785
-
-
-def numbers(seed):  # the prototype's random numbers from that state on
-    while True:
-        seed = seed * 16807 % 2147483647
-        yield seed / 2147483647
-
-
-def inside(v, gaps): return any(a < v < b for a, b in gaps)
 
 
 def bars(boxes, along, at, a, b, h):  # a gate as the prototype draws one: a post every 0.15 m, a rail at its foot and top
@@ -104,26 +96,6 @@ def estate():
     return fixed('Estate', estate_lawn=lawn, estate_railing=railing, estate_gate=gate, estate_towers=towers), spots
 
 
-# A tower's windows, 1.5 × 1.4 m, as many as fit 3.3 m apart along each face, 0.9 m over each floor: one MultiMesh for the
-# north and south faces and one for the east and west, shown again on every floor.
-def windows(floors):
-    subs, nodes = [], []
-    glass = material(subs, COLORS['window'][:3])
-
-    def along(length):
-        n = int(length // 3.3)
-        return [(length - n * 3.3) / 2 + (i + 0.5) * 3.3 for i in range(n)]
-    y = 0.9 + 0.7
-    ns = multimesh(subs, 'ns', resource(subs, 'BoxMesh', 'nsb', material=glass, size=vec(1.5, 1.4, 0.06)),
-                   [(c, y, z) for z in (-0.03, TOWER_D + 0.03) for c in along(TOWER_W)])
-    ew = multimesh(subs, 'ew', resource(subs, 'BoxMesh', 'ewb', material=glass, size=vec(0.06, 1.4, 1.5)),
-                   [(x, y, c) for x in (-0.03, TOWER_W + 0.03) for c in along(TOWER_D)])
-    for f in range(floors):
-        show_many(nodes, f'NorthSouth{f + 1}', ns, (0, f * TOWER_FH, 0))
-        show_many(nodes, f'EastWest{f + 1}', ew, (0, f * TOWER_FH, 0))
-    return packed('Windows', [], subs=subs, nodes=nodes)
-
-
 def building_site():
     site, frames = [], []
     pave(site, SITE_X[0], FIELD_X[1], *SITE_Z, TOP, 'dirt')  # inside the hoarding, up to the belt of poplars
@@ -176,12 +148,6 @@ def poplars():
     return out
 
 
-def poplars_scene():  # Poplars3D.cs builds them when the region loads: a scene file cannot hold so many boxes
-    at = ', '.join(f'{fmt(round(x, 3))}, {fmt(round(z, 3))}' for x, z in poplars())
-    return '\n'.join(['[gd_scene load_steps=2 format=3]\n', '[ext_resource type="Script" path="res://regions/campus/Poplars3D.cs" id="e1"]\n',
-                      f'[node name="Poplars" type="Node3D"]\nscript = ExtResource("e1")\nAt = PackedVector2Array({at})\n'])
-
-
 # Under section I's Props: the estate's posts, the towers' windows, the stalls' sunshades, the poplars and the sports ground's.
 def props(posts_at, shades):
     subs, nodes = [], []
@@ -202,8 +168,8 @@ def files():
     estate_scene, posts_at = estate()
     stalls_scene, shades = stalls()
     scenes = {'roads': roads(), 'estate': estate_scene, 'building_site': building_site(), 'field': field.fixed_scene(),
-              'stalls': stalls_scene, 'field_props': field.props(), 'poplars': poplars_scene(), 'props': props(posts_at, shades)}
+              'stalls': stalls_scene, 'field_props': field.props(), 'poplars': poplars_scene(poplars()), 'props': props(posts_at, shades)}
     parts = ('Roads', 'roads'), ('Estate', 'estate'), ('BuildingSite', 'building_site'), ('Field', 'field'), ('Stalls', 'stalls')
     scenes['fixed'] = packed('NorthWest', [(name, f'{path}.tscn', (0, 0, 0), []) for name, path in parts], under='campus/north_west')
-    scenes.update({f'windows_{floors}': windows(floors) for floors in sorted({f for _, _, f in TOWERS})})
+    scenes.update({f'windows_{floors}': windows(TOWER_W, TOWER_D, floors, TOWER_FH) for floors in sorted({f for _, _, f in TOWERS})})
     return {f'north_west/{name}.tscn': text for name, text in scenes.items()}

@@ -1,15 +1,15 @@
-"""What generate.py and the modules it calls share: the wall thickness, the yard's levels, walls with holes in them, boxes
-along a line and the prototype's fence posts, paving, scenes of fixed objects, and plain meshes for a section's Props; and
-what the two teaching buildings share, the fittings of a water room and a teachers' toilet. Importing it puts the compound
-region's tscn.py, which writes the scene text, on the path."""
+"""What generate.py and the modules it calls share: the brick walls' size, the yard's levels, walls with holes in them, boxes
+along a line and the prototype's fence posts, paving, scenes of fixed objects, plain meshes for a section's Props, windows
+on a block, poplars, and the prototype's random numbers; and what the two teaching buildings share, the fittings of a water
+room and a teachers' toilet. Importing it puts the compound region's tscn.py, which writes the scene text, on the path."""
 import math
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'compound'))
-from tscn import box, fmt, scene, vec  # noqa: E402
+from tscn import COLORS, box, fmt, packed, scene, vec  # noqa: E402
 
-WT = 0.24  # brick wall thickness
+WT, WALL_H = 0.24, 2.4  # brick walls: the thickness, and the height of the school's wall and the staff compound's
 GROUND = -0.2  # the bottom of the yard's slab
 # Paving and floors stand this much over the yard, lines a little more; each reaches into the yard, 1 cm thick at least.
 TOP, LINE = 0.004, 0.008
@@ -89,6 +89,44 @@ def multimesh(subs, rid, mesh, spots):
 def show_many(nodes, name, many, position=(0, 0, 0)):
     nodes.append(f'[node name="{name}" type="MultiMeshInstance3D" parent="."]\nlayers = 3\n'
                  + (f'position = {vec(*position)}\n' if any(position) else '') + f'multimesh = {many}\n')
+
+
+# A scene of the prototype's windows on a block w along x and d along z from the scene's origin: 1.5 × 1.4 m, as many as fit
+# 3.3 m apart along each face named in sides (n, s, e, w), 0.9 m over each of its floors, which are fh apart.
+# One MultiMesh draws the north and south faces' and one the east and west faces', shown again on every floor.
+def windows(w, d, floors, fh, sides='nsew'):
+    subs, nodes, many = [], [], {}
+    glass = material(subs, COLORS['window'][:3])
+
+    def along(length):
+        n = int(length // 3.3)
+        return [(length - n * 3.3) / 2 + (i + 0.5) * 3.3 for i in range(n)]
+    y = 0.9 + 0.7
+    ns = [(c, y, z) for side, z in (('n', -0.03), ('s', d + 0.03)) if side in sides for c in along(w)]
+    ew = [(x, y, c) for side, x in (('w', -0.03), ('e', w + 0.03)) if side in sides for c in along(d)]
+    for rid, name, size, spots in (('ns', 'NorthSouth', (1.5, 1.4, 0.06), ns), ('ew', 'EastWest', (0.06, 1.4, 1.5), ew)):
+        if spots: many[name] = multimesh(subs, rid, resource(subs, 'BoxMesh', f'{rid}b', material=glass, size=vec(*size)), spots)
+    for f in range(floors):
+        for name, mm in many.items(): show_many(nodes, f'{name}{f + 1}', mm, (0, f * fh, 0))
+    return packed('Windows', [], subs=subs, nodes=nodes)
+
+
+# A scene of poplars that Poplars3D.cs builds when the region loads, one at each (x, z) of at; a scene file cannot hold
+# so many boxes. Their trunks are the fixed objects poplars_1, poplars_2 and so on, or entity_1 and on when it is given.
+def poplars_scene(at, entity=None):
+    spots = ', '.join(f'{fmt(round(x, 3))}, {fmt(round(z, 3))}' for x, z in at)
+    return '\n'.join(['[gd_scene load_steps=2 format=3]\n', '[ext_resource type="Script" path="res://regions/campus/Poplars3D.cs" id="e1"]\n',
+                      '[node name="Poplars" type="Node3D"]\nscript = ExtResource("e1")\n'
+                      + (f'EntityId = "{entity}"\n' if entity else '') + f'At = PackedVector2Array({spots})\n'])
+
+
+def numbers(seed):  # the prototype's random numbers from that state on
+    while True:
+        seed = seed * 16807 % 2147483647
+        yield seed / 2147483647
+
+
+def inside(v, gaps): return any(a < v < b for a, b in gaps)
 
 
 # A water room's and a teachers' toilet's fittings, laid out as the prototype's roomFrame does from the wall with the door:
