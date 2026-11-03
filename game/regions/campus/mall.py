@@ -13,6 +13,7 @@ Decision note: 2026-11-01-school-scene-layout
 """
 import math
 
+from east import TUNNEL
 from north_west import DIRT
 from shapes import TOP, WT, beam, fixed, material, multimesh, numbers, pave, posts, resource, runs, show, show_many, spaced
 from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once shapes is imported
@@ -20,7 +21,7 @@ from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once sha
 COLORS.update({'vault': (0.839, 0.82, 0.776, 1)})
 
 X0, X1, Z0, Z1 = -121.6, 239.2, 92.12, 122.12  # 40 m longer to the west than the sketch, 30 m deep instead of 52
-T0, T1 = 103.12, 111.12  # the passage (z), open at both ends
+T0, T1 = TUNNEL  # the passage (z), open at both ends; east.py keeps the poplars clear of its mouth
 SPRING, CROWN, MF, MH = 3.7, 5.0, 5.3, 4.2  # the arch's foot and crown; the upper floor's level and storey height
 ROOF = MF + MH
 STAIRS, STAIR_TOP, TREADS = (-80, 60, 200), 94.75, 31  # each stair's middle (x), 3 m wide, up north from the passage
