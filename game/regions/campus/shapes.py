@@ -42,11 +42,11 @@ def beam(boxes, along, at, a, b, lo, hi, t, m):  # a box from a to b along x (at
     else: box(boxes, at - t, at + t, lo, hi, a, b, m)
 
 
-def runs(a, b, gaps):  # the stretches of a to b outside the gaps (p, q), which are in order
+def runs(a, b, gaps):  # the stretches of a to b outside the gaps (p, q), in any order and possibly overlapping
     out, s = [], a
-    for p, q in [*gaps, (b, b)]:
+    for p, q in sorted([*gaps, (b, b)]):
         if p > s: out.append((s, p))
-        s = q
+        s = max(s, q)
     return out
 
 
@@ -91,19 +91,20 @@ def show_many(nodes, name, many, position=(0, 0, 0)):
                  + (f'position = {vec(*position)}\n' if any(position) else '') + f'multimesh = {many}\n')
 
 
+def spaced(a, b, step):  # the middles of the prototype's windows along a face from a to b: as many as fit step apart
+    n = int((b - a) // step)
+    return [a + (b - a - n * step) / 2 + (i + 0.5) * step for i in range(n)]
+
+
 # A scene of the prototype's windows on a block w along x and d along z from the scene's origin: 1.5 × 1.4 m, as many as fit
 # 3.3 m apart along each face named in sides (n, s, e, w), 0.9 m over each of its floors, which are fh apart.
 # One MultiMesh draws the north and south faces' and one the east and west faces', shown again on every floor.
 def windows(w, d, floors, fh, sides='nsew'):
     subs, nodes, many = [], [], {}
     glass = material(subs, COLORS['window'][:3])
-
-    def along(length):
-        n = int(length // 3.3)
-        return [(length - n * 3.3) / 2 + (i + 0.5) * 3.3 for i in range(n)]
     y = 0.9 + 0.7
-    ns = [(c, y, z) for side, z in (('n', -0.03), ('s', d + 0.03)) if side in sides for c in along(w)]
-    ew = [(x, y, c) for side, x in (('w', -0.03), ('e', w + 0.03)) if side in sides for c in along(d)]
+    ns = [(c, y, z) for side, z in (('n', -0.03), ('s', d + 0.03)) if side in sides for c in spaced(0, w, 3.3)]
+    ew = [(x, y, c) for side, x in (('w', -0.03), ('e', w + 0.03)) if side in sides for c in spaced(0, d, 3.3)]
     for rid, name, size, spots in (('ns', 'NorthSouth', (1.5, 1.4, 0.06), ns), ('ew', 'EastWest', (0.06, 1.4, 1.5), ew)):
         if spots: many[name] = multimesh(subs, rid, resource(subs, 'BoxMesh', f'{rid}b', material=glass, size=vec(*size)), spots)
     for f in range(floors):
