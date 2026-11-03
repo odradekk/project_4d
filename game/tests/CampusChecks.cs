@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Game.Debugging;
+using Game.Player;
 using Godot;
 using static Game.Tests.CharacterFixture;
 using static Game.Tests.TurningFixture;
@@ -11,17 +12,18 @@ namespace Game.Tests;
 /// The campus region's school grounds, walked with the movement keys: in through the gate, across the plaza and up the
 /// steps onto the stand; into both rooms of the lodge and into the sports store; through the open bay under the toilet
 /// block into the boys' toilet, then up the outside stair to the landing and into the girls' toilet. The steps and the
-/// stair are walked and run, up and down. The school wall on each side, the stand's side, and the open edges of the stair
-/// and its landing stop her. The routes keep clear of the sites left for the two teaching buildings.
+/// stair are each walked and run up and down on three lines across them, from start points 3 mm apart over one physics
+/// frame's travel. The school wall on each side, the stand's side, the railings on both sides of the stair and the open
+/// edges of its landing stop her. The routes keep clear of the sites left for the two teaching buildings.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class CampusChecks : Node
 {
     private const float Stand = 1.2f, Upstairs = 3.6f;
-    // The school wall's inner faces; the stand's west side and north face; the line the outside stair's railing keeps her
-    // to, and the east end of its landing.
+    // The school wall's inner faces; the stand's west side and north face; the lines the outside stair's railings keep her
+    // between, and the east end of its landing.
     private const float NorthWall = .12f, WestWall = .12f, SouthWall = 91.88f, EastWall = 148.88f;
-    private const float StandWest = 79, StandNorth = 79.5f, StairEdge = 36.7f, LandingEnd = 146.7f;
+    private const float StandWest = 79, StandNorth = 79.5f, StairNorth = 35.22f, StairSouth = 36.7f, LandingEnd = 146.7f;
     // Along the outside stair; west of its foot; on its landing, in front of the girls' door.
     private const float StairLine = 35.9f, StairFoot = 137.4f, Landing = 145.6f;
 
@@ -43,13 +45,8 @@ public partial class CampusChecks : Node
             play.LookAt(new(76, 0, 0), new(76, 1.3f, 5));
             await WalkTo((76, 18), (82, 47), (82, 75.5f), (87, 76));
             Check(OnGround, $"she walks in through the gate and across the plaza to the steps; she is at {feet}");
-            foreach (var run in new[] { false, true })
-            {
-                await Go(run, (87, 82));
-                Check(Mathf.Abs(feet.Y - Stand) < .05f, $"she {Pace(run)} up the steps onto the stand; she is at {feet}");
-                await Go(run, (87, 76));
-                Check(OnGround, $"she {Pace(run)} down the steps; she is at {feet}");
-            }
+            // The steps' slope leaves the ground at z 76.58 and meets the stand at z 79.08.
+            var walks = await Sweep((a, c) => new(c, 0, a), 76.58f, 79.08f, Stand, 83.5f, 87, 90.5f);
             await WalkTo((77, 76), (77, 82));
             await Push((81, 82));
             Check(Stopped(feet.X, StandWest) && OnGround, $"the stand's west side stops her; she is at {feet}");
@@ -88,19 +85,18 @@ public partial class CampusChecks : Node
             await WalkTo((140, 27.7f), (StairFoot, 27.7f), (StairFoot, 31.5f), (StairFoot, StairLine));
             Check(OnGround, $"she walks out of the bay between its columns to the foot of the outside stair; she is at {feet}");
 
-            foreach (var run in new[] { false, true })
-            {
-                await Go(run, (Landing, StairLine));
-                Check(OnLanding, $"she {Pace(run)} up the outside stair onto the landing; she is at {feet}");
-                await Go(run, (StairFoot, StairLine));
-                Check(OnGround, $"she {Pace(run)} down the outside stair; she is at {feet}");
-            }
+            // The stair's slope leaves the ground at x 138.22 and meets the landing at x 144.4.
+            walks += await Sweep((a, c) => new(a, 0, c), 138.22f, 144.4f, Upstairs, 35.5f, StairLine, 36.4f);
             await WalkTo((141.3f, StairLine));
             await Push((141.3f, 39));
-            Check(Stopped(feet.Z, StairEdge) && feet.Y > 1.5f, $"the railing along the stair's open side stops her; she is at {feet}");
+            Check(Stopped(feet.Z, StairSouth) && feet.Y > 1.5f, $"the railing along the stair's south side stops her; she is at {feet}");
+            // West of the bay's middle column, so that only the railing can stop her.
+            await WalkTo((140, StairLine));
+            await Push((140, 33));
+            Check(Stopped(feet.Z, StairNorth) && feet.Y > .5f, $"the railing along the stair's north side keeps her out of the bay; she is at {feet}");
             await WalkTo((Landing, StairLine));
             await Push((Landing, 39));
-            Check(Stopped(feet.Z, StairEdge) && OnLanding, $"the railing along the landing stops her; she is at {feet}");
+            Check(Stopped(feet.Z, StairSouth) && OnLanding, $"the railing along the landing stops her; she is at {feet}");
             await WalkTo((Landing, StairLine));
             await Push((152, StairLine));
             Check(Stopped(feet.X, LandingEnd) && OnLanding, $"the railing across the landing's end stops her; she is at {feet}");
@@ -112,7 +108,7 @@ public partial class CampusChecks : Node
             await WalkTo((143.4f, 33.9f), (Landing, 33.9f), (Landing, StairLine), (StairFoot, StairLine));
             Check(OnGround, $"she walks back out and down the stair; she is at {feet}");
 
-            GD.Print("Campus checks passed: the start inside the gate; in through the gate, across the plaza and up the stand's steps, walking and running; the stand's side and north face; both rooms of the lodge; the sports store; the school wall on every side; through the open bay into the boys' toilet; up the outside stair, walking and running, onto the landing and into the girls' toilet; the railings of the stair and its landing.");
+            GD.Print($"Campus checks passed: the start inside the gate; in through the gate and across the plaza; {walks} walks and runs up or down the stand's steps and the outside stair, from start points 3 mm apart on three lines across each, none stopped; the stand's side and north face; both rooms of the lodge; the sports store; the school wall on every side; through the open bay into the boys' toilet; up the outside stair onto the landing and into the girls' toilet; the railings on both sides of the stair and its landing.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -135,11 +131,44 @@ public partial class CampusChecks : Node
     // Pushed toward a face past which her target lies, she stops by it: her middle is about her radius, 0.2 m, from it.
     private static bool Stopped(float at, float face) => Mathf.Abs(at - face) is > .1f and < .5f;
 
-    private Task WalkTo(params (float X, float Z)[] points) => Go(true, points);
+    // Up a flight and down again on each line across it, walking and running, from start points 3 mm apart over one physics
+    // frame's travel, so that a frame ends at every distance from each tread's front edge. at(a, c) is the point a along the
+    // flight and c across it; its slope leaves the ground at foot and reaches height at top. She goes up until at least
+    // 0.5 m past the top, which on the steps takes her across the top tread onto the stand. Returns the number of walks.
+    private async Task<int> Sweep(Func<float, float, Vector3> at, float foot, float top, float height, params float[] lines)
+    {
+        var walks = 0;
+        foreach (var line in lines)
+            foreach (var (run, speed) in new[] { (false, FirstPersonPlayer.WalkSpeed), (true, FirstPersonPlayer.RunSpeed) })
+                for (var start = .25f; start < .25f + speed / Engine.PhysicsTicksPerSecond; start += .003f, walks += 2)
+                {
+                    await Cross(run, at(foot - start, line), at(top + .6f, line) with { Y = height });
+                    await Cross(run, at(top + start, line) with { Y = height }, at(foot - .25f, line));
+                }
+        return walks;
+    }
 
-    // Walks or runs the player to each point in turn with the movement keys, in straight lines, and lets go of them there.
-    // She gets ten seconds and one more for every 2 m to each point.
-    private async Task Go(bool run, params (float X, float Z)[] points)
+    // Puts her at from, standing still, then walks or runs her straight toward to until she is within 0.1 m of it, at its
+    // height. Like the spiral stair's check, she fails if half a second passes without her getting 1 cm nearer.
+    private async Task Cross(bool run, Vector3 from, Vector3 to)
+    {
+        play.LookAt(from, to + new Vector3(0, 1.3f, 0));
+        await play.Frames(2);
+        var (best, still) = (Apart(from, to), 0);
+        while (Apart(feet, to) > .1f)
+        {
+            await Step((to.X, to.Z), run);
+            if (Apart(feet, to) < best - .01f) (best, still) = (Apart(feet, to), 0);
+            else Check(++still < 30, $"she must {(run ? "run" : "walk")} from {from} to {to}; she is stuck at {feet}");
+        }
+        Input.ActionRelease("move_forward");
+        Input.ActionRelease("run");
+        Check(Mathf.Abs(feet.Y - to.Y) < .05f, $"she {Pace(run)} from {from} to {to}; she is at {feet}");
+    }
+
+    // Runs the player to each point in turn with the movement keys, in straight lines, and lets go of them there. She gets
+    // ten seconds and one more for every 2 m to each point.
+    private async Task WalkTo(params (float X, float Z)[] points)
     {
         foreach (var point in points)
         {
@@ -147,8 +176,8 @@ public partial class CampusChecks : Node
             var limit = 60 * (10 + Apart(feet, target) / 2);
             for (var frame = 0; Apart(feet, target) > .1f; frame++)
             {
-                Check(frame < limit, $"the player must {(run ? "run" : "walk")} to {point}; she is stopped at {feet}");
-                await Step(point, run);
+                Check(frame < limit, $"the player must run to {point}; she is stopped at {feet}");
+                await Step(point, true);
             }
         }
         Input.ActionRelease("move_forward");
