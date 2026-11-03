@@ -4,7 +4,8 @@ Six storeys 3.6 m high on the plaza's west side, round an atrium open from the g
 of 16 rooms a floor round a corridor 2.4 m wide round the atrium, and a spiral stair at each end of the atrium. Doors 1 and
 2, in the east wall to the plaza and the west wall to the courts, open into halls on the ground floor; above the halls are
 rooms. Every storey is built from the same scenes, each instance with ids of its own. Layout, rooms and furniture are the
-greybox prototype's TB2_* constants and its "teaching building 2, inside" section, in its coordinates.
+greybox prototype's TB2_* constants and its "teaching building 2, inside" section, in its coordinates, except that the
+corridor and the atrium stand 0.6 m west of the prototype's (see CX0).
 Decision note: 2026-11-01-school-scene-layout
 """
 import math
@@ -15,11 +16,16 @@ from tscn import COLORS, box, fmt, packed, vec  # on the path once shapes is imp
 
 FH, FLOORS = 3.6, 6  # storey height
 X0, X1, Z0, Z1 = 37.5, 64.5, 18, 76  # the outer walls
-CX0, CX1, CZ0, CZ1 = 44.1, 57.9, 25.2, 68.8  # the corridor's outer walls: rooms 6.6 m deep east and west, 7.2 north and south
-AX0, AX1, AZ0, AZ1 = 46.5, 55.5, 27.6, 66.4  # the atrium, inside the corridor
-# Both spiral stairs' columns stand on x SX, and the atrium's parapets are open OPEN either side of it, where SpiralStair3D
-# leaves its rail open. Each stair: its column's z, and the angle from north, clockwise, at which the corridors meet it.
-SX, OPEN = 51, 1.1
+# The corridor's outer walls, and the atrium inside the corridor. The prototype centres them, which leaves the rooms east
+# and west of the corridor 6.6 m deep. Here, by the user's decision, they stand 0.6 m further west: the classrooms east of
+# the corridor are 7.2 m deep, as those north of it are, and so their platforms, 5.2 m wide in the middle of the front
+# wall, start 1 m from the corridor's wall, where a door's leaf ends. The rooms west of the corridor are 6 m deep.
+CX0, CX1, CZ0, CZ1 = 43.5, 57.3, 25.2, 68.8
+AX0, AX1, AZ0, AZ1 = 45.9, 54.9, 27.6, 66.4
+# Both spiral stairs' columns stand on x SX, the atrium's middle, and the atrium's parapets are open OPEN either side of
+# it, where SpiralStair3D leaves its rail open. Each stair: its column's z, and the angle from north, clockwise, at which
+# the corridors meet it.
+SX, OPEN = 50.4, 1.1
 SPIRALS = (('North', 29.3, 0), ('South', 64.7, math.pi))
 DOOR1, DOOR2 = (28, 30.4), (36, 38.4)  # in the east wall to the plaza and the west wall to the courts
 
@@ -197,17 +203,19 @@ def furnish(kind, r):
     return boxes, chairs
 
 
-SAMPLE = {'north': ROOMS[1], 'east': ROOMS[4]}  # a room of each shape, whose furniture every room of that shape gets
+# A room of each shape, whose furniture every room of that shape gets: room 2, 9 m long; room 3 in the north-east corner,
+# 9.6 m long; and the rooms east of the corridor.
+SAMPLE = {'north': ROOMS[1], 'northeast': ROOMS[2], 'east': ROOMS[4]}
 
 
 def furnished():  # (floor, number, room, kind, the room's shape) of each furnished room
-    return [(n, k, ROOMS[k - 1], kind, 'north' if ROOMS[k - 1].side == 'n' else 'east')
+    return [(n, k, ROOMS[k - 1], kind, {2: 'north', 3: 'northeast'}.get(k, 'east'))
             for n, (kind, numbers) in FURNISHED.items() for k in numbers]
 
 
 def chairs(shape):  # one classroom's
     subs, nodes = [], []
-    size = vec(0.35, 0.45, 1) if shape == 'north' else vec(1, 0.45, 0.35)
+    size = vec(1, 0.45, 0.35) if shape == 'east' else vec(0.35, 0.45, 1)
     chair = resource(subs, 'BoxMesh', 'chair', material=material(subs, COLORS['chair'][:3]), size=size)
     for i, (x, z) in enumerate(furnish('class', SAMPLE[shape])[1], 1): show(nodes, f'Chair{i}', chair, (x, 0.225, z))
     return packed('Chairs', [], subs=subs, nodes=nodes)

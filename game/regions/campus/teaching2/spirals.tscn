@@ -5,13 +5,13 @@
 [node name="Spirals" type="Node3D"]
 
 [node name="North" type="Node3D" parent="."]
-position = Vector3(51, 0, 29.3)
+position = Vector3(50.4, 0, 29.3)
 script = ExtResource("e1")
 Floors = 6
 EntityId = "teaching2_spiral_north"
 
 [node name="South" type="Node3D" parent="."]
-position = Vector3(51, 0, 64.7)
+position = Vector3(50.4, 0, 64.7)
 rotation = Vector3(0, -3.141593, 0)
 script = ExtResource("e1")
 Floors = 6

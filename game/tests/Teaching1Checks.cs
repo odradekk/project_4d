@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Game.Player;
 using Godot;
 using static Game.Tests.CharacterFixture;
 using static Game.Tests.TurningFixture;
@@ -13,7 +16,8 @@ namespace Game.Tests;
 /// floor she also goes into the water room, each classroom and the teachers' toilet, walking on the first and third
 /// floors and running on the others: into a classroom by its front door, down its middle aisle and out of its back door,
 /// past the chairs, which do not stop her. The second time she runs the stairs. On the top floor the rail where no flight
-/// goes up stops her at each stair; a desk stops her.
+/// goes up stops her at each stair; a desk stops her. Last, she walks and runs each run of one storey of the north stair
+/// many times over, up and down, so that her steps end at every point along it.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class Teaching1Checks : Node
@@ -30,6 +34,14 @@ public partial class Teaching1Checks : Node
     private const float WaterDoor = 15.4f, ToiletDoor = 82.88f;
     // Outside door 1 in the tower's west wall, and outside door 2 in the south wall.
     private const float Door1 = 51.3f, WestOfDoor1 = 110, Door2 = 125, SouthOfDoor2 = 87;
+    // The north stair's ground floor to its second: each run's walks, from 0.25 m before one end of its slope to the same
+    // past the other (x and the height at each end), along its middle (z). The lower run's slope goes from x 119.36 on the
+    // ground floor up to the half landing's edge at 116; the upper run's from 115.72 on the half landing to 119.08.
+    private static readonly (float From, float FromY, float To, float ToY, float Z)[] Runs =
+    [
+        (119.61f, 0, 115.75f, Storey / 2, North.West), (115.75f, Storey / 2, 119.61f, 0, North.West),
+        (115.47f, Storey / 2, 119.33f, Storey, North.East), (119.33f, Storey, 115.47f, Storey / 2, North.East)
+    ];
 
     private TurningFixture play = null!;
     private Vector3 feet => play.Player.Position;
@@ -67,7 +79,10 @@ public partial class Teaching1Checks : Node
                 Check(OnFloor(1), $"she {Pace(run)} out of door 2; she is at {feet}");
             }
 
-            GD.Print("Teaching building 1 checks passed: in through door 1, up the wide stair to the fourth floor, down the north stair, up the south stair to the second floor and down, out of door 2, walking and running on the stairs; into every water room, classroom and teachers' toilet, walking and running; the top floor's rails; a desk.");
+            var (walks, stuck) = await Sweep();
+            Check(stuck.Count == 0, $"she is stuck on {stuck.Count} of {walks} walks over the north stair: {string.Join("; ", stuck.Take(5))}");
+
+            GD.Print($"Teaching building 1 checks passed: {walks} walks over the north stair's runs, none stuck; in through door 1, up the wide stair to the fourth floor, down the north stair, up the south stair to the second floor and down, out of door 2, walking and running on the stairs; into every water room, classroom and teachers' toilet, walking and running; the top floor's rails; a desk.");
             GetTree().Quit();
         }
         catch (Exception error)
@@ -80,6 +95,42 @@ public partial class Teaching1Checks : Node
             Input.ActionRelease("move_forward");
             Input.ActionRelease("run");
         }
+    }
+
+    // Each run of Runs, walked and run, on its middle line and 0.45 m to either side, from start points 3 mm apart over one
+    // physics step's travel, so that a step ends at every point along each line. Returns how many walks there were, and
+    // the ones on which she got no 1 cm further for half a second.
+    private async Task<(int, List<string>)> Sweep()
+    {
+        var (walks, stuck) = (0, new List<string>());
+        foreach (var (from, fromY, to, toY, middle) in Runs)
+            foreach (var z in new[] { middle - .45f, middle, middle + .45f })
+                foreach (var (run, speed) in new[] { (false, FirstPersonPlayer.WalkSpeed), (true, FirstPersonPlayer.RunSpeed) })
+                    for (var start = 0f; start < speed / Engine.PhysicsTicksPerSecond; start += .003f, walks++)
+                    {
+                        var way = Mathf.Sign(to - from);
+                        var at = new Vector3(from - way * start, fromY + .02f, z);
+                        // Let go first, so that she stands still at the start point while she settles there.
+                        Input.ActionRelease("move_forward");
+                        Input.ActionRelease("run");
+                        play.LookAt(at, new(to, fromY + 1.3f, z));
+                        await play.Frames(2);
+                        Input.ActionPress("move_forward");
+                        if (run) Input.ActionPress("run");
+                        var (best, still) = (feet.X * way, 0);
+                        while ((to - feet.X) * way > 0 && still < 30)
+                        {
+                            play.Player.Rotation = new(0, Mathf.Atan2(feet.X - to, feet.Z - z), 0);
+                            await play.Frames(1);
+                            if (feet.X * way > best + .01f) (best, still) = (feet.X * way, 0);
+                            else still++;
+                        }
+                        if (still == 30 || Mathf.Abs(feet.Y - toY) > .05f)
+                            stuck.Add($"{Pace(run)} from {at} toward x {to}, stopped at {feet}");
+                    }
+        Input.ActionRelease("move_forward");
+        Input.ActionRelease("run");
+        return (walks, stuck);
     }
 
     // From the stair's landing on a floor up its two flights to the next floor, and down.

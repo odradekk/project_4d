@@ -180,9 +180,15 @@ layers = 3
 position = Vector3(30.925, 3.05, 52.5)
 mesh = SubResource("rim")
 
-[node name="StairHandrail" type="MeshInstance3D" parent="."]
+[node name="StairHandrail1" type="MeshInstance3D" parent="."]
 layers = 3
 position = Vector3(141.45, 2.8, 36.75)
+rotation = Vector3(0, 0, 0.547864)
+mesh = SubResource("handrail")
+
+[node name="StairHandrail2" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(141.45, 2.8, 35.17)
 rotation = Vector3(0, 0, 0.547864)
 mesh = SubResource("handrail")
 

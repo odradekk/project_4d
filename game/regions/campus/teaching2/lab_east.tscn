@@ -15,7 +15,7 @@ size = Vector3(4, 1.2, 0.06)
 
 [sub_resource type="BoxMesh" id="b2"]
 material = SubResource("m2")
-size = Vector3(5, 0.9, 0.75)
+size = Vector3(5.6, 0.9, 0.75)
 
 [node name="LabEast" type="Node3D"]
 
@@ -24,21 +24,21 @@ script = ExtResource("e1")
 EntityId = "teaching2_lab_east"
 
 [node name="p1" parent="teaching2_lab_east" instance=ExtResource("e2")]
-position = Vector3(3.3, 1.5, 0.13)
+position = Vector3(3.6, 1.5, 0.13)
 mesh = SubResource("b1")
 PartId = "p1"
 
 [node name="p2" parent="teaching2_lab_east" instance=ExtResource("e2")]
-position = Vector3(3.3, 0.45, 2.575)
+position = Vector3(3.6, 0.45, 2.575)
 mesh = SubResource("b2")
 PartId = "p2"
 
 [node name="p3" parent="teaching2_lab_east" instance=ExtResource("e2")]
-position = Vector3(3.3, 0.45, 4.375)
+position = Vector3(3.6, 0.45, 4.375)
 mesh = SubResource("b2")
 PartId = "p3"
 
 [node name="p4" parent="teaching2_lab_east" instance=ExtResource("e2")]
-position = Vector3(3.3, 0.45, 6.175)
+position = Vector3(3.6, 0.45, 6.175)
 mesh = SubResource("b2")
 PartId = "p4"
