@@ -4,7 +4,7 @@
 
 新的学校区域按 Decision note: 2026-11-01-school-scene-layout 重做学校：学校、学校四周的街道和建筑、商场隧道和城市布景都在这一个区域里。原来只有一间教室的[学校区域](school-region.md)照旧给第 3、4、5 场用，和它互不相干。坐标和尺寸照白模原型（分支 `prototype/school-layout` 的 `prototypes/school-layout/index.html`），单位米，x 向东，z 向南，y 向上；墙的位置按中线。原点在学校围墙西北角的中线交点，y = 0 是院子的地面。
 
-区域是 `game/regions/campus.tscn`，现在搭了五部分：围墙以内的校园，见下面「校园」，两栋教学楼另见[教学楼 1](campus-teaching1.md)和[教学楼 2](campus-teaching2.md)；学校北面和西面的柏油路、高档小区、林间土路、废弃工地、操场、大铁门和地摊，见[学校北面和西面](campus-north-west.md)；学校东面的小巷、家属院、主路和公交车站，见[学校东面](campus-east.md)；学校南面的商场隧道，见[商场隧道](campus-mall.md)；更外面的城市布景、远山和雾，见[学校的城市布景](campus-city.md)。可活动范围的边界以后再搭。教学楼 2 的两部螺旋楼梯见下面「螺旋楼梯」，螺旋楼梯另有一个单独的检查区域 `game/regions/spiral_test.tscn`。区域只有截面Ⅰ（W = 0），棱镜关闭；区域里的东西都是截面Ⅰ的固定物件，或截面Ⅰ的 `Props` 里的普通节点，所以只在截面Ⅰ里存在。调试入口是 `-- --start=campus`，玩家出生在大门里面 (76, 0.02, 2)，面朝南。区域里没有灯，用适配层默认的平行光；截面Ⅰ有雾，和新的家区域一样。
+区域是 `game/regions/campus.tscn`，现在搭了五部分：围墙以内的校园，见下面「校园」，两栋教学楼另见[教学楼 1](campus-teaching1.md)和[教学楼 2](campus-teaching2.md)；学校北面和西面的柏油路、高档小区、林间土路、废弃工地、操场、大铁门和地摊，见[学校北面和西面](campus-north-west.md)；学校东面的小巷、家属院、主路和公交车站，见[学校东面](campus-east.md)；学校南面的商场隧道，见[商场隧道](campus-mall.md)；更外面的城市布景、远山和雾，见[学校的城市布景](campus-city.md)。玩家能走到哪里、哪几处有看不见的墙挡人，见[可活动范围](campus-bounds.md)。教学楼 2 的两部螺旋楼梯见下面「螺旋楼梯」，螺旋楼梯另有一个单独的检查区域 `game/regions/spiral_test.tscn`。区域只有截面Ⅰ（W = 0），棱镜关闭；区域里的东西都是截面Ⅰ的固定物件，或截面Ⅰ的 `Props` 里的普通节点，所以只在截面Ⅰ里存在。调试入口是 `-- --start=campus`，玩家出生在大门里面 (76, 0.02, 2)，面朝南。区域里没有灯，用适配层默认的平行光；截面Ⅰ有雾，和新的家区域一样。
 
 ## 校园
 
@@ -112,7 +112,7 @@
 
 ## 文件
 
-`campus.tscn` 是手写的区域根场景，城市布景也直接放在它里面，见[学校的城市布景](campus-city.md)。`game/regions/campus/` 下的子场景都由同一目录下的 `generate.py` 按原型的常量写出，场景文本用新的家区域的 `tscn.py` 来写。两栋教学楼的场景由它调用的 `teaching1.py` 和 `teaching2.py` 写出，学校北面和西面的由 `north_west.py` 和 `field.py` 写出，学校东面的由 `east.py` 写出，商场隧道的由 `mall.py` 写出。它们共用 `shapes.py` 里墙、铺地、固定物件场景和网格的写法，两栋教学楼还共用其中水房和教师厕所的写法，学校北面、西面和东面还共用其中窗的写法（高楼、底商楼上和住宅楼的窗都用它）和杨树的场景，它们和商场隧道还共用其中窗的间距和原型的随机数公式。区域用的颜色写在 `generate.py`、`north_west.py`、`field.py`、`east.py` 和 `mall.py` 里，运行时并进 `tscn.py` 的颜色表。改格局时改脚本里的常量，再运行 `python game/regions/campus/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
+`campus.tscn` 是手写的区域根场景，城市布景也直接放在它里面，见[学校的城市布景](campus-city.md)。`game/regions/campus/` 下的子场景都由同一目录下的 `generate.py` 按原型的常量写出，场景文本用新的家区域的 `tscn.py` 来写。两栋教学楼的场景由它调用的 `teaching1.py` 和 `teaching2.py` 写出，学校北面和西面的由 `north_west.py` 和 `field.py` 写出，学校东面的由 `east.py` 写出，商场隧道的由 `mall.py` 写出，可活动范围那几道看不见的墙由 `bounds.py` 写出。它们共用 `shapes.py` 里墙、铺地、固定物件场景和网格的写法，两栋教学楼还共用其中水房和教师厕所的写法，学校北面、西面和东面还共用其中窗的写法（高楼、底商楼上和住宅楼的窗都用它）和杨树的场景，它们和商场隧道还共用其中窗的间距和原型的随机数公式。区域用的颜色写在 `generate.py`、`north_west.py`、`field.py`、`east.py` 和 `mall.py` 里，运行时并进 `tscn.py` 的颜色表。改格局时改脚本里的常量，再运行 `python game/regions/campus/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
 
 | 文件 | 内容 |
 |---|---|
@@ -124,4 +124,5 @@
 | `toilet_upstairs.tscn` | `toilet_upstairs`：二楼的楼板、墙和地面，屋顶和女儿墙 |
 | `toilet_fittings.tscn` | `toilet_fittings`、`toilet_upstairs_fittings`：两层里挡视线的墙、隔板、蹲坑、洗手槽和小便槽 |
 | `props.tscn` | 截面Ⅰ的 `Props`：两块斜坡，和「校园」里说的那些普通网格 |
+| `bounds.tscn` | `sidewalk_edge`、`dirt_road_end`、`site_gap`：可活动范围那几道看不见的墙，见[可活动范围](campus-bounds.md) |
 | `SpiralStair3D.cs` | 螺旋楼梯，手写，见上面「螺旋楼梯」 |
