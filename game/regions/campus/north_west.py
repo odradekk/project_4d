@@ -53,13 +53,13 @@ def bars(boxes, along, at, a, b, h):  # a gate as the prototype draws one: a pos
 
 def roads():
     ground, asphalt, walks, dirt, gate = [], [], [], [], []
-    pave(ground, FIELD_X[0], WALK_END, RICH_Z[0], OUT, 0, 'ground')
-    pave(ground, FIELD_X[0], OUT, OUT, IRON + WT / 2, 0, 'ground')
     # What she may walk on is in pieces no longer than the compound's roads, whose long thin sides can catch her (PR #79):
-    # the asphalt road and its sidewalks are cut in the middle of the estate's gate, the dirt road and the belts of poplars
-    # at the building site's north end, where she is to stop. The worn path from the back gate crosses the belts to the
-    # sports ground's gate.
+    # the ground, the asphalt road and its sidewalks are cut in the middle of the estate's gate, the dirt road and the belts
+    # of poplars at the building site's north end, where she is to stop. The worn path from the back gate crosses the belts
+    # to the sports ground's gate.
     cut = sum(RICH_GATE) / 2
+    for x0, x1 in ((FIELD_X[0], cut), (cut, WALK_END)): pave(ground, x0, x1, RICH_Z[0], OUT, 0, 'ground')
+    pave(ground, FIELD_X[0], OUT, OUT, IRON + WT / 2, 0, 'ground')
     for x0, x1 in ((DIRT[1], cut), (cut, MAIN)): pave(asphalt, x0, x1, *ROAD, TOP, 'asphalt')
     mid, x = sum(ROAD) / 2, DIRT[1] + 4
     while x < MAIN - 4:  # the dashed centre line
