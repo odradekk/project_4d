@@ -93,8 +93,8 @@ public partial class EastChecks : Node
     // radius, 0.2 m, from it.
     private static bool Stopped(float at, float face, float from) => (at - face) * Mathf.Sign(from - face) is > .1f and < .5f;
 
-    // Stopped by that face itself. Her middle stops 0.2 to 0.22 m from a face she runs into; a shop's front stands 4 cm out
-    // from its block, so without the front she would stop at most 0.18 m from where the front should be.
+    // Stopped by that face itself. In these walks her middle stops 0.2 to 0.22 m from what she runs into; a shop's front is
+    // 4 cm thick on its solid block, so without the front she stops 0.16 to 0.18 m from where the front should be.
     private static bool Against(float at, float face, float from) => (at - face) * Mathf.Sign(from - face) is > .19f and < .25f;
 
     // Runs the player to each point in turn with the movement keys, in straight lines, and lets go of them there. She gets

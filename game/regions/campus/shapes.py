@@ -112,12 +112,12 @@ def windows(w, d, floors, fh, sides='nsew'):
 
 
 # A scene of poplars that Poplars3D.cs builds when the region loads, one at each (x, z) of at; a scene file cannot hold
-# so many boxes. Their trunks are the fixed objects poplars_1, poplars_2 and so on, or entity_1 and on when it is given.
-def poplars_scene(at, entity=None):
+# so many boxes. Their trunks are the fixed objects poplars_1, poplars_2 and so on, or prefix_1 and on when it is given.
+def poplars_scene(at, prefix=None):
     spots = ', '.join(f'{fmt(round(x, 3))}, {fmt(round(z, 3))}' for x, z in at)
     return '\n'.join(['[gd_scene load_steps=2 format=3]\n', '[ext_resource type="Script" path="res://regions/campus/Poplars3D.cs" id="e1"]\n',
                       '[node name="Poplars" type="Node3D"]\nscript = ExtResource("e1")\n'
-                      + (f'EntityPrefix = "{entity}"\n' if entity else '') + f'At = PackedVector2Array({spots})\n'])
+                      + (f'EntityPrefix = "{prefix}"\n' if prefix else '') + f'At = PackedVector2Array({spots})\n'])
 
 
 def numbers(seed):  # the prototype's random numbers from that state on
