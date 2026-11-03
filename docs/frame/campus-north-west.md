@@ -71,4 +71,4 @@
 | `windows_11.tscn`、`windows_18.tscn` | 一栋 11 层和一栋 18 层高楼的窗：南北面和东西面各一个 `MultiMesh`，每层画一次 |
 | `field_props.tscn` | 跑道和球场的线，铁丝网的立柱 |
 | `poplars.tscn` | 一个 `Poplars3D` 节点，带着 650 棵杨树的位置 |
-| `Poplars3D.cs` | 手写，在 `game/regions/campus/` 下：区域载入时，在每个位置搭一棵杨树。树干是截面Ⅰ的固定物件 `poplars_1` 到 `poplars_3`，名字的开头是导出属性 `EntityId`，默认 `poplars`；每个最多 256 根，因为适配层把一个固定物件的每个零件画成网格的一个表面（surface），Godot 一个网格最多 256 个表面；树冠是普通网格。650 棵树写成盒子的话，场景文件会超过仓库对单个文件约 20,000 字节的大小限制 |
+| `Poplars3D.cs` | 手写，在 `game/regions/campus/` 下：区域载入时，在每个位置搭一棵杨树。树干是截面Ⅰ的固定物件 `poplars_1` 到 `poplars_3`，实体 ID 的开头是导出属性 `EntityPrefix`，默认 `poplars`；每个最多 256 根，因为适配层把一个固定物件的每个零件画成网格的一个表面（surface），Godot 一个网格最多 256 个表面；树冠是普通网格。650 棵树写成盒子的话，场景文件会超过仓库对单个文件约 20,000 字节的大小限制 |

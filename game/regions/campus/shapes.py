@@ -117,7 +117,7 @@ def poplars_scene(at, entity=None):
     spots = ', '.join(f'{fmt(round(x, 3))}, {fmt(round(z, 3))}' for x, z in at)
     return '\n'.join(['[gd_scene load_steps=2 format=3]\n', '[ext_resource type="Script" path="res://regions/campus/Poplars3D.cs" id="e1"]\n',
                       '[node name="Poplars" type="Node3D"]\nscript = ExtResource("e1")\n'
-                      + (f'EntityId = "{entity}"\n' if entity else '') + f'At = PackedVector2Array({spots})\n'])
+                      + (f'EntityPrefix = "{entity}"\n' if entity else '') + f'At = PackedVector2Array({spots})\n'])
 
 
 def numbers(seed):  # the prototype's random numbers from that state on

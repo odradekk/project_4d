@@ -7,8 +7,8 @@ on its west side and a wall on its south; three blocks of flats in its yard. Fur
 north and south past the fog with a sidewalk and a row of poplars on each side, and the bus stop on its west sidewalk south
 of the corner. What she walks on and what stops her are fixed objects of section I; what she cannot reach and there are too
 many of for a scene file, plain meshes in its Props. The layout is the greybox prototype's ALLEY, ALLEY_END, SHOPS_N,
-SHOPS_E, FLATS, YARD_DOORS, MAIN and STOP constants and the code that builds them, in its coordinates. The shop fronts
-replay its random numbers, so each shutter and glass front stands where its does.
+SHOPS_E, FLATS, YARD_DOORS, MAIN, STOP and TUNNEL constants and the code that builds them, in its coordinates. The shop
+fronts replay its random numbers, so each shutter and glass front stands where its does.
 Decision note: 2026-11-01-school-scene-layout
 """
 import north_west
@@ -25,7 +25,7 @@ STOREYS, FH, SHOP_H = 5, 2.9, 3.6  # the shops' blocks: storeys, the flats' stor
 FLATS_X, FLATS, FLATS_STOREYS = (160, 220), ((22, 33), (45, 56), (68, 79)), 5  # the yard's three blocks of flats (z)
 YARD_DOORS = (16, 19), (58, 61)  # the openings from the alley into the yard (z)
 MAIN = (north_west.MAIN, north_west.MAIN + 16)  # the main road's carriageway (x), four lanes; sidewalks 5 m wide
-STOP, FAR, PASSAGE = (241.6, 15), 700, (103.12, 111.12)  # the bus stop; the main road's ends (z); the mall's passage (z)
+STOP, FAR, TUNNEL = (241.6, 15), 700, (103.12, 111.12)  # the bus stop; the main road's ends (z); the mall's passage (z)
 SHOPS_SEED = 1943309742  # the prototype's random state where it lays out the shop fronts, after the plaza's texture
 
 
@@ -85,7 +85,7 @@ def main_road():
 def poplars():
     out = []
     for z in range(-FAR + 4, FAR, 8):
-        if not inside(z, ((ROAD[0] - 5, ROAD[1] + 5), (STOP[1] - 8, STOP[1] + 8), (PASSAGE[0] - 6, PASSAGE[1] + 6))):
+        if not inside(z, ((ROAD[0] - 5, ROAD[1] + 5), (STOP[1] - 8, STOP[1] + 8), (TUNNEL[0] - 6, TUNNEL[1] + 6))):
             out.append((MAIN[0] - 0.8, z))
         out.append((MAIN[1] + 0.8, z))
     return out
