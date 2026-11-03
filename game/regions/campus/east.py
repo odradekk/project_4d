@@ -13,7 +13,7 @@ Decision note: 2026-11-01-school-scene-layout
 """
 import north_west
 from north_west import OUT, ROAD, WALK_END
-from shapes import (LINE, TOP, WALL_H, fixed, gap, inside, material, multimesh, numbers, pave, poplars_scene, resource, runs,
+from shapes import (LINE, TOP, WALL_H, WT, fixed, gap, inside, material, multimesh, numbers, pave, poplars_scene, resource, runs,
                     show, show_many, wall, windows)
 from tscn import COLORS, box, packed, vec  # on the path once shapes is imported
 
@@ -51,7 +51,9 @@ def compound():
     for x in (ALLEY[0] + 0.1, ALLEY[1] - 0.1): box(gate, x - 0.1, x + 0.1, 0, 3.6, -0.1, 0.1, 'iron')  # the gate: posts, a sign
     box(gate, *ALLEY, 3.6, 4.2, -0.15, 0.15, 'shop_sign')
     wall(end, 'x', ALLEY_END, *ALLEY, 3.0, m='brick')
-    wall(walls, 'z', NORTH_X[0], NORTH_Z[1], EAST_Z[1], WALL_H, [gap(a, b, WALL_H) for a, b in YARD_DOORS], m='brick')
+    # The west wall starts at the north row's south face: a wall reaches half its thickness past its ends, and here that
+    # half would stand out of the row's west face into the alley.
+    wall(walls, 'z', NORTH_X[0], NORTH_Z[1] + WT / 2, EAST_Z[1], WALL_H, [gap(a, b, WALL_H) for a, b in YARD_DOORS], m='brick')
     wall(walls, 'x', EAST_Z[1], NORTH_X[0], EAST_X[0], WALL_H, m='brick')
     rand = numbers(SHOPS_SEED)
     shops(rows, NORTH_X, NORTH_Z, 'n', rand)

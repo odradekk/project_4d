@@ -53,7 +53,7 @@ size = Vector3(75.3, 0.204, 80.12)
 
 [sub_resource type="BoxMesh" id="b7"]
 material = SubResource("m5")
-size = Vector3(0.24, 2.4, 4.12)
+size = Vector3(0.24, 2.4, 4)
 
 [sub_resource type="BoxMesh" id="b8"]
 material = SubResource("m5")
@@ -165,7 +165,7 @@ script = ExtResource("e1")
 EntityId = "compound_wall"
 
 [node name="p1" parent="compound_wall" instance=ExtResource("e2")]
-position = Vector3(151.9, 1.2, 13.94)
+position = Vector3(151.9, 1.2, 14)
 mesh = SubResource("b7")
 PartId = "p1"
 
