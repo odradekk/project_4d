@@ -18,11 +18,10 @@ public partial class City3D : Node3D
         Ground = 0xa7ad9fff, Asphalt = 0x55585cff, Line = 0xeeeeeaff, Walk = 0xb8b4abff, Bike = 0x6e7174ff,
         Green = 0x8a9a74ff, Sign = 0xc9a77cff, Shutter = 0x8c9196ff, Pole = 0x6d6f72ff, Ballast = 0x8e8a82ff,
         Sleeper = 0x7a6c5cff, Glass = 0x7f8b96ff, Trunk = 0x8a8478ff, Crown = 0x5d7a4aff;
-    private static readonly Color Sky = new(0xd4d8ddff), Loess = new(0xa89a84ff);
     private const double X0 = -1300, X1 = 1350, Z0 = -500, Z1 = 700;  // along the valley past the fog, across it to the mountains' foot
-    // These copy generate.py's layout, so change them with it: FX and FZ from FENCE_*, Cross from CROSS_ROAD, (57, 105)
+    // These copy generate.py's layout, so change them with it: fx and fz from FENCE_*, Cross from CROSS_ROAD, (57, 105)
     // from WALK, x 78 and 84 from SIDEWALK, x 91 from MAIN_ROAD; the node's y in compound.tscn is GROUND.
-    private const double FX = 27, FZ = 92.5;  // the compound's centre
+    private double fx = 27, fz = 92.5;  // the compound's centre
     // Carriageways (z) of the streets north and south of the compound and opposite the gate, and of the road to the gate.
     private static readonly (double, double) R2 = (-31, -22), R3 = (205, 214), E1 = (89, 98), Cross = (90, 97);
     private static readonly (double, double)[] WestCross = [NorthCross, BayIn, BayOut, SouthCross],
@@ -41,6 +40,18 @@ public partial class City3D : Node3D
 
     public override void _Ready()
     {
+        CompoundCity();
+        AddChild(new MeshInstance3D { Name = "Boxes", Mesh = Merged(), Layers = 3 });
+        AddChild(new MeshInstance3D
+        {
+            Name = "Ground", Layers = 3, Position = new Vector3((float)fx, -.01f, (float)fz),
+            Mesh = new PlaneMesh { Size = new Vector2(8000, 8000), Material = Material(Ground) }
+        });
+        AddChild(new MeshInstance3D { Name = "Mountains", Mesh = Mountains(), Layers = 3 });
+    }
+
+    private void CompoundCity()
+    {
         Streets();
         Factory();
         Shops();
@@ -51,16 +62,9 @@ public partial class City3D : Node3D
         Block(136, 196, 104, 150, 24, true, "windows");  // the department store at the corner opposite the gate
         Box(150, 182, 24, 28, 103.6, 104, Sign);
         Blocks();
-        AddChild(new MeshInstance3D { Name = "Boxes", Mesh = Merged(), Layers = 3 });
         foreach (var (x, z, h) in new[] { (-75.0, -125.0, 60.0), (-112, -150, 45) }) Cylinder(x, z, 0, h, 1.4, 2.8, 10);  // chimneys
         Cylinder(-25, -185, 0, 24, 1.2, 1.2, 8);  // the water tower
         Cylinder(-25, -185, 24, 30, 5, 5, 12);
-        AddChild(new MeshInstance3D
-        {
-            Name = "Ground", Layers = 3, Position = new Vector3((float)FX, -.01f, (float)FZ),
-            Mesh = new PlaneMesh { Size = new Vector2(8000, 8000), Material = Material(Ground) }
-        });
-        AddChild(new MeshInstance3D { Name = "Mountains", Mesh = Mountains(), Layers = 3 });
     }
 
     private void Streets()
@@ -232,7 +236,7 @@ public partial class City3D : Node3D
             for (var z = Z0; z < Z1 - 12; z += 34)
             {
                 double jx = x + (Rand() - .5) * 4, jz = z + (Rand() - .5) * 4;
-                var dist = Math.Sqrt(Math.Pow(jx + 15 - FX, 2) + Math.Pow(jz + 6 - FZ, 2));
+                var dist = Math.Sqrt(Math.Pow(jx + 15 - fx, 2) + Math.Pow(jz + 6 - fz, 2));
                 var tower = dist > 250 && Rand() < .08;  // no tower within 250 m of the compound
                 var (w, d) = tower ? (18, 18) : (30, 12);
                 if (!Clear(jx, jx + w, jz, jz + d)) continue;
@@ -304,55 +308,6 @@ public partial class City3D : Node3D
             mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
             mesh.SurfaceSetMaterial(mesh.GetSurfaceCount() - 1, Material(color));
         }
-        return mesh;
-    }
-
-    // Two ridges on each side of the east–west valley, about 1.2 km and 2.3 km out. They ignore the fog and are blended
-    // toward the sky by hand, the far ridge more, so they stay visible as hazy ridges past the fogged city.
-    private ArrayMesh Mountains()
-    {
-        var vertices = new List<Vector3>();
-        var colors = new List<Color>();
-        var sun = new Vector3(10, 35, 8).Normalized();
-        foreach (var (side, dist, height, haze) in new[] { (-1, 1200.0, 520.0, .6f), (-1, 2300, 820, .78f), (1, 1250, 480, .6f), (1, 2400, 780, .78f) })
-        {
-            const double span = 8000, step = 160;
-            var xs = Enumerable.Range(0, (int)(2 * span / step) + 1).Select(i => -span + i * step).ToArray();
-            var crest = xs.Select(x => height * (1 - Math.Pow(x / span, 2))
-                * (.6 + .25 * Math.Sin(x / 530 + side) + .1 * Math.Sin(x / 170 - side) + .15 * Rand())).ToArray();
-            // the valley floor, the foothills and the crest
-            var rows = new[] { (dist - 500, 0.0), (dist - 250, .35), (dist, 1) }.Select(row => xs.Select((x, i) =>
-            {
-                var px = FX + x + (Rand() - .5) * step * .4;
-                return new Vector3((float)px, row.Item2 > 0 ? (float)(crest[i] * row.Item2) : -20, (float)(FZ + side * (row.Item1 + (Rand() - .5) * 120)));
-            }).ToArray()).ToArray();
-            void Triangle(Vector3 a, Vector3 b, Vector3 d)
-            {
-                var n = (b - a).Cross(d - a).Normalized();
-                if (n.Z * side > 0) n = -n;  // facing the compound
-                var c = Loess.SrgbToLinear() * (.75f + .25f * Math.Max(0, n.Dot(sun)));
-                c = c.Lerp(Sky.SrgbToLinear(), haze);
-                vertices.AddRange([a, b, d]);
-                colors.AddRange([c, c, c]);
-            }
-            for (var r = 0; r < 2; r++)
-                for (var i = 0; i + 1 < xs.Length; i++)
-                {
-                    Triangle(rows[r][i], rows[r][i + 1], rows[r + 1][i + 1]);
-                    Triangle(rows[r][i], rows[r + 1][i + 1], rows[r + 1][i]);
-                }
-        }
-        var arrays = new Godot.Collections.Array();
-        arrays.Resize((int)Mesh.ArrayType.Max);
-        arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
-        arrays[(int)Mesh.ArrayType.Color] = colors.ToArray();
-        var mesh = new ArrayMesh();
-        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-        mesh.SurfaceSetMaterial(0, new StandardMaterial3D
-        {
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded, VertexColorUseAsAlbedo = true,
-            DisableFog = true, CullMode = BaseMaterial3D.CullModeEnum.Disabled
-        });
         return mesh;
     }
 }
