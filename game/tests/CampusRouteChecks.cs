@@ -15,12 +15,12 @@ namespace Game.Tests;
 /// gate into the sports ground; up the dirt road to the gap between the building site and the sports ground and on to the
 /// road's north end; down the dirt road through the iron gate and the side door into the mall, up its middle stair to
 /// the upper floor and down; along the passage out of the east entrance to the sidewalk's south end, and north to the bus
-/// stop. She runs outward into each of the unseen walls that bound where she can go, and it stops her: the main road's
-/// kerb at the bus stop and across the asphalt road's mouth; the sidewalk's north end, on the sidewalk and on the ground
-/// east of the estate's railing; its south end; the dirt road's north end, on the road and on each belt of poplars; the
-/// gap. Nothing else stands behind any of them, so with a wall gone, or shorter than the opening it closes, she runs on
-/// past it. Long runs that the checks of each part also run at the real speed, along the asphalt road, over the plaza
-/// and the yard, along the dirt road and the mall's passage, go at eight times it.
+/// stop. She runs outward into each of the unseen walls that bound where she can go, 0.5 m from what it meets at each of
+/// its ends, and it stops her: the main road's kerb, the sidewalk's north and south ends, the dirt road's north end and
+/// the gap; the kerb also at the bus stop and across the asphalt road's mouth. Nothing else stands behind any of them, so
+/// with a wall gone, or 0.7 m or more short of either end of the opening it closes, she runs on past it. Long runs that
+/// the checks of each part also run at the real speed, along the asphalt road, over the plaza and the yard, along the dirt
+/// road and the mall's passage, go at eight times it.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class CampusRouteChecks : Node
@@ -28,13 +28,16 @@ public partial class CampusRouteChecks : Node
     // The faces of the unseen walls toward her: the kerb (x), the sidewalk's north and south ends (z), the dirt road's
     // north end (z), and the gap (x).
     private const float Kerb = 244.2f, NorthEnd = -30, SouthEnd = 122.02f, DirtEnd = -106, Gap = -17.6f;
+    // Lines 0.5 m from what the walls meet at their ends: the kerb (x); the sidewalk's north and south ends (z); the
+    // estate's east railing and the mall's east wall (x); the building site's east hoarding and the estate's west railing
+    // (x); the hoarding's south side and the sports ground's fence (z).
+    private const float ByKerb = Kerb - .5f, ByNorthEnd = NorthEnd + .5f, BySouthEnd = SouthEnd - .5f;
+    private const float ByEstate = 237.62f, ByMall = 239.7f, ByHoarding = -16.45f, ByRailing = -1.22f;
+    private const float ByHoardingSouth = -31.85f, ByFence = -28.33f;
     // The bus stop by the kerb (x) and its middle (z); a line along the main road's west sidewalk clear of the bus stop's
-    // bench and the poplars (x); the middle of the ground between the estate's east railing and the sidewalk (x); the
-    // middles of the asphalt road and of its south sidewalk (z).
-    private const float Kerbside = 243.4f, Stop = 15, Walk = 241.8f, Strip = 238.2f, Mouth = -7, Sidewalk = -1.8f;
-    // The middle of the dirt road (x); a line across the belt of poplars west of it into the gap, 0.89 m from the two
-    // nearest trunks (z); lines through the belts west and east of it by its north end, 0.9 m or more from every trunk (x).
-    private const float Road = -8.8f, GapLine = -29.85f, WestBelt = -14.8f, EastBelt = -2.7f;
+    // bench and the poplars (x); the middles of the asphalt road and of its south sidewalk (z); the middle of the dirt
+    // road (x).
+    private const float Kerbside = 243.4f, Stop = 15, Walk = 241.8f, Mouth = -7, Sidewalk = -1.8f, Road = -8.8f;
     // Teaching building 1: outside door 1 (x) and its middle (z); the stairs' landing on each floor (x); the wide stair's
     // half landing (x), the flight up westward from a floor and the one on up eastward to the next (z).
     private const float WestOfDoor1 = 110, Door1 = 51.3f, Landing = 121, Half = 114.45f, UpWest = 46.74f, UpEast = 48.94f;
@@ -64,26 +67,22 @@ public partial class CampusRouteChecks : Node
         {
             await play.Load(scene: "res://regions/campus.tscn");
 
-            // At the bus stop, by the kerb where the bus would stop; north along the sidewalk to its north end, there and on
-            // the ground east of the estate's railing.
-            play.LookAt(new(Kerbside, 0, Stop), new(Kerb + 6, 1.3f, Stop));
+            // At the bus stop, by the kerb where the bus would stop. North along the sidewalk: the kerb by the sidewalk's
+            // north end, and the north end by the kerb and by the estate's railing.
+            play.LookAt(new(Kerbside, 0, Stop), new(Kerb, 1.3f, Stop));
             await play.Frames(3);
-            await Push((Kerb + 6, Stop));
-            Check(Stopped(feet.X, Kerb, Kerbside) && OnGround, $"at the bus stop the main road's kerb stops her; she is at {feet}");
+            await Against("the main road's kerb", (Kerbside, Stop), Kerb, true);
             await RunTo((Walk, Stop));
-            foreach (var x in new[] { Walk, Strip })
-            {
-                await RunTo((x, NorthEnd + 3.5f));
-                await Push((x, NorthEnd - 4));
-                Check(Stopped(feet.Z, NorthEnd, NorthEnd + 3.5f) && OnGround, $"the sidewalk's north end stops her at x {x}; she is at {feet}");
-            }
+            await Against("the main road's kerb", (Walk, ByNorthEnd), Kerb, true);
+            await Against("the sidewalk's north end", (ByKerb, NorthEnd + 3.5f), NorthEnd, false);
+            await RunTo((ByKerb, NorthEnd + 3.5f));
+            await Against("the sidewalk's north end", (ByEstate, NorthEnd + 3.5f), NorthEnd, false);
 
             // Back to the asphalt road, where the kerb stops her across its mouth; west along its south sidewalk, in at the
             // school's gate and across the plaza.
-            await RunTo((Walk, Mouth));
-            await Push((Kerb + 6, Mouth));
-            Check(Stopped(feet.X, Kerb, Walk) && OnGround, $"across the asphalt road's mouth the main road's kerb stops her; she is at {feet}");
-            await RunTo((Walk, Sidewalk));
+            await RunTo((ByEstate, NorthEnd + 3.5f));
+            await Against("the main road's kerb", (Walk, Mouth), Kerb, true);
+            await RunTo((Walk, Sidewalk), (236, Sidewalk));
             await FarTo((76, Sidewalk), (76, 2), (WestOfDoor1, Door1));
             Check(OnGround, $"she runs from the bus stop in at the school's gate and across the plaza; she is at {feet}");
 
@@ -120,21 +119,19 @@ public partial class CampusRouteChecks : Node
             await FarTo((3, 8), (-21, 8));
             Check(OnGround, $"she runs out of the back gate, over the dirt road and into the sports ground; she is at {feet}");
 
-            // Up the dirt road: into the gap between the building site and the sports ground, then to the road's north end.
-            await FarTo((Road, 8), (Road, GapLine));
-            await RunTo((Gap + 3.6f, GapLine));
-            await Push((Gap - 4.4f, GapLine));
-            Check(Stopped(feet.X, Gap, Gap + 3.6f) && OnGround, $"the gap between the building site and the sports ground stops her; she is at {feet}");
-            await RunTo((Road, GapLine));
+            // Up the dirt road: the gap between the building site and the sports ground by the fence and by the hoarding,
+            // then the road's north end by the hoarding and by the estate's railing. The runs across the belts of poplars
+            // pass every trunk with 0.25 m or more to spare; the one by the railing starts north of a trunk near it.
+            await FarTo((Road, 8), (Road, ByFence));
+            await Against("the gap between the building site and the sports ground", (Gap + 3.6f, ByFence), Gap, true);
+            await RunTo((Road, ByFence), (Road, ByHoardingSouth));
+            await Against("the gap between the building site and the sports ground", (Gap + 3.6f, ByHoardingSouth), Gap, true);
+            await RunTo((Road, ByHoardingSouth));
             await FarTo((Road, DirtEnd + 3.5f));
-            foreach (var x in new[] { WestBelt, Road, EastBelt })
-            {
-                await RunTo((x, DirtEnd + 3.5f));
-                await Push((x, DirtEnd - 4));
-                Check(Stopped(feet.Z, DirtEnd, DirtEnd + 3.5f) && OnGround, $"the dirt road's north end stops her at x {x}; she is at {feet}");
-                await RunTo((x, DirtEnd + 3.5f));
-            }
-            await RunTo((Road, DirtEnd + 3.5f));
+            await Against("the dirt road's north end", (ByHoarding, DirtEnd + 3.5f), DirtEnd, false);
+            await RunTo((ByHoarding, DirtEnd + 3.5f), (Road, DirtEnd + 3.5f), (Road, DirtEnd + 2.3f));
+            await Against("the dirt road's north end", (ByRailing, DirtEnd + 2.3f), DirtEnd, false);
+            await RunTo((ByRailing, DirtEnd + 2.3f), (Road, DirtEnd + 2.3f));
 
             // Down the dirt road through the iron gate and the side door into the mall, up its middle stair and down.
             await FarTo((Road, Passage), (Stair, Passage));
@@ -143,12 +140,14 @@ public partial class CampusRouteChecks : Node
             await RunTo((Stair, Passage));
             Check(OnGround, $"she runs down the mall's middle stair into the passage; she is at {feet}");
 
-            // Along the passage, out of the east entrance onto the sidewalk to its south end, and north to the bus stop.
-            await FarTo((Walk, Passage));
-            await RunTo((Walk, SouthEnd - 3.5f));
-            await Push((Walk, SouthEnd + 4));
-            Check(Stopped(feet.Z, SouthEnd, SouthEnd - 3.5f) && OnGround, $"the sidewalk's south end stops her; she is at {feet}");
-            await RunTo((Walk, Stop));
+            // Along the passage, out of the east entrance onto the sidewalk: its south end by the mall and by the kerb, the
+            // kerb by the south end. The run by the kerb starts south of the poplar at z 120. North to the bus stop.
+            await FarTo((236, Passage));
+            await RunTo((Walk, Passage));
+            await Against("the sidewalk's south end", (ByMall, SouthEnd - 3.5f), SouthEnd, false);
+            await Against("the main road's kerb", (Walk, BySouthEnd), Kerb, true);
+            await Against("the sidewalk's south end", (ByKerb, SouthEnd - 1.12f), SouthEnd, false);
+            await RunTo((Walk, BySouthEnd), (Walk, Stop));
             Check(OnGround, $"she runs out of the mall's east entrance back to the bus stop; she is at {feet}");
 
             GD.Print("Campus route checks passed: from the bus stop in at the school's gate, up both teaching buildings to their top floors, out of the back gate into the sports ground, along the dirt road into the mall and up to its upper floor, out of its east entrance and back to the bus stop; the main road's kerb, the sidewalk's north and south ends, the dirt road's north end and the gap between the building site and the sports ground stop her.");
@@ -239,6 +238,17 @@ public partial class CampusRouteChecks : Node
         }
         Input.ActionRelease("move_forward");
         Input.ActionRelease("run");
+    }
+
+    // From `from`, runs at an unseen wall whose face lies across x, if she runs along x, or else across z, toward a point
+    // 4 m past it; the wall must stop her by the face.
+    private async Task Against(string wall, (float X, float Z) from, float face, bool alongX)
+    {
+        await RunTo(from);
+        var start = alongX ? from.X : from.Z;
+        var past = face + Mathf.Sign(face - start) * 4;
+        await Push(alongX ? (past, from.Z) : (from.X, past));
+        Check(Stopped(alongX ? feet.X : feet.Z, face, start) && OnGround, $"{wall} must stop her, run into from {from}; she is at {feet}");
     }
 
     // Runs toward a point for two seconds, longer than it takes to get there, whatever stands in the way.
