@@ -16,7 +16,7 @@ namespace Game.Tests;
 /// Into a slope steeper than she can stand on, and into a step 10 cm high, at an angle, she rises no more than 2 cm; nearly
 /// straight into the step, she stops. Pushed into the corner of two walls, or of a wall and a step or the steep slope, she
 /// stands still and rises no more than 2 cm. On a slope of 44° she stands still without sliding, and she walks and runs up
-/// it.
+/// it. Each case starts afresh, so it goes the same alone as among the others.
 /// </summary>
 public partial class MovementChecks : Node
 {
@@ -40,7 +40,6 @@ public partial class MovementChecks : Node
         play = new TurningFixture(this);
         try
         {
-            await play.Load(AddYard, "res://regions/spiral_test.tscn");
             foreach (var run in new[] { false, true })
             {
                 var how = run ? "runs" : "walks";
@@ -50,11 +49,13 @@ public partial class MovementChecks : Node
                 await Stand(SpiralStair3D.At(1.5f, Mathf.Pi / 4, SpiralStair3D.Surface(Mathf.Pi / 4) + .02f), Vector3.Zero);
                 await Round(Vector3.Zero, RailLine, Mathf.Pi / 4, Landing, run);
                 Check(OnSecondFloor, $"she {how} up a turn of the spiral stair against its rail; she is at {feet}");
+                await Stand(SpiralStair3D.At(1.5f, Landing, SpiralStair3D.Storey + .02f), Vector3.Zero);
                 await Round(Vector3.Zero, RailLine, Landing, -.25f, run);
                 Check(Mathf.Abs(feet.Y) < .05f, $"she {how} down a turn of the spiral stair against its rail; she is at {feet}");
                 await Stand(SpiralStair3D.At(1, -.3f, .02f), Vector3.Zero);
                 await Round(Vector3.Zero, KeepOutLine, -.3f, Landing, run);
                 Check(OnSecondFloor, $"she {how} up a turn of the spiral stair against the keep-out round its column; she is at {feet}");
+                await Stand(SpiralStair3D.At(1, Landing, SpiralStair3D.Storey + .02f), Vector3.Zero);
                 await Round(Vector3.Zero, KeepOutLine, Landing, -.25f, run);
                 Check(Mathf.Abs(feet.Y) < .05f, $"she {how} down a turn of the spiral stair against the keep-out round its column; she is at {feet}");
 
@@ -86,8 +87,7 @@ public partial class MovementChecks : Node
             }
             // Halfway up, where the bottom of her capsule rests on the slope: 0.2 (1 / cos 44° - 1) = 0.078 m above it.
             var halfway = new Vector3(Foot + SlopeLength / 2 * Mathf.Cos(Mathf.DegToRad(Slope)), SlopeLength / 2 * Mathf.Sin(Mathf.DegToRad(Slope)) + .09f, 0);
-            play.LookAt(halfway, halfway + new Vector3(1, 1.3f, 0));
-            await play.Frames(10);
+            await Start(halfway, halfway + new Vector3(1, 1.3f, 0));
             var still = feet;
             await play.Frames(120);
             Check(feet.DistanceTo(still) < .001f, $"she stands still for 2 s on a {Slope}° slope; she moved from {still} to {feet}");
@@ -172,12 +172,22 @@ public partial class MovementChecks : Node
         region.GetNode("Sections/Ⅰ/Props").AddChild(body);
     }
 
-    // Puts her feet there, facing round centre the way the angles grow, as SpiralStair3D.At measures them.
-    private async Task Stand(Vector3 spot, Vector3 centre)
+    // Starts a case: a freshly loaded region, with her feet put at the spot, looking at target, and left standing still until
+    // she is on the floor. What she and Godot keep from one move to the next, such as whether she was on the floor, would
+    // otherwise carry over from the case before and change how this one goes.
+    private async Task Start(Vector3 spot, Vector3 target)
+    {
+        await play.Load(AddYard, "res://regions/spiral_test.tscn");
+        play.LookAt(spot, target);
+        await play.Until(() => play.Player.IsOnFloor(), 1, $"she must come to stand on the floor at {spot}");
+        await play.Frames(5);
+    }
+
+    // Starts a case with her feet there, facing round centre the way the angles grow, as SpiralStair3D.At measures them.
+    private Task Stand(Vector3 spot, Vector3 centre)
     {
         var a = Mathf.Atan2(spot.X - centre.X, -(spot.Z - centre.Z));
-        play.LookAt(spot, spot + new Vector3(Mathf.Cos(a), 1.3f, Mathf.Sin(a)));
-        await play.Frames(2);
+        return Start(spot, spot + new Vector3(Mathf.Cos(a), 1.3f, Mathf.Sin(a)));
     }
 
     // Walks or runs round centre from `from` to `to` round from its −z, steering each frame for `steer` from it, which a wall
@@ -215,8 +225,7 @@ public partial class MovementChecks : Node
     private async Task<(float highest, float wander)> Corner(Vector3 corner, float degrees, bool run)
     {
         var a = Mathf.DegToRad(degrees);
-        play.LookAt(corner + new Vector3(Mathf.Cos(a), .01f, Mathf.Sin(a)), corner + new Vector3(0, 1.3f, 0));
-        await play.Frames(2);
+        await Start(corner + new Vector3(Mathf.Cos(a), .01f, Mathf.Sin(a)), corner + new Vector3(0, 1.3f, 0));
         var (highest, wander) = (feet.Y, 0f);
         Input.ActionPress("move_forward");
         if (run) Input.ActionPress("run");
@@ -237,8 +246,7 @@ public partial class MovementChecks : Node
     private async Task<float> Straight(Vector3 spot, float degrees, bool run, int frames = 90, Func<bool>? done = null)
     {
         var heading = new Vector3(Mathf.Cos(Mathf.DegToRad(degrees)), 0, Mathf.Sin(Mathf.DegToRad(degrees)));
-        play.LookAt(spot, spot + heading + new Vector3(0, 1.3f, 0));
-        await play.Frames(2);
+        await Start(spot, spot + heading + new Vector3(0, 1.3f, 0));
         var highest = feet.Y;
         Input.ActionPress("move_forward");
         if (run) Input.ActionPress("run");
