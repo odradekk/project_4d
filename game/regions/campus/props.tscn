@@ -105,7 +105,7 @@ buffer = PackedFloat32Array(1, 0, 0, 3.8, 0, 1, 0, 0.55, 0, 0, 1, 74.63, 1, 0, 0
 [node name="Props" type="Node3D"]
 
 [node name="StandSlope" type="StaticBody3D" parent="."]
-position = Vector3(87, 0.554924, 77.85497)
+position = Vector3(87, 0.554924, 77.82797)
 rotation = Vector3(-0.44752, 0, 0)
 collision_mask = 0
 
@@ -113,7 +113,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="ToiletStairSlope" type="StaticBody3D" parent="."]
-position = Vector3(141.334688, 1.756794, 35.96)
+position = Vector3(141.312688, 1.756794, 35.96)
 rotation = Vector3(0, 0, 0.527404)
 collision_mask = 0
 

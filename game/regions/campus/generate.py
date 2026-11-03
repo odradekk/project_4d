@@ -163,7 +163,7 @@ def toilet():
     box(up, x0 - 0.12, x1 + 0.12, 2 * th - 0.2, 2 * th, z0 - 0.12, z1 + 0.12, 'slab')
     for p, q, r, s in ((x0, x1, z0, z0), (x0, x1, z1, z1), (x0, x0, z0, z1), (x1, x1, z0, z1)):
         box(up, p - 0.12, q + 0.12, 2 * th, 2 * th + 0.6, r - 0.12, s + 0.12, 'wall')  # parapet
-    # Each tread stands on the ground; the landing is the last rise. The sloping handrails are in props.tscn.
+    # Each tread stands on the ground; the landing is the last rise.
     rise = th / (TREADS + 1)
     for i in range(TREADS): box(stair, FOOT + i * RUN / TREADS, FOOT + (i + 1) * RUN / TREADS, 0, (i + 1) * rise, *STAIR_Z, 'concrete')
     box(stair, *LANDING, 0, th, *STAIR_Z, 'concrete')
@@ -232,11 +232,11 @@ def store():
     return fixed('Store', store=shell, store_furniture=things)
 
 
-# Section I's Props: collision-only slopes through the front edges of the stand's and the outside stair's treads, and what
-# upright boxes cannot draw, unknown to the engine: the plaza's rings, centre circles, rims, handrails, balls.
+# Section I's Props: collision-only slopes 1.3 cm over the treads' front edges (one through them can stop her dead), and
+# what upright boxes cannot draw, unknown to the engine: the plaza's rings, centre circles, rims, handrails, balls.
 def props(circles, rims):
-    subs, nodes = bodies([slope('StandSlope', 'z', STEPS_Z[0] - GO, 0, STEPS_Z[0] + (STEPS - 1) * GO, STAND_H, *STEPS_X),
-                          slope('ToiletStairSlope', 'x', FOOT - RUN / TREADS, 0, LANDING[0], TOILET_H, *STAIR_Z)])
+    subs, nodes = bodies([slope('StandSlope', 'z', STEPS_Z[0] - GO - 0.027, 0, STEPS_Z[1] - GO - 0.027, STAND_H, *STEPS_X),
+                          slope('ToiletStairSlope', 'x', FOOT - RUN / TREADS - 0.022, 0, LANDING[0] - 0.022, TOILET_H, *STAIR_Z)])
 
     def disc(rid, r, rgb, h):
         return resource(subs, 'CylinderMesh', rid, material=material(subs, rgb), top_radius=r, bottom_radius=r, height=h,
