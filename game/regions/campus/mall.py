@@ -13,6 +13,7 @@ Decision note: 2026-11-01-school-scene-layout
 """
 import math
 
+from east import TUNNEL
 from north_west import DIRT
 from shapes import TOP, WT, beam, fixed, material, multimesh, numbers, pave, posts, resource, runs, show, show_many, spaced
 from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once shapes is imported
@@ -20,11 +21,15 @@ from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once sha
 COLORS.update({'vault': (0.839, 0.82, 0.776, 1)})
 
 X0, X1, Z0, Z1 = -121.6, 239.2, 92.12, 122.12  # 40 m longer to the west than the sketch, 30 m deep instead of 52
-T0, T1 = 103.12, 111.12  # the passage (z), open at both ends
+T0, T1 = TUNNEL  # the passage (z), open at both ends; east.py keeps the poplars clear of its mouth
 SPRING, CROWN, MF, MH = 3.7, 5.0, 5.3, 4.2  # the arch's foot and crown; the upper floor's level and storey height
 ROOF = MF + MH
 STAIRS, STAIR_TOP, TREADS = (-80, 60, 200), 94.75, 31  # each stair's middle (x), 3 m wide, up north from the passage
 WELLS, RUN = [(s - 1.5, s + 1.5) for s in STAIRS], T0 - STAIR_TOP  # the stairs (x), and how far each runs (z)
+# Each stair's slope lies this far toward the passage from the line through its treads' front edges, about 1.3 cm above
+# every edge: on a slope through the edges themselves she can stop dead on her way up. Its top still meets the top
+# tread's level, and its foot lies in the passage.
+SHIFT = 0.02
 SIDE_DOOR = (DIRT[0] + 0.35, DIRT[1] - 0.35)  # between the iron gate's pillars
 HALVES = (X0, STAIRS[1]), (STAIRS[1], X1)  # the floors longer than 200 m, cut in two at the middle stair
 RAIL = 1.2  # the forecourt's railing
@@ -128,11 +133,11 @@ def booth_row(dividers, counters, z0, z1, faces):  # one row's dividers and coun
     return packed('Booths', [], subs=subs, nodes=nodes)
 
 
-# Under section I's Props: the collision-only slopes over the stairs, through the front edges of their treads; the arch
+# Under section I's Props: the collision-only slopes over the stairs, just above the front edges of their treads; the arch
 # over the passage, in eight flat strips; the windows; the shops' signs; and the rows of booths.
 def props(signs):
-    subs, nodes = bodies([slope(f'Stair{k}Slope', 'z', T0 + RUN / TREADS, 0, STAIR_TOP + RUN / TREADS, MF, *well)
-                          for k, well in enumerate(WELLS, 1)])
+    foot, top = T0 + RUN / TREADS + SHIFT, STAIR_TOP + RUN / TREADS + SHIFT
+    subs, nodes = bodies([slope(f'Stair{k}Slope', 'z', foot, 0, top, MF, *well) for k, well in enumerate(WELLS, 1)])
     half, rise, n = (T1 - T0) / 2, CROWN - SPRING, 8
     r = (half * half + rise * rise) / (2 * rise)
     step = 2 * math.asin(half / r) / n

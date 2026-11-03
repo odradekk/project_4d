@@ -629,14 +629,34 @@ mesh = SubResource("b47")
 PartId = "p26"
 
 [node name="p27" parent="toilet_stair" instance=ExtResource("e2")]
-position = Vector3(145.6, 4.625, 36.745)
-mesh = SubResource("b48")
+position = Vector3(138.5, 0.5, 35.175)
+mesh = SubResource("b47")
 PartId = "p27"
 
 [node name="p28" parent="toilet_stair" instance=ExtResource("e2")]
+position = Vector3(140.466667, 1.7, 35.175)
+mesh = SubResource("b47")
+PartId = "p28"
+
+[node name="p29" parent="toilet_stair" instance=ExtResource("e2")]
+position = Vector3(142.433333, 2.9, 35.175)
+mesh = SubResource("b47")
+PartId = "p29"
+
+[node name="p30" parent="toilet_stair" instance=ExtResource("e2")]
+position = Vector3(144.4, 4.1, 35.175)
+mesh = SubResource("b47")
+PartId = "p30"
+
+[node name="p31" parent="toilet_stair" instance=ExtResource("e2")]
+position = Vector3(145.6, 4.625, 36.745)
+mesh = SubResource("b48")
+PartId = "p31"
+
+[node name="p32" parent="toilet_stair" instance=ExtResource("e2")]
 position = Vector3(146.745, 4.625, 35.96)
 mesh = SubResource("b49")
-PartId = "p28"
+PartId = "p32"
 
 [node name="toilet_stair_edge" type="Node3D" parent="."]
 script = ExtResource("e1")
@@ -646,3 +666,8 @@ EntityId = "toilet_stair_edge"
 position = Vector3(141.45, 2.35, 36.75)
 mesh = SubResource("b50")
 PartId = "p1"
+
+[node name="p2" parent="toilet_stair_edge" instance=ExtResource("e2")]
+position = Vector3(141.45, 2.35, 35.17)
+mesh = SubResource("b50")
+PartId = "p2"
