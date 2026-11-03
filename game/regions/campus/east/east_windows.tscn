@@ -1,0 +1,64 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="StandardMaterial3D" id="c0"]
+albedo_color = Color(0.435, 0.659, 0.878, 1)
+
+[sub_resource type="BoxMesh" id="nsb"]
+material = SubResource("c0")
+size = Vector3(1.5, 1.4, 0.06)
+
+[sub_resource type="MultiMesh" id="ns"]
+transform_format = 1
+instance_count = 3
+mesh = SubResource("nsb")
+buffer = PackedFloat32Array(1, 0, 0, 2.7, 0, 1, 0, 1.6, 0, 0, 1, 80.15, 1, 0, 0, 6, 0, 1, 0, 1.6, 0, 0, 1, 80.15, 1, 0, 0, 9.3, 0, 1, 0, 1.6, 0, 0, 1, 80.15)
+
+[sub_resource type="BoxMesh" id="ewb"]
+material = SubResource("c0")
+size = Vector3(0.06, 1.4, 1.5)
+
+[sub_resource type="MultiMesh" id="ew"]
+transform_format = 1
+instance_count = 48
+mesh = SubResource("ewb")
+buffer = PackedFloat32Array(1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 2.11, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 5.41, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 8.71, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 12.01, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 15.31, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 18.61, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 21.91, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 25.21, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 28.51, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 31.81, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 35.11, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 38.41, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 41.71, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 45.01, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 48.31, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 51.61, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 54.91, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 58.21, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 61.51, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 64.81, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 68.11, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 71.41, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 74.71, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 78.01, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 2.11, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 5.41, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 8.71, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 12.01, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 15.31, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 18.61, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 21.91, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 25.21, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 28.51, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 31.81, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 35.11, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 38.41, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 41.71, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 45.01, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 48.31, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 51.61, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 54.91, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 58.21, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 61.51, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 64.81, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 68.11, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 71.41, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 74.71, 1, 0, 0, 12.03, 0, 1, 0, 1.6, 0, 0, 1, 78.01)
+
+[node name="Windows" type="Node3D"]
+
+[node name="NorthSouth1" type="MultiMeshInstance3D" parent="."]
+layers = 3
+multimesh = SubResource("ns")
+
+[node name="EastWest1" type="MultiMeshInstance3D" parent="."]
+layers = 3
+multimesh = SubResource("ew")
+
+[node name="NorthSouth2" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 2.9, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest2" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 2.9, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth3" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 5.8, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest3" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 5.8, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth4" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 8.7, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest4" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 8.7, 0)
+multimesh = SubResource("ew")

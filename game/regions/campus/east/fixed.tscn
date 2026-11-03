@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/east/compound.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/campus/east/main_road.tscn" id="e2"]
+
+[node name="East" type="Node3D"]
+
+[node name="Compound" parent="." instance=ExtResource("e1")]
+
+[node name="MainRoad" parent="." instance=ExtResource("e2")]

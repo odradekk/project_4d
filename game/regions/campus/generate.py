@@ -1,6 +1,6 @@
 """Writes the scenes of the campus region next to this file, all but campus.tscn: python game/regions/campus/generate.py
-Teaching building 1's come from teaching1.py, teaching building 2's from teaching2.py, and those of the school's north
-and west sides from north_west.py.
+Teaching building 1's come from teaching1.py, teaching building 2's from teaching2.py, those of the school's north and
+west sides from north_west.py, and those of its east side from east.py.
 
 The layout is the greybox prototype's (branch prototype/school-layout, prototypes/school-layout/index.html), in metres with
 x east, z south and y up; walls are placed by their centrelines. The origin is the school wall's north-west corner, and
@@ -10,10 +10,11 @@ Decision note: 2026-11-01-school-scene-layout
 import math
 from pathlib import Path
 
+import east
 import north_west
 import teaching1
 import teaching2
-from shapes import LINE, TOP, WT, fixed, gap, material, multimesh, pave, resource, show, show_many, wall, window
+from shapes import LINE, TOP, WALL_H, WT, fixed, gap, material, multimesh, pave, resource, show, show_many, wall, window
 from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once shapes is imported
 
 # The campus's colors, beside the compound's; scene() looks them up by name.
@@ -28,7 +29,7 @@ COLORS.update({
     'glass_roof': (0.749, 0.863, 0.925, 0.28),
 })
 
-SCHOOL_X, SCHOOL_Z, WALL_H = (0, 149), (0, 92), 2.4
+SCHOOL_X, SCHOOL_Z = (0, 149), (0, 92)
 GATE, NAME_WALL, BACK = (72, 80), (62, 71.4), (6, 10)  # in the north wall (x); the back gate in the west wall (z)
 PLAZA_X, PLAZA_Z = (66, 108), (18, 76)
 STAND_X, STAND_Z, STAND_H = (79, 95), (79.5, 84.5), 1.2
@@ -270,9 +271,11 @@ def main():
     files.update(teaching1.files())
     files.update(teaching2.files())
     files.update(north_west.files())
+    files.update(east.files())
     here = Path(__file__).parent
-    for folder in ('teaching1', 'teaching2', 'north_west'): (here / folder).mkdir(exist_ok=True)
-    for path, text in files.items(): (here / path).write_text(text, encoding='utf-8', newline='\n')
+    for path, text in files.items():
+        (here / path).parent.mkdir(exist_ok=True)
+        (here / path).write_text(text, encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':
