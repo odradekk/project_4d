@@ -236,7 +236,39 @@ public partial class FirstPersonPlayer : CharacterBody3D
         var velocity = direction * speed;
         velocity.Y = IsOnFloor() ? 0 : Velocity.Y - 9.8f * (float)delta;
         Velocity = velocity;
+        Move((float)delta);
+    }
+
+    // Moves her by Velocity. Blocking on walls, as Godot does by default, keeps her from climbing steep slopes and the edges of
+    // steps, but stops her dead whenever one move meets a wall a second time: rightly in a corner, but also at each joint of a
+    // railing built of boxes. So unless she walked within WallMinSlideAngle of straight into the wall that stopped her, where
+    // Godot stops her anyway, she goes on along it for the rest of the step without blocking on walls. She stays where Godot
+    // stopped her if that takes her back against the way she walks, as out of a corner, or if it touches a wall that faces up,
+    // such as the edge of a step or a steep slope, which sliding without blocking on walls can lift her up.
+    private void Move(float delta)
+    {
+        var start = GlobalPosition;
+        var level = Velocity.Slide(UpDirection);
         MoveAndSlide();
+        if (Velocity != Vector3.Zero || level == Vector3.Zero || !IsOnWall()) return;
+        var wall = GetWallNormal().Slide(UpDirection).Normalized();
+        if (-level.Normalized().Dot(wall) >= Mathf.Cos(WallMinSlideAngle)) return;
+        var stopped = GlobalPosition;
+        Velocity = level.Slide(wall) * Mathf.Max(0, 1 - (stopped - start).Slide(UpDirection).Length() / (level.Length() * delta));
+        FloorBlockOnWall = false;
+        MoveAndSlide();
+        FloorBlockOnWall = true;
+        var steep = false;
+        for (var i = 0; i < GetSlideCollisionCount(); i++)
+        {
+            var hit = GetSlideCollision(i);
+            // Godot counts a surface as floor up to 0.01 rad past FloorMaxAngle.
+            for (var j = 0; j < hit.GetCollisionCount(); j++)
+                steep |= hit.GetAngle(j, UpDirection) > FloorMaxAngle + .01f && hit.GetNormal(j).Dot(UpDirection) > .01f;
+        }
+        if (!steep && (GlobalPosition - stopped).Dot(level) >= 0) return;
+        GlobalPosition = stopped;
+        Velocity = Vector3.Zero;
     }
 
     // The prompt of what the crosshair is on if it can be used, else the keys that act on a seam at her feet and on what is

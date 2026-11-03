@@ -88,8 +88,8 @@ public partial class SpiralChecks : Node
                     await Stand(2 * Tau - Going + (start - .2f) / Line);
                     await Climb(Landing, run, run ? runDown : walkDown);
                 }
-            // Clear of the keep-out and the rail: pressed against either, she stops, because a CharacterBody3D that blocks on
-            // walls stops dead when it meets a wall twice in one move, at each corner of the rail and each crease of the ramp.
+            // On lines through two more of the ramp's rings, clear of the keep-out and the rail, which MovementChecks walks
+            // pressed against.
             foreach (var r in new[] { .9f, 1.5f })
                 foreach (var run in new[] { false, true })
                 {
