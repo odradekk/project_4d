@@ -11,7 +11,7 @@ namespace Game.Tests;
 /// sidewalk, round the corner and west along the asphalt road's south sidewalk to the school's gate; then back out, in at
 /// the staff compound's gate and down the alley to the wall at its south end, and through the openings in the compound's
 /// wall into its yard and out again. The bus stop's bench, a shop front in each row, the wall at the alley's south end, the
-/// compound's wall and a block of flats stop her.
+/// compound's wall and a block of flats stop her; a shop front stops her at the front itself, not at the block behind it.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class EastChecks : Node
@@ -44,12 +44,12 @@ public partial class EastChecks : Node
             Check(Stopped(feet.X, Bench, Walk) && OnGround, $"the bus stop's bench stops her: the stop stands there; she is at {feet}");
             await WalkTo((Walk, EastShop));
             await Push((236, EastShop));
-            Check(Stopped(feet.X, EastFront, Walk) && OnGround, $"a shop front in the east row stops her; she is at {feet}");
+            Check(Against(feet.X, EastFront, Walk) && OnGround, $"a shop front in the east row stops her; she is at {feet}");
 
             // North along the sidewalk, round the corner and west to the school's gate, past the north row of shops.
-            await WalkTo((Walk, Sidewalk), (NorthShop, Sidewalk));
+            await WalkTo((Walk, EastShop), (Walk, Sidewalk), (NorthShop, Sidewalk));
             await Push((NorthShop, 4));
-            Check(Stopped(feet.Z, NorthFront, Sidewalk) && OnGround, $"a shop front in the north row stops her; she is at {feet}");
+            Check(Against(feet.Z, NorthFront, Sidewalk) && OnGround, $"a shop front in the north row stops her; she is at {feet}");
             await WalkTo((NorthShop, Sidewalk), (76, Sidewalk), (76, 2));
             Check(feet.Z > .12f && OnGround, $"she walks from the bus stop along the sidewalks in at the school's gate; she is at {feet}");
 
@@ -92,6 +92,10 @@ public partial class EastChecks : Node
     // Pushed from `from` toward a face past which her target lies, she stops by it on her side: her middle is about her
     // radius, 0.2 m, from it.
     private static bool Stopped(float at, float face, float from) => (at - face) * Mathf.Sign(from - face) is > .1f and < .5f;
+
+    // Stopped by that face itself. Her middle stops 0.2 to 0.22 m from a face she runs into; a shop's front stands 4 cm out
+    // from its block, so without the front she would stop at most 0.18 m from where the front should be.
+    private static bool Against(float at, float face, float from) => (at - face) * Mathf.Sign(from - face) is > .19f and < .25f;
 
     // Runs the player to each point in turn with the movement keys, in straight lines, and lets go of them there. She gets
     // ten seconds and one more for every 2 m to each point.
