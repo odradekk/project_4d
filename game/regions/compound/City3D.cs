@@ -20,16 +20,16 @@ public partial class City3D : Node3D
         Green = 0x8a9a74ff, Sign = 0xc9a77cff, Shutter = 0x8c9196ff, Pole = 0x6d6f72ff, Ballast = 0x8e8a82ff,
         Sleeper = 0x7a6c5cff, Glass = 0x7f8b96ff, Trunk = 0x8a8478ff, Crown = 0x5d7a4aff;
     private const double X0 = -1300, X1 = 1350, Z0 = -500, Z1 = 700;  // along the valley past the fog, across it to the mountains' foot
-    // These copy generate.py's layout, so change them with it: fx and fz from FENCE_*, Cross from CROSS_ROAD, (57, 105)
-    // from WALK, x 78 and 84 from SIDEWALK, x 91 from MAIN_ROAD; the node's y in compound.tscn is GROUND.
-    private double fx = 27, fz = 92.5;  // the compound's centre; CampusCity sets the campus's
+    // These copy generate.py's layout, so change them with it: CompoundCity's centre from FENCE_*, Cross from CROSS_ROAD,
+    // (57, 105) from WALK, x 78 and 84 from SIDEWALK, x 91 from MAIN_ROAD; the node's y in compound.tscn is GROUND.
+    private double fx, fz;  // the region's centre, which its city sets with the random state
     // Carriageways (z) of the streets north and south of the compound and opposite the gate, and of the road to the gate.
     private static readonly (double, double) R2 = (-31, -22), R3 = (205, 214), E1 = (89, 98), Cross = (90, 97);
     private static readonly (double, double)[] WestCross = [NorthCross, BayIn, BayOut, SouthCross],
         EastCross = [(E1.Item1 - 3, E1.Item2 + 3)];
 
     private readonly Dictionary<uint, List<Aabb>> boxes = [];
-    private long seed = 2000;
+    private long seed;
 
     private double Rand() => (seed = seed * 16807 % 2147483647) / 2147483647.0;
 
@@ -53,6 +53,7 @@ public partial class City3D : Node3D
 
     private void CompoundCity()
     {
+        (seed, fx, fz) = (2000, 27, 92.5);  // the prototype's seed, and the compound's centre
         Streets();
         Factory();
         Shops();
