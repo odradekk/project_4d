@@ -8,9 +8,9 @@ using static Game.Tests.TurningFixture;
 namespace Game.Tests;
 
 /// <summary>
-/// The campus region's mall tunnel, walked with the movement keys. First up and down each stair on three lines across it,
-/// walking and running, from start points 3 mm apart over one physics step's travel, so that her steps end at every point
-/// along the treads; and once the walk up the middle stair on which she stopped dead on the treads' edges. Then from the
+/// The campus region's mall tunnel, walked with the movement keys. First up and down the middle stair on three lines
+/// across it, walking and running, from start points 3 mm apart over one physics step's travel, so that her steps end at
+/// every point along the treads; and once the walk up it on which she stopped dead on the treads' edges. Then from the
 /// main road's west sidewalk in at the east entrance and along the passage to the forecourt at its west end; from the dirt
 /// road through the iron gate and the side door into the passage; up the west stair to the upper floor, along the middle
 /// aisle from its west end to its east end, and down and up again the middle and east stairs on the way. A shop front in
@@ -53,20 +53,22 @@ public partial class MallChecks : Node
             await play.Load(scene: "res://regions/campus.tscn");
 
             // A walk up the middle stair, 1 m west of its middle, on which she stopped dead when its slope ran through the
-            // treads' front edges; then each stair on three lines, up from the passage and down from the top tread.
+            // treads' front edges; then that stair on three lines, up from the passage and down from the top tread. The three
+            // stairs are one scene placed three times, with the same slope and the same blocks and slabs beside them; only
+            // the middle one stands on a join, the cut in the passage's floor along its middle. So sweeping it covers all
+            // three, and the route below walks the other two.
             await Climb(new(59, .004f, Passage), SlopeTop - .25f, false);
             Check(OnFloor, $"she walks up the middle stair 1 m west of its middle from the passage; she is at {feet}");
             var climbs = 1;
-            foreach (var stair in Stairs)
-                foreach (var x in new[] { stair - 1, stair, stair + 1 })
-                    foreach (var (run, speed) in new[] { (false, FirstPersonPlayer.WalkSpeed), (true, FirstPersonPlayer.RunSpeed) })
-                        for (var start = .25f; start < .25f + speed / Engine.PhysicsTicksPerSecond; start += .003f, climbs += 2)
-                        {
-                            await Climb(new(x, .004f, SlopeFoot + start), SlopeTop - .25f, run);
-                            Check(OnFloor, $"she {(run ? "runs" : "walks")} up the stair at x {x} to the upper floor; she is at {feet}");
-                            await Climb(new(x, Upper, SlopeTop - start), SlopeFoot + .25f, run);
-                            Check(OnGround, $"she {(run ? "runs" : "walks")} down the stair at x {x} into the passage; she is at {feet}");
-                        }
+            foreach (var x in new[] { Stairs[1] - 1, Stairs[1], Stairs[1] + 1 })
+                foreach (var (run, speed) in new[] { (false, FirstPersonPlayer.WalkSpeed), (true, FirstPersonPlayer.RunSpeed) })
+                    for (var start = .25f; start < .25f + speed / Engine.PhysicsTicksPerSecond; start += .003f, climbs += 2)
+                    {
+                        await Climb(new(x, .004f, SlopeFoot + start), SlopeTop - .25f, run);
+                        Check(OnFloor, $"she {(run ? "runs" : "walks")} up the middle stair at x {x} to the upper floor; she is at {feet}");
+                        await Climb(new(x, Upper, SlopeTop - start), SlopeFoot + .25f, run);
+                        Check(OnGround, $"she {(run ? "runs" : "walks")} down the middle stair at x {x} into the passage; she is at {feet}");
+                    }
 
             // On the main road's west sidewalk beside the mall's north row of shops, facing south; in at the east entrance.
             play.LookAt(new(Walk, 0, 100), new(Walk, 1.3f, 120));
@@ -140,7 +142,7 @@ public partial class MallChecks : Node
             await WalkTo((AisleEast, Aisle));
             Check(OnFloor, $"she walks the middle aisle to its east end; she is at {feet}");
 
-            GD.Print($"Mall checks passed: {climbs} times up or down a stair, none stuck; from the main road's sidewalk in at the east entrance and along the passage to the forecourt; a shop front in each row; the forecourt's railing on three sides; from the dirt road through the iron gate and the side door into the passage; up each stair, and down the middle and east ones; the railings round each stairwell; the booths of every row; along the middle aisle from end to end.");
+            GD.Print($"Mall checks passed: {climbs} times up or down the middle stair, none stuck; from the main road's sidewalk in at the east entrance and along the passage to the forecourt; a shop front in each row; the forecourt's railing on three sides; from the dirt road through the iron gate and the side door into the passage; up each stair, and down the middle and east ones; the railings round each stairwell; the booths of every row; along the middle aisle from end to end.");
             GetTree().Quit();
         }
         catch (Exception error)
