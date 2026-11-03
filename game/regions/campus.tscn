@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://adapter/Region3D.cs" id="e1"]
 [ext_resource type="Script" path="res://adapter/Section3D.cs" id="e2"]
@@ -22,6 +22,20 @@
 [ext_resource type="PackedScene" path="res://regions/campus/east/props.tscn" id="e20"]
 [ext_resource type="PackedScene" path="res://regions/campus/mall/fixed.tscn" id="e21"]
 [ext_resource type="PackedScene" path="res://regions/campus/mall/props.tscn" id="e22"]
+[ext_resource type="Script" path="res://regions/compound/City3D.cs" id="e23"]
+
+[sub_resource type="Environment" id="env1"]
+background_mode = 1
+background_color = Color(0.831, 0.847, 0.867, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.65
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.831, 0.847, 0.867, 1)
+fog_density = 1.0
+fog_depth_begin = 40.0
+fog_depth_end = 900.0
 
 [node name="Campus" type="Node3D"]
 script = ExtResource("e1")
@@ -80,3 +94,10 @@ CharacterScene = ExtResource("e4")
 [node name="East" parent="Sections/Ⅰ/Props" instance=ExtResource("e20")]
 
 [node name="Mall" parent="Sections/Ⅰ/Props" instance=ExtResource("e22")]
+
+[node name="Environment" type="WorldEnvironment" parent="Sections/Ⅰ/Props"]
+environment = SubResource("env1")
+
+[node name="City" type="Node3D" parent="Sections/Ⅰ/Props"]
+script = ExtResource("e23")
+Campus = true

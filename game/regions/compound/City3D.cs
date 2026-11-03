@@ -6,10 +6,11 @@ using Godot;
 namespace Game.Regions;
 
 /// <summary>
-/// The city around the compound and the mountains north and south of it: scenery she sees and never reaches. It is built
-/// when it is ready, from the greybox prototype's layout and fixed seed, so it is the same on every load; boxes are merged
-/// into one surface per colour, with no collision, and the engine does not know of it. In metres as the compound's
-/// scenes, with y from the ground; the node sits on the ground. Placed in a section's Props, it exists in that section only.
+/// The city around the compound, or around the campus when <see cref="Campus"/> is set, and the mountains north and south
+/// of it: scenery she sees and never reaches. It is built when it is ready, from the greybox prototype's layout and fixed
+/// seed, so it is the same on every load; boxes are merged into one surface per colour, with no collision, and the engine
+/// does not know of it. In metres as the region's scenes, with y from the ground; the node sits on the ground. Placed in a
+/// section's Props, it exists in that section only.
 /// Decision note: 2026-10-29-home-scene-layout
 /// </summary>
 public partial class City3D : Node3D
@@ -21,7 +22,7 @@ public partial class City3D : Node3D
     private const double X0 = -1300, X1 = 1350, Z0 = -500, Z1 = 700;  // along the valley past the fog, across it to the mountains' foot
     // These copy generate.py's layout, so change them with it: fx and fz from FENCE_*, Cross from CROSS_ROAD, (57, 105)
     // from WALK, x 78 and 84 from SIDEWALK, x 91 from MAIN_ROAD; the node's y in compound.tscn is GROUND.
-    private double fx = 27, fz = 92.5;  // the compound's centre
+    private double fx = 27, fz = 92.5;  // the compound's centre; CampusCity sets the campus's
     // Carriageways (z) of the streets north and south of the compound and opposite the gate, and of the road to the gate.
     private static readonly (double, double) R2 = (-31, -22), R3 = (205, 214), E1 = (89, 98), Cross = (90, 97);
     private static readonly (double, double)[] WestCross = [NorthCross, BayIn, BayOut, SouthCross],
@@ -40,7 +41,7 @@ public partial class City3D : Node3D
 
     public override void _Ready()
     {
-        CompoundCity();
+        if (Campus) CampusCity(); else CompoundCity();
         AddChild(new MeshInstance3D { Name = "Boxes", Mesh = Merged(), Layers = 3 });
         AddChild(new MeshInstance3D
         {
