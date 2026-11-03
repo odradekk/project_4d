@@ -12,11 +12,11 @@ namespace Game.Tests;
 /// <summary>
 /// How the player moves along what stops her and up what holds her, walked and run with the movement keys in the spiral
 /// stair's region with a yard beside it. Pressed against a rail that bends round in boxes she goes its whole length, and
-/// pressed against the spiral stair's rail, and against the keep-out round its column, she goes up a turn and back down. Into a slope
-/// steeper than she can stand on, and into a step 10 cm high, at an angle, she rises no more than 2 cm; nearly straight into
-/// the step, she stops. Pushed into the corner of two walls she stands still, and into the corner of a wall and the step or
-/// the steep slope she rises no more than 2 cm. On a slope of 44° she stands still without sliding, and she walks and runs
-/// up it.
+/// pressed against the spiral stair's rail, and against the keep-out round its column, she goes up a turn and back down.
+/// Into a slope steeper than she can stand on, and into a step 10 cm high, at an angle, she rises no more than 2 cm; nearly
+/// straight into the step, she stops. Pushed into the corner of two walls, or of a wall and a step or the steep slope, she
+/// stands still and rises no more than 2 cm. On a slope of 44° she stands still without sliding, and she walks and runs up
+/// it.
 /// </summary>
 public partial class MovementChecks : Node
 {
@@ -24,8 +24,9 @@ public partial class MovementChecks : Node
     private const float BendRadius = 2.5f;
     private static readonly Vector3 Bend = new(10, 0, 0);
     // The corners: of two upright walls, along +x and 120° round from it toward +z; and of an upright wall 60° round from the
-    // edge of a step, and from the foot of a slope, both along +x.
-    private static readonly Vector3 Walls = new(8, 0, -5), StepCorner = new(13.5f, 0, 3.5f), SlopeCorner = new(13.5f, 0, -5.5f);
+    // edge of a step, 45° round from the edge of another, and 60° round from the foot of a slope, all three along +x.
+    private static readonly Vector3 Walls = new(8, 0, -5), StepCorner = new(13.5f, 0, 3.5f), NarrowStepCorner = new(13.5f, 0, 6.5f),
+        SlopeCorner = new(13.5f, 0, -5.5f);
     // The steep slope, the step and the slope she can stand on all start at x = Foot and rise toward +x.
     private const float Foot = 17, Steep = 50, Step = .1f, Slope = 44, SlopeLength = 3;
     // On the stair, steering for 1.7 m from the column keeps her against the rail, whose boxes start 1.75 m out, and steering
@@ -69,13 +70,16 @@ public partial class MovementChecks : Node
                 await Straight(new(Foot - .5f, .01f, 2.5f), 10, run);
                 Check(feet.Z < 2.6f, $"she {how} 10° from straight into the step and stops; she is at {feet}");
 
-                var (_, wander) = await Corner(Walls, 60, run);
-                Check(wander < .01f, $"she {how} into the corner of two walls 120° apart and goes {wander:0.000} m in its last second");
-                var (highest, _) = await Corner(StepCorner, 30, run);
-                Check(highest < .02f, $"she {how} into the corner of a wall and the step and is lifted {highest:0.000} m");
-                (highest, _) = await Corner(SlopeCorner, 30, run);
-                Check(highest < .02f, $"she {how} into the corner of a wall and a {Steep}° slope and is lifted {highest:0.000} m");
+                foreach (var (corner, degrees, what) in new[] { (Walls, 60f, "two walls 120°"), (StepCorner, 30f, "a wall and a step 60°"),
+                    (NarrowStepCorner, 22.5f, "a wall and a step 45°"), (SlopeCorner, 30f, $"a wall and a {Steep}° slope 60°") })
+                {
+                    var (highest, wander) = await Corner(corner, degrees, run);
+                    Check(highest < .02f && wander < .01f,
+                        $"she {how} into the corner of {what} apart, is lifted {highest:0.000} m and goes {wander:0.000} m in its last second");
+                }
 
+                // The slope she can stand on has no wall beside it, and standing still she presses no key, so neither of these
+                // reaches FirstPersonPlayer's going on along a wall: they keep her walking up such a slope and not sliding down it.
                 var top = SlopeLength * Mathf.Sin(Mathf.DegToRad(Slope));
                 await Straight(new(Foot - .5f, .01f, 0), 0, run, 240, () => feet.Y > top - .1f);
                 Check(feet.Y > top - .1f, $"she {how} up a {Slope}° slope; she is at {feet}");
@@ -150,8 +154,11 @@ public partial class MovementChecks : Node
         }
         Upright(Walls, 0, 1);
         Upright(Walls, 120, -1);
-        Upright(StepCorner, 60, -1);
-        Box(corners, StepCorner + new Vector3(1.25f, Step / 2, -.5f), new(2.5f, Step, 1), Basis.Identity);
+        foreach (var (corner, degrees) in new[] { (StepCorner, 60f), (NarrowStepCorner, 45f) })
+        {
+            Upright(corner, degrees, -1);
+            Box(corners, corner + new Vector3(1.25f, Step / 2, -.5f), new(2.5f, Step, 1), Basis.Identity);
+        }
         Upright(SlopeCorner, 60, -1);
         Box(corners, SlopeCorner + new Vector3(1.25f, length / 2 * Mathf.Sin(steep) - depth / 2 * Mathf.Cos(steep), -depth / 2 * Mathf.Sin(steep) - length / 2 * Mathf.Cos(steep)),
             new(2.5f, depth, length), new Basis(Vector3.Right, steep));

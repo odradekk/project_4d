@@ -240,11 +240,12 @@ public partial class FirstPersonPlayer : CharacterBody3D
     }
 
     // Moves her by Velocity. Blocking on walls, as Godot does by default, keeps her from climbing steep slopes and the edges of
-    // steps, but stops her dead whenever one move meets a wall a second time: rightly in a corner, but also at each joint of a
-    // railing built of boxes. So unless she walked within WallMinSlideAngle of straight into the wall that stopped her, where
-    // Godot stops her anyway, she goes on along it for the rest of the step without blocking on walls. She stays where Godot
-    // stopped her if that takes her back against the way she walks, as out of a corner, or if it touches a wall that faces up,
-    // such as the edge of a step or a steep slope, which sliding without blocking on walls can lift her up.
+    // steps, but stops her dead whenever one move meets a wall a second time still heading into it: rightly in a corner, but
+    // also at each joint of a railing built of boxes. So unless she walked within WallMinSlideAngle of straight into the wall
+    // that stopped her, where Godot stops her anyway, she goes on along it for the rest of the step without blocking on walls.
+    // She stays where Godot stopped her if that takes her back against the way she walks, as out of a corner, or if it touches
+    // a wall that faces up, such as the edge of a step or a steep slope, which sliding without blocking on walls can lift her
+    // up.
     private void Move(float delta)
     {
         var start = GlobalPosition;
@@ -269,6 +270,8 @@ public partial class FirstPersonPlayer : CharacterBody3D
         if (!steep && (GlobalPosition - stopped).Dot(level) >= 0) return;
         GlobalPosition = stopped;
         Velocity = Vector3.Zero;
+        // Otherwise she keeps the floor of the move undone, or none, and the next frame takes her as falling.
+        ApplyFloorSnap();
     }
 
     // The prompt of what the crosshair is on if it can be used, else the keys that act on a seam at her feet and on what is
