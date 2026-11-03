@@ -19,13 +19,13 @@ public partial class EastChecks : Node
 {
     // The middle of the main road's west sidewalk clear of the bus stop's bench and the poplars (x), of the asphalt road's
     // south sidewalk (z), and of the alley (x).
-    private const float Walk = 241.8f, Sidewalk = -1.8f, Alley = 150.5f;
+    private const float Walk = 241.8f, Sidewalk = -1.8f, Alley = 150.4f;
     // The faces that stop her: the bench's front; the shop fronts in the east row and the north row; the wall at the alley's
     // south end; the compound's wall on the alley; a block of flats' west side. The lines through the middles of the fronts.
-    private const float Bench = 241.1f, EastFront = 239.24f, NorthFront = -.04f, AlleyEnd = 89.88f, CompoundWall = 151.78f;
-    private const float Flats = 160, EastShop = 30.5f, NorthShop = 194.4f;
+    private const float Bench = 241.1f, EastFront = 239.24f, NorthFront = -.04f, AlleyEnd = 89.88f, CompoundWall = 151.68f;
+    private const float Flats = 160, EastShop = 30.5f, NorthShop = 194.3f;
     // The compound's yard inside its walls and rows of shops; the middles of the two openings from the alley (z).
-    private const float YardWest = 152.02f, YardEast = 227.2f, YardNorth = 12, YardSouth = 92, NorthDoor = 17.5f, SouthDoor = 59.5f;
+    private const float YardWest = 151.92f, YardEast = 227.2f, YardNorth = 12, YardSouth = 92, NorthDoor = 17.5f, SouthDoor = 59.5f;
 
     private TurningFixture play = null!;
     private Vector3 feet => play.Player.Position;
