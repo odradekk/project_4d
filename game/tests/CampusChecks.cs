@@ -45,8 +45,8 @@ public partial class CampusChecks : Node
             play.LookAt(new(76, 0, 0), new(76, 1.3f, 5));
             await WalkTo((76, 18), (82, 47), (82, 75.5f), (87, 76));
             Check(OnGround, $"she walks in through the gate and across the plaza to the steps; she is at {feet}");
-            // The steps' slope leaves the ground at z 76.58 and meets the stand at z 79.08.
-            var walks = await Sweep((a, c) => new(c, 0, a), 76.58f, 79.08f, Stand, 83.5f, 87, 90.5f);
+            // The steps' slope leaves the ground at z 76.56 and reaches the stand's height at z 79.06.
+            var walks = await Sweep((a, c) => new(c, 0, a), 76.56f, 79.06f, Stand, 83.5f, 87, 90.5f);
             await WalkTo((77, 76), (77, 82));
             await Push((81, 82));
             Check(Stopped(feet.X, StandWest) && OnGround, $"the stand's west side stops her; she is at {feet}");
@@ -85,8 +85,8 @@ public partial class CampusChecks : Node
             await WalkTo((140, 27.7f), (StairFoot, 27.7f), (StairFoot, 31.5f), (StairFoot, StairLine));
             Check(OnGround, $"she walks out of the bay between its columns to the foot of the outside stair; she is at {feet}");
 
-            // The stair's slope leaves the ground at x 138.22 and meets the landing at x 144.4.
-            walks += await Sweep((a, c) => new(a, 0, c), 138.22f, 144.4f, Upstairs, 35.5f, StairLine, 36.4f);
+            // The stair's slope leaves the ground at x 138.2 and reaches the landing's height at x 144.38.
+            walks += await Sweep((a, c) => new(a, 0, c), 138.2f, 144.38f, Upstairs, 35.5f, StairLine, 36.4f);
             await WalkTo((141.3f, StairLine));
             await Push((141.3f, 39));
             Check(Stopped(feet.Z, StairSouth) && feet.Y > 1.5f, $"the railing along the stair's south side stops her; she is at {feet}");
