@@ -16,6 +16,9 @@ from tscn import COLORS, bodies, box, packed, slope, vec  # on the path once sha
 FH, FLOORS = 3.6, 4  # storey height
 STEPS = 12  # risers a flight, two flights a storey
 RISE = FH / 2 / STEPS
+# How far each flight's slope lies above its treads' front edges: on a slope through the edges themselves she can stop
+# dead on her way up, as on the mall's stairs.
+CLEAR = 0.013
 X0, XC, X1 = 114.5, 123.5, 126.5  # the west wall, the corridor's wall (rooms 9 m deep), the east wall (corridor 3 m wide)
 TX = X0 - 1.5  # the tower's west wall
 
@@ -224,17 +227,22 @@ def chairs():  # one classroom's, from its north-west corner, behind the desks
     return packed('Chairs', [], subs=subs, nodes=nodes)
 
 
-# Under section I's Props: the collision-only slopes over the flights, through the front edges of their treads; the
-# tower's red pyramid roof; and every classroom's chairs. The chairs and the roof are plain meshes, which the engine does
-# not know, so the chairs do not stop her, as in the prototype, and she can walk between the rows of desks.
+# Under section I's Props: the collision-only slopes over the flights, each moved toward its foot from the line through
+# its treads' front edges so that it lies CLEAR above every edge, its top level with the landing or floor it meets and
+# its foot on the one below; the tower's red pyramid roof; and every classroom's chairs. The chairs and the roof are
+# plain meshes, which the engine does not know, so the chairs do not stop her, as in the prototype, and she can walk
+# between the rows of desks.
 def props():
     slopes = []
     for f in range(FLOORS - 1):
         y = f * FH
         for s in STAIRS:
             sm, go = middle(s.f0, s.f1), tread(s)
-            slopes.append(slope(f'{s.name}Stair{f + 1}West', 'x', s.lx + go, y, s.hx1, y + FH / 2, s.f0 + 0.1, sm - 0.1))
-            slopes.append(slope(f'{s.name}Stair{f + 1}East', 'x', s.hx1 - go, y + FH / 2, s.lx, y + FH, sm + 0.1, s.f1 - 0.1))
+            shift = CLEAR * go / RISE
+            slopes.append(slope(f'{s.name}Stair{f + 1}West', 'x', s.lx + go + shift, y, s.hx1 + shift, y + FH / 2,
+                                s.f0 + 0.1, sm - 0.1))
+            slopes.append(slope(f'{s.name}Stair{f + 1}East', 'x', s.hx1 - go - shift, y + FH / 2, s.lx - shift, y + FH,
+                                sm + 0.1, s.f1 - 0.1))
     subs, nodes = bodies(slopes)
     roof = resource(subs, 'CylinderMesh', 'roof', material=material(subs, COLORS['roof'][:3]), top_radius=0, bottom_radius=5.4,
                     height=3.2, radial_segments=4, rings=0)

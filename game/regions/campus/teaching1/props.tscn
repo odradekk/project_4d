@@ -94,7 +94,7 @@ position = Vector3(114.5, 10.8, 61.04)
 position = Vector3(114.5, 10.8, 69.44)
 
 [node name="NorthStair1West" type="StaticBody3D" parent="."]
-position = Vector3(117.656389, 0.855926, 18.01)
+position = Vector3(117.680656, 0.855926, 18.01)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -102,7 +102,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="NorthStair1East" type="StaticBody3D" parent="."]
-position = Vector3(117.423611, 2.655926, 19.63)
+position = Vector3(117.399344, 2.655926, 19.63)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -110,7 +110,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="WideStair1West" type="StaticBody3D" parent="."]
-position = Vector3(117.456389, 0.855926, 46.74)
+position = Vector3(117.480656, 0.855926, 46.74)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -118,7 +118,7 @@ collision_mask = 0
 shape = SubResource("s2")
 
 [node name="WideStair1East" type="StaticBody3D" parent="."]
-position = Vector3(117.223611, 2.655926, 48.94)
+position = Vector3(117.199344, 2.655926, 48.94)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -126,7 +126,7 @@ collision_mask = 0
 shape = SubResource("s2")
 
 [node name="SouthStair1West" type="StaticBody3D" parent="."]
-position = Vector3(117.656389, 0.855926, 78.65)
+position = Vector3(117.680656, 0.855926, 78.65)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -134,7 +134,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="SouthStair1East" type="StaticBody3D" parent="."]
-position = Vector3(117.423611, 2.655926, 80.27)
+position = Vector3(117.399344, 2.655926, 80.27)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -142,7 +142,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="NorthStair2West" type="StaticBody3D" parent="."]
-position = Vector3(117.656389, 4.455926, 18.01)
+position = Vector3(117.680656, 4.455926, 18.01)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -150,7 +150,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="NorthStair2East" type="StaticBody3D" parent="."]
-position = Vector3(117.423611, 6.255926, 19.63)
+position = Vector3(117.399344, 6.255926, 19.63)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -158,7 +158,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="WideStair2West" type="StaticBody3D" parent="."]
-position = Vector3(117.456389, 4.455926, 46.74)
+position = Vector3(117.480656, 4.455926, 46.74)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -166,7 +166,7 @@ collision_mask = 0
 shape = SubResource("s2")
 
 [node name="WideStair2East" type="StaticBody3D" parent="."]
-position = Vector3(117.223611, 6.255926, 48.94)
+position = Vector3(117.199344, 6.255926, 48.94)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -174,7 +174,7 @@ collision_mask = 0
 shape = SubResource("s2")
 
 [node name="SouthStair2West" type="StaticBody3D" parent="."]
-position = Vector3(117.656389, 4.455926, 78.65)
+position = Vector3(117.680656, 4.455926, 78.65)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -182,7 +182,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="SouthStair2East" type="StaticBody3D" parent="."]
-position = Vector3(117.423611, 6.255926, 80.27)
+position = Vector3(117.399344, 6.255926, 80.27)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -190,7 +190,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="NorthStair3West" type="StaticBody3D" parent="."]
-position = Vector3(117.656389, 8.055926, 18.01)
+position = Vector3(117.680656, 8.055926, 18.01)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -198,7 +198,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="NorthStair3East" type="StaticBody3D" parent="."]
-position = Vector3(117.423611, 9.855926, 19.63)
+position = Vector3(117.399344, 9.855926, 19.63)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -206,7 +206,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="WideStair3West" type="StaticBody3D" parent="."]
-position = Vector3(117.456389, 8.055926, 46.74)
+position = Vector3(117.480656, 8.055926, 46.74)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -214,7 +214,7 @@ collision_mask = 0
 shape = SubResource("s2")
 
 [node name="WideStair3East" type="StaticBody3D" parent="."]
-position = Vector3(117.223611, 9.855926, 48.94)
+position = Vector3(117.199344, 9.855926, 48.94)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
@@ -222,7 +222,7 @@ collision_mask = 0
 shape = SubResource("s2")
 
 [node name="SouthStair3West" type="StaticBody3D" parent="."]
-position = Vector3(117.656389, 8.055926, 78.65)
+position = Vector3(117.680656, 8.055926, 78.65)
 rotation = Vector3(0, 0, -0.491809)
 collision_mask = 0
 
@@ -230,7 +230,7 @@ collision_mask = 0
 shape = SubResource("s1")
 
 [node name="SouthStair3East" type="StaticBody3D" parent="."]
-position = Vector3(117.423611, 9.855926, 80.27)
+position = Vector3(117.399344, 9.855926, 80.27)
 rotation = Vector3(0, 0, 0.491809)
 collision_mask = 0
 
