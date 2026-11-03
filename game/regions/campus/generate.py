@@ -12,7 +12,7 @@ from pathlib import Path
 import teaching1
 import teaching2
 from shapes import LINE, TOP, WT, fixed, gap, material, pave, resource, show, wall, window
-from tscn import COLORS, bodies, box, fmt, packed, slope, vec  # on the path once shapes is imported
+from tscn import COLORS, bodies, box, fmt, mirror, packed, slope, vec  # on the path once shapes is imported
 
 # The campus's colors, beside the compound's; scene() looks them up by name.
 COLORS.update({
@@ -161,16 +161,18 @@ def toilet():
     box(up, x0 - 0.12, x1 + 0.12, 2 * th - 0.2, 2 * th, z0 - 0.12, z1 + 0.12, 'slab')
     for p, q, r, s in ((x0, x1, z0, z0), (x0, x1, z1, z1), (x0, x0, z0, z1), (x1, x1, z0, z1)):
         box(up, p - 0.12, q + 0.12, 2 * th, 2 * th + 0.6, r - 0.12, s + 0.12, 'wall')  # parapet
-    # Each tread stands on the ground; the landing is the last rise. The sloping handrail is in props.tscn.
+    # Each tread stands on the ground; the landing is the last rise. The sloping handrails are in props.tscn.
     rise = th / (TREADS + 1)
     for i in range(TREADS): box(stair, FOOT + i * RUN / TREADS, FOOT + (i + 1) * RUN / TREADS, 0, (i + 1) * rise, *STAIR_Z, 'concrete')
     box(stair, *LANDING, 0, th, *STAIR_Z, 'concrete')
     rail = STAIR_Z[1] - 0.08, STAIR_Z[1] - 0.03
     for i in range(4): box(stair, FOOT + i * RUN / 3 - 0.03, FOOT + i * RUN / 3 + 0.03, i * th / 3, i * th / 3 + 1.0, *rail, 'iron')
+    stair += mirror(stair[-4:], sum(STAIR_Z))
     box(stair, *LANDING, th + 1.0, th + 1.05, *rail, 'iron')
     box(stair, LANDING[1] - 0.08, LANDING[1] - 0.03, th + 1.0, th + 1.05, *STAIR_Z, 'iron')
-    # The landing's handrail stops her; between the stair's posts, under a handrail without collision, an unseen wall does.
+    # The landing's handrail stops her; between each side's posts, under a handrail without collision, an unseen wall does.
     box(edge, FOOT, LANDING[0], 0, th + 1.1, STAIR_Z[1] - 0.1, STAIR_Z[1], 'unseen')
+    edge += mirror(edge, sum(STAIR_Z))
     return (fixed('Toilet', toilet=down, toilet_stair=stair, toilet_stair_edge=edge),
             fixed('ToiletUpstairs', toilet_upstairs=up))
 
@@ -229,7 +231,7 @@ def store():
 
 
 # Section I's Props: collision-only slopes through the front edges of the stand's and the outside stair's treads, and what
-# upright boxes cannot draw, unknown to the engine: the plaza's rings, centre circles, rims, the sloping handrail, balls.
+# upright boxes cannot draw, unknown to the engine: the plaza's rings, centre circles, rims, handrails, balls.
 def props(circles, rims):
     subs, nodes = bodies([slope('StandSlope', 'z', STEPS_Z[0] - GO, 0, STEPS_Z[0] + (STEPS - 1) * GO, STAND_H, *STEPS_X),
                           slope('ToiletStairSlope', 'x', FOOT - RUN / TREADS, 0, LANDING[0], TOILET_H, *STAIR_Z)])
@@ -253,7 +255,8 @@ def props(circles, rims):
     th = TOILET_H
     bar = resource(subs, 'BoxMesh', 'handrail', material=material(subs, COLORS['iron'][:3]),
                    size=vec(math.hypot(RUN, th), 0.05, 0.05))
-    show(nodes, 'StairHandrail', bar, (FOOT + RUN / 2, th / 2 + 1.0, STAIR_Z[1] - 0.05), rotation=vec(0, 0, math.atan2(th, RUN)))
+    for i, z in enumerate((STAIR_Z[1] - 0.05, STAIR_Z[0] + 0.05), 1):
+        show(nodes, f'StairHandrail{i}', bar, (FOOT + RUN / 2, th / 2 + 1.0, z), rotation=vec(0, 0, math.atan2(th, RUN)))
     ball = resource(subs, 'SphereMesh', 'ball', material=red, radius=BALL_R, height=2 * BALL_R, radial_segments=8, rings=6)
     spots = [(STORE_X[0] + 0.8 + 0.45 * k, y, STORE_Z[1] - 0.37) for y in BALL_ROWS for k in range(33)]
     buffer = ', '.join(f'1, 0, 0, {fmt(x)}, 0, 1, 0, {fmt(y)}, 0, 0, 1, {fmt(z)}' for x, y, z in spots)
