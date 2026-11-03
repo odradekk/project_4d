@@ -28,7 +28,7 @@ buffer = PackedFloat32Array(1, 0, 0, 0, 0, 1, 0, 0.006, 0, 0, 1, -698.5, 1, 0, 0
 [node name="East" type="Node3D"]
 
 [node name="NorthShopsWindows" parent="." instance=ExtResource("e1")]
-position = Vector3(151.9, 3.6, 0)
+position = Vector3(151.8, 3.6, 0)
 
 [node name="EastShopsWindows" parent="." instance=ExtResource("e2")]
 position = Vector3(227.2, 3.6, 12)

@@ -19,8 +19,11 @@ from tscn import COLORS, box, packed, vec  # on the path once shapes is imported
 
 COLORS.update({'flats': (0.949, 0.769, 0.541, 1), 'yellow': (0.847, 0.698, 0.227, 1)})
 
-ALLEY, ALLEY_END = (149.12, 151.9), 90  # x, from the school wall's outer face; the wall across its south end (z)
-NORTH_X, NORTH_Z, EAST_X, EAST_Z = (151.9, 239.2), (0, 12), (227.2, 239.2), (12, 92.12)  # the two rows of shops
+# The alley (x) runs from the school wall's outer face to the compound wall's centreline, which is also the north row's
+# west face: 2.8 m between the two walls' centrelines, as the decision note has it, 0.1 m narrower than the prototype's.
+# The compound's east side stays on the main road's sidewalk, so the north row and the yard are 0.1 m longer than its.
+ALLEY, ALLEY_END = (149.12, 151.8), 90  # ALLEY_END: the wall across its south end (z)
+NORTH_X, NORTH_Z, EAST_X, EAST_Z = (ALLEY[1], 239.2), (0, 12), (227.2, 239.2), (12, 92.12)  # the two rows of shops
 STOREYS, FH, SHOP_H = 5, 2.9, 3.6  # the shops' blocks: storeys, the flats' storey height over the shops, the shops' height
 FLATS_X, FLATS, FLATS_STOREYS = (160, 220), ((22, 33), (45, 56), (68, 79)), 5  # the yard's three blocks of flats (z)
 YARD_DOORS = (16, 19), (58, 61)  # the openings from the alley into the yard (z)
