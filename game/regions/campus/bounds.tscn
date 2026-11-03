@@ -1,0 +1,67 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0, 0, 0, 0)
+transparency = 1
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(1, 3, 154.02)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m1")
+size = Vector3(7.2, 3, 1)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m1")
+size = Vector3(5, 3, 1)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m1")
+size = Vector3(16.4, 3, 1)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m1")
+size = Vector3(1, 3, 4.6)
+
+[node name="Bounds" type="Node3D"]
+
+[node name="sidewalk_edge" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "sidewalk_edge"
+
+[node name="p1" parent="sidewalk_edge" instance=ExtResource("e2")]
+position = Vector3(244.7, 1.5, 46.01)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="sidewalk_edge" instance=ExtResource("e2")]
+position = Vector3(240.6, 1.5, -30.5)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="sidewalk_edge" instance=ExtResource("e2")]
+position = Vector3(241.7, 1.5, 122.52)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="dirt_road_end" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "dirt_road_end"
+
+[node name="p1" parent="dirt_road_end" instance=ExtResource("e2")]
+position = Vector3(-8.8, 1.5, -106.5)
+mesh = SubResource("b4")
+PartId = "p1"
+
+[node name="site_gap" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "site_gap"
+
+[node name="p1" parent="site_gap" instance=ExtResource("e2")]
+position = Vector3(-18.1, 1.5, -30.1)
+mesh = SubResource("b5")
+PartId = "p1"

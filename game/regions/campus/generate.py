@@ -1,6 +1,7 @@
 """Writes the scenes of the campus region next to this file, all but campus.tscn: python game/regions/campus/generate.py
 Teaching building 1's come from teaching1.py, teaching building 2's from teaching2.py, those of the school's north and
-west sides from north_west.py, those of its east side from east.py, and the mall tunnel's from mall.py.
+west sides from north_west.py, those of its east side from east.py, the mall tunnel's from mall.py, and the unseen walls
+that bound where she can go from bounds.py.
 
 The layout is the greybox prototype's (branch prototype/school-layout, prototypes/school-layout/index.html), in metres with
 x east, z south and y up; walls are placed by their centrelines. The origin is the school wall's north-west corner, and
@@ -10,6 +11,7 @@ Decision note: 2026-11-01-school-scene-layout
 import math
 from pathlib import Path
 
+import bounds
 import east
 import mall
 import north_west
@@ -277,6 +279,7 @@ def main():
     files.update(north_west.files())
     files.update(east.files())
     files.update(mall.files())
+    files.update(bounds.files())
     here = Path(__file__).parent
     for path, text in files.items():
         (here / path).parent.mkdir(exist_ok=True)
