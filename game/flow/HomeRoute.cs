@@ -46,10 +46,10 @@ internal static class HomeRoute
 
     // The stair hall, as regions/compound/generate.py builds it: the turn's landing half a storey up from x 6.33 east, and
     // the wall between the two flights along z 18.525. The slope up from the ground floor, north of the wall, rises east
-    // from x 1.01 to the landing; the one up to the flat's storey, south of it, rises west from x 6.71 to its landing's
-    // edge at x 1.39. Each rises half a storey over 5.32 m.
+    // from x 0.97 to the landing's height; the one up to the flat's storey, south of it, rises west from x 6.75 to the
+    // storey's height at x 1.43, short of its landing's edge at x 1.39. Each rises half a storey over 5.32 m.
     private const float Landing = Y / 2, Turn = 6.33f, Middle = 18.525f, Rise = Landing / 5.32f;
-    private const float GroundFoot = 1.01f, TurnFoot = 6.71f, StoreyEdge = 1.39f;
+    private const float GroundFoot = .97f, TurnFoot = 6.75f, StoreyEdge = 1.39f;
     // The flat's front wall, the vestibule's south wall, the stair hall's north and south walls, and the corridor's railing.
     private const float FrontWall = 7.35f, Vestibule = 9.05f, StairHall = 16.4f, HallEnd = 20.65f, Railing = -1.72f;
     // The stair hall's east wall; the slope out of its west side ends at x −2.47, and a cat counts as out of the stair hall
