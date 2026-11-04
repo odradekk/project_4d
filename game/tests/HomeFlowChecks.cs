@@ -25,6 +25,7 @@ public partial class HomeFlowChecks : Node
 {
     private const int FramesPerSecond = 60;
     private const string FrontDoor = "HomeDoors/FrontDoor/Leaf";
+    private const float CatRadius = .1f;  // as characters/cat.tscn
 
     private Node scene = null!;
     private FirstPersonPlayer player = null!;
@@ -179,13 +180,20 @@ public partial class HomeFlowChecks : Node
     }
 
     // Where the cat stands at the spot: on a floor no more than half a metre above or below it, with its body there meeting
-    // nothing; null where it cannot stand.
+    // nothing; null where it cannot stand. The floor is found by lowering a ball as wide as the cat, which rests on both
+    // edges of a narrow gap as the cat does, such as the one between the top of a stair's slope and its landing.
     private Vector3? Footing(Vector3 spot)
     {
         var space = player.GetWorld3D().DirectSpaceState;
-        var floor = space.IntersectRay(PhysicsRayQueryParameters3D.Create(spot + Vector3.Up * .5f, spot + Vector3.Down * .5f, PhysicsLayers.World));
-        if (floor.Count == 0) return null;
-        var feet = floor["position"].AsVector3();
+        var fall = space.CastMotion(new PhysicsShapeQueryParameters3D
+        {
+            Shape = new SphereShape3D { Radius = CatRadius },
+            Transform = new Transform3D(Basis.Identity, spot + Vector3.Up * (.5f + CatRadius)),
+            Motion = Vector3.Down,
+            CollisionMask = PhysicsLayers.World
+        })[0];
+        if (fall is 0 or 1) return null;
+        var feet = spot + Vector3.Up * (.5f - fall);
         return space.IntersectShape(new PhysicsShapeQueryParameters3D
         {
             Shape = new SphereShape3D { Radius = .15f },
