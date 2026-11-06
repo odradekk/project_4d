@@ -1,8 +1,8 @@
 """Writes the scenes of the compound region next to this file, all but compound.tscn: python game/regions/compound/generate.py
 
-The layout is the greybox prototype's (branch prototype/home-layout, prototypes/home-layout/index.html), in metres with x
-east, z south and y up; walls are placed by their centrelines. The origin is where the flat's north wall meets its
-kitchen's west wall, and y = 0 is the ground floor. Hand edits to the scenes are lost when this runs again.
+The layout is the greybox prototype's (branch prototype/home-layout), in metres with x east, z south and y up; walls are
+placed by their centrelines. The origin is where the flat's north wall meets its kitchen's west wall, and y = 0 is the
+ground floor. Hand edits to the scenes are lost when this runs again.
 Decision note: 2026-10-29-home-scene-layout
 """
 import math
@@ -170,13 +170,14 @@ def element(eid, boxes):
     return eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"', 'BuildingId': '"home"', 'WMin': '-0.5', 'WMax': '0.5'}
 
 
-# Slopes over each flight, through the front edges of its treads, and one over the step out of the ground floor.
+# Slopes over each flight, moved toward its foot to lie 1.3 cm above its treads' front edges, since she can stop dead on
+# an edge a slope runs through; and one over the step out of the ground floor.
 def stair_slopes():
-    slopes = []
+    slopes, shift = [], 0.013 * GO / RISE
     for f in range(FLOORS - 1):
         y = f * S
-        slopes.append(slope(f'Floor{f}UpSlope', 'x', SX - GO, y, SX + RUN, y + S / 2, zB + EXT / 2, SC - 0.06))
-        slopes.append(slope(f'Floor{f}TurnSlope', 'x', SX + RUN + GO, y + S / 2, SX, y + S, SC + 0.06, zS - EXT / 2))
+        slopes.append(slope(f'Floor{f}UpSlope', 'x', SX - GO - shift, y, SX + RUN - shift, y + S / 2, zB + EXT / 2, SC - 0.06))
+        slopes.append(slope(f'Floor{f}TurnSlope', 'x', SX + RUN + GO + shift, y + S / 2, SX + shift, y + S, SC + 0.06, zS - EXT / 2))
     slopes.append(slope('ExitSlope', 'x', -CW - 0.75, GROUND, -CW, 0, zB, zS))
     subs, nodes = bodies(slopes)
     return packed('Slopes', [], subs=subs, nodes=nodes)
@@ -203,7 +204,7 @@ def home_leaves():
     return leaves
 
 
-# The shut front doors of a building's flats, all but Xiaoman's in ours, where the walls of north.tscn and south.tscn have them.
+# The shut front doors of a building's flats, all but Xiaoman's in ours, where north.tscn and south.tscn have them.
 def shut_doors(home):
     front = next(hole for w in walls for hole in w['holes'] if hole['front'])
     x, width, shut = (front['a'] + front['b']) / 2, front['b'] - front['a'], []

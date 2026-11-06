@@ -25,6 +25,7 @@ public partial class HomeFlowChecks : Node
 {
     private const int FramesPerSecond = 60;
     private const string FrontDoor = "HomeDoors/FrontDoor/Leaf";
+    private const float CatRadius = .1f;  // as characters/cat.tscn
 
     private Node scene = null!;
     private FirstPersonPlayer player = null!;
@@ -142,8 +143,8 @@ public partial class HomeFlowChecks : Node
         Vector3[] places =
         [
             new(.75f, floor, 6.1f), new(5.4f, floor, 2.75f), new(1f, floor, 2f), new(4.8f, floor, 6f), new(2.4f, floor, 6.3f),
-            new(1.3f, floor, 8.7f), new(-1.4f, floor, 12f), new(.3f, floor, 18f), new(3.5f, 2.565f, 20.2f), new(7.3f, 1.6f, 20f),
-            new(3.5f, .749f, 16.9f), CatWaits, new(-6f, -.2f, 15f), new(-2.8f, -.2f, 14.7f), new(-2.8f, -.2f, 22.3f)
+            new(1.3f, floor, 8.7f), new(-1.4f, floor, 12f), new(.3f, floor, 18f), new(3.5f, 2.578f, 20.2f), new(7.3f, 1.6f, 20f),
+            new(3.5f, .762f, 16.9f), CatWaits, new(-6f, -.2f, 15f), new(-2.8f, -.2f, 14.7f), new(-2.8f, -.2f, 22.3f)
         ];
         var door = Door("FrontDoor");
         door.State = Door3D.DoorState.Open;
@@ -179,13 +180,20 @@ public partial class HomeFlowChecks : Node
     }
 
     // Where the cat stands at the spot: on a floor no more than half a metre above or below it, with its body there meeting
-    // nothing; null where it cannot stand.
+    // nothing; null where it cannot stand. The floor is found by lowering a ball as wide as the cat, which rests on both
+    // edges of a narrow gap as the cat does, such as the one between the top of a stair's slope and its landing.
     private Vector3? Footing(Vector3 spot)
     {
         var space = player.GetWorld3D().DirectSpaceState;
-        var floor = space.IntersectRay(PhysicsRayQueryParameters3D.Create(spot + Vector3.Up * .5f, spot + Vector3.Down * .5f, PhysicsLayers.World));
-        if (floor.Count == 0) return null;
-        var feet = floor["position"].AsVector3();
+        var fall = space.CastMotion(new PhysicsShapeQueryParameters3D
+        {
+            Shape = new SphereShape3D { Radius = CatRadius },
+            Transform = new Transform3D(Basis.Identity, spot + Vector3.Up * (.5f + CatRadius)),
+            Motion = Vector3.Down,
+            CollisionMask = PhysicsLayers.World
+        })[0];
+        if (fall is 0 or 1) return null;
+        var feet = spot + Vector3.Up * (.5f - fall);
         return space.IntersectShape(new PhysicsShapeQueryParameters3D
         {
             Shape = new SphereShape3D { Radius = .15f },
