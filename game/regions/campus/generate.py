@@ -1,5 +1,6 @@
 """Writes the scenes of the campus region next to this file, all but campus.tscn: python game/regions/campus/generate.py
-Teaching building 1's come from teaching1.py, teaching building 2's from teaching2.py.
+Teaching building 1's come from teaching1.py, teaching building 2's from teaching2.py, and those of the school's north
+and west sides from north_west.py.
 
 The layout is the greybox prototype's (branch prototype/school-layout, prototypes/school-layout/index.html), in metres with
 x east, z south and y up; walls are placed by their centrelines. The origin is the school wall's north-west corner, and
@@ -9,10 +10,11 @@ Decision note: 2026-11-01-school-scene-layout
 import math
 from pathlib import Path
 
+import north_west
 import teaching1
 import teaching2
-from shapes import LINE, TOP, WT, fixed, gap, material, pave, resource, show, wall, window
-from tscn import COLORS, bodies, box, fmt, mirror, packed, slope, vec  # on the path once shapes is imported
+from shapes import LINE, TOP, WT, fixed, gap, material, multimesh, pave, resource, show, show_many, wall, window
+from tscn import COLORS, bodies, box, mirror, packed, slope, vec  # on the path once shapes is imported
 
 # The campus's colors, beside the compound's; scene() looks them up by name.
 COLORS.update({
@@ -259,10 +261,7 @@ def props(circles, rims):
         show(nodes, f'StairHandrail{i}', bar, (FOOT + RUN / 2, th / 2 + 1.0, z), rotation=vec(0, 0, math.atan2(th, RUN)))
     ball = resource(subs, 'SphereMesh', 'ball', material=red, radius=BALL_R, height=2 * BALL_R, radial_segments=8, rings=6)
     spots = [(STORE_X[0] + 0.8 + 0.45 * k, y, STORE_Z[1] - 0.37) for y in BALL_ROWS for k in range(33)]
-    buffer = ', '.join(f'1, 0, 0, {fmt(x)}, 0, 1, 0, {fmt(y)}, 0, 0, 1, {fmt(z)}' for x, y, z in spots)
-    many = resource(subs, 'MultiMesh', 'balls', transform_format=1, instance_count=len(spots), mesh=ball,
-                    buffer=f'PackedFloat32Array({buffer})')
-    nodes.append(f'[node name="Balls" type="MultiMeshInstance3D" parent="."]\nlayers = 3\nmultimesh = {many}\n')
+    show_many(nodes, 'Balls', multimesh(subs, 'balls', ball, spots))
     return packed('Props', [], subs=subs, nodes=nodes)
 
 
@@ -273,8 +272,9 @@ def main():
     files['props.tscn'] = props(circles, rims)
     files.update(teaching1.files())
     files.update(teaching2.files())
+    files.update(north_west.files())
     here = Path(__file__).parent
-    for building in ('teaching1', 'teaching2'): (here / building).mkdir(exist_ok=True)
+    for folder in ('teaching1', 'teaching2', 'north_west'): (here / folder).mkdir(exist_ok=True)
     for path, text in files.items(): (here / path).write_text(text, encoding='utf-8', newline='\n')
 
 

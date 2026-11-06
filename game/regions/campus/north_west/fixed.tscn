@@ -1,0 +1,19 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/north_west/roads.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/campus/north_west/estate.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/campus/north_west/building_site.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/campus/north_west/field.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/campus/north_west/stalls.tscn" id="e5"]
+
+[node name="NorthWest" type="Node3D"]
+
+[node name="Roads" parent="." instance=ExtResource("e1")]
+
+[node name="Estate" parent="." instance=ExtResource("e2")]
+
+[node name="BuildingSite" parent="." instance=ExtResource("e3")]
+
+[node name="Field" parent="." instance=ExtResource("e4")]
+
+[node name="Stalls" parent="." instance=ExtResource("e5")]

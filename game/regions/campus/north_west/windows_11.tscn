@@ -1,0 +1,134 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="StandardMaterial3D" id="c0"]
+albedo_color = Color(0.435, 0.659, 0.878, 1)
+
+[sub_resource type="BoxMesh" id="nsb"]
+material = SubResource("c0")
+size = Vector3(1.5, 1.4, 0.06)
+
+[sub_resource type="MultiMesh" id="ns"]
+transform_format = 1
+instance_count = 14
+mesh = SubResource("nsb")
+buffer = PackedFloat32Array(1, 0, 0, 2.1, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 5.4, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 8.7, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 12, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 15.3, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 18.6, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 21.9, 0, 1, 0, 1.6, 0, 0, 1, -0.03, 1, 0, 0, 2.1, 0, 1, 0, 1.6, 0, 0, 1, 15.03, 1, 0, 0, 5.4, 0, 1, 0, 1.6, 0, 0, 1, 15.03, 1, 0, 0, 8.7, 0, 1, 0, 1.6, 0, 0, 1, 15.03, 1, 0, 0, 12, 0, 1, 0, 1.6, 0, 0, 1, 15.03, 1, 0, 0, 15.3, 0, 1, 0, 1.6, 0, 0, 1, 15.03, 1, 0, 0, 18.6, 0, 1, 0, 1.6, 0, 0, 1, 15.03, 1, 0, 0, 21.9, 0, 1, 0, 1.6, 0, 0, 1, 15.03)
+
+[sub_resource type="BoxMesh" id="ewb"]
+material = SubResource("c0")
+size = Vector3(0.06, 1.4, 1.5)
+
+[sub_resource type="MultiMesh" id="ew"]
+transform_format = 1
+instance_count = 8
+mesh = SubResource("ewb")
+buffer = PackedFloat32Array(1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 2.55, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 5.85, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 9.15, 1, 0, 0, -0.03, 0, 1, 0, 1.6, 0, 0, 1, 12.45, 1, 0, 0, 24.03, 0, 1, 0, 1.6, 0, 0, 1, 2.55, 1, 0, 0, 24.03, 0, 1, 0, 1.6, 0, 0, 1, 5.85, 1, 0, 0, 24.03, 0, 1, 0, 1.6, 0, 0, 1, 9.15, 1, 0, 0, 24.03, 0, 1, 0, 1.6, 0, 0, 1, 12.45)
+
+[node name="Windows" type="Node3D"]
+
+[node name="NorthSouth1" type="MultiMeshInstance3D" parent="."]
+layers = 3
+multimesh = SubResource("ns")
+
+[node name="EastWest1" type="MultiMeshInstance3D" parent="."]
+layers = 3
+multimesh = SubResource("ew")
+
+[node name="NorthSouth2" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 3, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest2" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 3, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth3" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 6, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest3" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 6, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth4" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 9, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest4" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 9, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth5" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 12, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest5" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 12, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth6" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 15, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest6" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 15, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth7" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 18, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest7" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 18, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth8" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 21, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest8" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 21, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth9" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 24, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest9" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 24, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth10" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 27, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest10" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 27, 0)
+multimesh = SubResource("ew")
+
+[node name="NorthSouth11" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 30, 0)
+multimesh = SubResource("ns")
+
+[node name="EastWest11" type="MultiMeshInstance3D" parent="."]
+layers = 3
+position = Vector3(0, 30, 0)
+multimesh = SubResource("ew")
