@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/mall/north_shops.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/campus/mall/south_shops.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/campus/mall/ground.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/campus/mall/upstairs.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/campus/mall/stair.tscn" id="e5"]
+
+[node name="Mall" type="Node3D"]
+
+[node name="NorthShops" parent="." instance=ExtResource("e1")]
+
+[node name="SouthShops" parent="." instance=ExtResource("e2")]
+
+[node name="Ground" parent="." instance=ExtResource("e3")]
+
+[node name="Upstairs" parent="." instance=ExtResource("e4")]
+
+[node name="Stair1" parent="." instance=ExtResource("e5")]
+position = Vector3(-80, 0, 0)
+
+[node name="mall_stair" parent="Stair1"]
+EntityId = "mall_stair_1"
+
+[node name="Stair2" parent="." instance=ExtResource("e5")]
+position = Vector3(60, 0, 0)
+
+[node name="mall_stair" parent="Stair2"]
+EntityId = "mall_stair_2"
+
+[node name="Stair3" parent="." instance=ExtResource("e5")]
+position = Vector3(200, 0, 0)
+
+[node name="mall_stair" parent="Stair3"]
+EntityId = "mall_stair_3"
