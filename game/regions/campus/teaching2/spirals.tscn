@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://regions/campus/SpiralStair3D.cs" id="e1"]
+
+[node name="Spirals" type="Node3D"]
+
+[node name="North" type="Node3D" parent="."]
+position = Vector3(50.4, 0, 29.3)
+script = ExtResource("e1")
+Floors = 6
+EntityId = "teaching2_spiral_north"
+
+[node name="South" type="Node3D" parent="."]
+position = Vector3(50.4, 0, 64.7)
+rotation = Vector3(0, -3.141593, 0)
+script = ExtResource("e1")
+Floors = 6
+EntityId = "teaching2_spiral_south"

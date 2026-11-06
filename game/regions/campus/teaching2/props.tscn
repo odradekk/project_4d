@@ -1,0 +1,301 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/spirals.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/chairs_north.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/chairs_northeast.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/chairs_east.tscn" id="e4"]
+
+[sub_resource type="StandardMaterial3D" id="glass"]
+transparency = 1
+albedo_color = Color(0.749, 0.863, 0.925, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="c1"]
+albedo_color = Color(0.29, 0.302, 0.322, 1)
+
+[sub_resource type="BoxMesh" id="pane"]
+material = SubResource("glass")
+size = Vector3(5.700877, 0.02, 38.8)
+
+[sub_resource type="PrismMesh" id="gable"]
+material = SubResource("glass")
+left_to_right = 0.5
+size = Vector3(9, 3.5, 0.02)
+
+[sub_resource type="BoxMesh" id="rafter"]
+material = SubResource("c1")
+size = Vector3(5.700877, 0.08, 0.08)
+
+[sub_resource type="BoxMesh" id="ridge"]
+material = SubResource("c1")
+size = Vector3(0.12, 0.12, 38.8)
+
+[node name="Teaching2" type="Node3D"]
+
+[node name="Spirals" parent="." instance=ExtResource("e1")]
+
+[node name="Chairs2_2" parent="." instance=ExtResource("e2")]
+position = Vector3(45.9, 3.6, 18)
+
+[node name="Chairs2_3" parent="." instance=ExtResource("e3")]
+position = Vector3(54.9, 3.6, 18)
+
+[node name="Chairs2_5" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 3.6, 33.2)
+
+[node name="Chairs2_6" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 3.6, 42.1)
+
+[node name="Chairs2_7" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 3.6, 51)
+
+[node name="Chairs2_8" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 3.6, 59.9)
+
+[node name="Chairs3_2" parent="." instance=ExtResource("e2")]
+position = Vector3(45.9, 7.2, 18)
+
+[node name="Chairs3_3" parent="." instance=ExtResource("e3")]
+position = Vector3(54.9, 7.2, 18)
+
+[node name="Chairs3_5" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 7.2, 33.2)
+
+[node name="Chairs3_6" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 7.2, 42.1)
+
+[node name="Chairs3_7" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 7.2, 51)
+
+[node name="Chairs3_8" parent="." instance=ExtResource("e4")]
+position = Vector3(57.3, 7.2, 59.9)
+
+[node name="GlassWest" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 47)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("pane")
+
+[node name="GlassEast" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 47)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("pane")
+
+[node name="GableNorth" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(50.4, 23.75, 27.6)
+mesh = SubResource("gable")
+
+[node name="GableSouth" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(50.4, 23.75, 66.4)
+mesh = SubResource("gable")
+
+[node name="Ridge" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(50.4, 25.5, 47)
+mesh = SubResource("ridge")
+
+[node name="Rafter1West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 27.6)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter1East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 27.6)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter2West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 30.025)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter2East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 30.025)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter3West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 32.45)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter3East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 32.45)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter4West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 34.875)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter4East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 34.875)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter5West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 37.3)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter5East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 37.3)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter6West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 39.725)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter6East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 39.725)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter7West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 42.15)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter7East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 42.15)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter8West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 44.575)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter8East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 44.575)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter9West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 47)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter9East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 47)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter10West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 49.425)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter10East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 49.425)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter11West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 51.85)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter11East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 51.85)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter12West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 54.275)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter12East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 54.275)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter13West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 56.7)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter13East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 56.7)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter14West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 59.125)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter14East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 59.125)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter15West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 61.55)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter15East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 61.55)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter16West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 63.975)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter16East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 63.975)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter17West" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(48.15, 23.75, 66.4)
+rotation = Vector3(0, 0, 0.661043)
+mesh = SubResource("rafter")
+
+[node name="Rafter17East" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(52.65, 23.75, 66.4)
+rotation = Vector3(0, 0, -0.661043)
+mesh = SubResource("rafter")

@@ -1,0 +1,49 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.184, 0.29, 0.227, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.725, 0.714, 0.682, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(0.06, 1.2, 4)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(0.75, 0.9, 5.6)
+
+[node name="LabNorth" type="Node3D"]
+
+[node name="teaching2_lab_north" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching2_lab_north"
+
+[node name="p1" parent="teaching2_lab_north" instance=ExtResource("e2")]
+position = Vector3(0.13, 1.5, 3.6)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching2_lab_north" instance=ExtResource("e2")]
+position = Vector3(2.575, 0.45, 3.6)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching2_lab_north" instance=ExtResource("e2")]
+position = Vector3(4.375, 0.45, 3.6)
+mesh = SubResource("b2")
+PartId = "p3"
+
+[node name="p4" parent="teaching2_lab_north" instance=ExtResource("e2")]
+position = Vector3(6.175, 0.45, 3.6)
+mesh = SubResource("b2")
+PartId = "p4"
+
+[node name="p5" parent="teaching2_lab_north" instance=ExtResource("e2")]
+position = Vector3(7.975, 0.45, 3.6)
+mesh = SubResource("b2")
+PartId = "p5"

@@ -1,0 +1,375 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/north.tscn" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/east.tscn" id="e2"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/south.tscn" id="e3"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/west.tscn" id="e4"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/fittings_men.tscn" id="e5"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/upper.tscn" id="e6"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/fittings_women.tscn" id="e7"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/class_north.tscn" id="e8"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/class_northeast.tscn" id="e9"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/class_east.tscn" id="e10"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/lab_north.tscn" id="e11"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/lab_northeast.tscn" id="e12"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/lab_east.tscn" id="e13"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/computer_north.tscn" id="e14"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/computer_northeast.tscn" id="e15"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/computer_east.tscn" id="e16"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/ground.tscn" id="e17"]
+[ext_resource type="PackedScene" path="res://regions/campus/teaching2/top.tscn" id="e18"]
+
+[node name="Teaching2" type="Node3D"]
+
+[node name="North1" parent="." instance=ExtResource("e1")]
+
+[node name="teaching2_north" parent="North1"]
+EntityId = "teaching2_north_1"
+
+[node name="East1" parent="." instance=ExtResource("e2")]
+
+[node name="teaching2_east" parent="East1"]
+EntityId = "teaching2_east_1"
+
+[node name="South1" parent="." instance=ExtResource("e3")]
+
+[node name="teaching2_south" parent="South1"]
+EntityId = "teaching2_south_1"
+
+[node name="West1" parent="." instance=ExtResource("e4")]
+
+[node name="teaching2_west" parent="West1"]
+EntityId = "teaching2_west_1"
+
+[node name="Fittings1" parent="." instance=ExtResource("e5")]
+
+[node name="teaching2_water" parent="Fittings1"]
+EntityId = "teaching2_water_1"
+
+[node name="teaching2_toilet" parent="Fittings1"]
+EntityId = "teaching2_toilet_1"
+
+[node name="North2" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching2_north" parent="North2"]
+EntityId = "teaching2_north_2"
+
+[node name="East2" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching2_east" parent="East2"]
+EntityId = "teaching2_east_2"
+
+[node name="South2" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching2_south" parent="South2"]
+EntityId = "teaching2_south_2"
+
+[node name="West2" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching2_west" parent="West2"]
+EntityId = "teaching2_west_2"
+
+[node name="Upper2" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching2_upper" parent="Upper2"]
+EntityId = "teaching2_upper_2"
+
+[node name="Fittings2" parent="." instance=ExtResource("e7")]
+position = Vector3(0, 3.6, 0)
+
+[node name="teaching2_water" parent="Fittings2"]
+EntityId = "teaching2_water_2"
+
+[node name="teaching2_toilet" parent="Fittings2"]
+EntityId = "teaching2_toilet_2"
+
+[node name="North3" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching2_north" parent="North3"]
+EntityId = "teaching2_north_3"
+
+[node name="East3" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching2_east" parent="East3"]
+EntityId = "teaching2_east_3"
+
+[node name="South3" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching2_south" parent="South3"]
+EntityId = "teaching2_south_3"
+
+[node name="West3" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching2_west" parent="West3"]
+EntityId = "teaching2_west_3"
+
+[node name="Upper3" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching2_upper" parent="Upper3"]
+EntityId = "teaching2_upper_3"
+
+[node name="Fittings3" parent="." instance=ExtResource("e5")]
+position = Vector3(0, 7.2, 0)
+
+[node name="teaching2_water" parent="Fittings3"]
+EntityId = "teaching2_water_3"
+
+[node name="teaching2_toilet" parent="Fittings3"]
+EntityId = "teaching2_toilet_3"
+
+[node name="North4" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching2_north" parent="North4"]
+EntityId = "teaching2_north_4"
+
+[node name="East4" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching2_east" parent="East4"]
+EntityId = "teaching2_east_4"
+
+[node name="South4" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching2_south" parent="South4"]
+EntityId = "teaching2_south_4"
+
+[node name="West4" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching2_west" parent="West4"]
+EntityId = "teaching2_west_4"
+
+[node name="Upper4" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching2_upper" parent="Upper4"]
+EntityId = "teaching2_upper_4"
+
+[node name="Fittings4" parent="." instance=ExtResource("e7")]
+position = Vector3(0, 10.8, 0)
+
+[node name="teaching2_water" parent="Fittings4"]
+EntityId = "teaching2_water_4"
+
+[node name="teaching2_toilet" parent="Fittings4"]
+EntityId = "teaching2_toilet_4"
+
+[node name="North5" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 14.4, 0)
+
+[node name="teaching2_north" parent="North5"]
+EntityId = "teaching2_north_5"
+
+[node name="East5" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 14.4, 0)
+
+[node name="teaching2_east" parent="East5"]
+EntityId = "teaching2_east_5"
+
+[node name="South5" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 14.4, 0)
+
+[node name="teaching2_south" parent="South5"]
+EntityId = "teaching2_south_5"
+
+[node name="West5" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 14.4, 0)
+
+[node name="teaching2_west" parent="West5"]
+EntityId = "teaching2_west_5"
+
+[node name="Upper5" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 14.4, 0)
+
+[node name="teaching2_upper" parent="Upper5"]
+EntityId = "teaching2_upper_5"
+
+[node name="Fittings5" parent="." instance=ExtResource("e5")]
+position = Vector3(0, 14.4, 0)
+
+[node name="teaching2_water" parent="Fittings5"]
+EntityId = "teaching2_water_5"
+
+[node name="teaching2_toilet" parent="Fittings5"]
+EntityId = "teaching2_toilet_5"
+
+[node name="North6" parent="." instance=ExtResource("e1")]
+position = Vector3(0, 18, 0)
+
+[node name="teaching2_north" parent="North6"]
+EntityId = "teaching2_north_6"
+
+[node name="East6" parent="." instance=ExtResource("e2")]
+position = Vector3(0, 18, 0)
+
+[node name="teaching2_east" parent="East6"]
+EntityId = "teaching2_east_6"
+
+[node name="South6" parent="." instance=ExtResource("e3")]
+position = Vector3(0, 18, 0)
+
+[node name="teaching2_south" parent="South6"]
+EntityId = "teaching2_south_6"
+
+[node name="West6" parent="." instance=ExtResource("e4")]
+position = Vector3(0, 18, 0)
+
+[node name="teaching2_west" parent="West6"]
+EntityId = "teaching2_west_6"
+
+[node name="Upper6" parent="." instance=ExtResource("e6")]
+position = Vector3(0, 18, 0)
+
+[node name="teaching2_upper" parent="Upper6"]
+EntityId = "teaching2_upper_6"
+
+[node name="Fittings6" parent="." instance=ExtResource("e7")]
+position = Vector3(0, 18, 0)
+
+[node name="teaching2_water" parent="Fittings6"]
+EntityId = "teaching2_water_6"
+
+[node name="teaching2_toilet" parent="Fittings6"]
+EntityId = "teaching2_toilet_6"
+
+[node name="Room2_2" parent="." instance=ExtResource("e8")]
+position = Vector3(45.9, 3.6, 18)
+
+[node name="teaching2_class_north" parent="Room2_2"]
+EntityId = "teaching2_class_2_2"
+
+[node name="Room2_3" parent="." instance=ExtResource("e9")]
+position = Vector3(54.9, 3.6, 18)
+
+[node name="teaching2_class_northeast" parent="Room2_3"]
+EntityId = "teaching2_class_2_3"
+
+[node name="Room2_5" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 3.6, 33.2)
+
+[node name="teaching2_class_east" parent="Room2_5"]
+EntityId = "teaching2_class_2_5"
+
+[node name="Room2_6" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 3.6, 42.1)
+
+[node name="teaching2_class_east" parent="Room2_6"]
+EntityId = "teaching2_class_2_6"
+
+[node name="Room2_7" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 3.6, 51)
+
+[node name="teaching2_class_east" parent="Room2_7"]
+EntityId = "teaching2_class_2_7"
+
+[node name="Room2_8" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 3.6, 59.9)
+
+[node name="teaching2_class_east" parent="Room2_8"]
+EntityId = "teaching2_class_2_8"
+
+[node name="Room3_2" parent="." instance=ExtResource("e8")]
+position = Vector3(45.9, 7.2, 18)
+
+[node name="teaching2_class_north" parent="Room3_2"]
+EntityId = "teaching2_class_3_2"
+
+[node name="Room3_3" parent="." instance=ExtResource("e9")]
+position = Vector3(54.9, 7.2, 18)
+
+[node name="teaching2_class_northeast" parent="Room3_3"]
+EntityId = "teaching2_class_3_3"
+
+[node name="Room3_5" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 7.2, 33.2)
+
+[node name="teaching2_class_east" parent="Room3_5"]
+EntityId = "teaching2_class_3_5"
+
+[node name="Room3_6" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 7.2, 42.1)
+
+[node name="teaching2_class_east" parent="Room3_6"]
+EntityId = "teaching2_class_3_6"
+
+[node name="Room3_7" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 7.2, 51)
+
+[node name="teaching2_class_east" parent="Room3_7"]
+EntityId = "teaching2_class_3_7"
+
+[node name="Room3_8" parent="." instance=ExtResource("e10")]
+position = Vector3(57.3, 7.2, 59.9)
+
+[node name="teaching2_class_east" parent="Room3_8"]
+EntityId = "teaching2_class_3_8"
+
+[node name="Room4_2" parent="." instance=ExtResource("e11")]
+position = Vector3(45.9, 10.8, 18)
+
+[node name="teaching2_lab_north" parent="Room4_2"]
+EntityId = "teaching2_lab_4_2"
+
+[node name="Room4_3" parent="." instance=ExtResource("e12")]
+position = Vector3(54.9, 10.8, 18)
+
+[node name="teaching2_lab_northeast" parent="Room4_3"]
+EntityId = "teaching2_lab_4_3"
+
+[node name="Room4_5" parent="." instance=ExtResource("e13")]
+position = Vector3(57.3, 10.8, 33.2)
+
+[node name="teaching2_lab_east" parent="Room4_5"]
+EntityId = "teaching2_lab_4_5"
+
+[node name="Room4_6" parent="." instance=ExtResource("e13")]
+position = Vector3(57.3, 10.8, 42.1)
+
+[node name="teaching2_lab_east" parent="Room4_6"]
+EntityId = "teaching2_lab_4_6"
+
+[node name="Room5_2" parent="." instance=ExtResource("e14")]
+position = Vector3(45.9, 14.4, 18)
+
+[node name="teaching2_computer_north" parent="Room5_2"]
+EntityId = "teaching2_computer_5_2"
+
+[node name="Room5_3" parent="." instance=ExtResource("e15")]
+position = Vector3(54.9, 14.4, 18)
+
+[node name="teaching2_computer_northeast" parent="Room5_3"]
+EntityId = "teaching2_computer_5_3"
+
+[node name="Room5_4" parent="." instance=ExtResource("e16")]
+position = Vector3(57.3, 14.4, 25.2)
+
+[node name="teaching2_computer_east" parent="Room5_4"]
+EntityId = "teaching2_computer_5_4"
+
+[node name="Room5_5" parent="." instance=ExtResource("e16")]
+position = Vector3(57.3, 14.4, 33.2)
+
+[node name="teaching2_computer_east" parent="Room5_5"]
+EntityId = "teaching2_computer_5_5"
+
+[node name="Room5_6" parent="." instance=ExtResource("e16")]
+position = Vector3(57.3, 14.4, 42.1)
+
+[node name="teaching2_computer_east" parent="Room5_6"]
+EntityId = "teaching2_computer_5_6"
+
+[node name="Ground" parent="." instance=ExtResource("e17")]
+
+[node name="Top" parent="." instance=ExtResource("e18")]

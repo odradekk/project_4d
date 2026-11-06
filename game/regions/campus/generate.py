@@ -1,5 +1,5 @@
 """Writes the scenes of the campus region next to this file, all but campus.tscn: python game/regions/campus/generate.py
-Teaching building 1's come from teaching1.py.
+Teaching building 1's come from teaching1.py, teaching building 2's from teaching2.py.
 
 The layout is the greybox prototype's (branch prototype/school-layout, prototypes/school-layout/index.html), in metres with
 x east, z south and y up; walls are placed by their centrelines. The origin is the school wall's north-west corner, and
@@ -10,6 +10,7 @@ import math
 from pathlib import Path
 
 import teaching1
+import teaching2
 from shapes import LINE, TOP, WT, fixed, gap, material, pave, resource, show, wall, window
 from tscn import COLORS, bodies, box, fmt, mirror, packed, slope, vec  # on the path once shapes is imported
 
@@ -22,6 +23,7 @@ COLORS.update({
     'desk': (0.69, 0.541, 0.353, 1), 'chair': (0.541, 0.416, 0.267, 1), 'glass': (0.373, 0.408, 0.439, 1),
     'door': (0.816, 0.165, 0.165, 1), 'white': (0.957, 0.957, 0.941, 1), 'pane': (0.612, 0.769, 0.91, 0.35),
     'board': (0.184, 0.29, 0.227, 1), 'roof': (0.659, 0.314, 0.235, 1), 'window': (0.435, 0.659, 0.878, 1),
+    'glass_roof': (0.749, 0.863, 0.925, 0.28),
 })
 
 SCHOOL_X, SCHOOL_Z, WALL_H = (0, 149), (0, 92), 2.4
@@ -270,8 +272,9 @@ def main():
     files['toilet.tscn'], files['toilet_upstairs.tscn'] = toilet()
     files['props.tscn'] = props(circles, rims)
     files.update(teaching1.files())
+    files.update(teaching2.files())
     here = Path(__file__).parent
-    (here / 'teaching1').mkdir(exist_ok=True)
+    for building in ('teaching1', 'teaching2'): (here / building).mkdir(exist_ok=True)
     for path, text in files.items(): (here / path).write_text(text, encoding='utf-8', newline='\n')
 
 
