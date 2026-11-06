@@ -6,10 +6,11 @@ namespace Game.Regions;
 /// <summary>
 /// Poplars standing on the ground at y = 0, one at each of <see cref="At"/> (x, z), as the compound's: a trunk 0.3 m square
 /// and 5 m tall under a crown 2.4 m square from 4 m up to 17 m. The trunks stop her: they are fixed objects of the section,
-/// poplars_1, poplars_2 and so on, 256 trunks each, because a slice draws each part as a surface of its own and a mesh holds
-/// at most 256. The crowns, out of her reach, are a plain mesh the engine does not know. It is all
-/// built when the node is ready, before the region reads its section, as the spiral stair's blocks are, because the campus's
-/// hundreds of poplars written out as boxes would not fit in a scene file of the size the repository allows.
+/// named after <see cref="EntityPrefix"/> as poplars_1, poplars_2 and so on, 256 trunks each, because a slice draws each
+/// part as a surface of its own and a mesh holds at most 256. The crowns, out of her reach, are a plain mesh the engine does
+/// not know. It is all built when the node is ready, before the region reads its section, as the spiral stair's blocks are,
+/// because the campus's hundreds of poplars written out as boxes would not fit in a scene file of the size the repository
+/// allows.
 /// Decision note: 2026-11-01-school-scene-layout
 /// </summary>
 public partial class Poplars3D : Node3D
@@ -17,6 +18,9 @@ public partial class Poplars3D : Node3D
     private const int Most = 256;
 
     [Export] public Vector2[] At { get; set; } = [];
+
+    /// <summary>The start of the trunks' entity IDs, unique in the region.</summary>
+    [Export] public string EntityPrefix { get; set; } = "poplars";
 
     public override void _Ready()
     {
@@ -31,7 +35,7 @@ public partial class Poplars3D : Node3D
         FixedObject3D trunks = null!;
         for (var i = 0; i < At.Length; i++)
         {
-            if (i % Most == 0) AddChild(trunks = new FixedObject3D { Name = $"Trunks{i / Most + 1}", EntityId = $"poplars_{i / Most + 1}" });
+            if (i % Most == 0) AddChild(trunks = new FixedObject3D { Name = $"Trunks{i / Most + 1}", EntityId = $"{EntityPrefix}_{i / Most + 1}" });
             var box = part.Instantiate<BoxPart3D>();
             box.PartId = $"p{i % Most + 1}";
             box.Mesh = trunk;
