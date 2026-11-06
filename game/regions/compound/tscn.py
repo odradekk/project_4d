@@ -1,5 +1,5 @@
-"""The text of the Godot scenes that generate.py writes: entities made of boxes, collision-only slopes, doors, and scenes of
-instances; and the boxes themselves."""
+"""The text of the Godot scenes that generate.py writes, and campus/generate.py too: entities made of boxes, collision-only
+slopes, doors, and scenes of instances; and the boxes themselves."""
 import math
 
 COLORS = {

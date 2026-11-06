@@ -117,7 +117,7 @@
 
 ## 文件
 
-子场景在 `game/regions/compound/` 下，除了 `compound.tscn` 本身，都由同一目录下的 `generate.py` 按原型的常量写出（`tscn.py` 是它用来写场景文本和拼盒子的函数）：改格局时改脚本里的常量，再运行 `python game/regions/compound/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
+子场景在 `game/regions/compound/` 下，除了 `compound.tscn` 本身，都由同一目录下的 `generate.py` 按原型的常量写出（`tscn.py` 写场景文本、拼盒子，新的学校区域也用它）：改格局时改脚本里的常量，再运行 `python game/regions/compound/generate.py`；直接在编辑器里改这些子场景，下次运行脚本时会被覆盖。
 
 | 文件 | 内容 |
 |---|---|
