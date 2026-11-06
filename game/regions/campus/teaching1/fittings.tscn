@@ -1,0 +1,426 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.29, 0.302, 0.322, 1)
+
+[sub_resource type="StandardMaterial3D" id="m2"]
+albedo_color = Color(0.427, 0.435, 0.447, 1)
+
+[sub_resource type="StandardMaterial3D" id="m3"]
+albedo_color = Color(0.725, 0.714, 0.682, 1)
+
+[sub_resource type="StandardMaterial3D" id="m4"]
+albedo_color = Color(0.94, 0.937, 0.918, 1)
+
+[sub_resource type="StandardMaterial3D" id="m5"]
+albedo_color = Color(0.561, 0.639, 0.722, 1)
+
+[sub_resource type="StandardMaterial3D" id="m6"]
+albedo_color = Color(0.957, 0.957, 0.941, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(1.2, 1.8, 0.8)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m2")
+size = Vector3(0.2, 0.1, 0.15)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m3")
+size = Vector3(0.6, 0.8, 2.8)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m2")
+size = Vector3(0.3, 0.08, 0.06)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m3")
+size = Vector3(0.9, 0.45, 0.8)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m4")
+size = Vector3(0.1, 2, 1.8)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m3")
+size = Vector3(1.6, 0.8, 0.5)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m5")
+size = Vector3(0.06, 1.8, 1.38)
+
+[sub_resource type="BoxMesh" id="b9"]
+material = SubResource("m6")
+size = Vector3(0.5, 0.06, 0.6)
+
+[sub_resource type="BoxMesh" id="b10"]
+material = SubResource("m3")
+size = Vector3(0.38, 0.25, 1.5)
+
+[node name="Fittings" type="Node3D"]
+
+[node name="teaching1_water_1" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_water_1"
+
+[node name="p1" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(122.4, 0.9, 14.2)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(122.4, 0.85, 14.675)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(114.92, 0.4, 15.4)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(114.77, 1.04, 14.4)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(114.77, 1.04, 15)
+mesh = SubResource("b4")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(114.77, 1.04, 15.6)
+mesh = SubResource("b4")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(114.77, 1.04, 16.2)
+mesh = SubResource("b4")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_water_1" instance=ExtResource("e2")]
+position = Vector3(122.55, 0.225, 16.6)
+mesh = SubResource("b5")
+PartId = "p8"
+
+[node name="teaching1_toilet_1" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_toilet_1"
+
+[node name="p1" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(122.05, 1, 82.88)
+mesh = SubResource("b6")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(120.7, 0.4, 81.45)
+mesh = SubResource("b7")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(114.62, 0.9, 83.87)
+mesh = SubResource("b8")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(115.72, 0.9, 83.87)
+mesh = SubResource("b8")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(116.82, 0.9, 83.87)
+mesh = SubResource("b8")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(115.17, 0.01, 83.88)
+mesh = SubResource("b9")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(116.27, 0.01, 83.88)
+mesh = SubResource("b9")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_toilet_1" instance=ExtResource("e2")]
+position = Vector3(114.81, 0.125, 82.13)
+mesh = SubResource("b10")
+PartId = "p8"
+
+[node name="teaching1_water_2" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_water_2"
+
+[node name="p1" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(122.4, 4.5, 14.2)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(122.4, 4.45, 14.675)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(114.92, 4, 15.4)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(114.77, 4.64, 14.4)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(114.77, 4.64, 15)
+mesh = SubResource("b4")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(114.77, 4.64, 15.6)
+mesh = SubResource("b4")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(114.77, 4.64, 16.2)
+mesh = SubResource("b4")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_water_2" instance=ExtResource("e2")]
+position = Vector3(122.55, 3.825, 16.6)
+mesh = SubResource("b5")
+PartId = "p8"
+
+[node name="teaching1_toilet_2" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_toilet_2"
+
+[node name="p1" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(122.05, 4.6, 82.88)
+mesh = SubResource("b6")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(120.7, 4, 81.45)
+mesh = SubResource("b7")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(114.62, 4.5, 83.87)
+mesh = SubResource("b8")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(115.72, 4.5, 83.87)
+mesh = SubResource("b8")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(116.82, 4.5, 83.87)
+mesh = SubResource("b8")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(117.92, 4.5, 83.87)
+mesh = SubResource("b8")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(115.17, 3.61, 83.88)
+mesh = SubResource("b9")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(116.27, 3.61, 83.88)
+mesh = SubResource("b9")
+PartId = "p8"
+
+[node name="p9" parent="teaching1_toilet_2" instance=ExtResource("e2")]
+position = Vector3(117.37, 3.61, 83.88)
+mesh = SubResource("b9")
+PartId = "p9"
+
+[node name="teaching1_water_3" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_water_3"
+
+[node name="p1" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(122.4, 8.1, 14.2)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(122.4, 8.05, 14.675)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(114.92, 7.6, 15.4)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(114.77, 8.24, 14.4)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(114.77, 8.24, 15)
+mesh = SubResource("b4")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(114.77, 8.24, 15.6)
+mesh = SubResource("b4")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(114.77, 8.24, 16.2)
+mesh = SubResource("b4")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_water_3" instance=ExtResource("e2")]
+position = Vector3(122.55, 7.425, 16.6)
+mesh = SubResource("b5")
+PartId = "p8"
+
+[node name="teaching1_toilet_3" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_toilet_3"
+
+[node name="p1" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(122.05, 8.2, 82.88)
+mesh = SubResource("b6")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(120.7, 7.6, 81.45)
+mesh = SubResource("b7")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(114.62, 8.1, 83.87)
+mesh = SubResource("b8")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(115.72, 8.1, 83.87)
+mesh = SubResource("b8")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(116.82, 8.1, 83.87)
+mesh = SubResource("b8")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(115.17, 7.21, 83.88)
+mesh = SubResource("b9")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(116.27, 7.21, 83.88)
+mesh = SubResource("b9")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_toilet_3" instance=ExtResource("e2")]
+position = Vector3(114.81, 7.325, 82.13)
+mesh = SubResource("b10")
+PartId = "p8"
+
+[node name="teaching1_water_4" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_water_4"
+
+[node name="p1" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(122.4, 11.7, 14.2)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(122.4, 11.65, 14.675)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(114.92, 11.2, 15.4)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(114.77, 11.84, 14.4)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(114.77, 11.84, 15)
+mesh = SubResource("b4")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(114.77, 11.84, 15.6)
+mesh = SubResource("b4")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(114.77, 11.84, 16.2)
+mesh = SubResource("b4")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_water_4" instance=ExtResource("e2")]
+position = Vector3(122.55, 11.025, 16.6)
+mesh = SubResource("b5")
+PartId = "p8"
+
+[node name="teaching1_toilet_4" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_toilet_4"
+
+[node name="p1" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(122.05, 11.8, 82.88)
+mesh = SubResource("b6")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(120.7, 11.2, 81.45)
+mesh = SubResource("b7")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(114.62, 11.7, 83.87)
+mesh = SubResource("b8")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(115.72, 11.7, 83.87)
+mesh = SubResource("b8")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(116.82, 11.7, 83.87)
+mesh = SubResource("b8")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(117.92, 11.7, 83.87)
+mesh = SubResource("b8")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(115.17, 10.81, 83.88)
+mesh = SubResource("b9")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(116.27, 10.81, 83.88)
+mesh = SubResource("b9")
+PartId = "p8"
+
+[node name="p9" parent="teaching1_toilet_4" instance=ExtResource("e2")]
+position = Vector3(117.37, 10.81, 83.88)
+mesh = SubResource("b9")
+PartId = "p9"

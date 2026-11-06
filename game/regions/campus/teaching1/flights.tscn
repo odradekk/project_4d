@@ -1,0 +1,390 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://adapter/FixedObject3D.cs" id="e1"]
+[ext_resource type="PackedScene" path="res://regions/box_part.tscn" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m1"]
+albedo_color = Color(0.851, 0.843, 0.82, 1)
+
+[sub_resource type="BoxMesh" id="b1"]
+material = SubResource("m1")
+size = Vector3(1.38, 0.2, 3.24)
+
+[sub_resource type="BoxMesh" id="b2"]
+material = SubResource("m1")
+size = Vector3(0.28, 0.15, 1.52)
+
+[sub_resource type="BoxMesh" id="b3"]
+material = SubResource("m1")
+size = Vector3(0.28, 0.35, 1.52)
+
+[sub_resource type="BoxMesh" id="b4"]
+material = SubResource("m1")
+size = Vector3(0.28, 0.3, 1.52)
+
+[sub_resource type="BoxMesh" id="b5"]
+material = SubResource("m1")
+size = Vector3(2.68, 0.2, 4.4)
+
+[sub_resource type="BoxMesh" id="b6"]
+material = SubResource("m1")
+size = Vector3(0.28, 0.15, 2.1)
+
+[sub_resource type="BoxMesh" id="b7"]
+material = SubResource("m1")
+size = Vector3(0.28, 0.35, 2.1)
+
+[sub_resource type="BoxMesh" id="b8"]
+material = SubResource("m1")
+size = Vector3(0.28, 0.3, 2.1)
+
+[node name="Flights" type="Node3D"]
+
+[node name="teaching1_flights" type="Node3D" parent="."]
+script = ExtResource("e1")
+EntityId = "teaching1_flights"
+
+[node name="p1" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(115.31, 1.7, 18.82)
+mesh = SubResource("b1")
+PartId = "p1"
+
+[node name="p2" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.94, 0.075, 17.96)
+mesh = SubResource("b2")
+PartId = "p2"
+
+[node name="p3" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.14, 1.775, 19.68)
+mesh = SubResource("b3")
+PartId = "p3"
+
+[node name="p4" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.66, 0.15, 17.96)
+mesh = SubResource("b4")
+PartId = "p4"
+
+[node name="p5" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.42, 1.925, 19.68)
+mesh = SubResource("b3")
+PartId = "p5"
+
+[node name="p6" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.38, 0.275, 17.96)
+mesh = SubResource("b3")
+PartId = "p6"
+
+[node name="p7" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.7, 2.075, 19.68)
+mesh = SubResource("b3")
+PartId = "p7"
+
+[node name="p8" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.1, 0.425, 17.96)
+mesh = SubResource("b3")
+PartId = "p8"
+
+[node name="p9" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.98, 2.225, 19.68)
+mesh = SubResource("b3")
+PartId = "p9"
+
+[node name="p10" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.82, 0.575, 17.96)
+mesh = SubResource("b3")
+PartId = "p10"
+
+[node name="p11" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.26, 2.375, 19.68)
+mesh = SubResource("b3")
+PartId = "p11"
+
+[node name="p12" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.54, 0.725, 17.96)
+mesh = SubResource("b3")
+PartId = "p12"
+
+[node name="p13" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.54, 2.525, 19.68)
+mesh = SubResource("b3")
+PartId = "p13"
+
+[node name="p14" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.26, 0.875, 17.96)
+mesh = SubResource("b3")
+PartId = "p14"
+
+[node name="p15" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.82, 2.675, 19.68)
+mesh = SubResource("b3")
+PartId = "p15"
+
+[node name="p16" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.98, 1.025, 17.96)
+mesh = SubResource("b3")
+PartId = "p16"
+
+[node name="p17" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.1, 2.825, 19.68)
+mesh = SubResource("b3")
+PartId = "p17"
+
+[node name="p18" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.7, 1.175, 17.96)
+mesh = SubResource("b3")
+PartId = "p18"
+
+[node name="p19" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.38, 2.975, 19.68)
+mesh = SubResource("b3")
+PartId = "p19"
+
+[node name="p20" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.42, 1.325, 17.96)
+mesh = SubResource("b3")
+PartId = "p20"
+
+[node name="p21" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.66, 3.125, 19.68)
+mesh = SubResource("b3")
+PartId = "p21"
+
+[node name="p22" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.14, 1.475, 17.96)
+mesh = SubResource("b3")
+PartId = "p22"
+
+[node name="p23" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.94, 3.275, 19.68)
+mesh = SubResource("b3")
+PartId = "p23"
+
+[node name="p24" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(114.46, 1.7, 47.84)
+mesh = SubResource("b5")
+PartId = "p24"
+
+[node name="p25" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.74, 0.075, 46.69)
+mesh = SubResource("b6")
+PartId = "p25"
+
+[node name="p26" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(115.94, 1.775, 48.99)
+mesh = SubResource("b7")
+PartId = "p26"
+
+[node name="p27" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.46, 0.15, 46.69)
+mesh = SubResource("b8")
+PartId = "p27"
+
+[node name="p28" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.22, 1.925, 48.99)
+mesh = SubResource("b7")
+PartId = "p28"
+
+[node name="p29" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.18, 0.275, 46.69)
+mesh = SubResource("b7")
+PartId = "p29"
+
+[node name="p30" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.5, 2.075, 48.99)
+mesh = SubResource("b7")
+PartId = "p30"
+
+[node name="p31" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.9, 0.425, 46.69)
+mesh = SubResource("b7")
+PartId = "p31"
+
+[node name="p32" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.78, 2.225, 48.99)
+mesh = SubResource("b7")
+PartId = "p32"
+
+[node name="p33" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.62, 0.575, 46.69)
+mesh = SubResource("b7")
+PartId = "p33"
+
+[node name="p34" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.06, 2.375, 48.99)
+mesh = SubResource("b7")
+PartId = "p34"
+
+[node name="p35" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.34, 0.725, 46.69)
+mesh = SubResource("b7")
+PartId = "p35"
+
+[node name="p36" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.34, 2.525, 48.99)
+mesh = SubResource("b7")
+PartId = "p36"
+
+[node name="p37" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.06, 0.875, 46.69)
+mesh = SubResource("b7")
+PartId = "p37"
+
+[node name="p38" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.62, 2.675, 48.99)
+mesh = SubResource("b7")
+PartId = "p38"
+
+[node name="p39" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.78, 1.025, 46.69)
+mesh = SubResource("b7")
+PartId = "p39"
+
+[node name="p40" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.9, 2.825, 48.99)
+mesh = SubResource("b7")
+PartId = "p40"
+
+[node name="p41" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.5, 1.175, 46.69)
+mesh = SubResource("b7")
+PartId = "p41"
+
+[node name="p42" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.18, 2.975, 48.99)
+mesh = SubResource("b7")
+PartId = "p42"
+
+[node name="p43" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.22, 1.325, 46.69)
+mesh = SubResource("b7")
+PartId = "p43"
+
+[node name="p44" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.46, 3.125, 48.99)
+mesh = SubResource("b7")
+PartId = "p44"
+
+[node name="p45" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(115.94, 1.475, 46.69)
+mesh = SubResource("b7")
+PartId = "p45"
+
+[node name="p46" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.74, 3.275, 48.99)
+mesh = SubResource("b7")
+PartId = "p46"
+
+[node name="p47" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(115.31, 1.7, 79.46)
+mesh = SubResource("b1")
+PartId = "p47"
+
+[node name="p48" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.94, 0.075, 78.6)
+mesh = SubResource("b2")
+PartId = "p48"
+
+[node name="p49" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.14, 1.775, 80.32)
+mesh = SubResource("b3")
+PartId = "p49"
+
+[node name="p50" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.66, 0.15, 78.6)
+mesh = SubResource("b4")
+PartId = "p50"
+
+[node name="p51" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.42, 1.925, 80.32)
+mesh = SubResource("b3")
+PartId = "p51"
+
+[node name="p52" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.38, 0.275, 78.6)
+mesh = SubResource("b3")
+PartId = "p52"
+
+[node name="p53" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.7, 2.075, 80.32)
+mesh = SubResource("b3")
+PartId = "p53"
+
+[node name="p54" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.1, 0.425, 78.6)
+mesh = SubResource("b3")
+PartId = "p54"
+
+[node name="p55" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.98, 2.225, 80.32)
+mesh = SubResource("b3")
+PartId = "p55"
+
+[node name="p56" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.82, 0.575, 78.6)
+mesh = SubResource("b3")
+PartId = "p56"
+
+[node name="p57" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.26, 2.375, 80.32)
+mesh = SubResource("b3")
+PartId = "p57"
+
+[node name="p58" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.54, 0.725, 78.6)
+mesh = SubResource("b3")
+PartId = "p58"
+
+[node name="p59" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.54, 2.525, 80.32)
+mesh = SubResource("b3")
+PartId = "p59"
+
+[node name="p60" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.26, 0.875, 78.6)
+mesh = SubResource("b3")
+PartId = "p60"
+
+[node name="p61" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(117.82, 2.675, 80.32)
+mesh = SubResource("b3")
+PartId = "p61"
+
+[node name="p62" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.98, 1.025, 78.6)
+mesh = SubResource("b3")
+PartId = "p62"
+
+[node name="p63" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.1, 2.825, 80.32)
+mesh = SubResource("b3")
+PartId = "p63"
+
+[node name="p64" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.7, 1.175, 78.6)
+mesh = SubResource("b3")
+PartId = "p64"
+
+[node name="p65" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.38, 2.975, 80.32)
+mesh = SubResource("b3")
+PartId = "p65"
+
+[node name="p66" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.42, 1.325, 78.6)
+mesh = SubResource("b3")
+PartId = "p66"
+
+[node name="p67" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.66, 3.125, 80.32)
+mesh = SubResource("b3")
+PartId = "p67"
+
+[node name="p68" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(116.14, 1.475, 78.6)
+mesh = SubResource("b3")
+PartId = "p68"
+
+[node name="p69" parent="teaching1_flights" instance=ExtResource("e2")]
+position = Vector3(118.94, 3.275, 80.32)
+mesh = SubResource("b3")
+PartId = "p69"

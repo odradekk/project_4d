@@ -1,0 +1,244 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://regions/campus/teaching1/chairs.tscn" id="e1"]
+
+[sub_resource type="BoxShape3D" id="s1"]
+size = Vector3(3.811771, 0.1, 1.42)
+
+[sub_resource type="BoxShape3D" id="s2"]
+size = Vector3(3.811771, 0.1, 2)
+
+[sub_resource type="StandardMaterial3D" id="c2"]
+albedo_color = Color(0.659, 0.314, 0.235, 1)
+
+[sub_resource type="CylinderMesh" id="roof"]
+material = SubResource("c2")
+top_radius = 0
+bottom_radius = 5.4
+height = 3.2
+radial_segments = 4
+rings = 0
+
+[node name="Teaching1" type="Node3D"]
+
+[node name="Chairs1_1" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 0, 20.44)
+
+[node name="Chairs1_2" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 0, 28.84)
+
+[node name="Chairs1_3" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 0, 37.24)
+
+[node name="Chairs1_4" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 0, 52.64)
+
+[node name="Chairs1_5" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 0, 61.04)
+
+[node name="Chairs1_6" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 0, 69.44)
+
+[node name="Chairs2_1" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 3.6, 20.44)
+
+[node name="Chairs2_2" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 3.6, 28.84)
+
+[node name="Chairs2_3" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 3.6, 37.24)
+
+[node name="Chairs2_4" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 3.6, 52.64)
+
+[node name="Chairs2_5" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 3.6, 61.04)
+
+[node name="Chairs2_6" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 3.6, 69.44)
+
+[node name="Chairs3_1" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 7.2, 20.44)
+
+[node name="Chairs3_2" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 7.2, 28.84)
+
+[node name="Chairs3_3" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 7.2, 37.24)
+
+[node name="Chairs3_4" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 7.2, 52.64)
+
+[node name="Chairs3_5" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 7.2, 61.04)
+
+[node name="Chairs3_6" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 7.2, 69.44)
+
+[node name="Chairs4_1" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 10.8, 20.44)
+
+[node name="Chairs4_2" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 10.8, 28.84)
+
+[node name="Chairs4_3" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 10.8, 37.24)
+
+[node name="Chairs4_4" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 10.8, 52.64)
+
+[node name="Chairs4_5" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 10.8, 61.04)
+
+[node name="Chairs4_6" parent="." instance=ExtResource("e1")]
+position = Vector3(114.5, 10.8, 69.44)
+
+[node name="NorthStair1West" type="StaticBody3D" parent="."]
+position = Vector3(117.680656, 0.855926, 18.01)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="NorthStair1West"]
+shape = SubResource("s1")
+
+[node name="NorthStair1East" type="StaticBody3D" parent="."]
+position = Vector3(117.399344, 2.655926, 19.63)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="NorthStair1East"]
+shape = SubResource("s1")
+
+[node name="WideStair1West" type="StaticBody3D" parent="."]
+position = Vector3(117.480656, 0.855926, 46.74)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="WideStair1West"]
+shape = SubResource("s2")
+
+[node name="WideStair1East" type="StaticBody3D" parent="."]
+position = Vector3(117.199344, 2.655926, 48.94)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="WideStair1East"]
+shape = SubResource("s2")
+
+[node name="SouthStair1West" type="StaticBody3D" parent="."]
+position = Vector3(117.680656, 0.855926, 78.65)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="SouthStair1West"]
+shape = SubResource("s1")
+
+[node name="SouthStair1East" type="StaticBody3D" parent="."]
+position = Vector3(117.399344, 2.655926, 80.27)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="SouthStair1East"]
+shape = SubResource("s1")
+
+[node name="NorthStair2West" type="StaticBody3D" parent="."]
+position = Vector3(117.680656, 4.455926, 18.01)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="NorthStair2West"]
+shape = SubResource("s1")
+
+[node name="NorthStair2East" type="StaticBody3D" parent="."]
+position = Vector3(117.399344, 6.255926, 19.63)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="NorthStair2East"]
+shape = SubResource("s1")
+
+[node name="WideStair2West" type="StaticBody3D" parent="."]
+position = Vector3(117.480656, 4.455926, 46.74)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="WideStair2West"]
+shape = SubResource("s2")
+
+[node name="WideStair2East" type="StaticBody3D" parent="."]
+position = Vector3(117.199344, 6.255926, 48.94)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="WideStair2East"]
+shape = SubResource("s2")
+
+[node name="SouthStair2West" type="StaticBody3D" parent="."]
+position = Vector3(117.680656, 4.455926, 78.65)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="SouthStair2West"]
+shape = SubResource("s1")
+
+[node name="SouthStair2East" type="StaticBody3D" parent="."]
+position = Vector3(117.399344, 6.255926, 80.27)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="SouthStair2East"]
+shape = SubResource("s1")
+
+[node name="NorthStair3West" type="StaticBody3D" parent="."]
+position = Vector3(117.680656, 8.055926, 18.01)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="NorthStair3West"]
+shape = SubResource("s1")
+
+[node name="NorthStair3East" type="StaticBody3D" parent="."]
+position = Vector3(117.399344, 9.855926, 19.63)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="NorthStair3East"]
+shape = SubResource("s1")
+
+[node name="WideStair3West" type="StaticBody3D" parent="."]
+position = Vector3(117.480656, 8.055926, 46.74)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="WideStair3West"]
+shape = SubResource("s2")
+
+[node name="WideStair3East" type="StaticBody3D" parent="."]
+position = Vector3(117.199344, 9.855926, 48.94)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="WideStair3East"]
+shape = SubResource("s2")
+
+[node name="SouthStair3West" type="StaticBody3D" parent="."]
+position = Vector3(117.680656, 8.055926, 78.65)
+rotation = Vector3(0, 0, -0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="SouthStair3West"]
+shape = SubResource("s1")
+
+[node name="SouthStair3East" type="StaticBody3D" parent="."]
+position = Vector3(117.399344, 9.855926, 80.27)
+rotation = Vector3(0, 0, 0.491809)
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="SouthStair3East"]
+shape = SubResource("s1")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+layers = 3
+position = Vector3(116.64, 20.6, 49.14)
+rotation = Vector3(0, 0.785398, 0)
+mesh = SubResource("roof")

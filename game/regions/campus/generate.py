@@ -1,4 +1,5 @@
 """Writes the scenes of the campus region next to this file, all but campus.tscn: python game/regions/campus/generate.py
+Teaching building 1's come from teaching1.py.
 
 The layout is the greybox prototype's (branch prototype/school-layout, prototypes/school-layout/index.html), in metres with
 x east, z south and y up; walls are placed by their centrelines. The origin is the school wall's north-west corner, and
@@ -6,11 +7,11 @@ y = 0 is the top of the yard. The scene text comes from the compound region's ts
 Decision note: 2026-11-01-school-scene-layout
 """
 import math
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent / 'compound'))
-from tscn import COLORS, bodies, box, fmt, mirror, packed, scene, slope, vec  # noqa: E402
+import teaching1
+from shapes import LINE, TOP, WT, fixed, gap, material, pave, resource, show, wall, window
+from tscn import COLORS, bodies, box, fmt, mirror, packed, slope, vec  # on the path once shapes is imported
 
 # The campus's colors, beside the compound's; scene() looks them up by name.
 COLORS.update({
@@ -20,12 +21,8 @@ COLORS.update({
     'backdrop': (0.949, 0.769, 0.541, 1), 'concrete': (0.725, 0.714, 0.682, 1), 'cement': (0.741, 0.718, 0.671, 1),
     'desk': (0.69, 0.541, 0.353, 1), 'chair': (0.541, 0.416, 0.267, 1), 'glass': (0.373, 0.408, 0.439, 1),
     'door': (0.816, 0.165, 0.165, 1), 'white': (0.957, 0.957, 0.941, 1), 'pane': (0.612, 0.769, 0.91, 0.35),
+    'board': (0.184, 0.29, 0.227, 1), 'roof': (0.659, 0.314, 0.235, 1), 'window': (0.435, 0.659, 0.878, 1),
 })
-
-WT = 0.24  # brick wall thickness
-GROUND = -0.2  # the bottom of the yard's slab
-# Paving and floors stand this much over the yard, lines a little more; each reaches into the yard, 1 cm thick at least.
-TOP, LINE = 0.004, 0.008
 
 SCHOOL_X, SCHOOL_Z, WALL_H = (0, 149), (0, 92), 2.4
 GATE, NAME_WALL, BACK = (72, 80), (62, 71.4), (6, 10)  # in the north wall (x); the back gate in the west wall (z)
@@ -45,41 +42,12 @@ STORE_X, STORE_Z, STORE_H = (3, 19), (67, 75), 3.4
 BALL_ROWS, BALL_R = (0.55, 1.15, 1.75), 0.12  # the store's balls: the rows' heights
 
 
-def gap(a, b, h): return (a, b, 0, h, False)
-def window(c, w, lo, hi): return (c - w / 2, c + w / 2, lo, hi, True)
-
-
-# A wall along x (at z) or along z (at x) from a to b, h high from y0, reaching half its thickness past each end so that
-# corners close. holes: (a, b, lo, hi, glass) with lo and hi over y0, glass for a pane in it. The wall is cut into bands at
-# the holes' sills and heads, and each band into the runs between the holes that span it.
-def wall(boxes, along, at, a, b, h, holes=(), t=WT, y0=0, m='wall'):
-    def piece(p, q, lo, hi, mm=m, tt=t):
-        if along == 'x': box(boxes, p, q, y0 + lo, y0 + hi, at - tt / 2, at + tt / 2, mm)
-        else: box(boxes, at - tt / 2, at + tt / 2, y0 + lo, y0 + hi, p, q, mm)
-
-    levels = sorted({0, h, *(y for _, _, lo, hi, _ in holes for y in (lo, hi))})
-    for lo, hi in zip(levels, levels[1:]):
-        start = a - t / 2
-        for p, q, hole_lo, hole_hi, _ in sorted(holes):
-            if hole_lo <= lo and hi <= hole_hi:
-                piece(start, p, lo, hi)
-                start = q
-        piece(start, b + t / 2, lo, hi)
-    for p, q, lo, hi, glass in holes:
-        if glass: piece(p, q, lo, hi, 'pane', 0.04)
-
-
-def pave(boxes, x0, x1, z0, z1, top, m): box(boxes, x0, x1, GROUND, top, z0, z1, m)
 def floor(boxes, x0, x1, z0, z1, m, y=0): box(boxes, x0, x1, y - 0.02, y + TOP, z0, z1, m)
 
 
 def outline(boxes, x0, x1, z0, z1, w, m):  # a frame w wide just inside the rectangle
     for p, q, r, s in ((x0, x1, z0, z0 + w), (x0, x1, z1 - w, z1), (x0, x0 + w, z0, z1), (x1 - w, x1, z0, z1)):
         pave(boxes, p, q, r, s, LINE, m)
-
-
-def fixed(root, **parts):  # a scene of fixed objects, one for each id and its boxes
-    return scene([(eid, (0, 0, 0), boxes, {'EntityId': f'"{eid}"'}) for eid, boxes in parts.items()], 'FixedObject3D', root)
 
 
 def site():
@@ -266,39 +234,31 @@ def props(circles, rims):
     subs, nodes = bodies([slope('StandSlope', 'z', STEPS_Z[0] - GO - 0.027, 0, STEPS_Z[1] - GO - 0.027, STAND_H, *STEPS_X),
                           slope('ToiletStairSlope', 'x', FOOT - RUN / TREADS - 0.022, 0, LANDING[0] - 0.022, TOILET_H, *STAIR_Z)])
 
-    def resource(kind, rid, **values):
-        subs.append(f'[sub_resource type="{kind}" id="{rid}"]\n' + ''.join(f'{k} = {v}\n' for k, v in values.items()))
-        return f'SubResource("{rid}")'
-
-    def material(rgb): return resource('StandardMaterial3D', f'c{len(subs)}', albedo_color=f'Color({", ".join(fmt(c) for c in rgb)}, 1)')
-
-    def show(name, mesh, position, **values):
-        nodes.append(f'[node name="{name}" type="MeshInstance3D" parent="."]\nlayers = 3\nposition = {vec(*position)}\n'
-                     + ''.join(f'{k} = {v}\n' for k, v in values.items()) + f'mesh = {mesh}\n')
-
     def disc(rid, r, rgb, h):
-        return resource('CylinderMesh', rid, material=material(rgb), top_radius=r, bottom_radius=r, height=h, radial_segments=48, rings=1)
+        return resource(subs, 'CylinderMesh', rid, material=material(subs, rgb), top_radius=r, bottom_radius=r, height=h,
+                        radial_segments=48, rings=1)
 
     # The prototype lays each ring over the last at 55% opacity; these are the colors that gives.
     x, z = (PLAZA_X[0] + PLAZA_X[1]) / 2, (PLAZA_Z[0] + PLAZA_Z[1]) / 2
     for i, (r, rgb) in enumerate(((13, (0.774, 0.737, 0.676)), (10, (0.836, 0.804, 0.751)), (7, (0.741, 0.705, 0.644)),
                                   (2.5, (0.767, 0.729, 0.665))), 1):
-        show(f'PlazaRing{i}', disc(f'disc{i}', r, rgb, 0.004), (x, 0.002 + 0.004 * i, z))
+        show(nodes, f'PlazaRing{i}', disc(f'disc{i}', r, rgb, 0.004), (x, 0.002 + 0.004 * i, z))
     # A centre circle is a disc of the line's color under one of the court's, 0.1 m smaller, which the centre line crosses.
     for name, r, m, y in (('CentreCircle', 1.85, 'line', 0.0055), ('CentreCircleInside', 1.75, 'court', 0.0065)):
         mesh = disc(name, r, COLORS[m][:3], 0.001)
-        for i, (x, z) in enumerate(circles, 1): show(f'{name}{i}', mesh, (x, y, z))
-    red = material(COLORS['door'][:3])
-    rim = resource('TorusMesh', 'rim', material=red, inner_radius=0.21, outer_radius=0.24, rings=16, ring_segments=6)
-    for i, position in enumerate(rims, 1): show(f'Rim{i}', rim, position)
+        for i, (x, z) in enumerate(circles, 1): show(nodes, f'{name}{i}', mesh, (x, y, z))
+    red = material(subs, COLORS['door'][:3])
+    rim = resource(subs, 'TorusMesh', 'rim', material=red, inner_radius=0.21, outer_radius=0.24, rings=16, ring_segments=6)
+    for i, position in enumerate(rims, 1): show(nodes, f'Rim{i}', rim, position)
     th = TOILET_H
-    bar = resource('BoxMesh', 'handrail', material=material(COLORS['iron'][:3]), size=vec(math.hypot(RUN, th), 0.05, 0.05))
+    bar = resource(subs, 'BoxMesh', 'handrail', material=material(subs, COLORS['iron'][:3]),
+                   size=vec(math.hypot(RUN, th), 0.05, 0.05))
     for i, z in enumerate((STAIR_Z[1] - 0.05, STAIR_Z[0] + 0.05), 1):
-        show(f'StairHandrail{i}', bar, (FOOT + RUN / 2, th / 2 + 1.0, z), rotation=vec(0, 0, math.atan2(th, RUN)))
-    ball = resource('SphereMesh', 'ball', material=red, radius=BALL_R, height=2 * BALL_R, radial_segments=8, rings=6)
+        show(nodes, f'StairHandrail{i}', bar, (FOOT + RUN / 2, th / 2 + 1.0, z), rotation=vec(0, 0, math.atan2(th, RUN)))
+    ball = resource(subs, 'SphereMesh', 'ball', material=red, radius=BALL_R, height=2 * BALL_R, radial_segments=8, rings=6)
     spots = [(STORE_X[0] + 0.8 + 0.45 * k, y, STORE_Z[1] - 0.37) for y in BALL_ROWS for k in range(33)]
     buffer = ', '.join(f'1, 0, 0, {fmt(x)}, 0, 1, 0, {fmt(y)}, 0, 0, 1, {fmt(z)}' for x, y, z in spots)
-    many = resource('MultiMesh', 'balls', transform_format=1, instance_count=len(spots), mesh=ball,
+    many = resource(subs, 'MultiMesh', 'balls', transform_format=1, instance_count=len(spots), mesh=ball,
                     buffer=f'PackedFloat32Array({buffer})')
     nodes.append(f'[node name="Balls" type="MultiMeshInstance3D" parent="."]\nlayers = 3\nmultimesh = {many}\n')
     return packed('Props', [], subs=subs, nodes=nodes)
@@ -309,7 +269,9 @@ def main():
     files['courts.tscn'], circles, rims = courts()
     files['toilet.tscn'], files['toilet_upstairs.tscn'] = toilet()
     files['props.tscn'] = props(circles, rims)
+    files.update(teaching1.files())
     here = Path(__file__).parent
+    (here / 'teaching1').mkdir(exist_ok=True)
     for path, text in files.items(): (here / path).write_text(text, encoding='utf-8', newline='\n')
 
 
