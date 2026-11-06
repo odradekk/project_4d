@@ -24,4 +24,4 @@
 
 ## 公共契约
 
-实现引擎、适配层、场景标注或谜题查询前，读[公共契约](contract.md)。实体形状见[数据定义](contract-data.md)，运动和事件见[动作与推进](contract-actions.md)，抓取、携带和受控布置见[抓取与布置](contract-carry.md)，网格和通用查询见[截面与查询](contract-views.md)，关卡制作与报错见[场景标注](scene-authoring.md)，谜题解法的写法见[预期操作](operations-authoring.md)，放样装置的搭法见[装置搭法](device-authoring.md)，角色的搭法见[角色搭法](character-authoring.md)，啃食者的搭法见[啃食者搭法](grazer-authoring.md)。
+实现引擎、适配层、场景标注或谜题查询前，读[公共契约](contract.md)。实体形状见[数据定义](contract-data.md)，运动和事件见[动作与推进](contract-actions.md)，抓取、携带和受控布置见[抓取与布置](contract-carry.md)，网格和通用查询见[截面与查询](contract-views.md)，关卡制作与报错、玩家碰到墙和斜坡时怎么走，见[场景标注](scene-authoring.md)，谜题解法的写法见[预期操作](operations-authoring.md)，放样装置的搭法见[装置搭法](device-authoring.md)，角色的搭法见[角色搭法](character-authoring.md)，啃食者的搭法见[啃食者搭法](grazer-authoring.md)。
