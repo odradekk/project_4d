@@ -19,7 +19,8 @@ public partial class RoomChecks : Node
 
     // Held for the whole check, so that every load of the room returns this scene. Loaded again after it was freed, the
     // room would take its resources back from Godot's cache while the GC may have collected their C# objects and not yet
-    // finalized them; Godot 4.7.2's C# bridge then loses track of those objects and logs "Handle is not initialized".
+    // finalized them; Godot 4.7.2's C# bridge then loses track of those objects and logs "Handle is not initialized"
+    // (godotengine/godot#112067).
     private PackedScene room = null!;
 
     public override async void _Ready()
