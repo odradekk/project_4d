@@ -61,9 +61,9 @@ public partial class ReloadChecks : Node
         Stall.Released.Reset();
         MakeStall();
         GC.Collect();
-        Check(Stall.Entered.Wait(TimeSpan.FromSeconds(10)), "the finalizer thread must reach the stall");
         try
         {
+            Check(Stall.Entered.Wait(TimeSpan.FromSeconds(10)), "the finalizer thread must reach the stall");
             await free();
             GC.Collect();
             await load();
