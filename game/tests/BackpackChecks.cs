@@ -157,7 +157,7 @@ public partial class BackpackChecks : Node
         var path = DebugScenes.Find("seam-demo");
 #if DEBUG
         Check(path == "res://tests/seam_demo.tscn", "the debug entry for the seam scene must be registered");
-        var demo = GD.Load<PackedScene>(path).Instantiate();
+        var demo = Scenes.Load(path!).Instantiate();
         AddChild(demo);
         await play.Frames(5);
         var region = demo.GetNode<Region3D>("Region");

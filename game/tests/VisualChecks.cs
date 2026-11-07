@@ -18,7 +18,7 @@ public partial class VisualChecks : Node
             await UprightOutline();
             return;
         }
-        var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+        var region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
         if (mode == "empty")
         {
             region.GetNode("Sections/Ⅱ").Free();

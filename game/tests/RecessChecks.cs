@@ -73,7 +73,7 @@ public partial class RecessChecks : Node
         await Unload();
         school.Forget();
         finished = 0;
-        scene = GD.Load<PackedScene>(ScenePath).Instantiate<Recess>();
+        scene = Scenes.Load(ScenePath).Instantiate<Recess>();
         scene.Finished += () => finished++;
         AddChild(scene);
         school.Room = SchoolRoom.Of(scene.Region!);

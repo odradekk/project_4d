@@ -11,7 +11,7 @@ public partial class AudioChecks : Node
     {
         try
         {
-            var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+            var region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
             region.GetNode("Sections").AddChild(new Section3D { Name = "Half", SectionId = "Half", W = .21 });
             region.GetNode("Sections").MoveChild(region.GetNode("Sections/Half"), 2);
             AddChild(region);

@@ -13,7 +13,7 @@ public partial class SeamDemo : Node
 {
     public override void _Ready()
     {
-        var region = GD.Load<PackedScene>("res://regions/seam_test.tscn").Instantiate<Region3D>();
+        var region = Scenes.Load("res://regions/seam_test.tscn").Instantiate<Region3D>();
         region.Name = "Region";
         AddChild(region);
         var world = region.World!;

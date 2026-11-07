@@ -19,7 +19,7 @@ public partial class AudioDemo : Node
 
     public override async void _Ready()
     {
-        region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+        region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
         // The test region's third section is shallower than the first; here it is the deepest, and so last in order.
         var third = region.GetNode<Section3D>("Sections/Ⅲ");
         third.W = .84;

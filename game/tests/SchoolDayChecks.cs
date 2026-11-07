@@ -31,7 +31,7 @@ public partial class SchoolDayChecks : Node
         school = new SchoolFixture(play);
         try
         {
-            region = GD.Load<PackedScene>(SchoolRoom.RegionPath).Instantiate<Region3D>();
+            region = Scenes.Load(SchoolRoom.RegionPath).Instantiate<Region3D>();
             AddChild(region);
             school.Room = SchoolRoom.Of(region);
             CheckLayout();

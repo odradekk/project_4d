@@ -80,7 +80,7 @@ public partial class DutyChecks : Node
         await Unload();
         school.Forget();
         finished = 0;
-        scene = GD.Load<PackedScene>(ScenePath).Instantiate<Duty>();
+        scene = Scenes.Load(ScenePath).Instantiate<Duty>();
         scene.Finished += () => finished++;
         AddChild(scene);
         school.Room = SchoolRoom.Of(scene.Region!);

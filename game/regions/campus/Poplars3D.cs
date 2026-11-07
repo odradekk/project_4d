@@ -24,7 +24,7 @@ public partial class Poplars3D : Node3D
 
     public override void _Ready()
     {
-        var part = GD.Load<PackedScene>("res://regions/box_part.tscn");
+        var part = Scenes.Load("res://regions/box_part.tscn");
         var trunk = new BoxMesh { Size = new(.3f, 5, .3f), Material = new StandardMaterial3D { AlbedoColor = new(0x8a8478ff) } };
         var crowns = new MultiMesh
         {

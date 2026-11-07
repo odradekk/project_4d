@@ -28,7 +28,7 @@ internal sealed class TurningFixture(Node host)
             host.RemoveChild(Region);
             Region.Free();
         }
-        Region = GD.Load<PackedScene>(scene).Instantiate<Region3D>();
+        Region = Scenes.Load(scene).Instantiate<Region3D>();
         change?.Invoke(Region);
         host.AddChild(Region);
         Check(Region.Loaded, $"the region {scene} must load: {Region.Diagnostics}");

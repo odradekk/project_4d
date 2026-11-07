@@ -46,7 +46,7 @@ internal sealed class HomeScene
     /// </summary>
     internal static HomeScene Open(Node host, Action<Region3D>? change = null, string path = RegionPath)
     {
-        var region = GD.Load<PackedScene>(path).Instantiate<Region3D>();
+        var region = Scenes.Load(path).Instantiate<Region3D>();
         region.Name = "Region";
         change?.Invoke(region);
         host.AddChild(region);
@@ -63,7 +63,7 @@ internal sealed class HomeScene
         PassageRadius = .15,
         PassageHeight = .4,
         CanUseSeamsWithoutPrism = true,
-        CharacterScene = GD.Load<PackedScene>("res://characters/cat.tscn")
+        CharacterScene = Scenes.Load("res://characters/cat.tscn")
     });
 
     /// <summary>The scene's view of a home region that an earlier scene has loaded and left in its state.</summary>

@@ -19,7 +19,7 @@ internal static class SchoolOperationChecks
     // The engine plays the solutions written in the school region when it loads, and reports a step that ends otherwise.
     internal static void Run(Node host)
     {
-        var region = GD.Load<PackedScene>(SchoolRoom.RegionPath).Instantiate<Region3D>();
+        var region = Scenes.Load(SchoolRoom.RegionPath).Instantiate<Region3D>();
         host.AddChild(region);
         var operation = region.GetNode<ExpectedOperationNode>("ExpectedPuzzleOperations/WindowStuck").Operation!;
         var stop = (ExpectedDeviceResource)operation.Steps[1];

@@ -38,7 +38,7 @@ public partial class RoomFlowChecks : Node
     {
         try
         {
-            room = GD.Load<PackedScene>(DebugScenes.Find("cat-room")!).Instantiate<CatRoom>();
+            room = Scenes.Load(DebugScenes.Find("cat-room")!).Instantiate<CatRoom>();
             AddChild(room);
             await Frames(3);
             player = room.Home.Player;

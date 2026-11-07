@@ -112,7 +112,7 @@ public partial class MovementChecks : Node
     // in the props, the slope she can stand on, which only holds her up, as the compound's stair slopes do.
     private static void AddYard(Region3D region)
     {
-        var part = GD.Load<PackedScene>("res://regions/box_part.tscn");
+        var part = Scenes.Load("res://regions/box_part.tscn");
         var fixedObjects = region.GetNode("Sections/Ⅰ/Fixed");
         FixedObject3D Add(string id)
         {
