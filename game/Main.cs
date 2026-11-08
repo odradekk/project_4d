@@ -12,7 +12,7 @@ public partial class Main : Node
         foreach (var arg in OS.GetCmdlineUserArgs())
             if (arg.StartsWith("--start=") && DebugScenes.Find(arg[8..]) is { } path)
             {
-                AddChild(GD.Load<PackedScene>(path).Instantiate());
+                AddChild(Scenes.Load(path).Instantiate());
                 return;
             }
         AddChild(new Prologue());

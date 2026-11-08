@@ -215,7 +215,7 @@ public partial class HomeFlowChecks : Node
     {
         var path = DebugScenes.Find(entry);
         Check(path is not null, $"the debug entry {entry} must be registered");
-        scene = GD.Load<PackedScene>(path).Instantiate<T>();
+        scene = Scenes.Load(path!).Instantiate<T>();
         finished = false;
         scene.Connect("Finished", Callable.From(() => finished = true));
         AddChild(scene);

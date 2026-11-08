@@ -43,7 +43,7 @@ internal sealed class CatWorld
             host.AddChild(room);
             result.Rooms.Add(section, room);
         }
-        result.Player = GD.Load<PackedScene>("res://player/first_person_player.tscn").Instantiate<FirstPersonPlayer>();
+        result.Player = Scenes.Load("res://player/first_person_player.tscn").Instantiate<FirstPersonPlayer>();
         result.Player.Position = new(0, .02f, 3);
         host.AddChild(result.Player);
         result.Cat = result.Character(CharacterFixture.CatScene, "cat", "I");
@@ -77,7 +77,7 @@ internal sealed class CatWorld
 
     private Character3D Character(string scene, string id, string section)
     {
-        var character = GD.Load<PackedScene>(scene).Instantiate<Character3D>();
+        var character = Scenes.Load(scene).Instantiate<Character3D>();
         character.Bind(new CreatureLink(World, id, "player", name => Rooms[name]), Player);
         Rooms[section].AddChild(character);
         character.PlaceAt(new((float)State(id).Pose.Position.X, 0, (float)State(id).Pose.Position.Z), 0);

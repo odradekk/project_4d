@@ -49,7 +49,7 @@ public partial class GrazerDemo : Node
 
     public override async void _Ready()
     {
-        region = GD.Load<PackedScene>(Scene).Instantiate<Region3D>();
+        region = Scenes.Load(Scene).Instantiate<Region3D>();
         region.Name = "Region";
         AddChild(region);
         music = new GrazerMusic { Name = "Music" };

@@ -12,7 +12,7 @@ public partial class SystemsDemo : Node
     public SceneCheckpoint Checkpoint { get; private set; } = null!;
     public override void _Ready()
     {
-        var region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+        var region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
         region.Name = "Region"; AddChild(region);
         var player = region.GetNode<FirstPersonPlayer>("Generated/Player");
         var prism = region.GetNode<PrismView>("Generated/Prism");

@@ -29,7 +29,7 @@ internal static class CharacterFixture
             PassageHeight = height,
             CanUseSeamsWithoutPrism = seams,
             DisplayName = name,
-            CharacterScene = GD.Load<PackedScene>(scene)
+            CharacterScene = Scenes.Load(scene)
         });
 
     internal static void AddCat(Region3D region, string id, Vector3 position, string section = "Ⅰ") =>

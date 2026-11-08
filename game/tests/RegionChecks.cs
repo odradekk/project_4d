@@ -15,7 +15,7 @@ public partial class RegionChecks : Node
     {
         try
         {
-            region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+            region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
             AddChild(region);
             Check(region.Loaded, "a valid region must load and generate section worlds");
             await Frames(3);
@@ -234,7 +234,7 @@ public partial class RegionChecks : Node
     private async Task CheckTargets()
     {
         RemoveChild(region); region.Free();
-        region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+        region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
         region.GetNode<Section3D>("Sections/Ⅱ").W = .8;
         // Section order is part of the load contract, not the target distance order: III is first and nearest here.
         region.GetNode<Section3D>("Sections/Ⅲ").W = -.3;
@@ -255,7 +255,7 @@ public partial class RegionChecks : Node
         Button(MouseButton.Right, false); Button(MouseButton.WheelDown, true); await Frames(1);
         Check(prism.TargetSection == "Ⅲ", "scrolling with the prism lowered must not change target");
         RemoveChild(region); region.Free();
-        region = GD.Load<PackedScene>("res://regions/section_test.tscn").Instantiate<Region3D>();
+        region = Scenes.Load("res://regions/section_test.tscn").Instantiate<Region3D>();
         region.GetNode("Sections/Ⅱ").Free();
         region.GetNode("Sections/Ⅲ").Free();
         AddChild(region); await Frames(2);

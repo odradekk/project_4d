@@ -95,7 +95,7 @@ public partial class SchoolChecks : Node
         await Unload();
         said.Clear();
         finished = 0;
-        scene = GD.Load<PackedScene>(ScenePath).Instantiate<MathClass>();
+        scene = Scenes.Load(ScenePath).Instantiate<MathClass>();
         scene.Finished += () => finished++;
         AddChild(scene);
         Check(region.Loaded, $"the school region must load: {region.Diagnostics}");

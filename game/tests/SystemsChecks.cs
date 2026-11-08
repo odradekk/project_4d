@@ -16,7 +16,7 @@ public partial class SystemsChecks : Node
             var floor = new StaticBody3D { Position = new Vector3(0, -.1f, 0) };
             floor.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = new Vector3(10, .2f, 10) } });
             AddChild(floor);
-            var player = GD.Load<PackedScene>("res://player/first_person_player.tscn").Instantiate<FirstPersonPlayer>();
+            var player = Scenes.Load("res://player/first_person_player.tscn").Instantiate<FirstPersonPlayer>();
             AddChild(player); await Frames(2);
             var hud = player.Hud;
             hud.Say("小满", "第一句", 1); hud.Say("老师", "第二句", 2);
@@ -95,7 +95,7 @@ public partial class SystemsChecks : Node
             var path = DebugScenes.Find("systems-demo");
 #if DEBUG
             Check(path == "res://tests/systems_demo.tscn", "debug entry resolves the registered real scene");
-            var demo = GD.Load<PackedScene>(path).Instantiate(); AddChild(demo); await Frames(2);
+            var demo = Scenes.Load(path!).Instantiate(); AddChild(demo); await Frames(2);
             var demoPlayer = demo.GetNode<FirstPersonPlayer>("Region/Generated/Player");
             Check(demoPlayer.Hud.NotebookAvailable && demoPlayer.Hud.UnlockedPages.Count == 2, "debug scene applies its own opening pages");
             var entrance = demo.GetNode<Node3D>("Region/Sections/Ⅰ/Spawns/Xiaoman").Transform;

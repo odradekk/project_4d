@@ -204,7 +204,7 @@ public partial class ItemChecks : Node
     // Errors in the authoring of a ball, a nut and a device are reported against the node and property that hold them.
     private static void CheckDiagnostics()
     {
-        var region = GD.Load<PackedScene>(Scene).Instantiate<Region3D>();
+        var region = Scenes.Load(Scene).Instantiate<Region3D>();
         Check(new SceneReader(region).Load() is LoadResult.Loaded, "the item test region must be valid");
 
         // A ring that rests .02 m from the first section is too close to it: it needs its tube, the layer and .02 m more.

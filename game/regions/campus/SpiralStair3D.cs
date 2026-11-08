@@ -67,7 +67,7 @@ public partial class SpiralStair3D : Node3D
         iron = Tool(Iron);
         ramp = new StaticBody3D { Name = "Ramp", CollisionMask = 0 };
         blocks = new FixedObject3D { Name = "Blocks", EntityId = EntityId };
-        part = GD.Load<PackedScene>("res://regions/box_part.tscn");
+        part = Scenes.Load("res://regions/box_part.tscn");
         unseen = new StandardMaterial3D { AlbedoColor = new(0, 0, 0, 0), Transparency = BaseMaterial3D.TransparencyEnum.Alpha };
         for (var n = 0; n < Floors - 1; n++) Turn(n);
         for (var f = 0; f < Floors; f++)

@@ -58,7 +58,7 @@ public partial class MathClass : Node
     {
         if (Region is null)
         {
-            Region = GD.Load<PackedScene>(SchoolRoom.RegionPath).Instantiate<Region3D>();
+            Region = Scenes.Load(SchoolRoom.RegionPath).Instantiate<Region3D>();
             Region.Name = "Region";
             AddChild(Region);
         }

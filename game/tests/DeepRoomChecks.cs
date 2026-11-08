@@ -193,7 +193,7 @@ public partial class DeepRoomChecks : Node
 
     private async Task Start()
     {
-        room = GD.Load<PackedScene>(DebugScenes.Find("deep-room")!).Instantiate<DeepRoom>();
+        room = Scenes.Load(DebugScenes.Find("deep-room")!).Instantiate<DeepRoom>();
         AddChild(room);
         await Bind(room);
     }

@@ -39,7 +39,7 @@ internal sealed class SchoolRoom
     private const float UpsideDownBehind = .12f;
     private const double Same = 1e-6;
 
-    private readonly PackedScene chair = GD.Load<PackedScene>("res://regions/school/chair.tscn");
+    private readonly PackedScene chair = Scenes.Load("res://regions/school/chair.tscn");
 
     // The desks of section Ⅰ, by number, whose chairs are upside down on them. The room remembers it, since a row may be
     // turned over in two goes.
@@ -95,7 +95,7 @@ internal sealed class SchoolRoom
     /// <summary>Loads the region into <paramref name="host"/>.</summary>
     internal static SchoolRoom Open(Node host)
     {
-        var region = GD.Load<PackedScene>(RegionPath).Instantiate<Region3D>();
+        var region = Scenes.Load(RegionPath).Instantiate<Region3D>();
         region.Name = "Region";
         host.AddChild(region);
         return Of(region);
