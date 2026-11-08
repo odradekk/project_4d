@@ -17,10 +17,17 @@ public partial class RoomChecks : Node
 {
     private const string Room = "res://regions/room.tscn";
 
+    // Held for the whole check, so that every load of the room returns this scene. Loaded again after it was freed, the
+    // room would take its resources back from Godot's cache while the GC may have collected their C# objects and not yet
+    // finalized them; Godot 4.7.2's C# bridge then loses track of those objects and logs "Handle is not initialized"
+    // (godotengine/godot#112067).
+    private PackedScene room = null!;
+
     public override async void _Ready()
     {
         try
         {
+            room = GD.Load<PackedScene>(Room);
             await CheckLoad();
             CheckWrongSolutions();
             await CheckFlipPlane();
@@ -50,7 +57,7 @@ public partial class RoomChecks : Node
     }
 
     // A solution that is wrong makes the load fail at its step, so the engine does play them.
-    private static void CheckWrongSolutions()
+    private void CheckWrongSolutions()
     {
         var authored = Instance();
         Check(new SceneReader(authored).Load() is LoadResult.Loaded, "the room as authored must be valid");
@@ -67,10 +74,10 @@ public partial class RoomChecks : Node
         Check(diagnostics.Contains("Only a StandUp has a Target"), $"a target on a flip must be refused: {diagnostics}");
     }
 
-    private static Region3D Instance() => GD.Load<PackedScene>(Room).Instantiate<Region3D>();
+    private Region3D Instance() => room.Instantiate<Region3D>();
 
     // Reads the room with the first step of an operation changed, and returns why it is not valid.
-    private static string Fails(string operation, Action<ExpectedRotationResource> change)
+    private string Fails(string operation, Action<ExpectedRotationResource> change)
     {
         var region = Instance();
         var node = region.GetNode("ExpectedPuzzleOperations/Operations").GetChildren().OfType<ExpectedOperationNode>().Single(n => n.Operation!.Id == operation);
