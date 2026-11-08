@@ -86,7 +86,7 @@ description: 按本仓库写下的规则和以往出过的错，审查 project_4
 17. **场景之间衔接正确。** 下一场从上一场结束的位置和状态开始；留给后一场用的节点自己停掉回调，不用 `ProcessMode = Disabled`（区域会一起冻住）；不读已经释放的节点。这类问题要连续玩通才会出现。来源：序章的流程「切换」；提交 `1929b9f`、`bdf7767`、`b0588e4`。
 18. **Godot 检查不轮询瞬时状态。** 检查不去读只持续几帧的阶段或位置，改为等事件（如 `CatRoom.StageEntered`）或等到位置，超时按物理帧数算。否则检查偶发失败，掩盖真问题。来源：提交 `97c656d`、`432e529`、`a11f986`、`a0a1ea6`。
 19. **播放过声音的无头检查，退出前等音频线程。** 退出前等 0.5 秒，节点离开场景树时不在主线程上等。音频线程要等声音淡出才放开它，不等就会在退出时报 `resources still in use`，Godot 检查判为失败。来源：提交 `a59d505`、`dee1337`；`game/audio/GrazerMusic.cs` 的注释。
-20. **带类型 `[Export]` 数组的 Resource 基类不写成 `abstract`。** 照 `ExpectedStepResource` 的做法。写成 abstract 时，曾在一台机器上 5 次运行有 4 次报 `Handle is not initialized`，和 Godot issue 112067 的报错相同；原因还没确认。来源：提交 `65cbe6e`；`game/adapter/ExpectedStepResource.cs` 的注释。
+20. **场景都经过 `Scenes.Load` 载入。** 游戏代码和检查载入 `PackedScene` 时一律用 `Scenes.Load`，不直接用 `GD.Load<PackedScene>`、`ResourceLoader.Load` 或别的载入方法。场景释放后再从文件读一遍时，如果它的资源的 C# 对象已被 GC 回收、终结器还没运行，这些资源从缓存取回后句柄就会失效（`godotengine/godot` 的 issue 112067）：带 C# 脚本的资源读出来是 null，区域载入失败，debug 构建崩溃。`Scenes.Load` 把载入过的场景留到游戏退出，不会再读一遍文件。`reload_checks` 只测 `HomeScene.Open` 和 `TurningFixture.Load` 这两个载入方法，新写的直接载入只能靠审查发现。来源：`game/Scenes.cs` 的注释；`game/tests/ReloadChecks.cs`。
 21. **不改归档原型。** `archives/threejs-demo/` 已冻结。来源：`AGENTS.md`「Map」。
 22. **导出配置映射。** `game/Game.sln` 里的每个项目都把 Godot 的 ExportDebug、ExportRelease 映射到对应的 Debug、Release。漏掉的话，导出版会用未经优化的引擎。来源：`AGENTS.md`「Map」；提交 `423dab8`。
 23. **语言。** 代码、注释、提交信息用英文；文档和游戏文本用中文。来源：`AGENTS.md`「Language and terms」。
